@@ -1,0 +1,5 @@
+{
+  "name": "Setpoint",
+  "description": "A calm food, nutrition and weight tracker. Log food from a big database, barcodes and recipes, see calories, macros, vitamins and minerals, and watch your weight trend. Works offline; syncs when you sign in.",
+  "requestFramePermissions": []
+}

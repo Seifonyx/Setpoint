@@ -1,0 +1,16 @@
+{
+  "name": "setpoint",
+  "version": "2.0.9",
+  "private": true,
+  "description": "Setpoint: a calm, offline weight tracker PWA.",
+  "main": "server.js",
+  "scripts": {
+    "start": "node server.js",
+    "dev": "node server.js",
+    "test": "node tests/smoke.js && node tests/e2e.js",
+    "build": "node tools/build.js"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

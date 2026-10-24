@@ -1,0 +1,47 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover" />
+<title>Cookies & Storage · Setpoint</title>
+<meta name="description" content="Cookies & Storage for Setpoint, the food, nutrition and weight tracker." />
+<link rel="icon" href="favicon.png" />
+<link rel="stylesheet" href="fonts/fonts.css" />
+<style>
+:root { --bg: #f2f2f7; --surface: #fff; --text: #111114; --text-2: #4a4a52; --line: #e3e3ea; --accent: #12946a; --accent-text: #0b6e4f; color-scheme: light; }
+@media (prefers-color-scheme: dark) { :root { --bg: #000; --surface: #141416; --text: #f2f2f5; --text-2: #b4b4bd; --line: #2a2a30; --accent: #7ee0b8; --accent-text: #7ee0b8; color-scheme: dark; } }
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--bg); color: var(--text); font: 16px/1.6 Figtree, system-ui, -apple-system, Segoe UI, sans-serif; }
+main { max-width: 720px; margin: 0 auto; padding: calc(env(safe-area-inset-top, 0px) + 24px) 16px 64px; }
+.back { display: inline-flex; align-items: center; gap: 6px; color: var(--accent-text); font-weight: 600; text-decoration: none; padding: 8px 0; }
+h1 { font-family: "Bricolage Grotesque", Figtree, sans-serif; font-size: 34px; line-height: 1.15; letter-spacing: -.02em; margin: 10px 0 4px; }
+.meta { color: var(--text-2); font-size: 14px; margin: 0 0 18px; }
+nav.legal { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 22px; }
+nav.legal a { padding: 7px 14px; border-radius: 99px; background: var(--surface); border: 1px solid var(--line); color: var(--text); text-decoration: none; font-size: 14px; font-weight: 600; }
+nav.legal a[aria-current="page"] { background: var(--text); color: var(--bg); border-color: var(--text); }
+section { background: var(--surface); border: 1px solid var(--line); border-radius: 20px; padding: 6px 22px 10px; margin: 0 0 14px; }
+h2 { font-family: "Bricolage Grotesque", Figtree, sans-serif; font-size: 20px; margin: 18px 0 6px; letter-spacing: -.01em; }
+p, li { color: var(--text-2); } p { margin: 8px 0; } ul { padding-left: 20px; margin: 8px 0; } li { margin: 4px 0; }
+b, strong { color: var(--text); }
+a { color: var(--accent-text); }
+a:focus-visible, button:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; border-radius: 6px; }
+.note { background: var(--bg); border-radius: 14px; padding: 12px 14px; }
+.todo { background: #ffe58f; color: #111; padding: 0 4px; border-radius: 4px; }
+footer { color: var(--text-2); font-size: 13px; text-align: center; margin-top: 26px; }
+</style>
+</head>
+<body>
+<main>
+<a class="back" href="./">&#8249; Back to Setpoint</a>
+<h1>Cookies & Storage</h1>
+<p class="meta">Effective 7 October 2026 · Setpoint, Egypt</p>
+<nav class="legal" aria-label="Legal pages"><a href="privacy.html">Privacy Policy</a><a href="terms.html">Terms of Use</a><a href="cookies.html" aria-current="page">Cookies & Storage</a><a href="refunds.html">Refund Policy</a></nav>
+<section><h2>Do we use cookies?</h2><p><b>Setpoint itself doesn't set any cookies.</b> We don't use advertising, analytics or tracking cookies, or any other trackers, and we don't embed third-party content such as social media buttons or videos.</p><p>Because nothing optional is stored, we don't show a cookie consent banner: the law only requires consent for storage that isn't needed to provide what you asked for.</p></section>
+<section><h2>What the app stores on your device</h2><ul><li><b>Local storage and IndexedDB</b>: your diary, weigh-ins, settings and photos, so the app works and keeps your data between visits. Strictly necessary.</li><li><b>App cache</b> (service worker): a copy of the app and food database, so Setpoint opens fast and works offline. Strictly necessary.</li><li><b>Sign-in</b>: if you sign in, Firebase Authentication keeps you signed in using your browser's storage. Strictly necessary.</li></ul></section>
+<section><h2>Other sites</h2><p>If you choose "Continue with Google", Google's sign-in page may set its own cookies on Google's domain, under <a href="https://policies.google.com/technologies/cookies" rel="noopener">Google's cookie policy</a>.</p></section>
+<section><h2>How to clear it</h2><p>In the app: Settings → Erase all data. In your browser: clear site data for setpoint-tracker.web.app. If you clear it without a backup or an account, your data on that device is gone.</p></section>
+
+<footer>Questions? Email <a href="mailto:setpointapp.support@gmail.com">setpointapp.support@gmail.com</a>.<br>&copy; 2026 Setpoint. All rights reserved.</footer>
+</main>
+</body>
+</html>

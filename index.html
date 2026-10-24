@@ -1,0 +1,241 @@
+<!DOCTYPE html>
+<html lang="en" data-mode="light" data-style="graphite">
+<head>
+<meta charset="UTF-8" />
+<meta name="google-site-verification" content="CLYcBGrtrcOfJS3E-fkRFYi3QmsXeVqyVJQm_FNSRxc" />
+<meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=no, viewport-fit=cover" />
+<title>Setpoint – Food, Nutrition &amp; Weight Tracker</title>
+<meta name="description" content="A free food, nutrition and weight tracker. Log what you eat, see every vitamin and mineral, plan your meals and follow your weight trend. Works offline, in English and Arabic." />
+<link rel="canonical" href="https://setpoint-tracker.web.app/" />
+<meta property="og:type" content="website" />
+<meta property="og:site_name" content="Setpoint" />
+<meta property="og:title" content="Setpoint – Food, Nutrition &amp; Weight Tracker" />
+<meta property="og:description" content="A free food, nutrition and weight tracker. Log what you eat, see every vitamin and mineral, plan your meals and follow your weight trend. Works offline, in English and Arabic." />
+<meta property="og:url" content="https://setpoint-tracker.web.app/" />
+<meta property="og:image" content="https://setpoint-tracker.web.app/og-image.png" />
+<meta property="og:image:width" content="1200" />
+<meta property="og:image:height" content="630" />
+<meta property="og:image:alt" content="Setpoint – food, nutrition and weight tracker" />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content="Setpoint – Food, Nutrition &amp; Weight Tracker" />
+<meta name="twitter:description" content="A free food, nutrition and weight tracker. Log what you eat, see every vitamin and mineral, plan your meals and follow your weight trend. Works offline, in English and Arabic." />
+<meta name="twitter:image" content="https://setpoint-tracker.web.app/og-image.png" />
+<script type="application/ld+json">{"@context":"https://schema.org","@type":"WebApplication","name":"Setpoint","url":"https://setpoint-tracker.web.app/","description":"A free food, nutrition and weight tracker. Log what you eat, see every vitamin and mineral, plan your meals and follow your weight trend. Works offline, in English and Arabic.","applicationCategory":"HealthApplication","operatingSystem":"Any (web browser)","inLanguage":["en","ar"],"offers":{"@type":"Offer","price":"0","priceCurrency":"USD"},"image":"https://setpoint-tracker.web.app/icon-512.png"}</script>
+<meta name="theme-color" content="#f3f4f6" id="themeColor" />
+<meta name="mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-capable" content="yes" />
+<meta name="apple-mobile-web-app-status-bar-style" content="default" />
+<meta name="apple-mobile-web-app-title" content="Setpoint" />
+<link rel="manifest" href="manifest.json" />
+<link rel="icon" type="image/png" sizes="32x32" href="favicon.png" />
+<link rel="icon" type="image/png" sizes="192x192" href="icon-192.png" />
+<link rel="apple-touch-icon" sizes="180x180" href="apple-touch-icon.png" />
+<link rel="stylesheet" href="fonts/fonts.css" />
+<script>
+  // Everything that changes how the app looks is set before the first paint, so opening it never flashes:
+  // light or dark, your theme, pure black, text size, the tab bar position and Arabic (right to left).
+  (function () {
+    var r = document.documentElement, st = {};
+    try { var s = JSON.parse(localStorage.getItem('setpoint') || localStorage.getItem('the-slope') || 'null'); st = (s && s.settings) || {}; } catch (e) {}
+    var t = st.theme || 'auto';
+    var dark = t === 'dark' || (t === 'auto' && window.matchMedia && matchMedia('(prefers-color-scheme: dark)').matches);
+    var styles = { graphite: ['#f2f2f7', '#000000'], classic: ['#f2f5f3', '#0a0f0d'], ocean: ['#eef4f9', '#070d16'], rose: ['#f8f1f2', '#120a0d'], violet: ['#f2f1f8', '#08070f'], sand: ['#f6f1ea', '#0f0c09'], luxe: ['#f4efe6', '#0a0b0a'] };
+    var style = styles[st.style] ? st.style : 'graphite';
+    r.setAttribute('data-mode', dark ? 'dark' : 'light');
+    r.setAttribute('data-style', style);
+    if (st.oled) r.setAttribute('data-oled', '');
+    if (st.tabs === 'top') r.classList.add('tabs-top');
+    if (st.textSize === 'l' || st.textSize === 'xl') r.style.zoom = st.textSize === 'l' ? '1.08' : '1.16';
+    // Arabic: stay hidden for the moment it takes to translate, so English never flashes (shown anyway after 2.5 s)
+    if (st.lang === 'ar') { r.lang = 'ar'; r.dir = 'rtl'; r.classList.add('ar-wait'); setTimeout(function () { r.classList.remove('ar-wait'); }, 2500); }
+    var m = document.getElementById('themeColor'); if (m) m.setAttribute('content', st.oled && dark ? '#000000' : styles[style][dark ? 1 : 0]);
+  })();
+</script>
+<link rel="stylesheet" href="app.css?v=2.0.9">
+</head>
+<body>
+<div class="seo-intro">
+  <p>Setpoint is a free food, nutrition and weight tracker that runs in your browser and installs like an app. Log meals from a food list with Egyptian and everyday foods, scan barcodes and labels, and see calories, protein, carbs, fat, fiber and every vitamin and mineral against your own targets.</p>
+  <p>Get food suggestions that fill what you still need today, plan a full day of meals for your targets, follow your weight trend, and let Setpoint work out your real energy expenditure (TDEE) from your weigh-ins. It works offline, in English and Arabic, and keeps your data on your device unless you choose to sync.</p>
+</div>
+<div class="main-clip">
+<main>
+
+  <!-- DIARY -->
+  <section class="tab-panel" id="panel-diary">
+    <header class="page-head day-head">
+      <span class="hd-spacer" aria-hidden="true"></span>
+      <div class="day-nav">
+        <button type="button" class="icon-btn" data-day="-1" aria-label="Previous day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button>
+        <label class="day-title"><span id="dayLabel">Today</span><span class="day-sub" id="daySub"></span><input type="date" id="dayPick" aria-label="Choose day" /></label>
+        <button type="button" class="icon-btn" data-day="1" id="dayNext" aria-label="Next day"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M9 5l7 7-7 7"/></svg></button>
+      </div>
+      <button type="button" class="icon-btn day-more" data-action="day-menu" aria-label="Day options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.8"/><circle cx="12" cy="12" r="1.8"/><circle cx="18.5" cy="12" r="1.8"/></svg></button>
+    </header>
+    <div id="sumCard"></div>
+    <div class="tiles" id="tiles">
+      <button type="button" class="card tile" id="weightRow" data-action="log-day"></button>
+      <div class="card tile" id="waterTile" role="button" tabindex="0" aria-label="Water"></div>
+      <button type="button" class="card tile" id="fastTile" data-action="fast" hidden></button>
+    </div>
+    <div id="mealList"></div>
+  </section>
+
+  <!-- PROGRESS -->
+  <section class="tab-panel" id="panel-progress" hidden>
+    <header class="page-head"><h1>Progress</h1></header>
+    <div class="seg" id="progSeg" style="margin-bottom:10px"><button type="button" data-prog="weight">Weight</button><button type="button" data-prog="nutrition">Nutrition</button><button type="button" data-prog="body">Body</button></div>
+    <div class="seg seg-sm range-seg prog-range" id="rangeSeg" role="group" aria-label="Chart range">
+          <button type="button" data-range="30">1M</button><button type="button" data-range="90">3M</button><button type="button" data-range="180">6M</button><button type="button" data-range="365">1Y</button><button type="button" data-range="0">All</button>
+        </div>
+    <div id="prog-weight">
+      <div class="card chart-card">
+        <div class="readout" id="readout"></div>
+        <div id="chart"></div>
+        <div class="chart-foot"><div id="chartRangeSlot"></div><div class="chart-tools"><button type="button" class="ck-toggle" id="ckToggle" data-action="chart-kcal" aria-pressed="false"><i></i>Calories</button></div></div>
+        <div class="metrics four" id="rangeStats"></div>
+      </div>
+      <div class="tiles prog-tiles">
+        <button type="button" class="card tile week-card" id="weekCard" data-action="week"></button>
+        <div id="goalBox"></div>
+      </div>
+      <div id="insightBox"></div>
+      <div class="list set-list" id="phaseStart" hidden><button type="button" class="row" data-action="new-phase"><span class="ico ico-s ic-c-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 7-9"/><path d="M4 6v12h16"/></svg></span><div class="grow"><div class="row-t">Phases</div><div class="row-s">Mark a cut, bulk or diet break</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button></div>
+      <div class="card fold-card" id="phaseFold">
+        <button type="button" class="fold-head" data-fold="phases" aria-expanded="true"><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg><span class="fold-t">Phases</span><span class="fold-s" id="phaseSub"></span></button>
+        <div class="fold-body"><div id="phaseBox"></div></div>
+      </div>
+      <div class="card fold-card" id="histFold">
+        <button type="button" class="fold-head" data-fold="history" aria-expanded="true"><svg class="fold-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg><span class="fold-t">History</span><span class="fold-s" id="histSub"></span></button>
+        <div class="fold-body"><div class="seg seg-sm hist-seg" id="viewSeg"><button type="button" data-view="days">Days</button><button type="button" data-view="weeks">Weeks</button></div><div id="entryList"></div></div>
+      </div>
+    </div>
+    <div id="prog-nutrition" hidden><div id="nutBox"></div></div>
+    <div id="prog-body" hidden><div id="bodyBox"></div><input type="file" id="photoFile" accept="image/*" multiple hidden /></div>
+  </section>
+
+  <!-- YOU -->
+  <section class="tab-panel" id="panel-you" hidden>
+    <header class="page-head"><h1>You</h1></header>
+    <div id="youHero"></div>
+    <div class="list">
+      <button type="button" class="row" data-go="settings"><span class="ico ic-c-blue"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h9M18 7h2M4 17h3M12 17h8"/><circle cx="15.5" cy="7" r="2.3"/><circle cx="9.5" cy="17" r="2.3"/></svg></span><div class="grow"><div class="row-t">Settings</div><div class="row-s">Theme, units, data</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-go="targets"><span class="ico ic-c-purple"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="4.5" width="14" height="16.5" rx="2.5"/><path d="M9 3h6v3H9zM8.5 11l1.5 1.5 3-3M14.5 11.5H16M8.5 16.5l1.5 1.5 3-3M14.5 17H16"/></svg></span><div class="grow"><div class="row-t">Plan</div><div class="row-s" id="youTargetSub">Calories, macros, activity</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="achievements"><span class="ico ic-c-orange"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="14.5" r="5.5"/><path d="M8.5 3h7l-2 6.5M10.5 9.5 8.5 3"/></svg></span><div class="grow"><div class="row-t">Achievements</div><div class="row-s" id="youAchSub">Milestones you've reached</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+    <p class="foot" id="youFoot"></p>
+  </section>
+
+  <!-- MY FOODS -->
+  <section class="tab-panel" id="panel-foods" hidden>
+    <header class="page-head"><h1>Foods</h1><button type="button" class="icon-btn mf-sbtn" id="mfSearchBtn" aria-label="Search your foods" aria-pressed="false"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="6.5"/><path d="M16 16l4 4"/></svg></button></header>
+    <div id="mfHead"></div>
+    <div class="set-search mf-search" id="mfSearchWrap" hidden><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="input" id="mfQ" type="search" placeholder="Search your foods" autocomplete="off" aria-label="Search your foods" /></div>
+    <div id="foodsBox"></div>
+  </section>
+
+  <!-- TARGETS -->
+  <section class="tab-panel" id="panel-targets" hidden>
+    <header class="page-head sub-head"><button type="button" class="back-btn" data-back aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1 id="tgTitle">Plan</h1></header>
+    <div id="tgHome">
+      <div class="list set-list tg-menu" id="tgMenu"></div>
+      <div class="group-label">More</div>
+      <div class="list set-list">
+      <button type="button" class="row" data-action="guest"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="9" cy="8.5" r="3.3"/><path d="M3 19c1-3 3.2-4.6 6-4.6s5 1.6 6 4.6M16 5.5a3 3 0 0 1 0 6M18.5 14.8c1.2.7 2 2 2.5 4.2"/></svg></span><div class="grow"><div class="row-t">Plan for someone else</div><div class="row-s">Work out targets for a friend or family member</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+    </div>
+    <div class="tg-sec" data-sec="goal" hidden>
+      <div class="card tg-goal" id="goalCard"></div>
+    </div>
+    <div class="tg-sec" data-sec="cal" hidden>
+      <div class="card hero tg-hero" id="planCard"></div>
+      <div id="ntTable"></div>
+    </div>
+    <div class="tg-sec" data-sec="burn" hidden>
+      <div class="card tg-burn" id="energyHero"></div>
+      <div class="group-label">What it's based on</div>
+      <div class="list set-list">
+      <button type="button" class="row" data-action="activity"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12h3l2-6 4 12 2-6h5"/></svg></span><div class="grow"><div class="row-t">Activity</div><div class="row-s" id="actSub"></div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="details"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="8" r="3.5"/><path d="M5 20c1-3.6 3.8-5.5 7-5.5s6 1.9 7 5.5"/></svg></span><div class="grow"><div class="row-t">About you</div><div class="row-s" id="detailsSub"></div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="real-tdee"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18l5-6 4 3 7-9"/><path d="M16 6h4v4"/></svg></span><div class="grow"><div class="row-t">TDEE</div><div class="row-s" id="realSub"></div></div><span class="row-v num" id="realVal"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      </div>
+      <div class="group-label">Through the week</div>
+      <div class="list set-list">
+      <button type="button" class="row" data-action="training"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 6.5v11M17.5 6.5v11M3.5 9v6M20.5 9v6M6.5 12h11"/></svg></span><div class="grow"><div class="row-t">Training days</div><div class="row-s" id="trainSub"></div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="flex"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15" rx="3"/><path d="M3.5 10h17M8 3v4M16 3v4M8 14h2M14 14h2"/></svg></span><div class="grow"><div class="row-t">Flexible week</div><div class="row-s">Let days balance out over the week</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 12a8 8 0 0 1 14-5.3M20 12a8 8 0 0 1-14 5.3M18 3v4h-4M6 21v-4h4"/></svg></span><div class="grow"><div class="row-t">Auto-adjust target</div><div class="row-s">At each weekly check-in</div></div><span class="switch"><input type="checkbox" id="autoAdjToggle" /><i></i></span></label>
+      </div>
+    </div>
+    <div hidden>
+      <button type="button" class="row" data-action="nut-targets"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3c3 4 6 6.5 6 10a6 6 0 0 1-12 0c0-3.5 3-6 6-10z"/></svg></span><div class="grow"><div class="row-t">Vitamins &amp; minerals</div><div class="row-s" id="nutTSub"></div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div>
+  </section>
+
+  <!-- SETTINGS -->
+  <section class="tab-panel" id="panel-settings" hidden>
+    <header class="page-head sub-head"><button type="button" class="back-btn" data-back aria-label="Back"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M15 5l-7 7 7 7"/></svg></button><h1>Settings</h1></header>
+    <div class="set-search"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><circle cx="11" cy="11" r="7"/><path d="M20 20l-3.5-3.5"/></svg><input class="input" id="setQ" type="search" placeholder="Search settings" autocomplete="off" aria-label="Search settings" /></div>
+    <div class="set-group"><div class="group-label">Appearance</div>
+    <div class="list set-list">
+      <div class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="4"/><path d="M12 3v2M12 19v2M3 12h2M19 12h2M5.6 5.6l1.4 1.4M17 17l1.4 1.4M5.6 18.4L7 17M17 7l1.4-1.4"/></svg></span><div class="grow row-t">Mode</div><div class="seg w3" data-setting="theme"><button type="button" data-v="auto">Auto</button><button type="button" data-v="light">Light</button><button type="button" data-v="dark">Dark</button></div></div>
+      <button type="button" class="row" data-action="theme"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3a9 9 0 1 0 0 18c1.2 0 2-.9 2-2 0-.6-.3-1-.6-1.4-.3-.4-.6-.8-.6-1.3 0-1.1.9-2 2-2H17a4 4 0 0 0 4-4c0-4.1-4-7.3-9-7.3z"/><circle cx="7.5" cy="11" r="1.2" fill="currentColor"/><circle cx="10.5" cy="7.5" r="1.2" fill="currentColor"/><circle cx="15" cy="7.5" r="1.2" fill="currentColor"/></svg></span><div class="grow row-t">Theme</div><span class="row-v" id="themeVal"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8 8 0 1 1 9.5 4a6.5 6.5 0 0 0 10.5 10.5z"/></svg></span><div class="grow"><div class="row-t">Pure black</div><div class="row-s">True black for OLED screens</div></div><span class="switch"><input type="checkbox" id="oledToggle" /><i></i></span></label>
+      <div class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 18 9 6l5 12M5.8 14h6.4M15 18l3-7 3 7M15.9 16h4.2"/></svg></span><div class="grow row-t">Text size</div><div class="seg w3" data-setting="textSize"><button type="button" data-v="m">A</button><button type="button" data-v="l" style="font-size:17px">A</button><button type="button" data-v="xl" style="font-size:20px">A</button></div></div>
+      <div class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="4" width="16" height="16" rx="3"/><path d="M4 15h16"/></svg></span><div class="grow row-t">Tab bar</div><div class="seg" data-setting="tabs"><button type="button" data-v="bottom">Bottom</button><button type="button" data-v="top">Top</button></div></div>
+      <div class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M3.5 12h17M12 3.5c2.5 2.6 3.7 5.4 3.7 8.5s-1.2 5.9-3.7 8.5c-2.5-2.6-3.7-5.4-3.7-8.5S9.5 6.1 12 3.5z"/></svg></span><div class="grow row-t">Language</div><div class="seg" data-setting="lang" data-notr><button type="button" data-v="en">English</button><button type="button" data-v="ar">العربية</button></div></div>
+    </div></div>
+    <div class="set-group"><div class="group-label">Food &amp; tracking</div>
+    <div class="list set-list">
+      <div class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 20h14l-1.5-11h-11z"/><circle cx="12" cy="6" r="2.5"/></svg></span><div class="grow row-t">Units</div><div class="seg" data-setting="unit"><button type="button" data-v="kg">kg</button><button type="button" data-v="lb">lb</button></div></div>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="3" width="14" height="18" rx="3"/><path d="M9 8h.01M12 8h.01M15 8h.01M9 12h.01M12 12h.01M15 12h.01M9 16h.01M12 16h.01M15 16h.01"/></svg></span><div class="grow"><div class="row-t">Number pad</div><div class="row-s">For food amounts, instead of the keyboard</div></div><span class="switch"><input type="checkbox" id="numpadToggle" /><i></i></span></label>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="3.5" width="7" height="7" rx="2"/><rect x="13.5" y="3.5" width="7" height="7" rx="2"/><rect x="3.5" y="13.5" width="7" height="7" rx="2"/><rect x="13.5" y="13.5" width="7" height="7" rx="2"/></svg></span><div class="grow"><div class="row-t">Explode all meals</div><div class="row-s">Log meals as their separate foods</div></div><span class="switch"><input type="checkbox" id="explodeToggle" /><i></i></span></label>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="13" r="7.5"/><path d="M12 9.5V13l2.5 1.5M10 3h4"/></svg></span><div class="grow"><div class="row-t">Fasting timer</div><div class="row-s">Shows on your Diary</div></div><span class="switch"><input type="checkbox" id="fastToggle" /><i></i></span></label>
+      <label class="row row-sel"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="5" width="16" height="15" rx="2.5"/><path d="M4 10h16M8.5 3v4M15.5 3v4"/></svg></span><div class="grow row-t">Week starts on</div><span class="row-v" id="weekStartVal"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg><select id="weekStartSel" aria-label="Week starts on"><option value="0">Sunday</option><option value="1">Monday</option><option value="2">Tuesday</option><option value="3">Wednesday</option><option value="4">Thursday</option><option value="5">Friday</option><option value="6">Saturday</option></select></label>
+      <label class="row"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 12.5V7a1.5 1.5 0 0 1 3 0v4M10 11V5.5a1.5 1.5 0 0 1 3 0V11M13 11V7a1.5 1.5 0 0 1 3 0v5.5a6 6 0 0 1-6 6h-.5a5 5 0 0 1-4-2l-2-2.8a1.5 1.5 0 0 1 2.3-1.9L7 12.5"/></svg></span><div class="grow row-t">Haptics</div><span class="switch"><input type="checkbox" id="hapticsToggle" /><i></i></span></label>
+    </div></div>
+    <div class="set-group"><div class="group-label">Health</div>
+    <div class="list set-list">
+      <button type="button" class="row" data-action="ramadan"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 14.5A8.5 8.5 0 1 1 9.5 4a7 7 0 0 0 10.5 10.5z"/></svg></span><div class="grow"><div class="row-t">Ramadan mode</div><div class="row-s">Suhoor, Iftar and fasting times</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="cycle"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7v5l3 2"/></svg></span><div class="grow"><div class="row-t">Cycle and weight</div><div class="row-s">Mark water-weight days on your chart</div></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div></div>
+    <div class="set-group"><div class="group-label">Privacy &amp; data</div>
+    <div class="list set-list">
+      <label class="row" id="lockRow"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="5" y="11" width="14" height="9.5" rx="2.5"/><path d="M8 11V8a4 4 0 0 1 8 0v3"/></svg></span><div class="grow"><div class="row-t">App lock</div><div class="row-s">Face ID or your passcode to open</div></div><span class="switch"><input type="checkbox" id="lockToggle" /><i></i></span></label>
+      <button type="button" class="row" data-action="data-backup"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 18a4.5 4.5 0 0 1-.5-9 6 6 0 0 1 11.5 1.5A3.75 3.75 0 0 1 17.5 18z"/><path d="M12 15v-5M9.8 12l2.2-2.2 2.2 2.2"/></svg></span><div class="grow"><div class="row-t">Your data</div><div class="row-s" id="storeSub">Checking…</div><span class="kw" hidden>back up restore backup export import cronometer weigh-ins spreadsheet storage check my data</span></div><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="erase"><span class="ico ico-s ico-danger"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 7h16M10 11v6M14 11v6M6 7l1 12a2 2 0 0 0 2 2h6a2 2 0 0 0 2-2l1-12M9 7V4h6v3"/></svg></span><div class="grow row-t" style="color:var(--danger)">Erase all data</div></button>
+    </div></div>
+    <input type="file" id="importFile" accept=".json,application/json" hidden />
+    <input type="file" id="cronoFile" accept=".csv,text/csv" multiple hidden />
+    <input type="file" id="csvFile" accept=".csv,.txt,text/csv,text/plain" hidden />
+    <div class="set-group"><div class="group-label">About</div>
+    <div class="list set-list">
+      <button type="button" class="row" data-action="whats-new"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3l1.8 4.6L18.5 9l-4.7 1.4L12 15l-1.8-4.6L5.5 9l4.7-1.4zM18 15l.8 2 2 .8-2 .8-.8 2-.8-2-2-.8 2-.8z"/></svg></span><div class="grow row-t">What's new</div><span class="row-v" id="versionLbl"></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+      <button type="button" class="row" data-action="legal"><span class="ico ico-s"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></svg></span><div class="grow"><div class="row-t">Legal</div><div class="row-s">Privacy, terms, cookies and refunds</div></div><span class="kw" hidden>privacy policy terms of use cookies storage refund policy</span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>
+    </div></div>
+    <p class="muted-note fd-empty set-none" id="setNone" hidden>No settings match.</p>
+    <p class="foot">Your data stays on this device unless you sign in. Setpoint is not medical advice.<br>Food data: USDA FoodData Central (public domain) and <a href="https://world.openfoodfacts.org" rel="noopener">Open Food Facts</a> (Open Database License). Fonts: SIL Open Font License.<br>&copy; 2026 Setpoint</p>
+  </section>
+</main>
+</div>
+
+<nav class="tabbar" aria-label="Sections">
+  <div class="tabbar-inner five">
+    <button class="tab-btn" id="tab-diary" type="button" data-tab="diary"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="4.5" y="3.5" width="15" height="17" rx="3"/><path d="M8.5 8.5h7M8.5 12h7M8.5 15.5h4"/></svg></span>Diary</button>
+    <button class="tab-btn" id="tab-progress" type="button" data-tab="progress"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3.5 6.5c4.5.4 5 9.3 10 9.9l5 .1"/><circle cx="19.5" cy="16.5" r="1.6" fill="currentColor"/></svg></span>Progress</button>
+    <button class="add-btn" id="addBtn" type="button" data-action="add" aria-label="Add food"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M12 5v14M5 12h14"/></svg></button>
+    <button class="tab-btn" id="tab-foods" type="button" data-tab="foods"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 10h16v2a7 7 0 0 1-7 7h-2a7 7 0 0 1-7-7z"/><path d="M8 6.5c0-1 1-1.5 1-3M12 6.5c0-1 1-1.5 1-3M16 6.5c0-1 1-1.5 1-3"/></svg></span>Foods</button>
+    <button class="tab-btn" id="tab-you" type="button" data-tab="you"><span class="tab-ico"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="8.5" r="3.8"/><path d="M4.5 20c1.4-3.6 4.2-5.4 7.5-5.4s6.1 1.8 7.5 5.4"/></svg></span>You</button>
+  </div>
+</nav>
+
+<div class="scrim" id="scrim"></div>
+<div class="sheet" id="sheet" role="dialog" aria-modal="true" aria-labelledby="sheetTitle">
+  <div class="grabber" id="grabber"></div>
+  <div id="sheetBody"></div>
+</div>
+<div class="lock-screen" id="lockScreen" hidden><div class="lock-in"><img src="icon-192.png" alt="" width="84" height="84" /><h2>Setpoint is locked</h2><button type="button" class="btn primary" id="lockGo">Unlock</button></div></div>
+<div class="toast" id="toast" role="status" aria-live="polite"><span id="toastMsg"></span><button type="button" id="toastBtn" hidden>Undo</button></div>
+
+<script src="app.js?v=2.0.9"></script>
+</body>
+</html>

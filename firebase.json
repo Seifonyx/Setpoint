@@ -1,0 +1,11 @@
+{
+  "hosting": {
+    "site": "setpoint-tracker",
+    "public": ".",
+    "ignore": ["firebase.json", "firestore.rules", ".firebaserc", ".env*", "package.json", "server.js", "src/**", "tests/**", "tools/**", "README.md", "metadata.json", "**/.*", "**/node_modules/**"],
+    "headers": [
+      { "source": "sw.js", "headers": [{ "key": "Cache-Control", "value": "no-cache" }] }
+    ]
+  },
+  "firestore": { "rules": "firestore.rules" }
+}
