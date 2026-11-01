@@ -1,6 +1,9 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.11';
+  const APP_VERSION = '2.0.12';
   const CHANGES = [
+    { v: '2.0.12', items: [
+      'Swiping a meal\'s title to the right now shows just the ⋯ button, which holds every option for that meal (Copy from yesterday, Save as a meal, Remove all and more). It works on empty meals too, so you can copy yesterday\'s into them.'
+    ] },
     { v: '2.0.11', items: [
       'The ⋯ beside a meal\'s title is gone to keep the Diary tidy. Swipe the title to the right to find it next to Yesterday and Save meal; it opens every option for that meal, now including Copy from yesterday.'
     ] },

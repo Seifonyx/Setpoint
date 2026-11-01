@@ -250,10 +250,7 @@
     const ma = e.target.closest('[data-mh-act]');
     if (ma) {
       const meal = ma.dataset.meal; swClose(); buzz('light');
-      if (ma.dataset.mhAct === 'more') mealSheet(meal, viewDay);
-      else if (ma.dataset.mhAct === 'yday') copyYesterdayMeal(meal);
-      else if (foodFor(viewDay).some(function (f) { return mealOf(f) === meal && !isDailyTotal(f); })) mealSheet(meal, viewDay, true);
-      else { buzz('warn'); toast('Add food first'); }
+      mealSheet(meal, viewDay);
       return;
     }
     const sa = e.target.closest('[data-sw-act]');

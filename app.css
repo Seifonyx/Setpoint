@@ -2505,8 +2505,5 @@ main.edge-drag.pm { box-shadow: none; }
 /* Meal header swipes right for Copy yesterday / Save meal */
 .sw-meal > .meal-head { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
 .list > .sw-meal:first-child > .meal-head { border-top: 0; }
-.sw-meal .sw-btn { width: 82px; }
-.sw-yday { background: #3478f6; }
-.sw-save { background: #2f8f5b; }
-.sw-meal .sw-more { width: 64px; background: #8e8e93; }
+.sw-meal .sw-more { width: 72px; background: #8e8e93; }
 .sw-more svg { width: 22px; height: 22px; }

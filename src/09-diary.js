@@ -598,9 +598,9 @@
       // Meal title sits above its card (on the page), so it reads as a heading; the card holds only the foods.
       const mac = its.filter(function (f) { return counts(f, viewDay); }).reduce(function (a, f) { a.p += f.protein || 0; a.c += f.carbs || 0; a.f += f.fat || 0; return a; }, { p: 0, c: 0, f: 0 });
       html += '<section class="meal-sec' + (open && its.length ? '' : ' shut') + '"><div class="list meal-card">';
-      // Swipe the header right for Yesterday, Save meal and ⋯ (every option for the meal).
+      // Swipe the header right for ⋯: every option for the meal in one sheet.
       const ma = function (k, cls, ic, label) { return '<button type="button" class="sw-btn ' + cls + '" data-mh-act="' + k + '" data-meal="' + m[0] + '" tabindex="-1">' + ic + '<span>' + label + '</span></button>'; };
-      html += '<div class="sw sw-meal" data-nodrag><div class="sw-acts">' + ma('yday', 'sw-yday', COPY_IC, 'Yesterday') + ma('save', 'sw-save', SAVE_IC, 'Save meal') + (its.length ? ma('more', 'sw-more', DOTS_IC, 'More') : '') + '</div>';
+      html += '<div class="sw sw-meal" data-nodrag><div class="sw-acts">' + (its.length || viewDay <= todayISO() ? ma('more', 'sw-more', DOTS_IC, 'More') : '') + '</div>';
       html += '<div class="meal-head' + (open ? '' : ' shut') + '" data-mh="' + m[0] + '"><button type="button" class="meal-toggle" data-toggle-meal="' + m[0] + '" aria-expanded="' + open + '"><span class="mh-t"><span class="mh-line"><span class="row-t">' + esc(m[1]) + '</span><svg class="meal-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' + (its.length ? '<span class="mh-sub">' + (open ? mealMacros(mac) : its.length + (its.length === 1 ? ' food' : ' foods')) + '</span>' : '') + '</span></button>' +
         '<span class="row-v num">' + (kc ? fmtKcal(kc) + '<small> kcal</small>' : '') + '</span>' +
         (open && its.length ? '' : '<button type="button" class="icon-btn mh-add" data-add-meal="' + m[0] + '" aria-label="Add to ' + m[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></button>') + '</div></div>';

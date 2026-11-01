@@ -104,7 +104,6 @@
   // A logged food with actions behind it: swipe right for ⋯, then Copy, Adjust (recipes) and Delete.
   const COPY_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
   const ADJ_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
-  const SAVE_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11A1.5 1.5 0 0 1 19 5.5V20l-7-4.5L5 20V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg>';
   const DOTS_IC = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>';
   // A meal's foods from the day before, added to the same meal on the day you're viewing.
   function copyYesterdayMeal(meal) {
@@ -539,25 +538,25 @@
     openSheet('<div id="catRoot"></div>', function (body) { sheet.classList.add('tall'); draw($('#catRoot', body)); }, function () { sheet.classList.remove('tall'); });
   }
   // Tap a meal's name: its totals, and copy, save or clear it.
-  function mealSheet(meal, date, saving) {
-    const d = date || viewDay, its = foodFor(d).filter(function (f) { return mealOf(f) === meal; });
-    if (!its.length) return;
+  function mealSheet(meal, date) {
+    const d = date || viewDay, its = foodFor(d).filter(function (f) { return mealOf(f) === meal; }), today = todayISO(), has = its.length > 0;
+    if (!has && d > today) return; // nothing to do with an empty meal on a day still to come
     const t = its.reduce(function (a, f) { return { kcal: a.kcal + f.kcal, p: a.p + f.protein, c: a.c + f.carbs, f: a.f + f.fat }; }, { kcal: 0, p: 0, c: 0, f: 0 });
-    const today = todayISO();
+    const row = function (id, label, danger) { return '<button type="button" class="row" id="' + id + '"><div class="grow row-t"' + (danger ? ' style="color:var(--danger)"' : '') + '>' + label + '</div>' + (danger ? '' : CHEV) + '</button>'; };
     openSheet('<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">' + mealName(meal) + '</h2></div></div>' +
-      '<div class="stat-box sv-mac meal-tot"><div><b class="num">' + fmtKcal(t.kcal) + '</b><span>kcal</span></div><div><b class="num">' + t.p + '</b><span>g protein</span></div><div><b class="num">' + t.c + '</b><span>g carbs</span></div><div><b class="num">' + t.f + '</b><span>g fat</span></div></div>' +
-      '<div id="msSaveBox" hidden><div class="field"><input class="input" id="msName" maxlength="40" placeholder="Name, like Usual breakfast" aria-label="Meal name" autocomplete="off" /></div><button type="button" class="btn primary block" id="msSaveGo" style="margin-bottom:16px">Save meal</button></div>' +
+      (has ? '<div class="stat-box sv-mac meal-tot"><div><b class="num">' + fmtKcal(t.kcal) + '</b><span>kcal</span></div><div><b class="num">' + t.p + '</b><span>g protein</span></div><div><b class="num">' + t.c + '</b><span>g carbs</span></div><div><b class="num">' + t.f + '</b><span>g fat</span></div></div>' +
+        '<div id="msSaveBox" hidden><div class="field"><input class="input" id="msName" maxlength="40" placeholder="Name, like Usual breakfast" aria-label="Meal name" autocomplete="off" /></div><button type="button" class="btn primary block" id="msSaveGo" style="margin-bottom:16px">Save meal</button></div>' : '') +
       '<div class="list">' +
-        (d <= today ? '<button type="button" class="row" id="msYday"><div class="grow row-t">' + (d === today ? 'Copy from yesterday' : 'Copy from the day before') + '</div>' + CHEV + '</button>' : '') +
-        (d !== today ? '<button type="button" class="row" id="msToday"><div class="grow row-t">Copy to today</div>' + CHEV + '</button>' : '') +
-        '<button type="button" class="row" id="msSave"><div class="grow row-t">Save as a meal</div>' + CHEV + '</button>' +
-        '<button type="button" class="row" id="msClear"><div class="grow row-t" style="color:var(--danger)">Remove all</div></button>' +
+        (d <= today ? row('msYday', d === today ? 'Copy from yesterday' : 'Copy from the day before') : '') +
+        (has && d !== today ? row('msToday', 'Copy to today') : '') +
+        (has ? row('msSave', 'Save as a meal') + row('msClear', 'Remove all', true) : '') +
       '</div>',
       function (root) {
-        if ($('#msYday', root)) $('#msYday', root).addEventListener('click', function () { closeSheet(); copyYesterdayMeal(meal); });
-        if ($('#msToday', root)) $('#msToday', root).addEventListener('click', function () { closeSheet(); copyFood(its, today, 'Copied to today'); });
-        $('#msSave', root).addEventListener('click', function () { $('#msSaveBox', root).hidden = false; this.hidden = true; $('#msName', root).focus(); });
-        if (saving) $('#msSave', root).click();
+        const on = function (id, fn) { const x = $('#' + id, root); if (x) x.addEventListener('click', fn); };
+        on('msYday', function () { closeSheet(); copyYesterdayMeal(meal); });
+        on('msToday', function () { closeSheet(); copyFood(its, today, 'Copied to today'); });
+        if (!has) return;
+        on('msSave', function () { $('#msSaveBox', root).hidden = false; this.hidden = true; $('#msName', root).focus(); });
         const saveMeal = function () {
           const nm = $('#msName', root).value.trim() || mealName(meal);
           state.meals.push({ id: 'm' + newId(), name: nm.slice(0, 40), items: its.slice(0, 40).map(function (it) { const c = Object.assign({}, it); delete c.id; delete c.meal; return c; }) });
@@ -565,7 +564,7 @@
         };
         $('#msSaveGo', root).addEventListener('click', saveMeal);
         $('#msName', root).addEventListener('keydown', function (e) { if (e.key === 'Enter') { e.preventDefault(); saveMeal(); } });
-        $('#msClear', root).addEventListener('click', function () {
+        on('msClear', function () {
           const snap = snapshot();
           state.food[d] = foodFor(d).filter(function (f) { return f.meal !== meal; });
           if (!state.food[d].length) delete state.food[d];
@@ -573,4 +572,5 @@
         });
       });
   }
+
 
