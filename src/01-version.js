@@ -1,6 +1,9 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.10';
+  const APP_VERSION = '2.0.11';
   const CHANGES = [
+    { v: '2.0.11', items: [
+      'The ⋯ beside a meal\'s title is gone to keep the Diary tidy. Swipe the title to the right to find it next to Yesterday and Save meal; it opens every option for that meal, now including Copy from yesterday.'
+    ] },
     { v: '2.0.10', items: [
       'Swipe a meal\'s title (like Breakfast) to the right for two shortcuts: Yesterday adds what you had in that meal the day before, and Save meal saves it to My foods so you can add it again in one tap.'
     ] },

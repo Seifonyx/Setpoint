@@ -105,6 +105,7 @@
   const COPY_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
   const ADJ_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
   const SAVE_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11A1.5 1.5 0 0 1 19 5.5V20l-7-4.5L5 20V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg>';
+  const DOTS_IC = '<svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.9"/><circle cx="12" cy="12" r="1.9"/><circle cx="18.5" cy="12" r="1.9"/></svg>';
   // A meal's foods from the day before, added to the same meal on the day you're viewing.
   function copyYesterdayMeal(meal) {
     const its = eatenFor(isoFromDay(dayNum(viewDay) - 1)).filter(function (it) { return mealOf(it) === meal && !isDailyTotal(it); }), y = viewDay === todayISO();
@@ -547,11 +548,13 @@
       '<div class="stat-box sv-mac meal-tot"><div><b class="num">' + fmtKcal(t.kcal) + '</b><span>kcal</span></div><div><b class="num">' + t.p + '</b><span>g protein</span></div><div><b class="num">' + t.c + '</b><span>g carbs</span></div><div><b class="num">' + t.f + '</b><span>g fat</span></div></div>' +
       '<div id="msSaveBox" hidden><div class="field"><input class="input" id="msName" maxlength="40" placeholder="Name, like Usual breakfast" aria-label="Meal name" autocomplete="off" /></div><button type="button" class="btn primary block" id="msSaveGo" style="margin-bottom:16px">Save meal</button></div>' +
       '<div class="list">' +
+        (d <= today ? '<button type="button" class="row" id="msYday"><div class="grow row-t">' + (d === today ? 'Copy from yesterday' : 'Copy from the day before') + '</div>' + CHEV + '</button>' : '') +
         (d !== today ? '<button type="button" class="row" id="msToday"><div class="grow row-t">Copy to today</div>' + CHEV + '</button>' : '') +
         '<button type="button" class="row" id="msSave"><div class="grow row-t">Save as a meal</div>' + CHEV + '</button>' +
         '<button type="button" class="row" id="msClear"><div class="grow row-t" style="color:var(--danger)">Remove all</div></button>' +
       '</div>',
       function (root) {
+        if ($('#msYday', root)) $('#msYday', root).addEventListener('click', function () { closeSheet(); copyYesterdayMeal(meal); });
         if ($('#msToday', root)) $('#msToday', root).addEventListener('click', function () { closeSheet(); copyFood(its, today, 'Copied to today'); });
         $('#msSave', root).addEventListener('click', function () { $('#msSaveBox', root).hidden = false; this.hidden = true; $('#msName', root).focus(); });
         if (saving) $('#msSave', root).click();

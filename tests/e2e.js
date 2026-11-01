@@ -497,10 +497,13 @@ server.listen(0, async () => {
       const mhX = "() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal > .meal-head')).transform).m41";
       await p.evaluate(([x, y, g]) => window.__g('pointer', x, y, t => [t < 80 ? t * 0.05 : 4 + (t - 80) * 1.2, 0], 140, eval(g)), [mhAt[0], mhAt[1], mhX]);
       await p.waitForTimeout(500);
-      const mhOpen = await p.evaluate(() => { const w = document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal'); const bs = [...w.querySelectorAll('.sw-btn')].filter(b => b.getBoundingClientRect().width > 0); return w.classList.contains('open') && bs.length === 2; });
+      const mhOpen = await p.evaluate(() => { const w = document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal'); const bs = [...w.querySelectorAll('.sw-btn')].filter(b => b.getBoundingClientRect().width > 0); return w.classList.contains('open') && bs.length === 3 && !document.querySelector('.meal-more'); });
       await p.evaluate(() => document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('[data-mh-act="save"]').click()); await p.waitForTimeout(500);
       const saveBox = await p.evaluate(() => { const x = document.getElementById('msSaveBox'); return !!x && !x.hidden; });
-      ok('meal header: swipe right shows Yesterday and Save meal; Save opens the name box', mhOpen && saveBox, mhOpen + ' ' + saveBox);
+      ok('meal header: swipe right shows Yesterday, Save meal and ⋯ (no ⋯ in the header); Save opens the name box', mhOpen && saveBox, mhOpen + ' ' + saveBox);
+      await p.evaluate(() => window.__setpoint.nav.close()); await p.waitForTimeout(500);
+      await p.evaluate(() => document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('[data-mh-act="more"]').click()); await p.waitForTimeout(500);
+      ok('meal header: ⋯ opens every option for the meal', await p.evaluate(() => !!document.getElementById('msYday') && !!document.getElementById('msSave') && !!document.getElementById('msClear')));
       await p.evaluate(() => window.__setpoint.nav.close()); await p.waitForTimeout(500);
       // the card strip at the top of the diary
       await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(300);

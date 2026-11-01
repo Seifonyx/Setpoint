@@ -245,14 +245,13 @@
       if (b2 && b2.animate) b2.animate([{ opacity: 0, transform: 'translateY(-8px)' }, { opacity: 1, transform: 'none' }], { duration: 320, delay: 40, easing: 'cubic-bezier(.22,1,.36,1)', fill: 'backwards' });
       return;
     }
-    const mm = e.target.closest('[data-meal-menu]');
-    if (mm) { buzz('light'); mealSheet(mm.dataset.mealMenu, viewDay); return; }
     const smo = e.target.closest('[data-sw-more]');
     if (smo) { swMore(smo.closest('.sw')); return; }
     const ma = e.target.closest('[data-mh-act]');
     if (ma) {
       const meal = ma.dataset.meal; swClose(); buzz('light');
-      if (ma.dataset.mhAct === 'yday') copyYesterdayMeal(meal);
+      if (ma.dataset.mhAct === 'more') mealSheet(meal, viewDay);
+      else if (ma.dataset.mhAct === 'yday') copyYesterdayMeal(meal);
       else if (foodFor(viewDay).some(function (f) { return mealOf(f) === meal && !isDailyTotal(f); })) mealSheet(meal, viewDay, true);
       else { buzz('warn'); toast('Add food first'); }
       return;

@@ -2508,3 +2508,5 @@ main.edge-drag.pm { box-shadow: none; }
 .sw-meal .sw-btn { width: 82px; }
 .sw-yday { background: #3478f6; }
 .sw-save { background: #2f8f5b; }
+.sw-meal .sw-more { width: 64px; background: #8e8e93; }
+.sw-more svg { width: 22px; height: 22px; }
