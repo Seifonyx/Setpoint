@@ -299,6 +299,7 @@ server.listen(0, async () => {
       await seed(p, { ui: Object.assign({}, BASE_UI, { prog: 'nutrition' }), seenVersion: '9.9', entries: [{ date: day(3), kg: 80 }], profile: { sex: 'female', birthYear: 1990, heightCm: 165 },
         food: { [day(1)]: [{ id: 'a', name: 'Big day', kcal: 6000, protein: 10, carbs: 50, fat: 6, meal: 'lunch' }] } });
       await p.evaluate(() => window.__setpoint.nav.tab('progress')); await p.waitForTimeout(500);
+      if (day(1).slice(0, 7) !== day(0).slice(0, 7)) { await p.click('[data-cal-m="1"]'); await p.waitForTimeout(400); } // yesterday was last month
       const over = await p.evaluate(d => { const x = document.querySelector('[data-cal-day="' + d + '"]'); return x ? x.className : 'missing'; }, day(1));
       await p.click('[data-cal-day="' + day(1) + '"]'); await p.waitForTimeout(400);
       const tab = await p.evaluate(() => JSON.parse(localStorage.getItem('setpoint')).ui.tab);
@@ -482,14 +483,25 @@ server.listen(0, async () => {
       ok('sheets: caught while springing back, it carries on from where it was', caught[2] > 5 && caught[0] < 14 && Math.abs(caught[1]) < 1 && await isOpen(), caught);
       await p.evaluate(() => window.__setpoint.nav.close()); await p.waitForTimeout(500);
       // swipe a food right to reveal its actions, and back
-      const rowAt = await p.evaluate(() => { const r = document.querySelector('#mealList .sw .food-item'); r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return [Math.round(b.left + 230), Math.round(b.top + b.height / 2)]; });
+      const rowAt = await p.evaluate(() => { const r = document.querySelector('#mealList .sw[data-sw] .food-item'); r.scrollIntoView({ block: 'center' }); const b = r.getBoundingClientRect(); return [Math.round(b.left + 230), Math.round(b.top + b.height / 2)]; });
       await p.waitForTimeout(250);
-      const rowX = "() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw .food-item')).transform).m41";
+      const rowX = "() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw[data-sw] .food-item')).transform).m41";
       await p.evaluate(([x, y, g]) => window.__g('pointer', x, y, t => [t < 80 ? t * 0.05 : 4 + (t - 80) * 1.2, 0], 104, eval(g)), [rowAt[0], rowAt[1], rowX]);
-      const opened = await p.evaluate(() => document.querySelector('#mealList .sw').classList.contains('open'));
+      const opened = await p.evaluate(() => document.querySelector('#mealList .sw[data-sw]').classList.contains('open'));
       await p.evaluate(([x, y, g]) => window.__g('pointer', x, y, t => [t < 60 ? -t * 0.1 : -6 - (t - 60) * 1.3, 0], 84, eval(g)), [rowAt[0], rowAt[1], rowX]);
-      const closed = await p.evaluate(() => !document.querySelector('#mealList .sw').classList.contains('open') && Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw .food-item')).transform).m41) < 1);
+      const closed = await p.evaluate(() => !document.querySelector('#mealList .sw[data-sw]').classList.contains('open') && Math.abs(new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw[data-sw] .food-item')).transform).m41) < 1);
       ok('swipe rows: a quick flick opens the actions, a flick back closes them', opened && closed, opened + ' ' + closed);
+      // swipe a meal's header right: Copy yesterday and Save meal
+      const mhAt = await p.evaluate(() => { const h = document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal > .meal-head'); h.scrollIntoView({ block: 'center' }); const b = h.getBoundingClientRect(); return [Math.round(b.left + 120), Math.round(b.top + b.height / 2)]; });
+      await p.waitForTimeout(250);
+      const mhX = "() => new DOMMatrixReadOnly(getComputedStyle(document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal > .meal-head')).transform).m41";
+      await p.evaluate(([x, y, g]) => window.__g('pointer', x, y, t => [t < 80 ? t * 0.05 : 4 + (t - 80) * 1.2, 0], 140, eval(g)), [mhAt[0], mhAt[1], mhX]);
+      await p.waitForTimeout(500);
+      const mhOpen = await p.evaluate(() => { const w = document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('.sw-meal'); const bs = [...w.querySelectorAll('.sw-btn')].filter(b => b.getBoundingClientRect().width > 0); return w.classList.contains('open') && bs.length === 2; });
+      await p.evaluate(() => document.querySelector('#mealList .sw[data-sw]').closest('.meal-card').querySelector('[data-mh-act="save"]').click()); await p.waitForTimeout(500);
+      const saveBox = await p.evaluate(() => { const x = document.getElementById('msSaveBox'); return !!x && !x.hidden; });
+      ok('meal header: swipe right shows Yesterday and Save meal; Save opens the name box', mhOpen && saveBox, mhOpen + ' ' + saveBox);
+      await p.evaluate(() => window.__setpoint.nav.close()); await p.waitForTimeout(500);
       // the card strip at the top of the diary
       await p.evaluate(() => window.scrollTo(0, 0)); await p.waitForTimeout(300);
       const strip = await p.evaluate(() => { const t = document.querySelector('.pager'); if (!t || t.firstElementChild.children.length < 2) return null; const r = t.getBoundingClientRect(); return [Math.round(r.left + r.width / 2), Math.round(r.top + 50)]; });

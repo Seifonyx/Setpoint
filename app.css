@@ -1512,14 +1512,14 @@ button.card:active, .link-card:active { transform: scale(.985); }
 .meal-sec + .meal-sec, .meal-sec.shut + .meal-sec, .meal-sec.shut:has(+ .meal-sec:not(.shut)) + .meal-sec { margin-top: 12px; }
 #mealList > .meal-sec:first-of-type { padding-top: 0; }
 .meal-sec .meal-card { padding: 0; overflow: hidden; }
-.meal-sec .meal-card > .meal-head { padding: 13px 10px 12px 16px; background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); }
-.meal-sec:not(.shut) .meal-card > .meal-head { border-bottom: 1px solid var(--line); }
-.meal-sec.shut .meal-card > .meal-head { background: none; padding-bottom: 13px; }
-.meal-sec .meal-card > .meal-head .row-t { font-size: 17px; }
+.meal-sec .meal-card > .sw-meal > .meal-head { padding: 13px 10px 12px 16px; background: color-mix(in srgb, var(--surface-2) 55%, var(--surface)); }
+.meal-sec:not(.shut) .meal-card > .sw-meal > .meal-head { border-bottom: 1px solid var(--line); }
+.meal-sec.shut .meal-card > .sw-meal > .meal-head { background: var(--surface); padding-bottom: 13px; }
+.meal-sec .meal-card > .sw-meal > .meal-head .row-t { font-size: 17px; }
 .meal-body { padding-top: 2px; }
 .meal-body > .usual:first-child { margin: 10px; width: calc(100% - 20px); }
-.meal-sec .meal-card > .meal-head { padding: 13px 10px 12px 16px; border-top: 0; }
-.meal-sec.shut .meal-card > .meal-head { padding-bottom: 13px; }
+.meal-sec .meal-card > .sw-meal > .meal-head { padding: 13px 10px 12px 16px; border-top: 0; }
+.meal-sec.shut .meal-card > .sw-meal > .meal-head { padding-bottom: 13px; }
 .meal-sec.shut .meal-body > .usual:first-child { margin-top: 0; }
 /* v1.30: time from the hold menu; notes at the bottom */
 .qs-v { float: inline-end; font-weight: 500; color: var(--text-3); font-size: 14px; }
@@ -1720,8 +1720,8 @@ button.mf-chip { cursor: pointer; }
 .drag-on .sw.lifted > .food-item { background: var(--surface); border-radius: 14px; }
 .drop-line { position: absolute; top: 0; left: 12px; right: 12px; height: 3px; border-radius: 3px; background: var(--accent); z-index: 7; pointer-events: none; opacity: 0; transition: opacity .12s; }
 .drop-line::before { content: ''; position: absolute; left: -4px; top: -3.5px; width: 10px; height: 10px; border-radius: 50%; background: var(--accent); }
-.drag-on .meal-sec .meal-card > .meal-head { border-radius: var(--r-card) var(--r-card) 0 0; }
-.drag-on .meal-sec.shut .meal-card > .meal-head { border-radius: var(--r-card); }
+.drag-on .meal-sec .meal-card > .sw-meal > .meal-head { border-radius: var(--r-card) var(--r-card) 0 0; }
+.drag-on .meal-sec.shut .meal-card > .sw-meal > .meal-head { border-radius: var(--r-card); }
 
 /* v1.44: progress photos — poses, dates from the photo, gallery, viewer, compare slider, timelapse */
 .seg.w4 { grid-template-columns: repeat(4, 1fr); }
@@ -2502,3 +2502,9 @@ main.edge-drag.pm { box-shadow: none; }
 .sheet:not(.tall) { box-shadow: 0 -10px 40px rgba(0,0,0,.16), 0 90px 0 0 var(--surface); }
 .sw.settling .sw-acts { visibility: visible; }
 .sw.settling .sw-btn { display: flex; }
+/* Meal header swipes right for Copy yesterday / Save meal */
+.sw-meal > .meal-head { position: relative; z-index: 1; background: var(--surface); touch-action: pan-y; }
+.list > .sw-meal:first-child > .meal-head { border-top: 0; }
+.sw-meal .sw-btn { width: 82px; }
+.sw-yday { background: #3478f6; }
+.sw-save { background: #2f8f5b; }

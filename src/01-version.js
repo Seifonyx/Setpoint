@@ -1,6 +1,9 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.9';
+  const APP_VERSION = '2.0.10';
   const CHANGES = [
+    { v: '2.0.10', items: [
+      'Swipe a meal\'s title (like Breakfast) to the right for two shortcuts: Yesterday adds what you had in that meal the day before, and Save meal saves it to My foods so you can add it again in one tap.'
+    ] },
     { v: '2.0.9', items: [
       'Setpoint now has its own home at setpoint-tracker.web.app, with accounts kept in its own place.'
     ] },

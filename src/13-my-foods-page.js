@@ -104,6 +104,13 @@
   // A logged food with actions behind it: swipe right for ⋯, then Copy, Adjust (recipes) and Delete.
   const COPY_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
   const ADJ_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
+  const SAVE_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11A1.5 1.5 0 0 1 19 5.5V20l-7-4.5L5 20V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg>';
+  // A meal's foods from the day before, added to the same meal on the day you're viewing.
+  function copyYesterdayMeal(meal) {
+    const its = eatenFor(isoFromDay(dayNum(viewDay) - 1)).filter(function (it) { return mealOf(it) === meal && !isDailyTotal(it); }), y = viewDay === todayISO();
+    if (!its.length) { buzz('warn'); toast(y ? 'Nothing to copy from yesterday' : 'Nothing to copy from the day before'); return; }
+    copyFood(its.map(function (it) { return Object.assign(repItemCopy(it), { meal: meal }, it.t ? { t: it.t } : {}); }), viewDay, y ? 'Added from yesterday' : 'Added from the day before');
+  }
   function swRow(f, rowHtml, delOnly) {
     const act = function (k, cls, ic, label) { return '<button type="button" class="sw-btn ' + cls + '" data-sw-act="' + k + '" data-id="' + f.id + '" tabindex="-1">' + ic + '<span>' + label + '</span></button>'; };
     return '<div class="sw" data-sw="' + f.id + '"' + (delOnly ? ' data-nodrag' : '') + '><div class="sw-acts">' + act('del', 'sw-del', TRASH, 'Delete') + '</div>' + rowHtml + '</div>';
@@ -531,7 +538,7 @@
     openSheet('<div id="catRoot"></div>', function (body) { sheet.classList.add('tall'); draw($('#catRoot', body)); }, function () { sheet.classList.remove('tall'); });
   }
   // Tap a meal's name: its totals, and copy, save or clear it.
-  function mealSheet(meal, date) {
+  function mealSheet(meal, date, saving) {
     const d = date || viewDay, its = foodFor(d).filter(function (f) { return mealOf(f) === meal; });
     if (!its.length) return;
     const t = its.reduce(function (a, f) { return { kcal: a.kcal + f.kcal, p: a.p + f.protein, c: a.c + f.carbs, f: a.f + f.fat }; }, { kcal: 0, p: 0, c: 0, f: 0 });
@@ -547,6 +554,7 @@
       function (root) {
         if ($('#msToday', root)) $('#msToday', root).addEventListener('click', function () { closeSheet(); copyFood(its, today, 'Copied to today'); });
         $('#msSave', root).addEventListener('click', function () { $('#msSaveBox', root).hidden = false; this.hidden = true; $('#msName', root).focus(); });
+        if (saving) $('#msSave', root).click();
         const saveMeal = function () {
           const nm = $('#msName', root).value.trim() || mealName(meal);
           state.meals.push({ id: 'm' + newId(), name: nm.slice(0, 40), items: its.slice(0, 40).map(function (it) { const c = Object.assign({}, it); delete c.id; delete c.meal; return c; }) });

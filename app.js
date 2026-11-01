@@ -2,8 +2,11 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.9';
+  const APP_VERSION = '2.0.10';
   const CHANGES = [
+    { v: '2.0.10', items: [
+      'Swipe a meal\'s title (like Breakfast) to the right for two shortcuts: Yesterday adds what you had in that meal the day before, and Save meal saves it to My foods so you can add it again in one tap.'
+    ] },
     { v: '2.0.9', items: [
       'Setpoint now has its own home at setpoint-tracker.web.app, with accounts kept in its own place.'
     ] },
@@ -2322,10 +2325,13 @@
       // Meal title sits above its card (on the page), so it reads as a heading; the card holds only the foods.
       const mac = its.filter(function (f) { return counts(f, viewDay); }).reduce(function (a, f) { a.p += f.protein || 0; a.c += f.carbs || 0; a.f += f.fat || 0; return a; }, { p: 0, c: 0, f: 0 });
       html += '<section class="meal-sec' + (open && its.length ? '' : ' shut') + '"><div class="list meal-card">';
+      // Swipe the header right for Copy yesterday and Save as meal.
+      const ma = function (k, cls, ic, label) { return '<button type="button" class="sw-btn ' + cls + '" data-mh-act="' + k + '" data-meal="' + m[0] + '" tabindex="-1">' + ic + '<span>' + label + '</span></button>'; };
+      html += '<div class="sw sw-meal" data-nodrag><div class="sw-acts">' + ma('yday', 'sw-yday', COPY_IC, 'Yesterday') + ma('save', 'sw-save', SAVE_IC, 'Save meal') + '</div>';
       html += '<div class="meal-head' + (open ? '' : ' shut') + '" data-mh="' + m[0] + '"><button type="button" class="meal-toggle" data-toggle-meal="' + m[0] + '" aria-expanded="' + open + '"><span class="mh-t"><span class="mh-line"><span class="row-t">' + esc(m[1]) + '</span><svg class="meal-chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg></span>' + (its.length ? '<span class="mh-sub">' + (open ? mealMacros(mac) : its.length + (its.length === 1 ? ' food' : ' foods')) + '</span>' : '') + '</span></button>' +
         '<span class="row-v num">' + (kc ? fmtKcal(kc) + '<small> kcal</small>' : '') + '</span>' +
         (its.length ? '<button type="button" class="icon-btn meal-more" data-meal-menu="' + m[0] + '" aria-label="' + m[1] + ' options"><svg viewBox="0 0 24 24" fill="currentColor"><circle cx="5.5" cy="12" r="1.7"/><circle cx="12" cy="12" r="1.7"/><circle cx="18.5" cy="12" r="1.7"/></svg></button>' : '') +
-        (open && its.length ? '' : '<button type="button" class="icon-btn mh-add" data-add-meal="' + m[0] + '" aria-label="Add to ' + m[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></button>') + '</div>';
+        (open && its.length ? '' : '<button type="button" class="icon-btn mh-add" data-add-meal="' + m[0] + '" aria-label="Add to ' + m[1] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg></button>') + '</div></div>';
       const usual = '', card = open && its.length;
       if (card) html += '<div class="meal-body">' + usual;
       if (open) its.forEach(function (f) {
@@ -4843,6 +4849,13 @@
   // A logged food with actions behind it: swipe right for ⋯, then Copy, Adjust (recipes) and Delete.
   const COPY_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="8" y="8" width="12" height="12" rx="2.5"/><path d="M16 8V6a2 2 0 0 0-2-2H6a2 2 0 0 0-2 2v8a2 2 0 0 0 2 2h2"/></svg>';
   const ADJ_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M4 7h10M18 7h2M4 17h4M12 17h8"/><circle cx="16" cy="7" r="2"/><circle cx="10" cy="17" r="2"/></svg>';
+  const SAVE_IC = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M6.5 4h11A1.5 1.5 0 0 1 19 5.5V20l-7-4.5L5 20V5.5A1.5 1.5 0 0 1 6.5 4z"/></svg>';
+  // A meal's foods from the day before, added to the same meal on the day you're viewing.
+  function copyYesterdayMeal(meal) {
+    const its = eatenFor(isoFromDay(dayNum(viewDay) - 1)).filter(function (it) { return mealOf(it) === meal && !isDailyTotal(it); }), y = viewDay === todayISO();
+    if (!its.length) { buzz('warn'); toast(y ? 'Nothing to copy from yesterday' : 'Nothing to copy from the day before'); return; }
+    copyFood(its.map(function (it) { return Object.assign(repItemCopy(it), { meal: meal }, it.t ? { t: it.t } : {}); }), viewDay, y ? 'Added from yesterday' : 'Added from the day before');
+  }
   function swRow(f, rowHtml, delOnly) {
     const act = function (k, cls, ic, label) { return '<button type="button" class="sw-btn ' + cls + '" data-sw-act="' + k + '" data-id="' + f.id + '" tabindex="-1">' + ic + '<span>' + label + '</span></button>'; };
     return '<div class="sw" data-sw="' + f.id + '"' + (delOnly ? ' data-nodrag' : '') + '><div class="sw-acts">' + act('del', 'sw-del', TRASH, 'Delete') + '</div>' + rowHtml + '</div>';
@@ -5270,7 +5283,7 @@
     openSheet('<div id="catRoot"></div>', function (body) { sheet.classList.add('tall'); draw($('#catRoot', body)); }, function () { sheet.classList.remove('tall'); });
   }
   // Tap a meal's name: its totals, and copy, save or clear it.
-  function mealSheet(meal, date) {
+  function mealSheet(meal, date, saving) {
     const d = date || viewDay, its = foodFor(d).filter(function (f) { return mealOf(f) === meal; });
     if (!its.length) return;
     const t = its.reduce(function (a, f) { return { kcal: a.kcal + f.kcal, p: a.p + f.protein, c: a.c + f.carbs, f: a.f + f.fat }; }, { kcal: 0, p: 0, c: 0, f: 0 });
@@ -5286,6 +5299,7 @@
       function (root) {
         if ($('#msToday', root)) $('#msToday', root).addEventListener('click', function () { closeSheet(); copyFood(its, today, 'Copied to today'); });
         $('#msSave', root).addEventListener('click', function () { $('#msSaveBox', root).hidden = false; this.hidden = true; $('#msName', root).focus(); });
+        if (saving) $('#msSave', root).click();
         const saveMeal = function () {
           const nm = $('#msName', root).value.trim() || mealName(meal);
           state.meals.push({ id: 'm' + newId(), name: nm.slice(0, 40), items: its.slice(0, 40).map(function (it) { const c = Object.assign({}, it); delete c.id; delete c.meal; return c; }) });
@@ -9881,6 +9895,14 @@
     if (mm) { buzz('light'); mealSheet(mm.dataset.mealMenu, viewDay); return; }
     const smo = e.target.closest('[data-sw-more]');
     if (smo) { swMore(smo.closest('.sw')); return; }
+    const ma = e.target.closest('[data-mh-act]');
+    if (ma) {
+      const meal = ma.dataset.meal; swClose(); buzz('light');
+      if (ma.dataset.mhAct === 'yday') copyYesterdayMeal(meal);
+      else if (foodFor(viewDay).some(function (f) { return mealOf(f) === meal && !isDailyTotal(f); })) mealSheet(meal, viewDay, true);
+      else { buzz('warn'); toast('Add food first'); }
+      return;
+    }
     const sa = e.target.closest('[data-sw-act]');
     if (sa) {
       const id = sa.dataset.id, k = sa.dataset.swAct, it = foodFor(viewDay).find(function (x) { return x.id === id; }); swClose();

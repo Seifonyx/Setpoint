@@ -249,6 +249,14 @@
     if (mm) { buzz('light'); mealSheet(mm.dataset.mealMenu, viewDay); return; }
     const smo = e.target.closest('[data-sw-more]');
     if (smo) { swMore(smo.closest('.sw')); return; }
+    const ma = e.target.closest('[data-mh-act]');
+    if (ma) {
+      const meal = ma.dataset.meal; swClose(); buzz('light');
+      if (ma.dataset.mhAct === 'yday') copyYesterdayMeal(meal);
+      else if (foodFor(viewDay).some(function (f) { return mealOf(f) === meal && !isDailyTotal(f); })) mealSheet(meal, viewDay, true);
+      else { buzz('warn'); toast('Add food first'); }
+      return;
+    }
     const sa = e.target.closest('[data-sw-act]');
     if (sa) {
       const id = sa.dataset.id, k = sa.dataset.swAct, it = foodFor(viewDay).find(function (x) { return x.id === id; }); swClose();
