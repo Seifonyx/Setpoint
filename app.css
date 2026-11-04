@@ -2226,10 +2226,6 @@ a.row { text-decoration: none; color: inherit; }
 :root:not(.tabs-top) .add-btn { width: 50px; height: 50px; border-radius: 25px !important; }
 :root:not(.tabs-top) main { padding-bottom: calc(var(--tabbar-h) + max(10px, calc(var(--safe-b) - 14px)) + 36px); }
 .ds-store { text-align: start; margin: -4px 2px 6px; }
-.same-y { padding-inline-end: 4px; }
-.same-go { display: flex; align-items: center; gap: 10px; flex: 1; min-width: 0; border: 0; background: none; padding: 0; margin: 0; color: inherit; font: inherit; text-align: start; cursor: pointer; }
-.same-x { flex: none; width: 32px; height: 32px; margin: -4px -2px; border: 0; border-radius: 50%; background: transparent; color: var(--text-3); display: grid; place-items: center; cursor: pointer; }
-.same-x svg { width: 16px; height: 16px; } .same-x:active { background: var(--surface-2); }
 /* Holding the tab bar: the highlight becomes a glass lens that follows your finger */
 .tabbar { -webkit-user-select: none; user-select: none; -webkit-touch-callout: none; touch-action: none; }
 .tab-btn { -webkit-tap-highlight-color: transparent; transition: color .2s ease, transform .25s cubic-bezier(.3,1.4,.5,1); }
@@ -2507,3 +2503,5 @@ main.edge-drag.pm { box-shadow: none; }
 .list > .sw-meal:first-child > .meal-head { border-top: 0; }
 .sw-meal .sw-more { width: 72px; background: #8e8e93; }
 .sw-more svg { width: 22px; height: 22px; }
+.adj-ic { display: inline-flex; vertical-align: -2px; margin-inline-start: 6px; color: var(--accent-text, var(--text-3)); }
+.adj-ic svg { width: 14px; height: 14px; }

@@ -124,7 +124,6 @@
         hintOff: ui.hintOff && ISO_RE.test(String(ui.hintOff.d || '')) && Array.isArray(ui.hintOff.k) ? { d: ui.hintOff.d, k: ui.hintOff.k.filter(function (k) { return typeof k === 'string' && k.length < 10; }).slice(0, 10) } : null,
         storeWarn: Number.isInteger(ui.storeWarn) ? ui.storeWarn : null,
         diet: ui.diet && typeof ui.diet === 'object' ? { seeds: (function (o) { const r = {}; if (o && typeof o === 'object') Object.keys(o).slice(0, 12).forEach(function (k) { if (MEAL_KEY.test(k) && Number.isInteger(o[k]) && o[k] >= 0) r[k] = Math.min(o[k], 9999); }); return r; })(ui.diet.seeds), mine: ui.diet.mine !== false, meals: Array.isArray(ui.diet.meals) ? ui.diet.meals.filter(function (m) { return typeof m === 'string' && MEAL_KEY.test(m); }).slice(0, 12) : null } : null, // the Diet planner's current plan
-        sameX: ui.sameX && ISO_RE.test(String(ui.sameX.d || '')) && Array.isArray(ui.sameX.m) ? { d: ui.sameX.d, m: ui.sameX.m.filter(function (m) { return typeof m === 'string' && MEAL_KEY.test(m); }).slice(0, 12) } : null, // "Same as yesterday" hidden for these meals on that day
         celeb: ISO_RE.test(String(ui.celeb || '')) ? ui.celeb : null, // last day we celebrated hitting the target
         folded: Array.isArray(ui.folded) ? ui.folded.filter(function (k, i, a) { return ['phases', 'history'].indexOf(k) >= 0 && a.indexOf(k) === i; }) : [],
         shut: Array.isArray(ui.shut) ? ui.shut.filter(function (m, i, a) { return typeof m === 'string' && MEAL_KEY.test(m) && a.indexOf(m) === i; }) : [],
@@ -200,6 +199,7 @@
     function normItem(f) {
         const g = function (v) { return numIn(v, 0, 1000) != null ? Math.round(Number(v)) : 0; };
         const it = { id: typeof f.id === 'string' ? f.id.slice(0, 24) : Math.random().toString(36).slice(2, 10), kcal: Math.round(Number(f.kcal)), protein: g(f.protein), carbs: g(f.carbs), fat: g(f.fat), name: typeof f.name === 'string' ? f.name.trim().slice(0, 80) : '', meal: typeof f.meal === 'string' && MEAL_KEY.test(f.meal) ? f.meal : 'snacks' };
+        if (f.adj === true) it.adj = true;
         if (typeof f.rep === 'string' && /^p[\w]{1,12}$/.test(f.rep)) it.rep = f.rep;
         // Foods picked from the database or My foods remember what and how much, so they can be edited later.
         if (typeof f.ref === 'string' && REF_RE.test(f.ref) && numIn(f.g, 0.01, 20000) != null && numIn(f.qty, 0.001, 10000) != null && typeof f.unit === 'string') {

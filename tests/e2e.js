@@ -277,20 +277,23 @@ server.listen(0, async () => {
       ok('search: logging from the everyday list saves the right food', it && /^u\d+$/.test(it.ref) && it.kcal > 0, JSON.stringify(it));
       release(); await p.context().close();
     }
-    // ---- 4g2. Same as yesterday: an empty meal offers yesterday's foods in one tap ----
+    // ---- 4g2. Copy from yesterday (no suggestion card) + adjusted mark ----
     {
       const { c, p } = await page();
       await seed(p, { ui: Object.assign({}, BASE_UI), seenVersion: '9.9', entries: [{ date: day(1), kg: 80 }], profile: { sex: 'female', birthYear: 1990, heightCm: 165 },
         food: { [day(1)]: [{ id: 'y1', name: 'Oats', kcal: 300, protein: 10, carbs: 50, fat: 6, meal: 'breakfast', t: '08:00' }, { id: 'y2', name: 'Banana', kcal: 100, protein: 1, carbs: 25, fat: 0, meal: 'breakfast' }] } });
-      const has = await p.evaluate(() => !!document.querySelector('[data-same="breakfast"]') && !document.querySelector('[data-same="lunch"]'));
-      await p.click('[data-same="breakfast"]'); await p.waitForTimeout(400);
+      const none = await p.evaluate(() => !document.querySelector('.same-y, [data-same]'));
+      await p.evaluate(() => document.querySelector('[data-mh-act="more"][data-meal="breakfast"]').click()); await p.waitForTimeout(500);
+      await p.click('#msYday'); await p.waitForTimeout(500);
       const n = await p.evaluate(d => (JSON.parse(localStorage.getItem('setpoint')).food[d] || []).filter(x => x.meal === 'breakfast').length, day(0));
-      const gone = await p.evaluate(() => !document.querySelector('[data-same="breakfast"]'));
-      ok('same as yesterday: offered on an empty meal, adds both foods, then goes away', has && n === 2 && gone, has + ' ' + n + ' ' + gone);
-      await p.evaluate(d => { const s = JSON.parse(localStorage.getItem('setpoint')); s.food[d] = []; localStorage.setItem('setpoint', JSON.stringify(s)); }, day(0)); await p.reload(); await p.waitForTimeout(1200);
-      await p.click('[data-same-x="breakfast"]'); await p.waitForTimeout(300);
-      const hid = await p.evaluate(() => !document.querySelector('[data-same="breakfast"]')); await p.reload(); await p.waitForTimeout(1200);
-      ok('same as yesterday: the X hides it for the day, even after reopening', hid && await p.evaluate(() => !document.querySelector('[data-same="breakfast"]')));
+      ok('yesterday: no suggestion card on empty meals; ⋯ → Copy from yesterday adds both foods', none && n === 2, none + ' ' + n);
+      // a saved meal changed for one day shows the adjusted mark; one that matches doesn't
+      await seed(p, { ui: Object.assign({}, BASE_UI), seenVersion: '9.9', entries: [{ date: day(1), kg: 80 }], profile: { sex: 'female', birthYear: 1990, heightCm: 165 },
+        meals: [{ id: 'm1', name: 'Usual', items: [{ name: 'Oats', kcal: 300, protein: 10, carbs: 50, fat: 6 }] }],
+        food: { [day(0)]: [{ id: 'a1', name: 'Usual', meal: 'breakfast', mid: 'm1', mi: [{ name: 'Oats', kcal: 300, protein: 10, carbs: 50, fat: 6 }], kcal: 300, protein: 10, carbs: 50, fat: 6 },
+          { id: 'a2', name: 'Usual', meal: 'lunch', mid: 'm1', mi: [{ name: 'Oats', kcal: 450, protein: 15, carbs: 75, fat: 9 }], kcal: 450, protein: 15, carbs: 75, fat: 9 }] } });
+      const adj = await p.evaluate(() => ['a1', 'a2'].map(id => !!document.querySelector('[data-food="' + id + '"] .adj-ic')));
+      ok('adjusted meals: marked when changed for the day, not when they match', !adj[0] && adj[1], adj);
       await c.close();
     }
     // ---- 4g3. Month calendar + tab pill ----

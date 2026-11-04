@@ -217,17 +217,13 @@
     const kc = u.reduce(function (a, it) { return a + it.kcal; }, 0);
     return '<button type="button" class="usual" data-usual="' + meal + '"><span class="grow"><span class="usual-l">Your usual</span><span class="usual-n">' + esc(u.map(function (it) { return shortName(it.name); }).join(' · ')) + '</span></span><span class="usual-k num">' + fmtKcal(kc) + ' kcal</span><span class="usual-add">Add</span></button>';
   }
-  // An empty meal offers what you had in it the day before, in one tap.
-  function sameItems(meal) {
-    if (viewDay > todayISO()) return [];
-    return eatenFor(isoFromDay(dayNum(viewDay) - 1)).filter(function (it) { return mealOf(it) === meal && !isDailyTotal(it); });
-  }
-  function sameRow(meal) {
-    const its = sameItems(meal); if (!its.length) return '';
-    const sx = state.ui.sameX; if (sx && sx.d === viewDay && sx.m.indexOf(meal) >= 0) return ''; // dismissed for this day
-    const kc = its.reduce(function (a, it) { return a + it.kcal; }, 0);
-    return '<div class="usual same-y"><button type="button" class="same-go" data-same="' + meal + '"><span class="grow"><span class="usual-l">' + (viewDay === todayISO() ? 'Same as yesterday' : 'Same as the day before') + '</span><span class="usual-n">' + esc(its.map(function (it) { return shortName(it.name || 'Quick add'); }).join(' · ')) + '</span></span><span class="usual-k num">' + fmtKcal(kc) + ' kcal</span><span class="usual-add">Add</span></button>' +
-      '<button type="button" class="same-x" data-same-x="' + meal + '" aria-label="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button></div>';
+  // A saved meal or recipe changed for this day only (amounts, foods or ingredients), so it no longer matches the saved one.
+  function isAdjusted(f) {
+    if (f.adj || (f.rc && f.ref && f.ref.charAt(0) === 'r')) return true;
+    if (!f.mid || !f.mi) return false;
+    const sm = state.meals.find(function (x) { return x.id === f.mid; }); if (!sm) return false;
+    const sig = function (l) { return l.map(function (x) { return (x.ref || x.name) + ':' + Math.round(x.kcal || 0); }).sort().join('|'); };
+    return sig(f.mi) !== sig(sm.items);
   }
   // ----- Repeat items -----
   // Foods you choose to have added to your diary every day (or on the days you pick). Each day's copy has a fixed id,
@@ -281,7 +277,7 @@
     });
     return out.sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
   }
-  function repItemCopy(it) { const c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan; delete c.pic; delete c.note; delete c.u; delete c.rep; delete c.rc; return c; }
+  function repItemCopy(it) { const c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan; delete c.pic; delete c.note; delete c.u; delete c.rep; delete c.rc; delete c.adj; return c; }
   // A starting time for "Add at a set time": when you last had it, or a usual time for that meal.
   function repDefTime(r) {
     if (r.item && /^\d\d:\d\d$/.test(r.item.t || '')) return r.item.t;
@@ -609,10 +605,9 @@
       if (open) its.forEach(function (f) {
         const mac = [fmtHM(f.t), f.ref ? fmtAmt(f.qty, f.unit) : [f.protein ? 'P ' + f.protein : '', f.carbs ? 'C ' + f.carbs : '', f.fat ? 'F ' + f.fat : ''].filter(Boolean).join(' · ')].filter(Boolean).join(' · ');
         const pl = f.plan, tickable = pl && viewDay <= todayISO();
-        html += swRow(f, '<button type="button" class="row food-item' + (pl ? ' planned' : '') + (justAdded[f.id] && Date.now() - justAt < 4000 ? ' row-new' : '') + '" data-food="' + f.id + '">' + (tickable ? '<span class="pl-tick" data-eat="' + f.id + '" role="checkbox" aria-checked="false" aria-label="Mark ' + esc(f.name || 'food') + ' as eaten"></span>' : diaryIcon(f)) + '<div class="grow"><div class="row-t">' + esc(f.name || 'Quick add') + (f.pic ? '<span class="pic-ic" data-pic="' + f.id + '" aria-label="Photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>' : '') + '</div><div class="row-s">' + (f.rep ? '<span class="rep-mk" title="Repeat item" aria-label="Repeat item">' + REP_IC + '</span>' : '') + [pl ? 'Planned' : '', mac].filter(Boolean).join(' · ') + '</div>' + (f.note ? '<div class="row-note">' + esc(f.note) + '</div>' : '') + '</div><span class="row-v num">' + fmtKcal(f.kcal) + '</span></button>');
+        html += swRow(f, '<button type="button" class="row food-item' + (pl ? ' planned' : '') + (justAdded[f.id] && Date.now() - justAt < 4000 ? ' row-new' : '') + '" data-food="' + f.id + '">' + (tickable ? '<span class="pl-tick" data-eat="' + f.id + '" role="checkbox" aria-checked="false" aria-label="Mark ' + esc(f.name || 'food') + ' as eaten"></span>' : diaryIcon(f)) + '<div class="grow"><div class="row-t">' + esc(f.name || 'Quick add') + (isAdjusted(f) ? '<span class="adj-ic" role="img" title="Adjusted for this day" aria-label="Adjusted for this day">' + ADJ_IC + '</span>' : '') + (f.pic ? '<span class="pic-ic" data-pic="' + f.id + '" aria-label="Photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>' : '') + '</div><div class="row-s">' + (f.rep ? '<span class="rep-mk" title="Repeat item" aria-label="Repeat item">' + REP_IC + '</span>' : '') + [pl ? 'Planned' : '', mac].filter(Boolean).join(' · ') + '</div>' + (f.note ? '<div class="row-note">' + esc(f.note) + '</div>' : '') + '</div><span class="row-v num">' + fmtKcal(f.kcal) + '</span></button>');
       });
       if (card) html += (its.length ? '<button type="button" class="meal-add" data-add-meal="' + m[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>Add food</button>' : '') + '</div>';
-      if (!its.length) html += sameRow(m[0]);
       html += '</div></section>';
     });
     swOpen = null;

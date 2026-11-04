@@ -801,6 +801,7 @@
           const it = entry(); if (!it) return closeSheet();
           const snap = snapshot(), e = mealEntry({ id: it.mid, name: (md.name.trim() || it.name).slice(0, 40), items: items }, it.meal);
           delete e.id; delete e.meal; delete it.n; Object.assign(it, e); readNote(root, it);
+          if (msg === 'Back to the meal') delete it.adj; else it.adj = true; // shows the adjusted mark in the Diary
           mealDraft = null; save(); renderAll(); closeSheet(); buzz('success'); toast(msg, function () { restore(snap); });
         };
         $('#meSave', root).addEventListener('click', function (ev) {

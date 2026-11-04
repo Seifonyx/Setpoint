@@ -2,8 +2,12 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.12';
+  const APP_VERSION = '2.0.13';
   const CHANGES = [
+    { v: '2.0.13', items: [
+      'The "Same as yesterday" cards on empty meals are gone. To copy a meal from yesterday, swipe its title right and tap ⋯ → Copy from yesterday.',
+      'A logged meal or recipe that you changed for that day (amounts, foods or ingredients) now shows a small sliders icon next to its name, so you can tell it apart from the saved version.'
+    ] },
     { v: '2.0.12', items: [
       'Swiping a meal\'s title to the right now shows just the ⋯ button, which holds every option for that meal (Copy from yesterday, Save as a meal, Remove all and more). It works on empty meals too, so you can copy yesterday\'s into them.'
     ] },
@@ -697,7 +701,6 @@
         hintOff: ui.hintOff && ISO_RE.test(String(ui.hintOff.d || '')) && Array.isArray(ui.hintOff.k) ? { d: ui.hintOff.d, k: ui.hintOff.k.filter(function (k) { return typeof k === 'string' && k.length < 10; }).slice(0, 10) } : null,
         storeWarn: Number.isInteger(ui.storeWarn) ? ui.storeWarn : null,
         diet: ui.diet && typeof ui.diet === 'object' ? { seeds: (function (o) { const r = {}; if (o && typeof o === 'object') Object.keys(o).slice(0, 12).forEach(function (k) { if (MEAL_KEY.test(k) && Number.isInteger(o[k]) && o[k] >= 0) r[k] = Math.min(o[k], 9999); }); return r; })(ui.diet.seeds), mine: ui.diet.mine !== false, meals: Array.isArray(ui.diet.meals) ? ui.diet.meals.filter(function (m) { return typeof m === 'string' && MEAL_KEY.test(m); }).slice(0, 12) : null } : null, // the Diet planner's current plan
-        sameX: ui.sameX && ISO_RE.test(String(ui.sameX.d || '')) && Array.isArray(ui.sameX.m) ? { d: ui.sameX.d, m: ui.sameX.m.filter(function (m) { return typeof m === 'string' && MEAL_KEY.test(m); }).slice(0, 12) } : null, // "Same as yesterday" hidden for these meals on that day
         celeb: ISO_RE.test(String(ui.celeb || '')) ? ui.celeb : null, // last day we celebrated hitting the target
         folded: Array.isArray(ui.folded) ? ui.folded.filter(function (k, i, a) { return ['phases', 'history'].indexOf(k) >= 0 && a.indexOf(k) === i; }) : [],
         shut: Array.isArray(ui.shut) ? ui.shut.filter(function (m, i, a) { return typeof m === 'string' && MEAL_KEY.test(m) && a.indexOf(m) === i; }) : [],
@@ -773,6 +776,7 @@
     function normItem(f) {
         const g = function (v) { return numIn(v, 0, 1000) != null ? Math.round(Number(v)) : 0; };
         const it = { id: typeof f.id === 'string' ? f.id.slice(0, 24) : Math.random().toString(36).slice(2, 10), kcal: Math.round(Number(f.kcal)), protein: g(f.protein), carbs: g(f.carbs), fat: g(f.fat), name: typeof f.name === 'string' ? f.name.trim().slice(0, 80) : '', meal: typeof f.meal === 'string' && MEAL_KEY.test(f.meal) ? f.meal : 'snacks' };
+        if (f.adj === true) it.adj = true;
         if (typeof f.rep === 'string' && /^p[\w]{1,12}$/.test(f.rep)) it.rep = f.rep;
         // Foods picked from the database or My foods remember what and how much, so they can be edited later.
         if (typeof f.ref === 'string' && REF_RE.test(f.ref) && numIn(f.g, 0.01, 20000) != null && numIn(f.qty, 0.001, 10000) != null && typeof f.unit === 'string') {
@@ -1950,17 +1954,13 @@
     const kc = u.reduce(function (a, it) { return a + it.kcal; }, 0);
     return '<button type="button" class="usual" data-usual="' + meal + '"><span class="grow"><span class="usual-l">Your usual</span><span class="usual-n">' + esc(u.map(function (it) { return shortName(it.name); }).join(' · ')) + '</span></span><span class="usual-k num">' + fmtKcal(kc) + ' kcal</span><span class="usual-add">Add</span></button>';
   }
-  // An empty meal offers what you had in it the day before, in one tap.
-  function sameItems(meal) {
-    if (viewDay > todayISO()) return [];
-    return eatenFor(isoFromDay(dayNum(viewDay) - 1)).filter(function (it) { return mealOf(it) === meal && !isDailyTotal(it); });
-  }
-  function sameRow(meal) {
-    const its = sameItems(meal); if (!its.length) return '';
-    const sx = state.ui.sameX; if (sx && sx.d === viewDay && sx.m.indexOf(meal) >= 0) return ''; // dismissed for this day
-    const kc = its.reduce(function (a, it) { return a + it.kcal; }, 0);
-    return '<div class="usual same-y"><button type="button" class="same-go" data-same="' + meal + '"><span class="grow"><span class="usual-l">' + (viewDay === todayISO() ? 'Same as yesterday' : 'Same as the day before') + '</span><span class="usual-n">' + esc(its.map(function (it) { return shortName(it.name || 'Quick add'); }).join(' · ')) + '</span></span><span class="usual-k num">' + fmtKcal(kc) + ' kcal</span><span class="usual-add">Add</span></button>' +
-      '<button type="button" class="same-x" data-same-x="' + meal + '" aria-label="Hide"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button></div>';
+  // A saved meal or recipe changed for this day only (amounts, foods or ingredients), so it no longer matches the saved one.
+  function isAdjusted(f) {
+    if (f.adj || (f.rc && f.ref && f.ref.charAt(0) === 'r')) return true;
+    if (!f.mid || !f.mi) return false;
+    const sm = state.meals.find(function (x) { return x.id === f.mid; }); if (!sm) return false;
+    const sig = function (l) { return l.map(function (x) { return (x.ref || x.name) + ':' + Math.round(x.kcal || 0); }).sort().join('|'); };
+    return sig(f.mi) !== sig(sm.items);
   }
   // ----- Repeat items -----
   // Foods you choose to have added to your diary every day (or on the days you pick). Each day's copy has a fixed id,
@@ -2014,7 +2014,7 @@
     });
     return out.sort(function (a, b) { return b.n - a.n; }).slice(0, 8);
   }
-  function repItemCopy(it) { const c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan; delete c.pic; delete c.note; delete c.u; delete c.rep; delete c.rc; return c; }
+  function repItemCopy(it) { const c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan; delete c.pic; delete c.note; delete c.u; delete c.rep; delete c.rc; delete c.adj; return c; }
   // A starting time for "Add at a set time": when you last had it, or a usual time for that meal.
   function repDefTime(r) {
     if (r.item && /^\d\d:\d\d$/.test(r.item.t || '')) return r.item.t;
@@ -2342,10 +2342,9 @@
       if (open) its.forEach(function (f) {
         const mac = [fmtHM(f.t), f.ref ? fmtAmt(f.qty, f.unit) : [f.protein ? 'P ' + f.protein : '', f.carbs ? 'C ' + f.carbs : '', f.fat ? 'F ' + f.fat : ''].filter(Boolean).join(' · ')].filter(Boolean).join(' · ');
         const pl = f.plan, tickable = pl && viewDay <= todayISO();
-        html += swRow(f, '<button type="button" class="row food-item' + (pl ? ' planned' : '') + (justAdded[f.id] && Date.now() - justAt < 4000 ? ' row-new' : '') + '" data-food="' + f.id + '">' + (tickable ? '<span class="pl-tick" data-eat="' + f.id + '" role="checkbox" aria-checked="false" aria-label="Mark ' + esc(f.name || 'food') + ' as eaten"></span>' : diaryIcon(f)) + '<div class="grow"><div class="row-t">' + esc(f.name || 'Quick add') + (f.pic ? '<span class="pic-ic" data-pic="' + f.id + '" aria-label="Photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>' : '') + '</div><div class="row-s">' + (f.rep ? '<span class="rep-mk" title="Repeat item" aria-label="Repeat item">' + REP_IC + '</span>' : '') + [pl ? 'Planned' : '', mac].filter(Boolean).join(' · ') + '</div>' + (f.note ? '<div class="row-note">' + esc(f.note) + '</div>' : '') + '</div><span class="row-v num">' + fmtKcal(f.kcal) + '</span></button>');
+        html += swRow(f, '<button type="button" class="row food-item' + (pl ? ' planned' : '') + (justAdded[f.id] && Date.now() - justAt < 4000 ? ' row-new' : '') + '" data-food="' + f.id + '">' + (tickable ? '<span class="pl-tick" data-eat="' + f.id + '" role="checkbox" aria-checked="false" aria-label="Mark ' + esc(f.name || 'food') + ' as eaten"></span>' : diaryIcon(f)) + '<div class="grow"><div class="row-t">' + esc(f.name || 'Quick add') + (isAdjusted(f) ? '<span class="adj-ic" role="img" title="Adjusted for this day" aria-label="Adjusted for this day">' + ADJ_IC + '</span>' : '') + (f.pic ? '<span class="pic-ic" data-pic="' + f.id + '" aria-label="Photo"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 8h3l2-2.5h6L17 8h3v11H4z"/><circle cx="12" cy="13" r="3.2"/></svg></span>' : '') + '</div><div class="row-s">' + (f.rep ? '<span class="rep-mk" title="Repeat item" aria-label="Repeat item">' + REP_IC + '</span>' : '') + [pl ? 'Planned' : '', mac].filter(Boolean).join(' · ') + '</div>' + (f.note ? '<div class="row-note">' + esc(f.note) + '</div>' : '') + '</div><span class="row-v num">' + fmtKcal(f.kcal) + '</span></button>');
       });
       if (card) html += (its.length ? '<button type="button" class="meal-add" data-add-meal="' + m[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>Add food</button>' : '') + '</div>';
-      if (!its.length) html += sameRow(m[0]);
       html += '</div></section>';
     });
     swOpen = null;
@@ -4321,6 +4320,7 @@
           const it = entry(); if (!it) return closeSheet();
           const snap = snapshot(), e = mealEntry({ id: it.mid, name: (md.name.trim() || it.name).slice(0, 40), items: items }, it.meal);
           delete e.id; delete e.meal; delete it.n; Object.assign(it, e); readNote(root, it);
+          if (msg === 'Back to the meal') delete it.adj; else it.adj = true; // shows the adjusted mark in the Diary
           mealDraft = null; save(); renderAll(); closeSheet(); buzz('success'); toast(msg, function () { restore(snap); });
         };
         $('#meSave', root).addEventListener('click', function (ev) {
@@ -9775,10 +9775,6 @@
     if (cm) { calOff = Math.max(0, calOff + Number(cm.dataset.calM)); buzz('light'); const c = $('.cal-card'); if (c) c.outerHTML = calCard(); return; }
     const cd = e.target.closest('[data-cal-day]');
     if (cd) { buzz('light'); viewDay = cd.dataset.calDay; renderDiary(); showTab('diary'); return; }
-    const sxb = e.target.closest('[data-same-x]');
-    if (sxb) { const m = sxb.dataset.sameX, sx = state.ui.sameX && state.ui.sameX.d === viewDay ? state.ui.sameX : { d: viewDay, m: [] }; if (sx.m.indexOf(m) < 0) sx.m.push(m); state.ui.sameX = sx; save(); buzz('light'); renderDiary(); return; }
-    const sy = e.target.closest('[data-same]');
-    if (sy) { const its = sameItems(sy.dataset.same); if (its.length) copyFood(its.map(function (it) { return Object.assign(repItemCopy(it), { meal: sy.dataset.same }, it.t ? { t: it.t } : {}); }), viewDay, viewDay === todayISO() ? 'Added from yesterday' : 'Added from the day before'); return; }
     const us = e.target.closest('[data-usual]');
     if (us) { const u = usualFor(us.dataset.usual); if (u) { const snap = snapshot(); addItems(viewDay, u.map(function (it) { const c = Object.assign({}, it, { id: newId(), meal: us.dataset.usual }); delete c.plan; delete c.pic; delete c.note; delete c.u; return c; })); save(); renderAll(); buzz('success'); toast('Added your usual ' + mealName(us.dataset.usual).toLowerCase(), function () { restore(snap); }); } return; }
     const hi = e.target.closest('#nutBox [data-high], #mealList [data-high]');

@@ -121,10 +121,6 @@
     if (cm) { calOff = Math.max(0, calOff + Number(cm.dataset.calM)); buzz('light'); const c = $('.cal-card'); if (c) c.outerHTML = calCard(); return; }
     const cd = e.target.closest('[data-cal-day]');
     if (cd) { buzz('light'); viewDay = cd.dataset.calDay; renderDiary(); showTab('diary'); return; }
-    const sxb = e.target.closest('[data-same-x]');
-    if (sxb) { const m = sxb.dataset.sameX, sx = state.ui.sameX && state.ui.sameX.d === viewDay ? state.ui.sameX : { d: viewDay, m: [] }; if (sx.m.indexOf(m) < 0) sx.m.push(m); state.ui.sameX = sx; save(); buzz('light'); renderDiary(); return; }
-    const sy = e.target.closest('[data-same]');
-    if (sy) { const its = sameItems(sy.dataset.same); if (its.length) copyFood(its.map(function (it) { return Object.assign(repItemCopy(it), { meal: sy.dataset.same }, it.t ? { t: it.t } : {}); }), viewDay, viewDay === todayISO() ? 'Added from yesterday' : 'Added from the day before'); return; }
     const us = e.target.closest('[data-usual]');
     if (us) { const u = usualFor(us.dataset.usual); if (u) { const snap = snapshot(); addItems(viewDay, u.map(function (it) { const c = Object.assign({}, it, { id: newId(), meal: us.dataset.usual }); delete c.plan; delete c.pic; delete c.note; delete c.u; return c; })); save(); renderAll(); buzz('success'); toast('Added your usual ' + mealName(us.dataset.usual).toLowerCase(), function () { restore(snap); }); } return; }
     const hi = e.target.closest('#nutBox [data-high], #mealList [data-high]');

@@ -1,6 +1,10 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.12';
+  const APP_VERSION = '2.0.13';
   const CHANGES = [
+    { v: '2.0.13', items: [
+      'The "Same as yesterday" cards on empty meals are gone. To copy a meal from yesterday, swipe its title right and tap ⋯ → Copy from yesterday.',
+      'A logged meal or recipe that you changed for that day (amounts, foods or ingredients) now shows a small sliders icon next to its name, so you can tell it apart from the saved version.'
+    ] },
     { v: '2.0.12', items: [
       'Swiping a meal\'s title to the right now shows just the ⋯ button, which holds every option for that meal (Copy from yesterday, Save as a meal, Remove all and more). It works on empty meals too, so you can copy yesterday\'s into them.'
     ] },
