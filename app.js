@@ -2,8 +2,11 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.3';
+  const APP_VERSION = '2.1.4';
   const CHANGES = [
+    { v: '2.1.4', items: [
+      "Fixed: the app no longer zooms in to follow the iPhone's text size, which made screens crowded. Use Settings \u203a Text size in Setpoint instead."
+    ] },
     { v: '2.1.3', items: [
       "Keyboard: every field shows the right iPhone Return key (Next, Done or Search), Next jumps to the following field, and the field you're typing in stays above the keyboard.",
       "A new welcome screen and What's New in Apple's own layout: a big title and each feature with its own symbol.",
@@ -1624,14 +1627,6 @@
 
   /* ================= Appearance ================= */
   const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
-  // How much bigger (or smaller) the iPhone's own text size is than the standard 17 pt. 1 anywhere else.
-  function dynType() {
-    if (!/iPhone|iPad|Macintosh/.test(navigator.userAgent) || !('ontouchend' in document)) return 1;
-    const t = document.createElement('span'); t.style.cssText = 'position:absolute;visibility:hidden;font:-apple-system-body';
-    document.body.appendChild(t); const px = parseFloat(getComputedStyle(t).fontSize); t.remove();
-    return px > 0 && px !== 16 ? Math.max(0.88, Math.min(1.35, px / 17)) : 1;
-  }
-  document.addEventListener('visibilitychange', function () { if (!document.hidden && state && state.settings) applyAppearance(); }); // text size changed in Settings while away
   function applyAppearance() {
     const s = state.settings, r = document.documentElement;
     const dark = s.theme === 'dark' || (s.theme === 'auto' && mq && mq.matches);
@@ -1639,10 +1634,7 @@
     r.setAttribute('data-style', s.style);
     if (s.oled) r.setAttribute('data-oled', ''); else r.removeAttribute('data-oled');
     r.classList.toggle('tabs-top', s.tabs === 'top');
-    // Your own Text size, times the iPhone's text size (Settings › Display & Brightness › Text Size), so the app
-    // follows Dynamic Type like built-in apps do.
-    const z = ({ m: 1, l: 1.08, xl: 1.16 }[s.textSize] || 1) * dynType();
-    r.style.zoom = Math.abs(z - 1) < 0.005 ? '' : String(Math.round(z * 1000) / 1000);
+    r.style.zoom = { m: '', l: '1.08', xl: '1.16' }[s.textSize] || ''; // only the app's own Text size: zooming with the iPhone's text size crowded the layout
     applyLang(); // bigger text: the whole layout scales and reflows
     requestAnimationFrame(function () { placePill(false); });
     requestAnimationFrame(function () { $('#themeColor').setAttribute('content', getComputedStyle(document.body).backgroundColor); });

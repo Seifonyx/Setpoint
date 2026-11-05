@@ -1,6 +1,9 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.3';
+  const APP_VERSION = '2.1.4';
   const CHANGES = [
+    { v: '2.1.4', items: [
+      "Fixed: the app no longer zooms in to follow the iPhone's text size, which made screens crowded. Use Settings \u203a Text size in Setpoint instead."
+    ] },
     { v: '2.1.3', items: [
       "Keyboard: every field shows the right iPhone Return key (Next, Done or Search), Next jumps to the following field, and the field you're typing in stays above the keyboard.",
       "A new welcome screen and What's New in Apple's own layout: a big title and each feature with its own symbol.",
