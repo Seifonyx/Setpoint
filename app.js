@@ -2,8 +2,15 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.15';
+  const APP_VERSION = '2.1.0';
   const CHANGES = [
+    { v: '2.1.0', items: [
+      "Setpoint now looks and feels more like a built-in iPhone app: San Francisco, the iPhone's own font, with rounded numbers like Health and Fitness, and Apple's exact greys in light and dark mode.",
+      "Lists look like Settings: thinner separators that start where the text starts, standard row heights, lighter chevrons.",
+      "Switches are the real iPhone switch (green, with its own feel), and segmented controls are the new iOS capsule style.",
+      "Pages bounce when you scroll past the end, like every iPhone app, and the app opens without a blank flash.",
+      "Fixed: the parts of your daily expenditure always add up to the total, even when your log says you burn less than the formula."
+    ] },
     { v: '2.0.15', items: [
       "Weigh-ins can be excluded from your trend: open one and turn on Exclude from trend (for bloating, a salty meal or travel). It stays in your history as a hollow dot but no longer moves your trend or expenditure.",
       "Expenditure and weekly adjustments now use a robust slope, so a day or two of water weight (fiber, salt, carbs) at the start or end of the month barely moves them.",
@@ -1030,6 +1037,21 @@
     }
     try { hapEl.click(); } catch (e) {}
   }
+  // The real iOS switch (Safari 17.4+): every .switch checkbox becomes one, so it looks, moves and ticks like Settings.
+  // Its own haptic fires when you flip it, so buzz() stays quiet for that moment instead of doubling it.
+  const NATIVE_SW = (function () { try { return 'switch' in HTMLInputElement.prototype && /iPhone|iPad|Macintosh/.test(navigator.userAgent); } catch (e) { return false; } })();
+  let swFlip = 0;
+  function nativeSwitches(root) {
+    if (!NATIVE_SW || !root || !root.querySelectorAll) return;
+    root.querySelectorAll('.switch input[type="checkbox"]:not([switch])').forEach(function (i) { i.setAttribute('switch', ''); });
+  }
+  if (NATIVE_SW) {
+    document.documentElement.classList.add('nsw');
+    document.addEventListener('change', function (e) { const t = e.target; if (t && t.hasAttribute && t.hasAttribute('switch') && !(hapEl && hapEl.contains(t))) swFlip = Date.now(); }, true);
+    new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType !== 1) return; if (n.matches('.switch input[type="checkbox"]:not([switch])')) n.setAttribute('switch', ''); else if (n.firstElementChild) nativeSwitches(n); }); }); }).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', function () { nativeSwitches(document); });
+    nativeSwitches(document);
+  }
   // Fewer animations when the phone asks for reduced motion.
   const calmMq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   function calmMotion() { return !!(calmMq && calmMq.matches); }
@@ -1104,6 +1126,7 @@
   function catchUp(key) { const draw = later[key]; if (draw) { delete later[key]; draw(); } }
   function buzz(kind) {
     if (!state.settings.haptics) return;
+    if (Date.now() - swFlip < 120) return; // a native switch already ticked
     if (!navigator.vibrate) { iosTick(); if (kind === 'success' || kind === 'warn') setTimeout(iosTick, 90); return; }
     const p = { light: 8, medium: 16, success: [12, 50, 16], warn: [24, 40, 24] }[kind] || 8;
     try { navigator.vibrate(p); } catch (e) {}
@@ -1317,6 +1340,14 @@
     let w = 0, tdee = base;
     if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1) * clamp((m.coverage - 0.5) / 0.35, 0, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
     return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
+  }
+  // The four parts of today's burn, always adding up to it. What the formula got wrong goes into movement
+  // (it varies most); if your real burn is so low that movement would go below zero, every part shrinks instead.
+  function burnParts(c, en) {
+    const life = c.life + en.tdee - c.tdee;
+    if (life >= 0) return { bmr: c.bmr, life: life, steps: c.steps, train: c.train };
+    const k = en.tdee / (c.bmr + c.steps + c.train);
+    return { bmr: c.bmr * k, life: 0, steps: c.steps * k, train: c.train * k };
   }
   // Pace in kg/week, snapped to the options shown for the current unit.
   function snapPace(pace) {
@@ -7420,7 +7451,7 @@
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
       if (c) {
         // What the formula got wrong shows up in daily life (everyday movement varies most), so the parts add up to the burn used.
-        const parts = [['Resting', c.bmr, 'o1'], ['Movement', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
+        const bp = burnParts(c, en), parts = [['Resting', bp.bmr, 'o1'], ['Movement', bp.life, 'o2'], ['Steps', bp.steps, 'o3'], ['Training', bp.train, 'o4']];
         h += '<div class="burn tg-bar">' + parts.map(function (x) { return '<i class="' + x[2] + '" style="flex-grow:' + Math.max(1, Math.round(x[1])) + '"></i>'; }).join('') + '</div>' +
           '<div class="tg-key">' + parts.map(function (x) { return '<div><span><i class="' + x[2] + '"></i>' + x[0] + '</span><b class="num">' + fmtKcal(roundKcal(x[1])) + '</b></div>'; }).join('') + '</div>';
       }
@@ -8269,12 +8300,12 @@
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
-      const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
+      const bp = burnParts(c, en), life = bp.life, learnedK = Math.round(en.tdee - c.tdee);
       h += step(1, 'Expenditure', '<div class="tx-parts">' +
-          item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
+          item('o1', 'Resting', k(bp.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
           item('o2', 'Movement', k(life), 'Moving around and digesting') +
-          item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
-          item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
+          item('o3', 'Steps', k(bp.steps), fmtKcal(p.steps) + ' steps a day') +
+          item('o4', 'Training', k(bp.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
         (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
           : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Adaptive expenditure</b> to use your real results.</div>' : ''));

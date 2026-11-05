@@ -1,6 +1,13 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.15';
+  const APP_VERSION = '2.1.0';
   const CHANGES = [
+    { v: '2.1.0', items: [
+      "Setpoint now looks and feels more like a built-in iPhone app: San Francisco, the iPhone's own font, with rounded numbers like Health and Fitness, and Apple's exact greys in light and dark mode.",
+      "Lists look like Settings: thinner separators that start where the text starts, standard row heights, lighter chevrons.",
+      "Switches are the real iPhone switch (green, with its own feel), and segmented controls are the new iOS capsule style.",
+      "Pages bounce when you scroll past the end, like every iPhone app, and the app opens without a blank flash.",
+      "Fixed: the parts of your daily expenditure always add up to the total, even when your log says you burn less than the formula."
+    ] },
     { v: '2.0.15', items: [
       "Weigh-ins can be excluded from your trend: open one and turn on Exclude from trend (for bloating, a salty meal or travel). It stays in your history as a hollow dot but no longer moves your trend or expenditure.",
       "Expenditure and weekly adjustments now use a robust slope, so a day or two of water weight (fiber, salt, carbs) at the start or end of the month barely moves them.",

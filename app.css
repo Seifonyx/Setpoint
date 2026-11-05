@@ -2506,3 +2506,70 @@ main.edge-drag.pm { box-shadow: none; }
 .adj-ic { display: inline-flex; vertical-align: -2px; margin-inline-start: 6px; color: var(--accent-text, var(--text-3)); }
 .adj-ic svg { width: 14px; height: 14px; }
 .lx-list { margin: 4px 0 14px; }
+
+/* ===================== iOS native layer (v2.1) =====================
+   San Francisco type, Apple's system greys, Settings-style inset grouped lists, the native switch and iOS 26 segmented
+   controls. Loaded last so it wins over the older layers above. */
+:root {
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Pro Text", "Helvetica Neue", system-ui, sans-serif;
+  --font-head: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Helvetica Neue", system-ui, sans-serif;
+  --font-num: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Pro Rounded", system-ui, sans-serif; /* big numbers, like Health and Fitness */
+  --ios-green: #34c759; --ios-red: #ff3b30;
+  --chev-c: rgba(60, 60, 67, .3);
+}
+:root[data-mode="dark"] { --ios-green: #30d158; --ios-red: #ff453a; --chev-c: rgba(235, 235, 245, .3); }
+:root[lang="ar"] {
+  --font-body: -apple-system, BlinkMacSystemFont, "SF Arabic", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-head: -apple-system, BlinkMacSystemFont, "SF Arabic", "IBM Plex Sans Arabic", system-ui, sans-serif;
+  --font-num: ui-rounded, -apple-system, BlinkMacSystemFont, "SF Arabic", "IBM Plex Sans Arabic", system-ui, sans-serif;
+}
+/* SF sets its own tracking for every size, so the tight letter-spacing tuned for the old fonts goes */
+body, body * { letter-spacing: normal !important; }
+.num, .tg-big, .tg-burn-v, .week-avg, .l-v, .r-v { font-family: var(--font-num); }
+h1 { font-size: 34px; font-weight: 700; line-height: 1.12; }
+
+/* Apple's system greys: Graphite (the default) and Emerald */
+:root[data-style="graphite"], :root[data-style="classic"] {
+  --bg: #f2f2f7; --surface: #ffffff; --surface-2: #eeeef0; --seg-on: #ffffff;
+  --line: #c6c6c8; --card-line: transparent;
+  --text: #000000; --text-2: #6c6c70; --text-3: #8a8a8e;
+  --danger: #ff3b30; --danger-soft: #ffe9e7;
+  --shadow: none;
+}
+:root[data-style="graphite"][data-mode="dark"], :root[data-style="classic"][data-mode="dark"] {
+  --bg: #000000; --surface: #1c1c1e; --surface-2: #2c2c2e; --seg-on: #636366;
+  --line: #38383a; --card-line: transparent;
+  --text: #ffffff; --text-2: #98989f; --text-3: #8d8d93;
+  --danger: #ff453a; --danger-soft: #3a1a18;
+  --shadow: none;
+}
+:root[data-style="graphite"][data-mode="dark"] { --accent-soft: #2c2c2e; }
+
+/* Scrolling bounces like every iPhone screen; the area revealed matches the page */
+html { background: var(--bg); }
+body { overscroll-behavior-y: auto; }
+
+/* Inset grouped lists, like Settings: 44 pt rows, hairline separators that start where the text starts */
+.group-label { font-size: 13px; font-weight: 400; color: var(--text-2); margin: 24px 16px 7px; text-transform: none; }
+.list > .row, .list > label.row { position: relative; min-height: 44px; padding: 11px 16px; border-top: 0; font-size: 17px; }
+.list > * + .row::before, .list > * + label.row::before { content: ''; position: absolute; top: 0; inset-inline-start: 16px; inset-inline-end: 0; height: .5px; background: var(--line); pointer-events: none; }
+.list > * + .row:has(> .ico)::before, .list > * + label.row:has(> .ico)::before { inset-inline-start: 58px; }
+.set-list .row-t, .list > label.row .row-t { font-weight: 400; }
+.row-s { color: var(--text-3); }
+.row-v { color: var(--text-3); font-size: 17px; }
+.chev { width: 13px; height: 13px; color: var(--chev-c); stroke-width: 3; }
+[dir="rtl"] .chev { transform: scaleX(-1); }
+
+/* Switches: iOS green; the real iOS switch where Safari has it (it brings its own feel and haptic) */
+:root .switch input:checked + i, :root[data-mode="dark"] .switch input:checked + i { background: var(--ios-green); border-color: var(--ios-green); }
+.nsw .switch { width: auto; height: auto; display: inline-flex; }
+.nsw .switch input { position: static; opacity: 1; margin: 0; accent-color: var(--ios-green); cursor: pointer; }
+.nsw .switch i { display: none; }
+
+/* Segmented controls, iOS 26: a capsule track with a capsule thumb */
+.seg { border-radius: 999px; padding: 2px; gap: 0; background: rgba(118, 118, 128, .12); }
+:root[data-mode="dark"] .seg { background: rgba(118, 118, 128, .24); }
+.seg button { height: 30px; border-radius: 999px; font-size: 13px; font-weight: 500; color: var(--text); }
+.seg button[aria-pressed="true"] { font-weight: 600; background: var(--seg-on); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
+:root[data-mode="dark"] .seg button[aria-pressed="true"] { box-shadow: none; }
+.seg-sm button { height: 28px; }

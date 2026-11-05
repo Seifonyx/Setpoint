@@ -55,6 +55,21 @@
     }
     try { hapEl.click(); } catch (e) {}
   }
+  // The real iOS switch (Safari 17.4+): every .switch checkbox becomes one, so it looks, moves and ticks like Settings.
+  // Its own haptic fires when you flip it, so buzz() stays quiet for that moment instead of doubling it.
+  const NATIVE_SW = (function () { try { return 'switch' in HTMLInputElement.prototype && /iPhone|iPad|Macintosh/.test(navigator.userAgent); } catch (e) { return false; } })();
+  let swFlip = 0;
+  function nativeSwitches(root) {
+    if (!NATIVE_SW || !root || !root.querySelectorAll) return;
+    root.querySelectorAll('.switch input[type="checkbox"]:not([switch])').forEach(function (i) { i.setAttribute('switch', ''); });
+  }
+  if (NATIVE_SW) {
+    document.documentElement.classList.add('nsw');
+    document.addEventListener('change', function (e) { const t = e.target; if (t && t.hasAttribute && t.hasAttribute('switch') && !(hapEl && hapEl.contains(t))) swFlip = Date.now(); }, true);
+    new MutationObserver(function (ms) { ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType !== 1) return; if (n.matches('.switch input[type="checkbox"]:not([switch])')) n.setAttribute('switch', ''); else if (n.firstElementChild) nativeSwitches(n); }); }); }).observe(document.documentElement, { childList: true, subtree: true });
+    document.addEventListener('DOMContentLoaded', function () { nativeSwitches(document); });
+    nativeSwitches(document);
+  }
   // Fewer animations when the phone asks for reduced motion.
   const calmMq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   function calmMotion() { return !!(calmMq && calmMq.matches); }
@@ -129,6 +144,7 @@
   function catchUp(key) { const draw = later[key]; if (draw) { delete later[key]; draw(); } }
   function buzz(kind) {
     if (!state.settings.haptics) return;
+    if (Date.now() - swFlip < 120) return; // a native switch already ticked
     if (!navigator.vibrate) { iosTick(); if (kind === 'success' || kind === 'warn') setTimeout(iosTick, 90); return; }
     const p = { light: 8, medium: 16, success: [12, 50, 16], warn: [24, 40, 24] }[kind] || 8;
     try { navigator.vibrate(p); } catch (e) {}

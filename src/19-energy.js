@@ -66,7 +66,7 @@
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
       if (c) {
         // What the formula got wrong shows up in daily life (everyday movement varies most), so the parts add up to the burn used.
-        const parts = [['Resting', c.bmr, 'o1'], ['Movement', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
+        const bp = burnParts(c, en), parts = [['Resting', bp.bmr, 'o1'], ['Movement', bp.life, 'o2'], ['Steps', bp.steps, 'o3'], ['Training', bp.train, 'o4']];
         h += '<div class="burn tg-bar">' + parts.map(function (x) { return '<i class="' + x[2] + '" style="flex-grow:' + Math.max(1, Math.round(x[1])) + '"></i>'; }).join('') + '</div>' +
           '<div class="tg-key">' + parts.map(function (x) { return '<div><span><i class="' + x[2] + '"></i>' + x[0] + '</span><b class="num">' + fmtKcal(roundKcal(x[1])) + '</b></div>'; }).join('') + '</div>';
       }

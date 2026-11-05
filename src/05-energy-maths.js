@@ -70,6 +70,14 @@
     if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1) * clamp((m.coverage - 0.5) / 0.35, 0, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
     return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
   }
+  // The four parts of today's burn, always adding up to it. What the formula got wrong goes into movement
+  // (it varies most); if your real burn is so low that movement would go below zero, every part shrinks instead.
+  function burnParts(c, en) {
+    const life = c.life + en.tdee - c.tdee;
+    if (life >= 0) return { bmr: c.bmr, life: life, steps: c.steps, train: c.train };
+    const k = en.tdee / (c.bmr + c.steps + c.train);
+    return { bmr: c.bmr * k, life: 0, steps: c.steps * k, train: c.train * k };
+  }
   // Pace in kg/week, snapped to the options shown for the current unit.
   function snapPace(pace) {
     if (pace == null || Math.abs(pace) < 1e-6) return { dir: 'maintain', kg: 0, i: -1 };

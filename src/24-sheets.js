@@ -172,12 +172,12 @@
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
-      const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
+      const bp = burnParts(c, en), life = bp.life, learnedK = Math.round(en.tdee - c.tdee);
       h += step(1, 'Expenditure', '<div class="tx-parts">' +
-          item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
+          item('o1', 'Resting', k(bp.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
           item('o2', 'Movement', k(life), 'Moving around and digesting') +
-          item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
-          item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
+          item('o3', 'Steps', k(bp.steps), fmtKcal(p.steps) + ' steps a day') +
+          item('o4', 'Training', k(bp.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
         (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
           : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Adaptive expenditure</b> to use your real results.</div>' : ''));
