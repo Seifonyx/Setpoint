@@ -64,6 +64,7 @@
   (function edgeSwipe() {
     if (!IOS) return;
     const EDGE = 28, PAR = 0.3;
+    const NO_FULL = '.sw, .pager, .sum-track, #chart, .seg, .rates, input, textarea, select, .kp, .cm-wrap, .as-wrap, [data-noswipe], .tile-strip, .fy-track, .ph-strip, .cal';
     let x0 = 0, y0 = 0, on = false, el = null, under = null, wrap = null, home = null, dim = null, shade = null, dx = 0, kind = '', raf = 0, busy = false;
     const fs = fingerSpeed();
     const rtl = function () { return document.documentElement.dir === 'rtl'; };
@@ -142,7 +143,10 @@
     };
     document.addEventListener('touchstart', function (e) {
       on = false; if (e.touches.length !== 1 || !navStack.length || dragActive || el || busy) return;
-      const t = e.touches[0]; if (!atEdge(t.clientX)) return;
+      // iOS 26: on a page you can swipe back from anywhere, not just the edge, unless you start on something that
+      // moves sideways itself. Sheets keep the edge only (their contents are full of sliders and swipers).
+      const t = e.touches[0], anywhere = navStack[navStack.length - 1] !== 'sheet' && !(e.target.closest && e.target.closest(NO_FULL));
+      if (!atEdge(t.clientX) && !anywhere) return;
       x0 = t.clientX; y0 = t.clientY; dx = 0; on = true; fs.reset(); fs.add(0, e.timeStamp);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {

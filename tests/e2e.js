@@ -477,6 +477,10 @@ server.listen(0, async () => {
       await touch('touchStart', 6); for (let x = 20; x <= 200; x += 25) { await touch('touchMove', x); await p.waitForTimeout(16); }
       const tu = await p.evaluate(() => !!document.querySelector('.edge-under .tg-menu')); await touch('touchEnd', 200); await p.waitForTimeout(750);
       ok('iPhone: swiping back from a Targets page shows the Targets menu underneath, then lands there', tu && await tab() === 'targets' && await p.evaluate(() => !document.getElementById('tgHome').hidden && !document.querySelector('.edge-under')), String(tu));
+      // iOS 26: from the middle of a page, not just the edge
+      await p.evaluate(() => window.__setpoint.nav.tab('you')); await p.evaluate(() => window.__setpoint.nav.tab('targets')); await p.waitForTimeout(300);
+      await touch('touchStart', 150); for (let x = 165; x <= 360; x += 25) { await touch('touchMove', x); await p.waitForTimeout(16); } await touch('touchEnd', 360); await p.waitForTimeout(750);
+      ok('iPhone: swipe back works from the middle of a page too', await tab() === 'you', await tab());
       await p.evaluate(() => window.__setpoint.nav.tab('foods')); await p.waitForTimeout(300); await p.evaluate(() => document.querySelector('[data-mf-open]').click()); await p.waitForTimeout(300);
       await touch('touchStart', 6); for (let x = 20; x <= 200; x += 25) { await touch('touchMove', x); await p.waitForTimeout(16); }
       const under = await p.evaluate(() => !!document.querySelector('.edge-under .mf-grid')); await touch('touchEnd', 200); await p.waitForTimeout(750);

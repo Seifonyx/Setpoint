@@ -1,6 +1,12 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.1';
+  const APP_VERSION = '2.1.2';
   const CHANGES = [
+    { v: '2.1.2', items: [
+      "Liquid Glass, like iOS 26: the tab bar and the floating buttons are clearer glass with a bright edge where the light catches them, and the current tab sits in a glass droplet. Turn on Reduce Transparency in iPhone settings for solid backgrounds instead.",
+      "Settings-style icons: solid iPhone colours with white symbols, and line weights that match the iPhone's own icons.",
+      "Search fields look like iOS, and Cancel slides in while you search.",
+      "Swipe back from anywhere on a page, not only the edge, like iOS 26."
+    ] },
     { v: '2.1.1', items: [
       "Large sheets (like Add food) are now cards like iOS: the page behind shrinks back with rounded corners, and you can pull them down to close.",
       "Simple sheets have the iOS top bar: Cancel on the left and Save or Done on the right.",

@@ -2,8 +2,14 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.1';
+  const APP_VERSION = '2.1.2';
   const CHANGES = [
+    { v: '2.1.2', items: [
+      "Liquid Glass, like iOS 26: the tab bar and the floating buttons are clearer glass with a bright edge where the light catches them, and the current tab sits in a glass droplet. Turn on Reduce Transparency in iPhone settings for solid backgrounds instead.",
+      "Settings-style icons: solid iPhone colours with white symbols, and line weights that match the iPhone's own icons.",
+      "Search fields look like iOS, and Cancel slides in while you search.",
+      "Swipe back from anywhere on a page, not only the edge, like iOS 26."
+    ] },
     { v: '2.1.1', items: [
       "Large sheets (like Add food) are now cards like iOS: the page behind shrinks back with rounded corners, and you can pull them down to close.",
       "Simple sheets have the iOS top bar: Cancel on the left and Save or Done on the right.",
@@ -7631,6 +7637,7 @@
   (function edgeSwipe() {
     if (!IOS) return;
     const EDGE = 28, PAR = 0.3;
+    const NO_FULL = '.sw, .pager, .sum-track, #chart, .seg, .rates, input, textarea, select, .kp, .cm-wrap, .as-wrap, [data-noswipe], .tile-strip, .fy-track, .ph-strip, .cal';
     let x0 = 0, y0 = 0, on = false, el = null, under = null, wrap = null, home = null, dim = null, shade = null, dx = 0, kind = '', raf = 0, busy = false;
     const fs = fingerSpeed();
     const rtl = function () { return document.documentElement.dir === 'rtl'; };
@@ -7709,7 +7716,10 @@
     };
     document.addEventListener('touchstart', function (e) {
       on = false; if (e.touches.length !== 1 || !navStack.length || dragActive || el || busy) return;
-      const t = e.touches[0]; if (!atEdge(t.clientX)) return;
+      // iOS 26: on a page you can swipe back from anywhere, not just the edge, unless you start on something that
+      // moves sideways itself. Sheets keep the edge only (their contents are full of sliders and swipers).
+      const t = e.touches[0], anywhere = navStack[navStack.length - 1] !== 'sheet' && !(e.target.closest && e.target.closest(NO_FULL));
+      if (!atEdge(t.clientX) && !anywhere) return;
       x0 = t.clientX; y0 = t.clientY; dx = 0; on = true; fs.reset(); fs.add(0, e.timeStamp);
     }, { passive: true });
     document.addEventListener('touchmove', function (e) {
@@ -9876,6 +9886,18 @@
       a.onfinish = a.oncancel = function () { s2.classList.remove('gliding'); setTimeout(function () { g.remove(); }, 200); };
     });
   }, true);
+  // iOS search fields: Cancel slides in while you search; it clears the search and puts the keyboard away.
+  $$('.set-search').forEach(function (w) {
+    const i = w.querySelector('input'); if (!i) return;
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'ss-cancel'; c.textContent = 'Cancel'; w.appendChild(c);
+    i.addEventListener('focus', function () { w.classList.add('focus'); });
+    i.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== i && !i.value) w.classList.remove('focus'); }, 0); });
+    c.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+    c.addEventListener('click', function () {
+      i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); i.blur(); w.classList.remove('focus');
+      if (w.id === 'mfSearchWrap' && foodsSearch) $('#mfSearchBtn').click();
+    });
+  });
   $$('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.tab !== b.dataset.tab) { if (b.dataset.tab === 'diary') viewDay = todayISO(), renderDiary(); showTab(b.dataset.tab); } else if (b.dataset.tab === 'foods' && (foodsView || foodsSearch)) { foodsView = null; foodsSearch = false; $('#mfQ').value = ''; renderFoods(); window.scrollTo(0, 0); } else window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
   $$('#progSeg button').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.prog !== b.dataset.prog) showProg(b.dataset.prog); }); });
   $$('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.tab === 'targets' && tgView) tgClose(); else goBack(); }); });

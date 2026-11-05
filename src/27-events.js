@@ -24,6 +24,18 @@
       a.onfinish = a.oncancel = function () { s2.classList.remove('gliding'); setTimeout(function () { g.remove(); }, 200); };
     });
   }, true);
+  // iOS search fields: Cancel slides in while you search; it clears the search and puts the keyboard away.
+  $$('.set-search').forEach(function (w) {
+    const i = w.querySelector('input'); if (!i) return;
+    const c = document.createElement('button'); c.type = 'button'; c.className = 'ss-cancel'; c.textContent = 'Cancel'; w.appendChild(c);
+    i.addEventListener('focus', function () { w.classList.add('focus'); });
+    i.addEventListener('blur', function () { setTimeout(function () { if (document.activeElement !== i && !i.value) w.classList.remove('focus'); }, 0); });
+    c.addEventListener('pointerdown', function (e) { e.preventDefault(); });
+    c.addEventListener('click', function () {
+      i.value = ''; i.dispatchEvent(new Event('input', { bubbles: true })); i.blur(); w.classList.remove('focus');
+      if (w.id === 'mfSearchWrap' && foodsSearch) $('#mfSearchBtn').click();
+    });
+  });
   $$('.tab-btn').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.tab !== b.dataset.tab) { if (b.dataset.tab === 'diary') viewDay = todayISO(), renderDiary(); showTab(b.dataset.tab); } else if (b.dataset.tab === 'foods' && (foodsView || foodsSearch)) { foodsView = null; foodsSearch = false; $('#mfQ').value = ''; renderFoods(); window.scrollTo(0, 0); } else window.scrollTo({ top: 0, behavior: 'smooth' }); }); });
   $$('#progSeg button').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.prog !== b.dataset.prog) showProg(b.dataset.prog); }); });
   $$('[data-back]').forEach(function (b) { b.addEventListener('click', function () { if (state.ui.tab === 'targets' && tgView) tgClose(); else goBack(); }); });
