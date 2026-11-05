@@ -26,7 +26,7 @@
   if (shortcut) history.replaceState(null, '', location.pathname);
   // Graphite is the main theme now: switch once from the old default (Emerald). Any theme you choose after that stays.
   if (!state.ui.smartBurn) { state.ui.smartBurn = true; if (state.profile.tdeeSource === 'calc') state.profile.tdeeSource = 'auto'; save(); renderAll(); }
-  // Burn: one switch now (Learn from my log). Formula users keep the formula; "Your log" users keep learning.
+  // Burn: one switch now (Adaptive expenditure). Formula users keep the formula; "Your log" users keep learning.
   if (!state.ui.oneBurn) { state.ui.oneBurn = true; const s0 = state.profile.tdeeSource; if (s0 === 'calc') state.settings.autoAdjust = false; else if (s0 === 'measured') state.settings.autoAdjust = true; state.profile.tdeeSource = 'auto'; save(); renderAll(); }
   if (!state.ui.graphite) { state.ui.graphite = true; if (state.settings.style === 'classic') { state.settings.style = 'graphite'; applyAppearance(); renderAll(); } save(); }
   if (applyRepeats()) renderAll();

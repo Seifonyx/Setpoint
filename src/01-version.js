@@ -1,6 +1,12 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.14';
+  const APP_VERSION = '2.0.15';
   const CHANGES = [
+    { v: '2.0.15', items: [
+      "Weigh-ins can be excluded from your trend: open one and turn on Exclude from trend (for bloating, a salty meal or travel). It stays in your history as a hollow dot but no longer moves your trend or expenditure.",
+      "Expenditure and weekly adjustments now use a robust slope, so a day or two of water weight (fiber, salt, carbs) at the start or end of the month barely moves them.",
+      "Insights now shows High-fiber days next to salty and high-carb days, so you can see if fiber holds your weight up the next morning.",
+      "Clearer names: Daily expenditure, Measured expenditure, Adaptive expenditure, Target breakdown, Weight factors, Data check and more."
+    ] },
     { v: '2.0.14', items: [
       "Your burn now ignores days that look half-logged (far below your usual), and counts your log less when you skip days. Both used to make your burn look lower and cut your target.",
       "The weekly target check no longer lowers your target when days are missing from your log, since unlogged days could explain the gap.",

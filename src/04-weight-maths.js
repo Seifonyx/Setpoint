@@ -21,10 +21,13 @@
   const TREND_ALPHA = 0.2, SPIKE_CAP = 1.5;
   let trendCache = { sig: null, map: null };
   function trendMap() { return inPass('tm', trendMapNow); }
+  // Weigh-ins you excluded (bloating, a salty meal, travel) stay in your history but don't move the trend:
+  // on those days the trend just carries on from the weigh-ins around them.
+  function counted() { return inPass('cnt', function () { return state.entries.filter(function (e) { return !e.x; }); }); }
   function trendMapNow() {
-    const l = state.entries; let h = 0;
-    for (let i = 0; i < l.length; i++) h = (h * 31 + dayNum(l[i].date) * 7 + Math.round(l[i].kg * 1000)) % 2147483647; // cheap fingerprint
-    const sig = l.length + ':' + h;
+    const all = state.entries, l = counted(); let h = 0;
+    for (let i = 0; i < all.length; i++) h = (h * 31 + dayNum(all[i].date) * 7 + Math.round(all[i].kg * 1000) + (all[i].x ? 3 : 0)) % 2147483647; // cheap fingerprint
+    const sig = all.length + ':' + h;
     if (trendCache.sig === sig) return trendCache.map;
     const map = {};
     if (l.length) {
@@ -39,6 +42,8 @@
         map[db] = t;
       }
     }
+    // excluded days read the trend from the last counted weigh-in before them (or the first one after)
+    all.forEach(function (e) { if (!e.x) return; const d = dayNum(e.date); let v = null; for (let i = l.length - 1; i >= 0; i--) if (dayNum(l[i].date) <= d) { v = map[dayNum(l[i].date)]; break; } map[d] = v != null ? v : l.length ? map[dayNum(l[0].date)] : e.kg; });
     trendCache = { sig: sig, map: map };
     return map;
   }
@@ -48,7 +53,17 @@
     for (let i = l.length - 1; i >= 0; i--) { const d = dayNum(l[i].date); if (d <= day) return map[d]; }
     return null;
   }
-  function withTrend() { const map = trendMap(); return state.entries.map(function (e) { const d = dayNum(e.date); return { date: e.date, kg: e.kg, note: e.note, kcal: e.kcal, day: d, trend: map[d] }; }); }
+  function withTrend() { const map = trendMap(); return state.entries.map(function (e) { const d = dayNum(e.date); return { date: e.date, kg: e.kg, note: e.note, kcal: e.kcal, x: !!e.x, day: d, trend: map[d] }; }); }
+  // Theil–Sen slope: the median of the slopes between every pair of points. One or two odd weigh-ins (water after
+  // a salty meal, a day or two of different fiber) barely move it, where a straight-line fit would lean towards them.
+  function robustSlope(points) {
+    const sl = [];
+    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { const dx = points[j].x - points[i].x; if (dx) sl.push((points[j].y - points[i].y) / dx); }
+    if (!sl.length) return null;
+    sl.sort(function (a, b) { return a - b; });
+    const m = sl.length >> 1;
+    return sl.length % 2 ? sl[m] : (sl[m - 1] + sl[m]) / 2;
+  }
   function linreg(points) {
     const n = points.length;
     if (n < 2) return null;
@@ -62,10 +77,11 @@
   function currentPhase() { return state.phases.length ? state.phases[state.phases.length - 1] : null; }
   function trend() {
     const p = currentPhase();
-    const list = p ? state.entries.filter(function (e) { return e.date >= p.date; }) : state.entries;
+    const list = p ? counted().filter(function (e) { return e.date >= p.date; }) : counted();
     if (list.length < 2) return null;
-    const reg = linreg(list.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
-    return reg ? { perDay: reg.slope, perWeek: reg.slope * 7, first: list[0] } : null;
+    const step = Math.ceil(list.length / 120), pts = list.filter(function (e, i) { return i % step === 0 || i === list.length - 1; }); // a long phase is sampled evenly so the pair count stays small
+    const sl = robustSlope(pts.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
+    return sl != null ? { perDay: sl, perWeek: sl * 7, first: list[0] } : null;
   }
   function currentKg() { return inPass('kg', function () { const l = state.entries; return l.length ? trendAt(dayNum(l[l.length - 1].date)) : null; }); }
 

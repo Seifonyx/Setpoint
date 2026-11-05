@@ -408,7 +408,7 @@
     parts.push({ k: 'p', label: 'Protein', max: 30, pts: 30 * Math.min(1, plan.protein ? tt.protein / plan.protein : 1), note: tt.protein + ' of ' + plan.protein + ' g' });
     if (foodDB) {
       const nd = dayNutrients(d), tg = nutTargets(d), fmin = tg.fib && tg.fib.min || 25;
-      if (nd.cov.fib > 0.6) parts.push({ k: 'fib', label: 'Fibre', max: 15, pts: 15 * Math.min(1, nd.tot.fib / fmin), note: Math.round(nd.tot.fib) + ' of ' + Math.round(fmin) + ' g' });
+      if (nd.cov.fib > 0.6) parts.push({ k: 'fib', label: 'Fiber', max: 15, pts: 15 * Math.min(1, nd.tot.fib / fmin), note: Math.round(nd.tot.fib) + ' of ' + Math.round(fmin) + ' g' });
     }
     const bal = function (v, t) { return t ? Math.max(0, 1 - Math.max(0, Math.abs(v - t) / t - 0.15) / 0.35) : 1; };
     parts.push({ k: 'bal', label: 'Carbs and fat', max: 15, pts: 15 * (bal(tt.carbs, plan.carbs) + bal(tt.fat, plan.fat)) / 2, note: 'C ' + tt.carbs + ' / ' + plan.carbs + ' g · F ' + tt.fat + ' / ' + plan.fat + ' g' });

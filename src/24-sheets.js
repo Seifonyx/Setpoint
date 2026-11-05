@@ -22,6 +22,7 @@
       (track ? '<div class="field sfx" id="lKWrap"><input class="input" id="lK" inputmode="numeric" maxlength="5" placeholder="Calories eaten" aria-label="Calories eaten" autocomplete="off" /><em>kcal</em></div><p class="t-sub" id="lKLog" style="margin:-4px 2px 14px" hidden></p>' : '') +
       '<button type="button" class="text-btn" id="lNoteBtn">+ Add note</button>' +
       '<div class="field" id="lNoteWrap" hidden><input class="input" id="lN" maxlength="200" placeholder="Note" aria-label="Note" autocomplete="off" /></div>' +
+      '<div class="list lx-list"><label class="row"><div class="grow"><div class="row-t">Exclude from trend</div><div class="row-s">Bloating, a salty meal or travel</div></div><span class="switch"><input type="checkbox" id="lX" /><i></i></span></label></div>' +
       '<p class="form-error" id="lErr" hidden></p>' +
       '<div class="btn-row"><button type="button" class="btn danger icon-only" id="lDel" aria-label="Delete" hidden>' + TRASH + '</button><button type="button" class="btn primary" id="lSave">Save</button></div>',
       function (root) {
@@ -44,6 +45,7 @@
           $('#lNoteWrap', root).hidden = !(e && e.note);
           $('#lNoteBtn', root).hidden = !!(e && e.note);
           $('#lDel', root).hidden = !e;
+          $('#lX', root).checked = !!(e && e.x);
           err('');
         };
         fill();
@@ -75,11 +77,12 @@
           if (kRaw && (isNaN(k) || k < 300 || k > 15000)) return err('Enter the whole day\'s calories');
           const prev = findEntry(d), snap = snapshot();
           const e = { date: d, kg: Math.round(kg * 10000) / 10000, note: nIn.value.trim().slice(0, 200) };
+          if ($('#lX', root).checked) e.x = true;
           if (k != null) e.kcal = Math.round(k);
           else if ((!kIn || $('#lKWrap', root).hidden) && prev && prev.kcal) e.kcal = prev.kcal; // calorie field hidden: keep what's there
           upsert(e); save(); closeSheet(); renderAll(); buzz('success');
           // A big jump above the trend is almost always water. Say so, so it doesn't feel like a setback.
-          const gap = e.kg - trendAt(dayNum(d)), waterish = toDisp(gap) >= (unit() === 'lb' ? 1.8 : 0.8);
+          const gap = e.kg - trendAt(dayNum(d)), waterish = !e.x && toDisp(gap) >= (unit() === 'lb' ? 1.8 : 0.8);
           toast((prev ? 'Updated ' : 'Logged ') + v.toFixed(1) + ' ' + unit() + (waterish ? ' · likely water, trend barely moved' : ''), function () { restore(snap); });
           checkMilestones();
         };
@@ -139,7 +142,7 @@
     const p = state.profile, en = activeEnergy(), c = en && en.calc, t = state.ui.tune, on = adaptive();
     const row = function (l, v) { return '<div class="row"><div class="grow row-t">' + l + '</div><span class="row-w num">' + v + '</span></div>'; };
     const sgn = function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmtKcal(Math.abs(Math.round(v))); };
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target learns</h2></div>' +
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Adaptive adjustments</h2></div>' +
       (c ? '<div class="list">' + row('Formula', fmtKcal(roundKcal(c.tdee))) +
         (on && p.adjustKcal ? row('Weekly corrections', sgn(p.adjustKcal)) : '') +
         (on && en.m && en.m.ready ? row('Your log', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
@@ -153,7 +156,7 @@
       });
   }
 
-  // "How this is worked out": the whole sum, step by step, in plain words. Only an explanation; the buttons live on the page.
+  // "Target breakdown": the whole sum, step by step, in plain words. Only an explanation; the buttons live on the page.
   function targetExplainSheet() {
     const en = activeEnergy(), plan = makePlan(en); if (!en || !plan) return;
     const c = en.calc, p = state.profile, pace = plan.pace, u = unit(), t = p.training;
@@ -164,23 +167,23 @@
     const para = function (x) { return '<p class="tx-p">' + x + '</p>'; };
     const item = function (dot, name, val, desc) { return '<div class="tx-part"><i class="' + dot + '"></i><div class="grow"><div class="tx-pt"><span>' + name + '</span><b class="num">' + val + '</b></div><div class="tx-pd">' + desc + '</div></div></div>'; };
     // The answer first, then where each number comes from. Kept short: the numbers do the explaining.
-    let h = '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
+    let h = '<div class="tx-eq">' + row('Expenditure', k(en.tdee)) +
       (pace.dir !== 'maintain' ? row(pace.dir === 'lose' ? 'To lose ' + rate + ' a week' : 'To gain ' + rate + ' a week', sg(goalK)) : '') +
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
       const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
-      h += step(1, 'What you burn', '<div class="tx-parts">' +
+      h += step(1, 'Expenditure', '<div class="tx-parts">' +
           item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
-          item('o2', 'Daily life', k(life), 'Moving around and digesting') +
+          item('o2', 'Movement', k(life), 'Moving around and digesting') +
           item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
           item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
         (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
-          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Learn from my log</b> to use your real results.</div>' : ''));
+          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Adaptive expenditure</b> to use your real results.</div>' : ''));
     }
     // 2. Goal
-    if (pace.dir !== 'maintain') h += step(2, 'Your goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
+    if (pace.dir !== 'maintain') h += step(2, 'Goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
     // 3. Macros
     const lb = u === 'lb', per = function (v) { return Number((lb ? v / LB : v).toFixed(1)) + ' g per ' + u; };
     const refTxt = plan.refWhy === 'your weight' ? 'body weight' : plan.refWhy === 'your lean mass' ? 'lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'healthy weight (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
@@ -195,7 +198,7 @@
     if (sp) h += '<div class="tx-note"><b>Training days</b> (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + '): +' + k(Math.round(sp.tx / 10) * 10) + ' kcal, rest days −' + k(Math.round(sp.rx / 10) * 10) + '. Same weekly total.</div>';
     if (state.settings.flex && state.settings.flex.on) h += '<div class="tx-note"><b>Flexible week:</b> days move with what you ate earlier in the week.</div>';
     if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'A slower pace keeps more muscle.' : 'A slower pace would help.') + '</div>';
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Target breakdown</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
       $('#txOk', root).addEventListener('click', function () { closeSheet(); });
     });
   }
@@ -583,7 +586,7 @@
       const d = +k; if (wBy[d + 1] == null) return;
       const iso = isoFromDay(d), t = dayTotals(iso); if (!t.kcal || t.kcal < 600) return;
       const r = { delta: wBy[d + 1] - wBy[d], kcal: t.kcal, carbs: t.carbs };
-      if (foodDB) { const nd = dayNutrients(iso); if (nd.cov.na > 0.7 && nd.tot.na > 0) r.na = nd.tot.na; }
+      if (foodDB) { const nd = dayNutrients(iso); if (nd.cov.na > 0.7 && nd.tot.na > 0) r.na = nd.tot.na; if (nd.cov.fib > 0.7 && nd.tot.fib > 0) r.fib = nd.tot.fib; }
       const pl = dayPlan(iso); if (pl && pl.train != null) r.train = pl.train;
       rows.push(r);
     });
@@ -598,6 +601,7 @@
     };
     split('na', 'Salty days', ' mg sodium', 'That\'s water, not fat. It usually leaves in 1–3 days.');
     split('carbs', 'High-carb days', ' g carbs', 'Carbs are stored with water, so the scale jumps. It isn\'t fat.');
+    split('fib', 'High-fiber days', ' g fiber', 'Fiber adds food and water still in your gut. It isn\'t fat, and it shows up as a stall until it passes.');
     split('kcal', 'Bigger eating days', ' kcal', 'Mostly food and water still in you. Real fat change shows over weeks, not overnight.');
     const tr = rows.filter(function (x) { return x.train === true; }), rs = rows.filter(function (x) { return x.train === false; });
     if (tr.length >= 5 && rs.length >= 5) { const d = avg(tr, 'delta') - avg(rs, 'delta'); out.items.push({ t: 'Training days', d: d, s: 'Next morning after training vs rest days', note: Math.abs(d) >= 0.15 ? 'Muscles hold extra water after training while they repair.' : 'No clear effect for you so far.' }); }
@@ -615,7 +619,7 @@
   function insightsSheet() {
     const draw = function (root) {
       const r = weightInsights();
-      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">What moves your weight</h2></div></div>' +
+      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">Weight factors</h2></div></div>' +
         (r.n < 14 ? '<p class="muted-note fd-empty">Needs 14 days with food logged and a weigh-in the next morning.</p>' :
           '<div class="list">' + r.items.map(function (x) { const up = x.d > 0; return '<div class="row fd-row ins-row"><div class="grow"><div class="row-t">' + esc(x.t) + '</div><div class="row-s" style="white-space:normal">' + esc(x.s) + '</div><div class="ins-note">' + esc(x.note) + '</div></div><span class="ins-v num ' + (Math.abs(x.d) < 0.15 && !x.week ? 'flat' : up ? 'up' : 'down') + '">' + (x.week ? '' : (up ? '+' : '−') + fmtW(Math.abs(x.d)) + ' ' + unit()) + '</span></div>'; }).join('') + '</div>' +
           '<p class="muted-note sv-src">Next-morning weight: your highest third of days vs your lowest.</p>');
@@ -761,9 +765,9 @@
         '<div class="sv-key wk-key" style="margin:14px 0"><div><b class="num">' + fmtKcal(roundKcal(m.intake)) + '</b><span>Ate a day</span></div><div><b class="num">' + fmtDelta(m.rateKgWk, 2) + '</b><span>' + unit() + ' a week</span></div><div><b class="num">' + m.calDays + '<small>/' + m.days + '</small></b><span>Days logged</span></div>' + (c ? '<div><b class="num">' + fmtKcal(roundKcal(c.tdee)) + '</b><span>Formula</span></div>' : '') + '</div>' +
         (gaps ? '<div class="tx-note tx-warn">Unlogged days hide what you ate, so this may read low. It counts less until you log more days.</div>' : '') +
         (m.partial ? '<p class="muted-note" style="text-align:start">Left out ' + m.partial + (m.partial === 1 ? ' day' : ' days') + ' that looked half-logged.</p>' : '') +
-        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Learn from my log') + '</p>';
+        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Adaptive expenditure') + '</p>';
     }
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Burn from your log</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Measured expenditure</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
   function whatsNewSheet() {

@@ -396,7 +396,7 @@
     const line = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p.day).toFixed(1) + ',' + Y(toDisp(p.trend)).toFixed(1); }).join('');
     s += '<path d="' + line + 'L' + X(pts[pts.length - 1].day).toFixed(1) + ',' + (padT + ih) + 'L' + X(d0).toFixed(1) + ',' + (padT + ih) + 'Z" fill="url(#cg)"/>';
     const r = pts.length > 120 ? 1.6 : pts.length > 60 ? 2.2 : 3;
-    pts.forEach(function (p) { s += '<circle cx="' + X(p.day).toFixed(1) + '" cy="' + Y(toDisp(p.kg)).toFixed(1) + '" r="' + r + '" fill="var(--chart-raw)"/>'; });
+    pts.forEach(function (p) { s += '<circle cx="' + X(p.day).toFixed(1) + '" cy="' + Y(toDisp(p.kg)).toFixed(1) + '" r="' + r + '" ' + (p.x ? 'fill="none" stroke="var(--chart-raw)" stroke-width="1.5"' : 'fill="var(--chart-raw)"') + '/>'; }); // excluded weigh-ins: hollow
     if (proj) {
       const px = X(proj.day).toFixed(1), py = Y(toDisp(proj.kg)).toFixed(1);
       s += '<path d="M' + X(lastDay).toFixed(1) + ',' + Y(toDisp(lastT)).toFixed(1) + 'L' + px + ',' + py + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" opacity=".8"/>';
@@ -509,6 +509,7 @@
       }
       const sub = [];
       const dk = dayKcal(e.date); if (dk) sub.push(fmtKcal(dk) + ' kcal');
+      if (e.x) sub.push('Excluded');
       if (e.note) sub.push(e.note);
       return '<button type="button" class="row" data-edit="' + e.date + '"><div class="grow"><div class="row-t">' + esc(relDate(e.date)) + '</div>' + (sub.length ? '<div class="row-s">' + esc(sub.join(' · ')) + '</div>' : '') + '</div>' +
         '<span class="row-w num">' + fmtW(e.kg) + '</span>' + delta + '</button>';
@@ -561,7 +562,7 @@
       const span = Math.max(1, Math.min(rng, today - dayNum(l[0].date) + 1)), n30 = l.filter(function (e) { return dayNum(e.date) > today - span; }).length, r = n30 / span;
       out.push([I_CAL, 'You weighed in on <b>' + n30 + ' of the last ' + span + ' days</b>.' + (r >= 0.8 ? ' Great consistency.' : r < 0.5 ? ' Daily weigh-ins make the trend more accurate.' : '')]);
     }
-    const more = '<button type="button" class="ins-more" data-action="insights"><span><b>What moves your weight</b><small>Patterns from your own log</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+    const more = '<button type="button" class="ins-more" data-action="insights"><span><b>Weight factors</b><small>Patterns from your own log</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>';
     box.innerHTML = '<div class="card insight-card"><div class="card-head"><h2 class="card-title">Insights</h2></div>' + out.slice(0, 2).map(function (x) { return '<div class="insight"><span class="ico">' + x[0] + '</span><div>' + x[1] + '</div></div>'; }).join('') + more + '</div>';
   }
 

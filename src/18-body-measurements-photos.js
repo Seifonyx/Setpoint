@@ -294,7 +294,7 @@
     let stream = null, facing = 'user', ghost = null, timer = 0;
     const stop = function () { if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; clearInterval(timer); };
     const ref = photos.find(function (x) { return x.pose === pose; }) || null;
-    openSheet('<div class="sheet-head"><div><div class="label faint">' + poseName(pose) + (date !== todayISO() ? ' · ' + esc(relDate(date)) : '') + '</div><h2 class="sheet-title" id="sheetTitle">Line it up</h2></div></div>' +
+    openSheet('<div class="sheet-head"><div><div class="label faint">' + poseName(pose) + (date !== todayISO() ? ' · ' + esc(relDate(date)) : '') + '</div><h2 class="sheet-title" id="sheetTitle">Alignment</h2></div></div>' +
       '<div class="gc-box" id="gcBox"><video id="gcV" playsinline muted autoplay></video><img id="gcG" alt="" /><span class="gc-grid"></span><span class="gc-count" id="gcCount" hidden></span></div>' +
       (ref ? '<div class="gc-ctl"><span class="label faint">Guide</span><input type="range" id="gcOp" min="0" max="80" value="35" aria-label="Guide strength" /></div>' : '') +
       '<div class="btn-row gc-row"><button type="button" class="btn soft" id="gcFlip">Flip</button><button type="button" class="btn soft" id="gcTimer" aria-pressed="false">Timer off</button><button type="button" class="btn primary" id="gcShot">Take photo</button></div>',

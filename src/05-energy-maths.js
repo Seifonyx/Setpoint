@@ -38,7 +38,7 @@
   function measuredEnergy() { return inPass('me', measuredEnergyNow); }
   function measuredEnergyNow() {
     const end = dayNum(todayISO());
-    const win = state.entries.filter(function (e) { return dayNum(e.date) > end - 28; });
+    const win = counted().filter(function (e) { return dayNum(e.date) > end - 28; });
     const from = Math.max(end - 27, win.length ? dayNum(win[0].date) : end);
     const ce = calcEnergy(), floor = ce ? ce.tdee * 0.5 : 800, raw = [];
     for (let d = from; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= floor) raw.push(k); }
@@ -47,16 +47,16 @@
     const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length, days = Math.max(1, end - from);
     const res = { ready: false, calDays: cal.length, days: days, coverage: cal.length / days, partial: raw.length - cal.length, span: span, needCal: 10, needSpan: 14 };
     if (cal.length < res.needCal || span < res.needSpan) return res;
-    const reg = linreg(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
-    if (!reg) return res;
+    const slope = robustSlope(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; })); // shrugs off a few water-weight days
+    if (slope == null) return res;
     const intake = cal.reduce(function (a, k) { return a + k; }, 0) / cal.length;
-    res.ready = true; res.intake = intake; res.rateKgWk = reg.slope * 7; res.tdee = intake - reg.slope * KCAL_PER_KG;
+    res.ready = true; res.intake = intake; res.rateKgWk = slope * 7; res.tdee = intake - slope * KCAL_PER_KG;
     return res;
   }
   function activeEnergy() { return inPass('ae', activeEnergyNow); }
   // Today's plan from today's burn (what the day plans below start from).
   function livePlan() { return inPass('lp', function () { return makePlan(activeEnergy()); }); }
-  // One switch decides the burn: "Learn from my log" (settings.autoAdjust) on, or the formula alone.
+  // One switch decides the burn: "Adaptive expenditure" (settings.autoAdjust) on, or the formula alone.
   function adaptive() { return state.settings.autoAdjust !== false; }
   function activeEnergyNow() {
     const c = calcEnergy(), m = measuredEnergy(), kg = currentKg();
@@ -155,11 +155,11 @@
     const today = dayNum(todayISO()), p = state.profile;
     if (p.adjustAt != null && today - p.adjustAt < 6) return null;
     if (p.paceAt != null && today - p.paceAt < 14) return null;
-    const win = state.entries.filter(function (e) { return dayNum(e.date) > today - 15; });
+    const win = counted().filter(function (e) { return dayNum(e.date) > today - 15; });
     if (win.length < 6 || dayNum(win[win.length - 1].date) - dayNum(win[0].date) < 10) return null;
-    const map = trendMap(), reg = linreg(win.map(function (e) { const d = dayNum(e.date); return { x: d, y: map[d] }; }));
-    if (!reg) return null;
-    const actual = reg.slope * 7, planned = currentPace().kg;
+    const map = trendMap(), slope = robustSlope(win.map(function (e) { const d = dayNum(e.date); return { x: d, y: map[d] }; }));
+    if (slope == null) return null;
+    const actual = slope * 7, planned = currentPace().kg;
     const gap = (actual - planned) * KCAL_PER_KG / 7; // kcal a day: + means heavier than the plan expects
     // Your food log for the same two weeks (days that look fully logged).
     const lowCut = en.calc ? en.calc.tdee * 0.5 : 800;

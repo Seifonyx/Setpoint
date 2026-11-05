@@ -12,7 +12,7 @@
   function forDayHtml() {
     const pl = makePlan(activeEnergy());
     const CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h4M8 17h7"/></svg>';
-    return '<div class="group-label mf-ins-l">For your day</div>' +
+    return '<div class="group-label mf-ins-l">Suggestions</div>' +
       '<button type="button" class="card fd-plan" data-plan-day><span class="ico ic-c-green">' + CAL + '</span><span class="grow"><b>Meal planner</b><small>' +
       (!pl ? 'Set your targets to plan a day' : 'A full day of meals for ' + fmtKcal(roundKcal(pl.target)) + ' kcal') +
       '</small></span>' + CHEV + '</button>';
@@ -282,7 +282,7 @@
     let n = 7;
     const range = function () { return n === 1 ? fmtDate(d, { weekday: 'long', month: 'short', day: 'numeric' }) : fmtDate(d, { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(isoFromDay(dayNum(d) + n - 1), { month: 'short', day: 'numeric' }); };
     const draw = function (root) {
-      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Take a break</h2></div></div>' +
+      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Diet break</h2></div></div>' +
         '<p class="sheet-text">Eat at maintenance for the day. Can help energy and training.</p>' +
         '<div class="label faint fd-sec">How many days?</div>' +
         '<div class="rates br-days">' + [1, 2, 3, 5, 7, 14].map(function (k) { return '<button type="button" data-brk="' + k + '" aria-pressed="' + (k === n) + '">' + (k === 1 ? '1 day' : k + ' days') + '</button>'; }).join('') + '</div>' +
@@ -304,7 +304,7 @@
         row('dmCopy', 'Copy day', its.length ? n(its.length) : 'Nothing logged yet', !its.length) +
         row('dmPrev', 'Copy previous day', pits.length ? n(pits.length) + ' from ' + esc(relDate(prev)) : 'Nothing logged ' + esc(relDate(prev)), !pits.length) +
         (clip ? row('dmPaste', 'Paste', n(clip.items.length) + ' from ' + esc(relDate(clip.from))) : '') +
-        (function () { const md = state.dayMode[d]; if (!md) return row('dmMode', 'Take a break', 'Eat at maintenance for a day or more'); let e = dayNum(d); while (state.dayMode[isoFromDay(e + 1)]) e++; return row('dmMode', 'End the break', 'Eating at maintenance' + (e > dayNum(d) ? ' until ' + esc(fmtDate(isoFromDay(e), { weekday: 'short', month: 'short', day: 'numeric' })) : ' today')); })() +
+        (function () { const md = state.dayMode[d]; if (!md) return row('dmMode', 'Diet break', 'Eat at maintenance for a day or more'); let e = dayNum(d); while (state.dayMode[isoFromDay(e + 1)]) e++; return row('dmMode', 'End the break', 'Eating at maintenance' + (e > dayNum(d) ? ' until ' + esc(fmtDate(isoFromDay(e), { weekday: 'short', month: 'short', day: 'numeric' })) : ' today')); })() +
         row('dmPlan', 'Meal planner', 'A full day of meals for your targets') +
         row('dmShare', 'Share this day', 'An image of your food and totals') +
         (plannedFor(d).length ? row('dmEatAll', 'Mark planned food as eaten', n(plannedFor(d).length)) : '') +
@@ -447,7 +447,7 @@
       g('Back up', row('export-json', I('<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/>'), 'Back up', 'Save everything to a file') + row('import', I('<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14"/>'), 'Restore', 'From a Setpoint backup file') + row('backups', I('<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/><path d="M12 8v4l3 2"/>'), 'Daily backups', 'A copy every day on this phone, kept for 7 days')) +
       g('Export', row('export-food', I('<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/>'), 'Export food log', 'Everything you ate, with nutrients, as a spreadsheet') + row('export-csv', I('<path d="M4 17l5-5 4 3 7-8"/>'), 'Export weigh-ins', 'Your weight and trend as a spreadsheet')) +
       g('Import', row('import-crono', I('<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>'), 'From Cronometer', 'Pick dailysummary.csv and servings.csv together') + row('import-csv', I('<path d="M4 17l5-5 4 3 7-8"/>'), 'Weigh-ins from another app', 'Happy Scale, Libra, MyFitnessPal and more')) +
-      g('Tidy up', row('health', I('<path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>'), 'Check my data', 'Find and fix entries that look wrong')),
+      g('Tidy up', row('health', I('<path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>'), 'Data check', 'Find and fix entries that look wrong')),
       function (root) { $$('[data-ds]', root).forEach(function (b) { b.addEventListener('click', function () { const a = b.dataset.ds; closeSheet(); const el = document.createElement('button'); el.dataset.action = a; el.hidden = true; document.body.appendChild(el); el.click(); el.remove(); }); }); });
   }
   // Theme picker: a small preview of each theme, in the light or dark version you're using now.

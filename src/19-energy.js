@@ -55,18 +55,18 @@
     // 1. Your daily burn (maintenance): one number, one bar, four parts.
     if (!en) {
       const needD = !profileReady(), needW = kgNow == null;
-      hero.innerHTML = '<div class="tg-k">Your daily burn</div>' +
+      hero.innerHTML = '<div class="tg-k">Daily expenditure</div>' +
         '<div class="tg-empty-t">Let\'s work out your targets</div>' +
         '<p class="tg-empty-s">' + (needD ? 'Add your age, sex and height' + (needW ? ', then log your weight.' : '.') : 'Log your weight to finish.') + '</p>' +
         '<button type="button" class="btn primary block" data-action="' + (needD ? 'details' : 'log') + '">' + (needD ? 'Get started' : 'Log weight') + '</button>';
     } else {
       const c = en.calc, learned = burnLabel(en);
-      let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Your daily burn</div>' +
+      let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Daily expenditure</div>' +
         '<div class="tg-burn-v num">' + fmtKcal(roundKcal(en.tdee)) + '<span class="unit">kcal</span></div>' +
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
       if (c) {
         // What the formula got wrong shows up in daily life (everyday movement varies most), so the parts add up to the burn used.
-        const parts = [['Resting', c.bmr, 'o1'], ['Daily life', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
+        const parts = [['Resting', c.bmr, 'o1'], ['Movement', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
         h += '<div class="burn tg-bar">' + parts.map(function (x) { return '<i class="' + x[2] + '" style="flex-grow:' + Math.max(1, Math.round(x[1])) + '"></i>'; }).join('') + '</div>' +
           '<div class="tg-key">' + parts.map(function (x) { return '<div><span><i class="' + x[2] + '"></i>' + x[0] + '</span><b class="num">' + fmtKcal(roundKcal(x[1])) + '</b></div>'; }).join('') + '</div>';
       }
@@ -84,12 +84,12 @@
         (plan.warn ? '<div class="tg-warn">' + esc(plan.warn) + '</div>' : '') +
         '<div class="tg-mac">' + kc.map(function (x) { return '<button type="button" class="tg-m" data-action="macros"><span class="tg-m-l"><i class="d-' + x[3] + '"></i>' + x[0] + '</span><b class="num"><span data-an="' + x[1] + '" data-af="g">' + x[1] + '</span><small>g</small></b><span class="tg-m-p num">' + Math.round(x[1] * x[2] / tot * 100) + '%</span></button>'; }).join('') + '</div>' +
         '<div class="tg-links"><button type="button" class="tg-how" data-action="macros"><span class="grow">Protein &amp; fat</span><span class="tg-how-v">' + (plan.custom ? 'Your own' : 'Recommended') + '</span>' + CHEV + '</button>' +
-        '<button type="button" class="tg-how" data-action="tg-explain"><span class="grow">How this is worked out</span>' + CHEV + '</button></div>';
+        '<button type="button" class="tg-how" data-action="tg-explain"><span class="grow">Target breakdown</span>' + CHEV + '</button></div>';
       animate(card, 'target');
       // 3. Your goal: direction, pace and goal weight, together in one place.
       const g = state.settings.goalKg;
       const etaD = plan.eta && plan.eta.replace(/^goal by /, '');
-      gc.innerHTML = '<div class="card-head"><h2 class="card-title">' + (g && etaD && pace.dir !== 'maintain' ? 'Reach ' + fmtW(g) + ' ' + unit() + ' by ' + esc(etaD) : 'Your goal') + '</h2></div>' +
+      gc.innerHTML = '<div class="card-head"><h2 class="card-title">' + (g && etaD && pace.dir !== 'maintain' ? 'Reach ' + fmtW(g) + ' ' + unit() + ' by ' + esc(etaD) : 'Goal') + '</h2></div>' +
         '<div class="seg"><button type="button" data-dir="lose" aria-pressed="' + (pace.dir === 'lose') + '">Lose</button><button type="button" data-dir="maintain" aria-pressed="' + (pace.dir === 'maintain') + '">Maintain</button><button type="button" data-dir="gain" aria-pressed="' + (pace.dir === 'gain') + '">Gain</button></div>' +
         (pace.dir !== 'maintain' ? '<div class="tg-rate-l">How fast, per week</div><div class="rates">' + RATES[unit()][pace.dir].map(function (v, i) { return '<button type="button" data-rate="' + i + '" aria-pressed="' + (i === pace.i) + '" aria-label="' + v + ' ' + unit() + ' per week">' + v + ' ' + unit() + '</button>'; }).join('') + '</div>' : '') +
         '<button type="button" class="tg-gw" data-action="goal"><span>Goal weight</span><b class="num">' + (g ? fmtW(g) + ' ' + unit() : 'Set') + '</b>' + CHEV + '</button>' +

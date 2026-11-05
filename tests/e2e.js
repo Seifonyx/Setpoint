@@ -262,6 +262,14 @@ server.listen(0, async () => {
       const gp = JSON.parse(JSON.stringify(st)); for (let d = 1; d <= 27; d++) if (d % 3 === 0) delete gp.food[iso(d)];
       e = await en(gp);
       ok('targets: gaps in the log lower how much your log counts', e.w > 0 && e.w < 0.7, JSON.stringify(e));
+      // an excluded weigh-in (bloating, salty meal) doesn't move the trend or the burn; a 2-day water dip barely does
+      const ex = JSON.parse(JSON.stringify(st)); ex.entries[ex.entries.length - 1] = Object.assign({}, ex.entries[ex.entries.length - 1], { kg: ex.entries[ex.entries.length - 1].kg - 2, x: true });
+      e = await en(ex);
+      const trendOk = await p.evaluate(() => { const l = JSON.parse(localStorage.getItem('setpoint')).entries; return l[l.length - 1].x === true; });
+      ok('weigh-ins: an excluded one is kept but left out of the burn', trendOk && Math.abs(e.tdee - 2750) < 30, JSON.stringify(e));
+      const dip = JSON.parse(JSON.stringify(st)); dip.entries.slice(-2).forEach(x => { x.kg -= 1.2; });
+      e = await en(dip);
+      ok('weigh-ins: a 2-day water dip at the end barely moves the burn', Math.abs(e.tdee - 2750) < 120, JSON.stringify(e));
       // plateau with only some days logged: no correction (unlogged days could explain it)
       e = await en(mk(() => 90, { food: food(2000, 8) }));
       ok('targets: weekly correction waits when the log has gaps', e.adjust === 0 && !e.tune, JSON.stringify(e));

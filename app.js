@@ -2,8 +2,14 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.14';
+  const APP_VERSION = '2.0.15';
   const CHANGES = [
+    { v: '2.0.15', items: [
+      "Weigh-ins can be excluded from your trend: open one and turn on Exclude from trend (for bloating, a salty meal or travel). It stays in your history as a hollow dot but no longer moves your trend or expenditure.",
+      "Expenditure and weekly adjustments now use a robust slope, so a day or two of water weight (fiber, salt, carbs) at the start or end of the month barely moves them.",
+      "Insights now shows High-fiber days next to salty and high-carb days, so you can see if fiber holds your weight up the next morning.",
+      "Clearer names: Daily expenditure, Measured expenditure, Adaptive expenditure, Target breakdown, Weight factors, Data check and more."
+    ] },
     { v: '2.0.14', items: [
       "Your burn now ignores days that look half-logged (far below your usual), and counts your log less when you skip days. Both used to make your burn look lower and cut your target.",
       "The weekly target check no longer lowers your target when days are missing from your log, since unlogged days could explain the gap.",
@@ -761,6 +767,7 @@
       const kg = e.kg != null ? Number(e.kg) : Number(e.weight); // v1 stored { date, weight } in kg
       if (!isFinite(kg) || kg <= 0 || kg > 700) return;
       const entry = { date: date, kg: Math.round(kg * 10000) / 10000, note: typeof e.note === 'string' ? e.note.slice(0, 200) : '' };
+      if (e.x === true) entry.x = true; // left out of the trend and expenditure (kept in history)
       const kcal = numIn(e.kcal, 1, 20000);
       if (kcal != null) entry.kcal = Math.round(kcal);
       byDate[date] = entry;
@@ -1125,10 +1132,13 @@
   const TREND_ALPHA = 0.2, SPIKE_CAP = 1.5;
   let trendCache = { sig: null, map: null };
   function trendMap() { return inPass('tm', trendMapNow); }
+  // Weigh-ins you excluded (bloating, a salty meal, travel) stay in your history but don't move the trend:
+  // on those days the trend just carries on from the weigh-ins around them.
+  function counted() { return inPass('cnt', function () { return state.entries.filter(function (e) { return !e.x; }); }); }
   function trendMapNow() {
-    const l = state.entries; let h = 0;
-    for (let i = 0; i < l.length; i++) h = (h * 31 + dayNum(l[i].date) * 7 + Math.round(l[i].kg * 1000)) % 2147483647; // cheap fingerprint
-    const sig = l.length + ':' + h;
+    const all = state.entries, l = counted(); let h = 0;
+    for (let i = 0; i < all.length; i++) h = (h * 31 + dayNum(all[i].date) * 7 + Math.round(all[i].kg * 1000) + (all[i].x ? 3 : 0)) % 2147483647; // cheap fingerprint
+    const sig = all.length + ':' + h;
     if (trendCache.sig === sig) return trendCache.map;
     const map = {};
     if (l.length) {
@@ -1143,6 +1153,8 @@
         map[db] = t;
       }
     }
+    // excluded days read the trend from the last counted weigh-in before them (or the first one after)
+    all.forEach(function (e) { if (!e.x) return; const d = dayNum(e.date); let v = null; for (let i = l.length - 1; i >= 0; i--) if (dayNum(l[i].date) <= d) { v = map[dayNum(l[i].date)]; break; } map[d] = v != null ? v : l.length ? map[dayNum(l[0].date)] : e.kg; });
     trendCache = { sig: sig, map: map };
     return map;
   }
@@ -1152,7 +1164,17 @@
     for (let i = l.length - 1; i >= 0; i--) { const d = dayNum(l[i].date); if (d <= day) return map[d]; }
     return null;
   }
-  function withTrend() { const map = trendMap(); return state.entries.map(function (e) { const d = dayNum(e.date); return { date: e.date, kg: e.kg, note: e.note, kcal: e.kcal, day: d, trend: map[d] }; }); }
+  function withTrend() { const map = trendMap(); return state.entries.map(function (e) { const d = dayNum(e.date); return { date: e.date, kg: e.kg, note: e.note, kcal: e.kcal, x: !!e.x, day: d, trend: map[d] }; }); }
+  // Theil–Sen slope: the median of the slopes between every pair of points. One or two odd weigh-ins (water after
+  // a salty meal, a day or two of different fiber) barely move it, where a straight-line fit would lean towards them.
+  function robustSlope(points) {
+    const sl = [];
+    for (let i = 0; i < points.length; i++) for (let j = i + 1; j < points.length; j++) { const dx = points[j].x - points[i].x; if (dx) sl.push((points[j].y - points[i].y) / dx); }
+    if (!sl.length) return null;
+    sl.sort(function (a, b) { return a - b; });
+    const m = sl.length >> 1;
+    return sl.length % 2 ? sl[m] : (sl[m - 1] + sl[m]) / 2;
+  }
   function linreg(points) {
     const n = points.length;
     if (n < 2) return null;
@@ -1166,10 +1188,11 @@
   function currentPhase() { return state.phases.length ? state.phases[state.phases.length - 1] : null; }
   function trend() {
     const p = currentPhase();
-    const list = p ? state.entries.filter(function (e) { return e.date >= p.date; }) : state.entries;
+    const list = p ? counted().filter(function (e) { return e.date >= p.date; }) : counted();
     if (list.length < 2) return null;
-    const reg = linreg(list.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
-    return reg ? { perDay: reg.slope, perWeek: reg.slope * 7, first: list[0] } : null;
+    const step = Math.ceil(list.length / 120), pts = list.filter(function (e, i) { return i % step === 0 || i === list.length - 1; }); // a long phase is sampled evenly so the pair count stays small
+    const sl = robustSlope(pts.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
+    return sl != null ? { perDay: sl, perWeek: sl * 7, first: list[0] } : null;
   }
   function currentKg() { return inPass('kg', function () { const l = state.entries; return l.length ? trendAt(dayNum(l[l.length - 1].date)) : null; }); }
 
@@ -1263,7 +1286,7 @@
   function measuredEnergy() { return inPass('me', measuredEnergyNow); }
   function measuredEnergyNow() {
     const end = dayNum(todayISO());
-    const win = state.entries.filter(function (e) { return dayNum(e.date) > end - 28; });
+    const win = counted().filter(function (e) { return dayNum(e.date) > end - 28; });
     const from = Math.max(end - 27, win.length ? dayNum(win[0].date) : end);
     const ce = calcEnergy(), floor = ce ? ce.tdee * 0.5 : 800, raw = [];
     for (let d = from; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= floor) raw.push(k); }
@@ -1272,16 +1295,16 @@
     const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length, days = Math.max(1, end - from);
     const res = { ready: false, calDays: cal.length, days: days, coverage: cal.length / days, partial: raw.length - cal.length, span: span, needCal: 10, needSpan: 14 };
     if (cal.length < res.needCal || span < res.needSpan) return res;
-    const reg = linreg(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
-    if (!reg) return res;
+    const slope = robustSlope(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; })); // shrugs off a few water-weight days
+    if (slope == null) return res;
     const intake = cal.reduce(function (a, k) { return a + k; }, 0) / cal.length;
-    res.ready = true; res.intake = intake; res.rateKgWk = reg.slope * 7; res.tdee = intake - reg.slope * KCAL_PER_KG;
+    res.ready = true; res.intake = intake; res.rateKgWk = slope * 7; res.tdee = intake - slope * KCAL_PER_KG;
     return res;
   }
   function activeEnergy() { return inPass('ae', activeEnergyNow); }
   // Today's plan from today's burn (what the day plans below start from).
   function livePlan() { return inPass('lp', function () { return makePlan(activeEnergy()); }); }
-  // One switch decides the burn: "Learn from my log" (settings.autoAdjust) on, or the formula alone.
+  // One switch decides the burn: "Adaptive expenditure" (settings.autoAdjust) on, or the formula alone.
   function adaptive() { return state.settings.autoAdjust !== false; }
   function activeEnergyNow() {
     const c = calcEnergy(), m = measuredEnergy(), kg = currentKg();
@@ -1380,11 +1403,11 @@
     const today = dayNum(todayISO()), p = state.profile;
     if (p.adjustAt != null && today - p.adjustAt < 6) return null;
     if (p.paceAt != null && today - p.paceAt < 14) return null;
-    const win = state.entries.filter(function (e) { return dayNum(e.date) > today - 15; });
+    const win = counted().filter(function (e) { return dayNum(e.date) > today - 15; });
     if (win.length < 6 || dayNum(win[win.length - 1].date) - dayNum(win[0].date) < 10) return null;
-    const map = trendMap(), reg = linreg(win.map(function (e) { const d = dayNum(e.date); return { x: d, y: map[d] }; }));
-    if (!reg) return null;
-    const actual = reg.slope * 7, planned = currentPace().kg;
+    const map = trendMap(), slope = robustSlope(win.map(function (e) { const d = dayNum(e.date); return { x: d, y: map[d] }; }));
+    if (slope == null) return null;
+    const actual = slope * 7, planned = currentPace().kg;
     const gap = (actual - planned) * KCAL_PER_KG / 7; // kcal a day: + means heavier than the plan expects
     // Your food log for the same two weeks (days that look fully logged).
     const lowCut = en.calc ? en.calc.tdee * 0.5 : 800;
@@ -2161,7 +2184,7 @@
     parts.push({ k: 'p', label: 'Protein', max: 30, pts: 30 * Math.min(1, plan.protein ? tt.protein / plan.protein : 1), note: tt.protein + ' of ' + plan.protein + ' g' });
     if (foodDB) {
       const nd = dayNutrients(d), tg = nutTargets(d), fmin = tg.fib && tg.fib.min || 25;
-      if (nd.cov.fib > 0.6) parts.push({ k: 'fib', label: 'Fibre', max: 15, pts: 15 * Math.min(1, nd.tot.fib / fmin), note: Math.round(nd.tot.fib) + ' of ' + Math.round(fmin) + ' g' });
+      if (nd.cov.fib > 0.6) parts.push({ k: 'fib', label: 'Fiber', max: 15, pts: 15 * Math.min(1, nd.tot.fib / fmin), note: Math.round(nd.tot.fib) + ' of ' + Math.round(fmin) + ' g' });
     }
     const bal = function (v, t) { return t ? Math.max(0, 1 - Math.max(0, Math.abs(v - t) / t - 0.15) / 0.35) : 1; };
     parts.push({ k: 'bal', label: 'Carbs and fat', max: 15, pts: 15 * (bal(tt.carbs, plan.carbs) + bal(tt.fat, plan.fat)) / 2, note: 'C ' + tt.carbs + ' / ' + plan.carbs + ' g · F ' + tt.fat + ' / ' + plan.fat + ' g' });
@@ -2914,7 +2937,7 @@
   function dupsSheet() {
     const draw = function (root) {
       const gs = dupGroups(), use = foodUse().use;
-      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Possible copies</h2></div>' +
+      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Possible duplicates</h2></div>' +
         (!gs.length ? '<p class="muted-note fd-empty">No copies left. Nice and tidy.</p>' :
           '<p class="muted-note" style="text-align:start;margin:0 2px 12px">Merging keeps one and moves your diary, recipes and meals over to it.</p>' +
           gs.map(function (g, gi) {
@@ -2961,9 +2984,9 @@
   }
   function healthSheet() {
     const draw = function (root) {
-      if (!foodDB) { root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Check my data</h2></div>' + skel(4); loadFoods().then(function () { if (root.isConnected) draw(root); }, function () { if (root.isConnected) { foodDB = foodDB || null; root.querySelector('.fd-empty').textContent = 'Couldn\'t load the food list. Check your connection.'; } }); return; }
+      if (!foodDB) { root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Data check</h2></div>' + skel(4); loadFoods().then(function () { if (root.isConnected) draw(root); }, function () { if (root.isConnected) { foodDB = foodDB || null; root.querySelector('.fd-empty').textContent = 'Couldn\'t load the food list. Check your connection.'; } }); return; }
       const is = healthIssues();
-      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Check my data</h2></div>' +
+      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Data check</h2></div>' +
         (!is.length ? '<div class="hc-ok">' + CHECK_IC + '<b>Everything looks right</b><span>No broken foods, odd entries or weigh-ins that look like typos.</span></div>' :
           '<p class="muted-note" style="text-align:start;margin:0 2px 12px">' + is.length + (is.length === 1 ? ' thing looks' : ' things look') + ' off. Nothing changes unless you tap a fix.</p>' +
           (is.length > 1 ? '<button type="button" class="btn soft block" id="hcAll" style="margin-bottom:12px">Fix all ' + is.length + '</button>' : '') +
@@ -4028,7 +4051,7 @@
       const src = srcBadge(f) + (f.est ? 'Typical values for this product · check the pack' : f.off || f.cat === 'Packaged foods' ? 'From the product label (Open Food Facts)' : f.cat === 'Restaurants (estimate)' ? 'Estimate for a typical serving' : f.recipe ? 'Recipe · ' + (state.recipes.find(function (x) { return x.id === f.id; }) || { items: [] }).items.length + ' ingredients' + (f.missing ? ' (some missing)' : '') + (f.rawG ? '. Grams are by raw ingredient weight; add the cooked weight to the recipe for exact grams.' : '') : f.custom ? 'Your own numbers' : f.cat === 'Egyptian dishes' ? 'Egyptian dish · estimate from a typical recipe' : f.cat === 'Dishes (estimate)' ? 'Estimate from a typical recipe' : esc(f.cat) + (f.src === 'fndds' ? ' · USDA, as eaten' : ' · USDA, lab analysis'));
       root.innerHTML = head(editing ? (forRecipe ? 'Ingredient' : editTitle(d)) : (forRecipe ? 'How much goes in?' : 'How much?'), edit && !forRecipe ? 'x' : true, '<button type="button" class="icon-btn fd-fav" id="svFav" aria-pressed="' + isFav(f.id) + '" aria-label="Favorite">' + STAR(isFav(f.id)) + '</button>' + '<button type="button" class="icon-btn hd-more" data-more aria-label="More">' + MORE_IC + '</button>', forRecipe) +
         '<div class="sv-name">' + esc(f.name) + (isVerified(f) ? VER_IC : '') + '</div>' +
-        (editing && !forRecipe ? '<div class="label faint fd-sec">How much you had</div>' : '') +
+        (editing && !forRecipe ? '<div class="label faint fd-sec">Amount</div>' : '') +
         '<div class="sv-amt"><div class="field"><input class="input" id="svQ" ' + (state.settings.numpad ? 'inputmode="none" readonly' : 'inputmode="decimal" enterkeyhint="done"') + ' autocomplete="off" aria-label="Amount" value="' + fmtQty(qty) + '" /></div>' +
         '<div class="field"><select class="input" id="svU" aria-label="Unit">' + units.map(function (u, i) { return '<option value="' + i + '"' + (u === unit ? ' selected' : '') + '>' + esc(u.label) + (u.label === 'g' || u.label === 'oz' || f.noG ? '' : ' (' + fmtQty(Math.round(u.g * 10) / 10) + ' g)') + '</option>'; }).join('') + '</select></div></div>' +
         (!state.settings.numpad ? '' : '<div class="kp" id="svKp"><div class="kp-quick" id="kpQ"></div>' + ['1', '2', '3', '4', '5', '6', '7', '8', '9', '.', '0', '⌫'].map(function (k) { return '<button type="button" data-k="' + k + '"' + (k === '⌫' ? ' aria-label="Delete"' : '') + '>' + k + '</button>'; }).join('') + '</div>') +
@@ -4319,7 +4342,7 @@
         '<div class="label faint fd-sec">Foods</div>' +
         (md.items.length ? '<div class="list" id="meItems">' + md.items.map(function (it, i) { return '<div class="row fd-row me-row" data-mrow="' + i + '">' + (md.items.length > 1 ? '<span class="cat-grip me-grip" aria-label="Drag to reorder">' + GRIP + '</span>' : '') + '<button type="button" class="grow me-open" data-mi="' + i + '"><div class="row-t">' + esc(it.name || 'Quick add') + '</div><div class="row-s">' + (it.ref ? fmtAmt(it.qty, it.unit) + ' · ' : '') + fmtKcal(it.kcal) + ' kcal</div></button><button type="button" class="icon-btn me-rm" data-rm="' + i + '" aria-label="Remove ' + esc(it.name || 'food') + '">' + TRASH + '</button></div>'; }).join('') + '</div>' : '<p class="muted-note fd-empty">No foods yet.</p>') +
         '<button type="button" class="btn soft block" id="meAdd" style="margin-bottom:16px">' + (otherMeals().length ? '+ Add food or meal' : '+ Add food') + '</button>' +
-        (mealAdj ? '' : '<div class="list me-opt"><label class="row"><div class="grow"><div class="row-t">Explode all meals</div><div class="row-s">Log every meal as its separate foods</div></div><span class="switch"><input type="checkbox" id="meSplit"' + (state.settings.explode ? ' checked' : '') + ' /><i></i></span></label></div>') +
+        (mealAdj ? '' : '<div class="list me-opt"><label class="row"><div class="grow"><div class="row-t">Log meals as separate foods</div><div class="row-s">Log every meal as its separate foods</div></div><span class="switch"><input type="checkbox" id="meSplit"' + (state.settings.explode ? ' checked' : '') + ' /><i></i></span></label></div>') +
         (md.items.length ? '<div class="sv-sum" id="meSum">' + sumBox(mealSum(md.items), mealAdj ? 'you had' : 'kcal') + SUM_MORE + '</div><div class="nut-drop" id="meNuts" hidden></div>' + keyBoxes(itemsKey(md.items)) : '') +
         '<p class="form-error" id="meErr" hidden></p>' +
         (mealAdj ? notePicHtml(edit) : '') +
@@ -4469,7 +4492,7 @@
       root.innerHTML = head(adjust ? editTitle(d) : draft.id ? 'Edit recipe' : 'New recipe', adjust || manage ? 'x' : true, '<button type="button" class="icon-btn hd-more" data-more aria-label="More">' + MORE_IC + '</button>', true) +
         '<div class="menu-src" hidden><button type="button" id="rcPaste">Paste an ingredient list</button>' + (draft.items.length ? '<button type="button" id="rcScale">Scale the recipe</button>' : '') + (draft.items.length && !adjust ? '<button type="button" id="rcMeal">Turn into a meal</button>' : '') + (manage && draft.id ? '<button type="button" id="rcShare">Share</button>' : '') + (!adjust && draft.id ? '<button type="button" class="danger" id="rcDel">Delete recipe</button>' : '') + '</div>' +
         (adjust ? '<div class="sv-name">' + esc(draft.name) + '</div><p class="muted-note adj-note">Changes this day only. To change the recipe itself, go to Foods.</p>' +
-          '<div class="label faint fd-sec">How much you had</div><div class="sv-amt rc-amt"><div class="field"><input class="input" id="rcQ" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-label="Amount" value="' + fmtQty(draft.amt.qty) + '" /></div><div class="field"><select class="input" id="rcU" aria-label="Unit"></select></div></div>' : '') +
+          '<div class="label faint fd-sec">Amount</div><div class="sv-amt rc-amt"><div class="field"><input class="input" id="rcQ" inputmode="decimal" enterkeyhint="done" autocomplete="off" aria-label="Amount" value="' + fmtQty(draft.amt.qty) + '" /></div><div class="field"><select class="input" id="rcU" aria-label="Unit"></select></div></div>' : '') +
         '<div class="field"' + (adjust ? ' hidden' : '') + '><span>Name</span><input class="input" id="rcN" maxlength="60" placeholder="e.g. Lentil soup" aria-label="Recipe name" autocomplete="off" value="' + esc(draft.name || '') + '" /></div>' +
         '<div class="two"><div class="field sfx"><span>Servings</span><input class="input" id="rcS" inputmode="numeric" maxlength="3" aria-label="Servings" value="' + (draft.servings || 1) + '" /></div>' +
         '<div class="field sfx"><span>Cooked weight</span><input class="input" id="rcG" inputmode="decimal" maxlength="6" placeholder="optional" aria-label="Cooked weight in grams, optional" value="' + (draft.cookedG ? fmtQty(draft.cookedG) : '') + '" /><em>g</em></div></div>' +
@@ -4778,7 +4801,7 @@
   function forDayHtml() {
     const pl = makePlan(activeEnergy());
     const CAL = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3.5" y="5" width="17" height="15.5" rx="3"/><path d="M8 3v4M16 3v4M3.5 10h17M8 14h4M8 17h7"/></svg>';
-    return '<div class="group-label mf-ins-l">For your day</div>' +
+    return '<div class="group-label mf-ins-l">Suggestions</div>' +
       '<button type="button" class="card fd-plan" data-plan-day><span class="ico ic-c-green">' + CAL + '</span><span class="grow"><b>Meal planner</b><small>' +
       (!pl ? 'Set your targets to plan a day' : 'A full day of meals for ' + fmtKcal(roundKcal(pl.target)) + ' kcal') +
       '</small></span>' + CHEV + '</button>';
@@ -5048,7 +5071,7 @@
     let n = 7;
     const range = function () { return n === 1 ? fmtDate(d, { weekday: 'long', month: 'short', day: 'numeric' }) : fmtDate(d, { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(isoFromDay(dayNum(d) + n - 1), { month: 'short', day: 'numeric' }); };
     const draw = function (root) {
-      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Take a break</h2></div></div>' +
+      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Diet break</h2></div></div>' +
         '<p class="sheet-text">Eat at maintenance for the day. Can help energy and training.</p>' +
         '<div class="label faint fd-sec">How many days?</div>' +
         '<div class="rates br-days">' + [1, 2, 3, 5, 7, 14].map(function (k) { return '<button type="button" data-brk="' + k + '" aria-pressed="' + (k === n) + '">' + (k === 1 ? '1 day' : k + ' days') + '</button>'; }).join('') + '</div>' +
@@ -5070,7 +5093,7 @@
         row('dmCopy', 'Copy day', its.length ? n(its.length) : 'Nothing logged yet', !its.length) +
         row('dmPrev', 'Copy previous day', pits.length ? n(pits.length) + ' from ' + esc(relDate(prev)) : 'Nothing logged ' + esc(relDate(prev)), !pits.length) +
         (clip ? row('dmPaste', 'Paste', n(clip.items.length) + ' from ' + esc(relDate(clip.from))) : '') +
-        (function () { const md = state.dayMode[d]; if (!md) return row('dmMode', 'Take a break', 'Eat at maintenance for a day or more'); let e = dayNum(d); while (state.dayMode[isoFromDay(e + 1)]) e++; return row('dmMode', 'End the break', 'Eating at maintenance' + (e > dayNum(d) ? ' until ' + esc(fmtDate(isoFromDay(e), { weekday: 'short', month: 'short', day: 'numeric' })) : ' today')); })() +
+        (function () { const md = state.dayMode[d]; if (!md) return row('dmMode', 'Diet break', 'Eat at maintenance for a day or more'); let e = dayNum(d); while (state.dayMode[isoFromDay(e + 1)]) e++; return row('dmMode', 'End the break', 'Eating at maintenance' + (e > dayNum(d) ? ' until ' + esc(fmtDate(isoFromDay(e), { weekday: 'short', month: 'short', day: 'numeric' })) : ' today')); })() +
         row('dmPlan', 'Meal planner', 'A full day of meals for your targets') +
         row('dmShare', 'Share this day', 'An image of your food and totals') +
         (plannedFor(d).length ? row('dmEatAll', 'Mark planned food as eaten', n(plannedFor(d).length)) : '') +
@@ -5213,7 +5236,7 @@
       g('Back up', row('export-json', I('<path d="M12 4v11M7.5 10.5L12 15l4.5-4.5M5 19h14"/>'), 'Back up', 'Save everything to a file') + row('import', I('<path d="M12 15V4M7.5 8.5L12 4l4.5 4.5M5 19h14"/>'), 'Restore', 'From a Setpoint backup file') + row('backups', I('<path d="M4 12a8 8 0 1 0 2.3-5.6M4 4v4h4"/><path d="M12 8v4l3 2"/>'), 'Daily backups', 'A copy every day on this phone, kept for 7 days')) +
       g('Export', row('export-food', I('<rect x="4" y="4" width="16" height="16" rx="2.5"/><path d="M4 9.5h16M9.5 9.5V20"/>'), 'Export food log', 'Everything you ate, with nutrients, as a spreadsheet') + row('export-csv', I('<path d="M4 17l5-5 4 3 7-8"/>'), 'Export weigh-ins', 'Your weight and trend as a spreadsheet')) +
       g('Import', row('import-crono', I('<circle cx="12" cy="12" r="8"/><path d="M12 7.5V12l3 2"/>'), 'From Cronometer', 'Pick dailysummary.csv and servings.csv together') + row('import-csv', I('<path d="M4 17l5-5 4 3 7-8"/>'), 'Weigh-ins from another app', 'Happy Scale, Libra, MyFitnessPal and more')) +
-      g('Tidy up', row('health', I('<path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>'), 'Check my data', 'Find and fix entries that look wrong')),
+      g('Tidy up', row('health', I('<path d="M9 12l2 2 4-4"/><path d="M12 3l7 3v5c0 4.5-3 8.2-7 10-4-1.8-7-5.5-7-10V6z"/>'), 'Data check', 'Find and fix entries that look wrong')),
       function (root) { $$('[data-ds]', root).forEach(function (b) { b.addEventListener('click', function () { const a = b.dataset.ds; closeSheet(); const el = document.createElement('button'); el.dataset.action = a; el.hidden = true; document.body.appendChild(el); el.click(); el.remove(); }); }); });
   }
   // Theme picker: a small preview of each theme, in the light or dark version you're using now.
@@ -5651,7 +5674,7 @@
       return;
     }
     const r = oftenLow();
-    box.innerHTML = '<div class="card"><div class="card-head"><h2 class="card-title">Often low on</h2><span class="label faint">Last 2 weeks</span></div>' +
+    box.innerHTML = '<div class="card"><div class="card-head"><h2 class="card-title">Common shortfalls</h2><span class="label faint">Last 2 weeks</span></div>' +
       (r.days < 3 ? '<p class="t-sub">Log your food for at least 3 days to see which vitamins and minerals you tend to miss.</p>'
         : r.low.length ? '<div class="nut-list">' + r.low.slice(0, 5).map(function (x) { const n = NUT[x.key]; return '<button type="button" class="nut-row low-row" data-high="' + x.key + '"><span class="nr-l">' + n.label + '</span><span class="nr-v num">' + fmtNut(x.avg, n.unit) + ' <small>avg</small></span><span class="nr-p num">' + Math.round(x.pct) + '%</span><span class="bar nr-bar"><i style="width:' + Math.min(100, x.pct).toFixed(1) + '%"></i></span></button>'; }).join('') + '</div>' +
           '<p class="t-sub" style="margin-top:10px">Average of ' + r.days + ' days. Tap one for foods high in it.</p>'
@@ -5711,7 +5734,7 @@
         (editing ? '<div class="label faint" style="margin:16px 0 8px">Your sizes</div><div class="four-in">' + state.settings.waterSizes.map(function (v, i) { return '<div class="field sfx"><input class="input" data-ws="' + i + '" inputmode="numeric" maxlength="4" value="' + v + '" aria-label="Size ' + (i + 1) + ' in ml" /><em>ml</em></div>'; }).join('') + '</div>' +
           '<div class="field sfx" style="margin-top:14px"><span>Daily goal</span><input class="input" id="wtG" inputmode="numeric" maxlength="5" value="' + goal + '" aria-label="Daily water goal in ml" /><em>ml</em></div><p class="form-error" id="wtErr" hidden></p>' +
           '<div class="btn-row">' + (state.settings.waterGoal ? '<button type="button" class="btn soft" id="wtAuto">Use suggested</button>' : '') + '<button type="button" class="btn primary" id="wtSave">Save goal</button></div>' : '') +
-        '<div class="list wt-opt"><label class="row"><div class="grow"><div class="row-t">Count drinks from your diary</div><div class="row-s">Tea, coffee, juice, milk…, also inside meals and recipes</div></div><span class="switch"><input type="checkbox" id="wtDrinks"' + (state.settings.drinkWater !== false ? ' checked' : '') + ' /><i></i></span></label></div>' +
+        '<div class="list wt-opt"><label class="row"><div class="grow"><div class="row-t">Include drinks from Diary</div><div class="row-s">Tea, coffee, juice, milk…, also inside meals and recipes</div></div><span class="switch"><input type="checkbox" id="wtDrinks"' + (state.settings.drinkWater !== false ? ' checked' : '') + ' /><i></i></span></label></div>' +
         '<p class="muted-note sv-src">Food has water too, so this is a rough guide.</p>';
       $$('[data-ml]', root).forEach(function (b) { b.addEventListener('click', function () { const prev = addWater(d, +b.dataset.ml); draw(root); toast('+' + fmtWater(+b.dataset.ml) + ' water', function () { state.water[d] = prev; if (!prev) delete state.water[d]; save(); renderDiary(); if (root.isConnected) draw(root); }); }); });
       $('#wtLess', root).addEventListener('click', function () { addWater(d, -250); draw(root); });
@@ -6447,7 +6470,7 @@
     const line = pts.map(function (p, i) { return (i ? 'L' : 'M') + X(p.day).toFixed(1) + ',' + Y(toDisp(p.trend)).toFixed(1); }).join('');
     s += '<path d="' + line + 'L' + X(pts[pts.length - 1].day).toFixed(1) + ',' + (padT + ih) + 'L' + X(d0).toFixed(1) + ',' + (padT + ih) + 'Z" fill="url(#cg)"/>';
     const r = pts.length > 120 ? 1.6 : pts.length > 60 ? 2.2 : 3;
-    pts.forEach(function (p) { s += '<circle cx="' + X(p.day).toFixed(1) + '" cy="' + Y(toDisp(p.kg)).toFixed(1) + '" r="' + r + '" fill="var(--chart-raw)"/>'; });
+    pts.forEach(function (p) { s += '<circle cx="' + X(p.day).toFixed(1) + '" cy="' + Y(toDisp(p.kg)).toFixed(1) + '" r="' + r + '" ' + (p.x ? 'fill="none" stroke="var(--chart-raw)" stroke-width="1.5"' : 'fill="var(--chart-raw)"') + '/>'; }); // excluded weigh-ins: hollow
     if (proj) {
       const px = X(proj.day).toFixed(1), py = Y(toDisp(proj.kg)).toFixed(1);
       s += '<path d="M' + X(lastDay).toFixed(1) + ',' + Y(toDisp(lastT)).toFixed(1) + 'L' + px + ',' + py + '" fill="none" stroke="var(--accent)" stroke-width="2" stroke-dasharray="3 5" stroke-linecap="round" opacity=".8"/>';
@@ -6560,6 +6583,7 @@
       }
       const sub = [];
       const dk = dayKcal(e.date); if (dk) sub.push(fmtKcal(dk) + ' kcal');
+      if (e.x) sub.push('Excluded');
       if (e.note) sub.push(e.note);
       return '<button type="button" class="row" data-edit="' + e.date + '"><div class="grow"><div class="row-t">' + esc(relDate(e.date)) + '</div>' + (sub.length ? '<div class="row-s">' + esc(sub.join(' · ')) + '</div>' : '') + '</div>' +
         '<span class="row-w num">' + fmtW(e.kg) + '</span>' + delta + '</button>';
@@ -6612,7 +6636,7 @@
       const span = Math.max(1, Math.min(rng, today - dayNum(l[0].date) + 1)), n30 = l.filter(function (e) { return dayNum(e.date) > today - span; }).length, r = n30 / span;
       out.push([I_CAL, 'You weighed in on <b>' + n30 + ' of the last ' + span + ' days</b>.' + (r >= 0.8 ? ' Great consistency.' : r < 0.5 ? ' Daily weigh-ins make the trend more accurate.' : '')]);
     }
-    const more = '<button type="button" class="ins-more" data-action="insights"><span><b>What moves your weight</b><small>Patterns from your own log</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>';
+    const more = '<button type="button" class="ins-more" data-action="insights"><span><b>Weight factors</b><small>Patterns from your own log</small></span><svg class="chev" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M9 6l6 6-6 6"/></svg></button>';
     box.innerHTML = '<div class="card insight-card"><div class="card-head"><h2 class="card-title">Insights</h2></div>' + out.slice(0, 2).map(function (x) { return '<div class="insight"><span class="ico">' + x[0] + '</span><div>' + x[1] + '</div></div>'; }).join('') + more + '</div>';
   }
 
@@ -6912,7 +6936,7 @@
     let stream = null, facing = 'user', ghost = null, timer = 0;
     const stop = function () { if (stream) stream.getTracks().forEach(function (t) { t.stop(); }); stream = null; clearInterval(timer); };
     const ref = photos.find(function (x) { return x.pose === pose; }) || null;
-    openSheet('<div class="sheet-head"><div><div class="label faint">' + poseName(pose) + (date !== todayISO() ? ' · ' + esc(relDate(date)) : '') + '</div><h2 class="sheet-title" id="sheetTitle">Line it up</h2></div></div>' +
+    openSheet('<div class="sheet-head"><div><div class="label faint">' + poseName(pose) + (date !== todayISO() ? ' · ' + esc(relDate(date)) : '') + '</div><h2 class="sheet-title" id="sheetTitle">Alignment</h2></div></div>' +
       '<div class="gc-box" id="gcBox"><video id="gcV" playsinline muted autoplay></video><img id="gcG" alt="" /><span class="gc-grid"></span><span class="gc-count" id="gcCount" hidden></span></div>' +
       (ref ? '<div class="gc-ctl"><span class="label faint">Guide</span><input type="range" id="gcOp" min="0" max="80" value="35" aria-label="Guide strength" /></div>' : '') +
       '<div class="btn-row gc-row"><button type="button" class="btn soft" id="gcFlip">Flip</button><button type="button" class="btn soft" id="gcTimer" aria-pressed="false">Timer off</button><button type="button" class="btn primary" id="gcShot">Take photo</button></div>',
@@ -7385,18 +7409,18 @@
     // 1. Your daily burn (maintenance): one number, one bar, four parts.
     if (!en) {
       const needD = !profileReady(), needW = kgNow == null;
-      hero.innerHTML = '<div class="tg-k">Your daily burn</div>' +
+      hero.innerHTML = '<div class="tg-k">Daily expenditure</div>' +
         '<div class="tg-empty-t">Let\'s work out your targets</div>' +
         '<p class="tg-empty-s">' + (needD ? 'Add your age, sex and height' + (needW ? ', then log your weight.' : '.') : 'Log your weight to finish.') + '</p>' +
         '<button type="button" class="btn primary block" data-action="' + (needD ? 'details' : 'log') + '">' + (needD ? 'Get started' : 'Log weight') + '</button>';
     } else {
       const c = en.calc, learned = burnLabel(en);
-      let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Your daily burn</div>' +
+      let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Daily expenditure</div>' +
         '<div class="tg-burn-v num">' + fmtKcal(roundKcal(en.tdee)) + '<span class="unit">kcal</span></div>' +
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
       if (c) {
         // What the formula got wrong shows up in daily life (everyday movement varies most), so the parts add up to the burn used.
-        const parts = [['Resting', c.bmr, 'o1'], ['Daily life', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
+        const parts = [['Resting', c.bmr, 'o1'], ['Movement', Math.max(0, c.life + en.tdee - c.tdee), 'o2'], ['Steps', c.steps, 'o3'], ['Training', c.train, 'o4']];
         h += '<div class="burn tg-bar">' + parts.map(function (x) { return '<i class="' + x[2] + '" style="flex-grow:' + Math.max(1, Math.round(x[1])) + '"></i>'; }).join('') + '</div>' +
           '<div class="tg-key">' + parts.map(function (x) { return '<div><span><i class="' + x[2] + '"></i>' + x[0] + '</span><b class="num">' + fmtKcal(roundKcal(x[1])) + '</b></div>'; }).join('') + '</div>';
       }
@@ -7414,12 +7438,12 @@
         (plan.warn ? '<div class="tg-warn">' + esc(plan.warn) + '</div>' : '') +
         '<div class="tg-mac">' + kc.map(function (x) { return '<button type="button" class="tg-m" data-action="macros"><span class="tg-m-l"><i class="d-' + x[3] + '"></i>' + x[0] + '</span><b class="num"><span data-an="' + x[1] + '" data-af="g">' + x[1] + '</span><small>g</small></b><span class="tg-m-p num">' + Math.round(x[1] * x[2] / tot * 100) + '%</span></button>'; }).join('') + '</div>' +
         '<div class="tg-links"><button type="button" class="tg-how" data-action="macros"><span class="grow">Protein &amp; fat</span><span class="tg-how-v">' + (plan.custom ? 'Your own' : 'Recommended') + '</span>' + CHEV + '</button>' +
-        '<button type="button" class="tg-how" data-action="tg-explain"><span class="grow">How this is worked out</span>' + CHEV + '</button></div>';
+        '<button type="button" class="tg-how" data-action="tg-explain"><span class="grow">Target breakdown</span>' + CHEV + '</button></div>';
       animate(card, 'target');
       // 3. Your goal: direction, pace and goal weight, together in one place.
       const g = state.settings.goalKg;
       const etaD = plan.eta && plan.eta.replace(/^goal by /, '');
-      gc.innerHTML = '<div class="card-head"><h2 class="card-title">' + (g && etaD && pace.dir !== 'maintain' ? 'Reach ' + fmtW(g) + ' ' + unit() + ' by ' + esc(etaD) : 'Your goal') + '</h2></div>' +
+      gc.innerHTML = '<div class="card-head"><h2 class="card-title">' + (g && etaD && pace.dir !== 'maintain' ? 'Reach ' + fmtW(g) + ' ' + unit() + ' by ' + esc(etaD) : 'Goal') + '</h2></div>' +
         '<div class="seg"><button type="button" data-dir="lose" aria-pressed="' + (pace.dir === 'lose') + '">Lose</button><button type="button" data-dir="maintain" aria-pressed="' + (pace.dir === 'maintain') + '">Maintain</button><button type="button" data-dir="gain" aria-pressed="' + (pace.dir === 'gain') + '">Gain</button></div>' +
         (pace.dir !== 'maintain' ? '<div class="tg-rate-l">How fast, per week</div><div class="rates">' + RATES[unit()][pace.dir].map(function (v, i) { return '<button type="button" data-rate="' + i + '" aria-pressed="' + (i === pace.i) + '" aria-label="' + v + ' ' + unit() + ' per week">' + v + ' ' + unit() + '</button>'; }).join('') + '</div>' : '') +
         '<button type="button" class="tg-gw" data-action="goal"><span>Goal weight</span><b class="num">' + (g ? fmtW(g) + ' ' + unit() : 'Set') + '</b>' + CHEV + '</button>' +
@@ -8095,6 +8119,7 @@
       (track ? '<div class="field sfx" id="lKWrap"><input class="input" id="lK" inputmode="numeric" maxlength="5" placeholder="Calories eaten" aria-label="Calories eaten" autocomplete="off" /><em>kcal</em></div><p class="t-sub" id="lKLog" style="margin:-4px 2px 14px" hidden></p>' : '') +
       '<button type="button" class="text-btn" id="lNoteBtn">+ Add note</button>' +
       '<div class="field" id="lNoteWrap" hidden><input class="input" id="lN" maxlength="200" placeholder="Note" aria-label="Note" autocomplete="off" /></div>' +
+      '<div class="list lx-list"><label class="row"><div class="grow"><div class="row-t">Exclude from trend</div><div class="row-s">Bloating, a salty meal or travel</div></div><span class="switch"><input type="checkbox" id="lX" /><i></i></span></label></div>' +
       '<p class="form-error" id="lErr" hidden></p>' +
       '<div class="btn-row"><button type="button" class="btn danger icon-only" id="lDel" aria-label="Delete" hidden>' + TRASH + '</button><button type="button" class="btn primary" id="lSave">Save</button></div>',
       function (root) {
@@ -8117,6 +8142,7 @@
           $('#lNoteWrap', root).hidden = !(e && e.note);
           $('#lNoteBtn', root).hidden = !!(e && e.note);
           $('#lDel', root).hidden = !e;
+          $('#lX', root).checked = !!(e && e.x);
           err('');
         };
         fill();
@@ -8148,11 +8174,12 @@
           if (kRaw && (isNaN(k) || k < 300 || k > 15000)) return err('Enter the whole day\'s calories');
           const prev = findEntry(d), snap = snapshot();
           const e = { date: d, kg: Math.round(kg * 10000) / 10000, note: nIn.value.trim().slice(0, 200) };
+          if ($('#lX', root).checked) e.x = true;
           if (k != null) e.kcal = Math.round(k);
           else if ((!kIn || $('#lKWrap', root).hidden) && prev && prev.kcal) e.kcal = prev.kcal; // calorie field hidden: keep what's there
           upsert(e); save(); closeSheet(); renderAll(); buzz('success');
           // A big jump above the trend is almost always water. Say so, so it doesn't feel like a setback.
-          const gap = e.kg - trendAt(dayNum(d)), waterish = toDisp(gap) >= (unit() === 'lb' ? 1.8 : 0.8);
+          const gap = e.kg - trendAt(dayNum(d)), waterish = !e.x && toDisp(gap) >= (unit() === 'lb' ? 1.8 : 0.8);
           toast((prev ? 'Updated ' : 'Logged ') + v.toFixed(1) + ' ' + unit() + (waterish ? ' · likely water, trend barely moved' : ''), function () { restore(snap); });
           checkMilestones();
         };
@@ -8212,7 +8239,7 @@
     const p = state.profile, en = activeEnergy(), c = en && en.calc, t = state.ui.tune, on = adaptive();
     const row = function (l, v) { return '<div class="row"><div class="grow row-t">' + l + '</div><span class="row-w num">' + v + '</span></div>'; };
     const sgn = function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmtKcal(Math.abs(Math.round(v))); };
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target learns</h2></div>' +
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Adaptive adjustments</h2></div>' +
       (c ? '<div class="list">' + row('Formula', fmtKcal(roundKcal(c.tdee))) +
         (on && p.adjustKcal ? row('Weekly corrections', sgn(p.adjustKcal)) : '') +
         (on && en.m && en.m.ready ? row('Your log', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
@@ -8226,7 +8253,7 @@
       });
   }
 
-  // "How this is worked out": the whole sum, step by step, in plain words. Only an explanation; the buttons live on the page.
+  // "Target breakdown": the whole sum, step by step, in plain words. Only an explanation; the buttons live on the page.
   function targetExplainSheet() {
     const en = activeEnergy(), plan = makePlan(en); if (!en || !plan) return;
     const c = en.calc, p = state.profile, pace = plan.pace, u = unit(), t = p.training;
@@ -8237,23 +8264,23 @@
     const para = function (x) { return '<p class="tx-p">' + x + '</p>'; };
     const item = function (dot, name, val, desc) { return '<div class="tx-part"><i class="' + dot + '"></i><div class="grow"><div class="tx-pt"><span>' + name + '</span><b class="num">' + val + '</b></div><div class="tx-pd">' + desc + '</div></div></div>'; };
     // The answer first, then where each number comes from. Kept short: the numbers do the explaining.
-    let h = '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
+    let h = '<div class="tx-eq">' + row('Expenditure', k(en.tdee)) +
       (pace.dir !== 'maintain' ? row(pace.dir === 'lose' ? 'To lose ' + rate + ' a week' : 'To gain ' + rate + ' a week', sg(goalK)) : '') +
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
       const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
-      h += step(1, 'What you burn', '<div class="tx-parts">' +
+      h += step(1, 'Expenditure', '<div class="tx-parts">' +
           item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
-          item('o2', 'Daily life', k(life), 'Moving around and digesting') +
+          item('o2', 'Movement', k(life), 'Moving around and digesting') +
           item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
           item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
         (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
-          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Learn from my log</b> to use your real results.</div>' : ''));
+          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Adaptive expenditure</b> to use your real results.</div>' : ''));
     }
     // 2. Goal
-    if (pace.dir !== 'maintain') h += step(2, 'Your goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
+    if (pace.dir !== 'maintain') h += step(2, 'Goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
     // 3. Macros
     const lb = u === 'lb', per = function (v) { return Number((lb ? v / LB : v).toFixed(1)) + ' g per ' + u; };
     const refTxt = plan.refWhy === 'your weight' ? 'body weight' : plan.refWhy === 'your lean mass' ? 'lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'healthy weight (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
@@ -8268,7 +8295,7 @@
     if (sp) h += '<div class="tx-note"><b>Training days</b> (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + '): +' + k(Math.round(sp.tx / 10) * 10) + ' kcal, rest days −' + k(Math.round(sp.rx / 10) * 10) + '. Same weekly total.</div>';
     if (state.settings.flex && state.settings.flex.on) h += '<div class="tx-note"><b>Flexible week:</b> days move with what you ate earlier in the week.</div>';
     if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'A slower pace keeps more muscle.' : 'A slower pace would help.') + '</div>';
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Target breakdown</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
       $('#txOk', root).addEventListener('click', function () { closeSheet(); });
     });
   }
@@ -8656,7 +8683,7 @@
       const d = +k; if (wBy[d + 1] == null) return;
       const iso = isoFromDay(d), t = dayTotals(iso); if (!t.kcal || t.kcal < 600) return;
       const r = { delta: wBy[d + 1] - wBy[d], kcal: t.kcal, carbs: t.carbs };
-      if (foodDB) { const nd = dayNutrients(iso); if (nd.cov.na > 0.7 && nd.tot.na > 0) r.na = nd.tot.na; }
+      if (foodDB) { const nd = dayNutrients(iso); if (nd.cov.na > 0.7 && nd.tot.na > 0) r.na = nd.tot.na; if (nd.cov.fib > 0.7 && nd.tot.fib > 0) r.fib = nd.tot.fib; }
       const pl = dayPlan(iso); if (pl && pl.train != null) r.train = pl.train;
       rows.push(r);
     });
@@ -8671,6 +8698,7 @@
     };
     split('na', 'Salty days', ' mg sodium', 'That\'s water, not fat. It usually leaves in 1–3 days.');
     split('carbs', 'High-carb days', ' g carbs', 'Carbs are stored with water, so the scale jumps. It isn\'t fat.');
+    split('fib', 'High-fiber days', ' g fiber', 'Fiber adds food and water still in your gut. It isn\'t fat, and it shows up as a stall until it passes.');
     split('kcal', 'Bigger eating days', ' kcal', 'Mostly food and water still in you. Real fat change shows over weeks, not overnight.');
     const tr = rows.filter(function (x) { return x.train === true; }), rs = rows.filter(function (x) { return x.train === false; });
     if (tr.length >= 5 && rs.length >= 5) { const d = avg(tr, 'delta') - avg(rs, 'delta'); out.items.push({ t: 'Training days', d: d, s: 'Next morning after training vs rest days', note: Math.abs(d) >= 0.15 ? 'Muscles hold extra water after training while they repair.' : 'No clear effect for you so far.' }); }
@@ -8688,7 +8716,7 @@
   function insightsSheet() {
     const draw = function (root) {
       const r = weightInsights();
-      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">What moves your weight</h2></div></div>' +
+      root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">Weight factors</h2></div></div>' +
         (r.n < 14 ? '<p class="muted-note fd-empty">Needs 14 days with food logged and a weigh-in the next morning.</p>' :
           '<div class="list">' + r.items.map(function (x) { const up = x.d > 0; return '<div class="row fd-row ins-row"><div class="grow"><div class="row-t">' + esc(x.t) + '</div><div class="row-s" style="white-space:normal">' + esc(x.s) + '</div><div class="ins-note">' + esc(x.note) + '</div></div><span class="ins-v num ' + (Math.abs(x.d) < 0.15 && !x.week ? 'flat' : up ? 'up' : 'down') + '">' + (x.week ? '' : (up ? '+' : '−') + fmtW(Math.abs(x.d)) + ' ' + unit()) + '</span></div>'; }).join('') + '</div>' +
           '<p class="muted-note sv-src">Next-morning weight: your highest third of days vs your lowest.</p>');
@@ -8834,9 +8862,9 @@
         '<div class="sv-key wk-key" style="margin:14px 0"><div><b class="num">' + fmtKcal(roundKcal(m.intake)) + '</b><span>Ate a day</span></div><div><b class="num">' + fmtDelta(m.rateKgWk, 2) + '</b><span>' + unit() + ' a week</span></div><div><b class="num">' + m.calDays + '<small>/' + m.days + '</small></b><span>Days logged</span></div>' + (c ? '<div><b class="num">' + fmtKcal(roundKcal(c.tdee)) + '</b><span>Formula</span></div>' : '') + '</div>' +
         (gaps ? '<div class="tx-note tx-warn">Unlogged days hide what you ate, so this may read low. It counts less until you log more days.</div>' : '') +
         (m.partial ? '<p class="muted-note" style="text-align:start">Left out ' + m.partial + (m.partial === 1 ? ' day' : ' days') + ' that looked half-logged.</p>' : '') +
-        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Learn from my log') + '</p>';
+        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Adaptive expenditure') + '</p>';
     }
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Burn from your log</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Measured expenditure</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
   function whatsNewSheet() {
@@ -9735,7 +9763,7 @@
     else lockVerify().then(function () { localStorage.removeItem(LOCK_KEY); buzz('light'); toast('App lock is off'); }, function () { el.checked = true; });
   });
   $('#weekStartSel').addEventListener('change', function () { state.settings.weekStart = +this.value; save(); buzz('light'); renderAll(); });
-  $('#autoAdjToggle').addEventListener('change', function () { const snap = snapshot(), was = roundKcal(makePlan(activeEnergy()) ? makePlan(activeEnergy()).target : 0); state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); const pl = makePlan(activeEnergy()); toast((this.checked ? 'Learning from your log' : 'Formula only') + (pl && roundKcal(pl.target) !== was ? ' · target ' + fmtKcal(roundKcal(pl.target)) + ' kcal' : ''), function () { restore(snap); }); });
+  $('#autoAdjToggle').addEventListener('change', function () { const snap = snapshot(), was = roundKcal(makePlan(activeEnergy()) ? makePlan(activeEnergy()).target : 0); state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); const pl = makePlan(activeEnergy()); toast((this.checked ? 'Adaptive expenditure on' : 'Formula only') + (pl && roundKcal(pl.target) !== was ? ' · target ' + fmtKcal(roundKcal(pl.target)) + ' kcal' : ''), function () { restore(snap); }); });
 
   document.addEventListener('click', function (e) {
     if (sheet.contains(e.target)) return; // sheets bind their own controls
@@ -10005,7 +10033,7 @@
   if (shortcut) history.replaceState(null, '', location.pathname);
   // Graphite is the main theme now: switch once from the old default (Emerald). Any theme you choose after that stays.
   if (!state.ui.smartBurn) { state.ui.smartBurn = true; if (state.profile.tdeeSource === 'calc') state.profile.tdeeSource = 'auto'; save(); renderAll(); }
-  // Burn: one switch now (Learn from my log). Formula users keep the formula; "Your log" users keep learning.
+  // Burn: one switch now (Adaptive expenditure). Formula users keep the formula; "Your log" users keep learning.
   if (!state.ui.oneBurn) { state.ui.oneBurn = true; const s0 = state.profile.tdeeSource; if (s0 === 'calc') state.settings.autoAdjust = false; else if (s0 === 'measured') state.settings.autoAdjust = true; state.profile.tdeeSource = 'auto'; save(); renderAll(); }
   if (!state.ui.graphite) { state.ui.graphite = true; if (state.settings.style === 'classic') { state.settings.style = 'graphite'; applyAppearance(); renderAll(); } save(); }
   if (applyRepeats()) renderAll();

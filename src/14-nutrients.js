@@ -309,7 +309,7 @@
       return;
     }
     const r = oftenLow();
-    box.innerHTML = '<div class="card"><div class="card-head"><h2 class="card-title">Often low on</h2><span class="label faint">Last 2 weeks</span></div>' +
+    box.innerHTML = '<div class="card"><div class="card-head"><h2 class="card-title">Common shortfalls</h2><span class="label faint">Last 2 weeks</span></div>' +
       (r.days < 3 ? '<p class="t-sub">Log your food for at least 3 days to see which vitamins and minerals you tend to miss.</p>'
         : r.low.length ? '<div class="nut-list">' + r.low.slice(0, 5).map(function (x) { const n = NUT[x.key]; return '<button type="button" class="nut-row low-row" data-high="' + x.key + '"><span class="nr-l">' + n.label + '</span><span class="nr-v num">' + fmtNut(x.avg, n.unit) + ' <small>avg</small></span><span class="nr-p num">' + Math.round(x.pct) + '%</span><span class="bar nr-bar"><i style="width:' + Math.min(100, x.pct).toFixed(1) + '%"></i></span></button>'; }).join('') + '</div>' +
           '<p class="t-sub" style="margin-top:10px">Average of ' + r.days + ' days. Tap one for foods high in it.</p>'

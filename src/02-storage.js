@@ -178,6 +178,7 @@
       const kg = e.kg != null ? Number(e.kg) : Number(e.weight); // v1 stored { date, weight } in kg
       if (!isFinite(kg) || kg <= 0 || kg > 700) return;
       const entry = { date: date, kg: Math.round(kg * 10000) / 10000, note: typeof e.note === 'string' ? e.note.slice(0, 200) : '' };
+      if (e.x === true) entry.x = true; // left out of the trend and expenditure (kept in history)
       const kcal = numIn(e.kcal, 1, 20000);
       if (kcal != null) entry.kcal = Math.round(kcal);
       byDate[date] = entry;

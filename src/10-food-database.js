@@ -541,7 +541,7 @@
   function dupsSheet() {
     const draw = function (root) {
       const gs = dupGroups(), use = foodUse().use;
-      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Possible copies</h2></div>' +
+      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Possible duplicates</h2></div>' +
         (!gs.length ? '<p class="muted-note fd-empty">No copies left. Nice and tidy.</p>' :
           '<p class="muted-note" style="text-align:start;margin:0 2px 12px">Merging keeps one and moves your diary, recipes and meals over to it.</p>' +
           gs.map(function (g, gi) {
@@ -588,9 +588,9 @@
   }
   function healthSheet() {
     const draw = function (root) {
-      if (!foodDB) { root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Check my data</h2></div>' + skel(4); loadFoods().then(function () { if (root.isConnected) draw(root); }, function () { if (root.isConnected) { foodDB = foodDB || null; root.querySelector('.fd-empty').textContent = 'Couldn\'t load the food list. Check your connection.'; } }); return; }
+      if (!foodDB) { root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Data check</h2></div>' + skel(4); loadFoods().then(function () { if (root.isConnected) draw(root); }, function () { if (root.isConnected) { foodDB = foodDB || null; root.querySelector('.fd-empty').textContent = 'Couldn\'t load the food list. Check your connection.'; } }); return; }
       const is = healthIssues();
-      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Check my data</h2></div>' +
+      root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Data check</h2></div>' +
         (!is.length ? '<div class="hc-ok">' + CHECK_IC + '<b>Everything looks right</b><span>No broken foods, odd entries or weigh-ins that look like typos.</span></div>' :
           '<p class="muted-note" style="text-align:start;margin:0 2px 12px">' + is.length + (is.length === 1 ? ' thing looks' : ' things look') + ' off. Nothing changes unless you tap a fix.</p>' +
           (is.length > 1 ? '<button type="button" class="btn soft block" id="hcAll" style="margin-bottom:12px">Fix all ' + is.length + '</button>' : '') +
