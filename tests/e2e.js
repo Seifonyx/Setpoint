@@ -275,6 +275,25 @@ server.listen(0, async () => {
       ok('targets: weekly correction waits when the log has gaps', e.adjust === 0 && !e.tune, JSON.stringify(e));
       await p.context().close();
     }
+    // ---- 4e2. iOS overlays: hold menu, action sheet ----
+    {
+      const { c, p } = await page();
+      await seed(p, { ui: Object.assign({}, BASE_UI), seenVersion: '9.9', food: { [day(0)]: [{ id: 'h1', name: 'Toast', kcal: 200, protein: 6, carbs: 30, fat: 4, meal: 'breakfast' }, { id: 'h2', name: 'Eggs', kcal: 150, protein: 12, carbs: 1, fat: 10, meal: 'breakfast' }] } });
+      const at = await p.evaluate(() => { const e = document.querySelector('[data-food="h2"]'); e.scrollIntoView({ block: 'center' }); const b = e.getBoundingClientRect(); return [b.left + 120, b.top + b.height / 2]; });
+      await p.waitForTimeout(250); await p.mouse.move(at[0], at[1]); await p.mouse.down(); await p.waitForTimeout(800); await p.mouse.up(); await p.waitForTimeout(500);
+      const menu = await p.evaluate(() => !!document.querySelector('.cm-wrap.open .cm-menu') && !document.getElementById('sheet').classList.contains('open'));
+      await p.evaluate(() => [...document.querySelectorAll('.cm-it')].find(x => /Delete/.test(x.textContent)).click()); await p.waitForTimeout(500);
+      const left = await p.evaluate(d => (JSON.parse(localStorage.getItem('setpoint')).food[d] || []).map(x => x.id).join(','), day(0));
+      ok('hold a food: an iOS context menu (not a sheet), and Delete works', menu && left === 'h1', menu + ' ' + left);
+      await p.evaluate(() => window.__setpoint.nav.tab('settings')); await p.waitForTimeout(400);
+      await p.evaluate(() => document.querySelector('[data-action="erase"]').click()); await p.waitForTimeout(500);
+      const as = await p.evaluate(() => !!document.querySelector('.as-wrap.open .as-btn.danger'));
+      await p.evaluate(() => document.querySelector('.as-cancel').click()); await p.waitForTimeout(450);
+      const kept = await p.evaluate(d => (JSON.parse(localStorage.getItem('setpoint')).food[d] || []).length, day(0));
+      const gone = await p.evaluate(() => !document.querySelector('.as-wrap'));
+      ok('erase asks with an iOS action sheet; Cancel keeps everything', as && kept === 1 && gone, as + ' ' + kept + ' ' + gone);
+      await c.close();
+    }
     // ---- 4f. Search: everyday picks first, whole words beat look-alikes ----
     {
       const { p } = await page();

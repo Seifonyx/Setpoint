@@ -2573,3 +2573,105 @@ body { overscroll-behavior-y: auto; }
 .seg button[aria-pressed="true"] { font-weight: 600; background: var(--seg-on); box-shadow: 0 3px 8px rgba(0, 0, 0, .12), 0 3px 1px rgba(0, 0, 0, .04); }
 :root[data-mode="dark"] .seg button[aria-pressed="true"] { box-shadow: none; }
 .seg-sm button { height: 28px; }
+
+/* ---- iOS sheets (v2.1) ---- */
+/* the page behind a large sheet: pushed back on black */
+html.sheet-back, html.sheet-back body { background: #000; }
+html.sheet-back .main-clip { background: var(--bg); will-change: transform; }
+html.sheet-back .scrim.open { background: rgba(0, 0, 0, .32); }
+/* large sheets are cards that stop just under the status bar (not full pages) and drag down like any other */
+.sheet { border-radius: 16px 16px 0 0; }
+.sheet.tall { top: calc(var(--safe-t) + 10px); border-radius: 16px 16px 0 0; box-shadow: 0 -4px 24px rgba(0, 0, 0, .18); }
+.sheet.tall .grabber { display: block; }
+.sheet.tall .sheet-head { padding-top: 6px; }
+.sheet.tall .sheet-head .sheet-x { width: 30px; height: 30px; border-radius: 50%; background: rgba(118, 118, 128, .14); color: var(--text-2); margin: 0 4px 0 0; flex: none; }
+.sheet.tall .sheet-head .sheet-x svg { width: 14px; height: 14px; }
+:root[data-mode="dark"] .sheet.tall .sheet-head .sheet-x { background: rgba(118, 118, 128, .3); }
+/* the iOS bar: Cancel · title · action */
+.sheet-head.ios-bar { display: grid; grid-template-columns: 1fr auto 1fr; align-items: center; gap: 8px; min-height: 44px; margin: 0 -8px 14px; }
+.sheet-head.ios-bar > :not(.bar-btn) { grid-column: 2; text-align: center; min-width: 0; }
+.sheet-head.ios-bar .sheet-title { font-size: 17px; font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.sheet-head.ios-bar .label { display: none; }
+.bar-btn { border: 0; background: none; font: 400 17px var(--font-body); color: var(--accent-text); padding: 8px; min-height: 44px; }
+.bar-btn.bar-l { justify-self: start; grid-column: 1; grid-row: 1; }
+.bar-btn.bar-r { justify-self: end; grid-column: 3; grid-row: 1; font-weight: 600; }
+.bar-btn:empty { visibility: hidden; }
+.bar-btn:active { opacity: .4; }
+.bar-moved { display: none !important; }
+
+/* ---- iOS action sheet and alert ---- */
+.as-wrap { position: fixed; inset: 0; z-index: 130; }
+.as-scrim { position: absolute; inset: 0; background: rgba(0, 0, 0, .3); opacity: 0; transition: opacity .25s ease; }
+.as-wrap.open .as-scrim { opacity: 1; }
+.as { position: absolute; left: 8px; right: 8px; bottom: calc(8px + var(--safe-b)); max-width: 520px; margin: 0 auto; transform: translateY(calc(100% + 20px)); transition: transform .42s cubic-bezier(.2, .95, .25, 1); }
+.as-wrap.open .as { transform: none; }
+.as-grp, .as-cancel { background: color-mix(in srgb, var(--surface) 82%, transparent); -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8); border-radius: 14px; overflow: hidden; }
+.as-head { padding: 14px 16px; text-align: center; border-bottom: .5px solid var(--line); }
+.as-t { font-size: 13px; font-weight: 600; color: var(--text-2); }
+.as-m { font-size: 13px; color: var(--text-2); margin-top: 3px; line-height: 1.35; }
+.as-btn { display: block; width: 100%; min-height: 57px; border: 0; background: none; font: 400 20px var(--font-body); color: var(--accent-text); }
+.as-grp .as-btn + .as-btn { border-top: .5px solid var(--line); }
+.as-btn.danger { color: var(--ios-red); }
+.as-btn:active { background: rgba(118, 118, 128, .16); }
+.as-cancel { margin-top: 8px; font-weight: 600; background: var(--surface); }
+.al { position: absolute; left: 50%; top: 50%; width: 270px; transform: translate(-50%, -50%) scale(1.12); opacity: 0; transition: transform .32s cubic-bezier(.2, .95, .25, 1), opacity .2s ease;
+  background: color-mix(in srgb, var(--surface) 86%, transparent); -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8); border-radius: 14px; overflow: hidden; text-align: center; }
+.as-wrap.open .al { transform: translate(-50%, -50%); opacity: 1; }
+.as-wrap.closing .al { transform: translate(-50%, -50%) scale(.96); }
+.al-head { padding: 19px 16px 18px; }
+.al-t { font-size: 17px; font-weight: 600; }
+.al-m { font-size: 13px; margin-top: 4px; line-height: 1.35; }
+.al-btns { display: flex; border-top: .5px solid var(--line); }
+.al-btns.stack { flex-direction: column; }
+.al-btn { flex: 1; min-height: 44px; border: 0; background: none; font: 400 17px var(--font-body); color: var(--accent-text); }
+.al-btns:not(.stack) .al-btn + .al-btn { border-inline-start: .5px solid var(--line); }
+.al-btns.stack .al-btn + .al-btn { border-top: .5px solid var(--line); }
+.al-btn.bold { font-weight: 600; }
+.al-btn.danger { color: var(--ios-red); }
+.al-btn:active { background: rgba(118, 118, 128, .16); }
+@media (prefers-reduced-motion: reduce) { .as, .al, .as-scrim { transition: opacity .15s ease !important; } }
+
+/* ---- top banner instead of a bottom toast (like iOS's "Copied" / "Added to Library") ---- */
+.toast { top: calc(var(--safe-t) + 8px); bottom: auto !important; transform: translate(-50%, calc(-100% - 20px - var(--safe-t))); min-height: 44px; border-radius: 999px; padding: 6px 8px 6px 20px;
+  background: color-mix(in srgb, var(--surface) 80%, transparent) !important; color: var(--text) !important; box-shadow: 0 8px 30px rgba(0, 0, 0, .14), 0 0 0 .5px rgba(0, 0, 0, .06); font-size: 15px; font-weight: 600; max-width: calc(100vw - 32px); }
+:root[data-mode="dark"] .toast { background: color-mix(in srgb, #2c2c2e 82%, transparent) !important; box-shadow: 0 8px 30px rgba(0, 0, 0, .5); }
+.toast.show { transform: translate(-50%, 0); }
+.toast button { color: var(--accent-text); font-weight: 600; }
+.toast.drag { transition: none !important; }
+
+/* ---- iOS context menu ---- */
+.cm-scrim { background: rgba(0, 0, 0, .18); -webkit-backdrop-filter: blur(14px) saturate(1.4); backdrop-filter: blur(14px) saturate(1.4); }
+:root[data-mode="dark"] .cm-scrim { background: rgba(0, 0, 0, .4); }
+.cm-prev { position: fixed; margin: 0; z-index: 1; background: var(--surface); border-radius: 14px; overflow: hidden; pointer-events: none; transform: translateY(0) scale(1);
+  transition: transform .45s cubic-bezier(.2, 1.2, .3, 1), box-shadow .3s ease; }
+.cm-prev > .food-item, .cm-prev > .row { transform: none !important; background: var(--surface); }
+.cm-prev .sw-acts { display: none; }
+.as-wrap.open .cm-prev { transform: translateY(var(--cm-dy, 0)) scale(1.03); box-shadow: 0 16px 40px rgba(0, 0, 0, .22); }
+.cm-menu { position: fixed; z-index: 2; width: 250px; max-height: 70vh; overflow-y: auto; border-radius: 14px;
+  background: color-mix(in srgb, var(--surface) 86%, transparent); -webkit-backdrop-filter: blur(30px) saturate(1.8); backdrop-filter: blur(30px) saturate(1.8);
+  box-shadow: 0 10px 40px rgba(0, 0, 0, .2); opacity: 0; transform: scale(.6); transition: transform .4s cubic-bezier(.2, 1.15, .3, 1), opacity .2s ease; }
+.as-wrap.open .cm-menu { opacity: 1; transform: none; }
+.as-wrap.closing .cm-menu { opacity: 0; transform: scale(.8); transition-duration: .2s; }
+.cm-it { display: flex; align-items: center; gap: 12px; width: 100%; min-height: 44px; padding: 10px 16px; border: 0; background: none; text-align: start; font: 400 17px var(--font-body); color: var(--text); }
+.cm-it + .cm-it { border-top: .5px solid var(--line); }
+.cm-it.sep { border-top: 8px solid rgba(118, 118, 128, .14) !important; }
+.cm-it.danger { color: var(--ios-red); }
+.cm-it:active { background: rgba(118, 118, 128, .16); }
+.cm-l { flex: 1; min-width: 0; }
+.cm-l small { display: block; font-size: 13px; color: var(--text-2); margin-top: 1px; }
+.cm-it.danger .cm-l small { color: var(--text-2); }
+.cm-ic { width: 20px; height: 20px; flex: none; display: inline-flex; align-items: center; justify-content: center; }
+.cm-ic svg, .cm-ic .ft-ico { width: 20px; height: 20px; }
+.cm-ic .ft-ico { background: none !important; }
+.cm-back { font-weight: 600; }
+.cm-back .cm-ic { order: -1; }
+@media (prefers-reduced-motion: reduce) { .cm-prev, .cm-menu { transition: opacity .15s ease !important; } }
+/* ⋯ menus: iOS pull-down menu look */
+.pop-menu { padding: 0; border-radius: 14px; border: 0; min-width: 230px; box-shadow: 0 10px 40px rgba(0, 0, 0, .2); }
+.pop-menu button { padding: 11px 16px; min-height: 44px; border-radius: 0; font: 400 17px var(--font-body); }
+.pop-menu button + button { border-top: .5px solid var(--line); }
+.pop-menu button.danger { color: var(--ios-red); }
+[dir="rtl"] .sfx .input { padding-right: 16px; padding-left: 56px; } /* the unit sits on the left in Arabic, so the number makes room there */
+.as-grp { background: color-mix(in srgb, var(--surface) 93%, transparent); }
+.toast { background: color-mix(in srgb, var(--surface) 90%, transparent) !important; -webkit-backdrop-filter: blur(24px) saturate(1.8); backdrop-filter: blur(24px) saturate(1.8); }
+:root[data-mode="dark"] .toast { background: color-mix(in srgb, #2c2c2e 92%, transparent) !important; }

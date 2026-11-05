@@ -1,6 +1,13 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.0';
+  const APP_VERSION = '2.1.1';
   const CHANGES = [
+    { v: '2.1.1', items: [
+      "Large sheets (like Add food) are now cards like iOS: the page behind shrinks back with rounded corners, and you can pull them down to close.",
+      "Simple sheets have the iOS top bar: Cancel on the left and Save or Done on the right.",
+      "Questions before deleting or erasing use the iPhone's action sheet, and other questions use an iPhone alert.",
+      "Hold a food for an iPhone-style menu: the food lifts out over a blurred screen, with its actions next to it (Move to opens the meals).",
+      "Messages like \"+250 ml water\" now drop in from the top as a small banner, like iOS. Flick it up to dismiss it."
+    ] },
     { v: '2.1.0', items: [
       "Setpoint now looks and feels more like a built-in iPhone app: San Francisco, the iPhone's own font, with rounded numbers like Health and Fitness, and Apple's exact greys in light and dark mode.",
       "Lists look like Settings: thinner separators that start where the text starts, standard row heights, lighter chevrons.",

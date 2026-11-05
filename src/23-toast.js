@@ -20,3 +20,11 @@
     if (fn) { fn(); buzz('medium'); if (isUndo) setTimeout(function () { toast('Undone'); }, 150); }
   });
 
+  // The banner can be flicked up out of the way, like an iPhone notification.
+  (function () {
+    const t = $('#toast'); let y0 = null, dy = 0;
+    t.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; t.classList.add('drag'); try { t.setPointerCapture(e.pointerId); } catch (x) {} });
+    t.addEventListener('pointermove', function (e) { if (y0 == null) return; dy = Math.min(0, e.clientY - y0); t.style.transform = 'translate(-50%,' + (dy - (dy < 0 ? 0 : 0)) + 'px)'; });
+    const end = function () { if (y0 == null) return; y0 = null; t.classList.remove('drag'); t.style.transform = ''; if (dy < -18) hideToast(); };
+    t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end);
+  })();

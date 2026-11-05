@@ -815,9 +815,12 @@
       a('privacy.html', 'Privacy Policy', 'What we collect, and your rights') + a('terms.html', 'Terms of Use', 'Including: not medical advice') +
       a('cookies.html', 'Cookies &amp; storage', 'No tracking, nothing optional') + a('refunds.html', 'Refund Policy', 'For future paid features') + '</div>');
   }
+  // Asking before something can't be easily taken back: an iOS action sheet for destructive choices, an alert otherwise.
+  // Confirming closes whatever sheet was open underneath (as the old confirm screen did); Cancel leaves it as it was.
   function confirmSheet(title, text, okLabel, danger, onOk) {
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">' + esc(title) + '</h2></div><p class="sheet-text">' + text + '</p>' +
-      '<div class="btn-row"><button type="button" class="btn soft" id="cfNo">Cancel</button><button type="button" class="btn ' + (danger ? 'danger' : 'primary') + '" id="cfOk">' + esc(okLabel) + '</button></div>',
-      function (root) { $('#cfNo', root).addEventListener('click', function () { closeSheet(); }); $('#cfOk', root).addEventListener('click', function () { closeSheet(); onOk(); }); });
+    const go = function () { if (sheet.classList.contains('open')) closeSheet(); onOk(); };
+    if (danger) actionSheet({ title: title, message: text, actions: [{ label: okLabel, danger: true, run: go }] });
+    else iosAlert({ title: title, message: text, actions: [{ label: okLabel, bold: true, run: go }] });
   }
+
 

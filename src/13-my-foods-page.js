@@ -142,36 +142,21 @@
     if (!state.food[d].length) delete state.food[d];
     save(); renderAll(); buzz('medium'); toast('Removed ' + (f.name || 'food'), function () { restore(snap); });
   }
-  // Hold a logged food (without dragging): its shortcuts in one place.
-  function quickSheet(id, date) {
+  // Hold a logged food (without dragging): an iOS context menu. The row lifts out over a blurred screen with its actions.
+  function foodMenu(id, date, row) {
     const d = date || viewDay, it = foodFor(d).find(function (x) { return x.id === id; }); if (!it) return;
-    const fav = it.ref && isFav(it.ref), sub = (it.ref ? fmtAmt(it.qty, it.unit) + ' · ' : '') + fmtKcal(it.kcal) + ' kcal';
-    const r = function (k, ic, t, cls) { return '<button type="button" class="row qs-row' + (cls ? ' ' + cls : '') + '" data-qs="' + k + '"><span class="qs-ic">' + ic + '</span><div class="grow row-t">' + t + '</div></button>'; };
-    openSheet('<div class="sheet-head qs-head">' + diaryIcon(it) + '<div class="grow" style="min-width:0"><h2 class="sheet-title" id="sheetTitle">' + esc(it.name || 'Quick add') + '</h2><div class="label faint">' + esc(sub) + ' · ' + esc(mealName(mealOf(it))) + '</div></div></div>' +
-      '<div class="list">' +
-        (it.plan && d <= todayISO() ? r('eat', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', 'Mark as eaten') : '') +
-        r('dup', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>', 'Add another') +
-        r('time', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>', 'Change time' + (it.t ? ' <span class="qs-v">' + esc(fmtHM(it.t)) + '</span>' : '')) +
-        r('copy', COPY_IC, 'Copy to another day') +
-        r('rep', REP_IC, it.rep && state.repeats.some(function (x) { return x.id === it.rep; }) ? 'Edit repeat' : 'Repeat this') +
-        (it.ref ? r('fav', STAR(fav), fav ? 'Remove from favorites' : 'Add to favorites') : '') +
-      '</div>' +
-      '<div class="label faint fd-sec">Move to</div><div class="qs-meals">' + MEALS.filter(function (m) { return m[0] !== mealOf(it); }).map(function (m) { return '<button type="button" data-qm="' + m[0] + '">' + mealIcon(m[0]) + '<span>' + esc(m[1]) + '</span></button>'; }).join('') + '</div>' +
-      '<div class="list" style="margin-top:14px">' + r('del', TRASH, it.rep ? 'Skip today <span class="qs-v">Only this day; it repeats as usual</span>' : 'Delete', 'danger') + '</div>', function (body) {
-      $$('[data-qs]', body).forEach(function (b) { b.addEventListener('click', function () {
-        const k = b.dataset.qs; closeSheet();
-        if (k === 'time') setTimeout(function () { timeSheet(id, d); }, 260);
-        else if (k === 'copy') setTimeout(function () { copyItemSheet(id, d); }, 260);
-        else if (k === 'rep') setTimeout(function () { const ex = it.rep && state.repeats.find(function (x) { return x.id === it.rep; }); repeatSheet(ex || { item: repItemCopy(it), meal: mealOf(it), days: [] }); }, 260);
-        else if (k === 'del') removeFoodItem(id, d);
-        else if (k === 'dup') { const snap = snapshot(), c = Object.assign({}, it, { id: newId() }); delete c.u; delete c.pic; addItems(d, [c]); save(); renderAll(); buzz('success'); toast('Added another ' + (it.name || 'food'), function () { restore(snap); }); }
-        else if (k === 'eat') { const snap = snapshot(); delete it.plan; if (d === todayISO()) it.t = nowHM(); save(); renderAll(); eatenFlash(it.id); buzz('success'); toast('Marked as eaten', function () { restore(snap); }); }
-        else if (k === 'fav') { if (fav) state.favs = state.favs.filter(function (x) { return x !== it.ref; }); else state.favs.unshift(it.ref); save(); buzz('light'); toast(fav ? 'Removed from favorites' : 'Added to favorites'); }
-      }); });
-      $$('[data-qm]', body).forEach(function (b) { b.addEventListener('click', function () {
-        const snap = snapshot(); it.meal = b.dataset.qm; closeSheet(); save(); renderAll(); buzz('success'); toast('Moved to ' + mealName(it.meal), function () { restore(snap); });
-      }); });
-    });
+    const fav = it.ref && isFav(it.ref), later = function (fn) { setTimeout(fn, 60); };
+    const I = function (p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; };
+    const items = [];
+    if (it.plan && d <= todayISO()) items.push({ label: 'Mark as eaten', icon: I('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), run: function () { const snap = snapshot(); delete it.plan; if (d === todayISO()) it.t = nowHM(); save(); renderAll(); eatenFlash(it.id); buzz('success'); toast('Marked as eaten', function () { restore(snap); }); } });
+    items.push({ label: 'Add another', icon: I('<path d="M12 6v12M6 12h12"/>'), run: function () { const snap = snapshot(), c = Object.assign({}, it, { id: newId() }); delete c.u; delete c.pic; addItems(d, [c]); save(); renderAll(); buzz('success'); toast('Added another ' + (it.name || 'food'), function () { restore(snap); }); } });
+    items.push({ label: 'Change time', sub: it.t ? fmtHM(it.t) : '', icon: I('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'), run: function () { later(function () { timeSheet(id, d); }); } });
+    items.push({ label: 'Copy to another day', icon: COPY_IC, run: function () { later(function () { copyItemSheet(id, d); }); } });
+    items.push({ label: 'Move to', icon: I('<path d="M5 12h14M13 6l6 6-6 6"/>'), items: MEALS.filter(function (m) { return m[0] !== mealOf(it); }).map(function (m) { return { label: m[1], icon: mealIcon(m[0]), run: function () { const snap = snapshot(); it.meal = m[0]; save(); renderAll(); buzz('success'); toast('Moved to ' + mealName(it.meal), function () { restore(snap); }); } }; }) });
+    items.push({ label: it.rep && state.repeats.some(function (x) { return x.id === it.rep; }) ? 'Edit repeat' : 'Repeat this', icon: REP_IC, run: function () { later(function () { const ex = it.rep && state.repeats.find(function (x) { return x.id === it.rep; }); repeatSheet(ex || { item: repItemCopy(it), meal: mealOf(it), days: [] }); }); } });
+    if (it.ref) items.push({ label: fav ? 'Remove from favorites' : 'Add to favorites', icon: STAR(fav), run: function () { if (fav) state.favs = state.favs.filter(function (x) { return x !== it.ref; }); else state.favs.unshift(it.ref); save(); buzz('light'); toast(fav ? 'Removed from favorites' : 'Added to favorites'); } });
+    items.push({ label: it.rep ? 'Skip today' : 'Delete', sub: it.rep ? 'Repeats as usual' : '', icon: TRASH, danger: true, sep: true, run: function () { removeFoodItem(id, d); } });
+    contextMenu(row, items);
   }
   // When you ate it (from the hold menu).
   function timeSheet(id, date) {

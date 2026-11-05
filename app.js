@@ -2,8 +2,15 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.0';
+  const APP_VERSION = '2.1.1';
   const CHANGES = [
+    { v: '2.1.1', items: [
+      "Large sheets (like Add food) are now cards like iOS: the page behind shrinks back with rounded corners, and you can pull them down to close.",
+      "Simple sheets have the iOS top bar: Cancel on the left and Save or Done on the right.",
+      "Questions before deleting or erasing use the iPhone's action sheet, and other questions use an iPhone alert.",
+      "Hold a food for an iPhone-style menu: the food lifts out over a blurred screen, with its actions next to it (Move to opens the meals).",
+      "Messages like \"+250 ml water\" now drop in from the top as a small banner, like iOS. Flick it up to dismiss it."
+    ] },
     { v: '2.1.0', items: [
       "Setpoint now looks and feels more like a built-in iPhone app: San Francisco, the iPhone's own font, with rounded numbers like Health and Fitness, and Apple's exact greys in light and dark mode.",
       "Lists look like Settings: thinner separators that start where the text starts, standard row heights, lighter chevrons.",
@@ -4962,36 +4969,21 @@
     if (!state.food[d].length) delete state.food[d];
     save(); renderAll(); buzz('medium'); toast('Removed ' + (f.name || 'food'), function () { restore(snap); });
   }
-  // Hold a logged food (without dragging): its shortcuts in one place.
-  function quickSheet(id, date) {
+  // Hold a logged food (without dragging): an iOS context menu. The row lifts out over a blurred screen with its actions.
+  function foodMenu(id, date, row) {
     const d = date || viewDay, it = foodFor(d).find(function (x) { return x.id === id; }); if (!it) return;
-    const fav = it.ref && isFav(it.ref), sub = (it.ref ? fmtAmt(it.qty, it.unit) + ' · ' : '') + fmtKcal(it.kcal) + ' kcal';
-    const r = function (k, ic, t, cls) { return '<button type="button" class="row qs-row' + (cls ? ' ' + cls : '') + '" data-qs="' + k + '"><span class="qs-ic">' + ic + '</span><div class="grow row-t">' + t + '</div></button>'; };
-    openSheet('<div class="sheet-head qs-head">' + diaryIcon(it) + '<div class="grow" style="min-width:0"><h2 class="sheet-title" id="sheetTitle">' + esc(it.name || 'Quick add') + '</h2><div class="label faint">' + esc(sub) + ' · ' + esc(mealName(mealOf(it))) + '</div></div></div>' +
-      '<div class="list">' +
-        (it.plan && d <= todayISO() ? r('eat', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>', 'Mark as eaten') : '') +
-        r('dup', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M12 6v12M6 12h12"/></svg>', 'Add another') +
-        r('time', '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/></svg>', 'Change time' + (it.t ? ' <span class="qs-v">' + esc(fmtHM(it.t)) + '</span>' : '')) +
-        r('copy', COPY_IC, 'Copy to another day') +
-        r('rep', REP_IC, it.rep && state.repeats.some(function (x) { return x.id === it.rep; }) ? 'Edit repeat' : 'Repeat this') +
-        (it.ref ? r('fav', STAR(fav), fav ? 'Remove from favorites' : 'Add to favorites') : '') +
-      '</div>' +
-      '<div class="label faint fd-sec">Move to</div><div class="qs-meals">' + MEALS.filter(function (m) { return m[0] !== mealOf(it); }).map(function (m) { return '<button type="button" data-qm="' + m[0] + '">' + mealIcon(m[0]) + '<span>' + esc(m[1]) + '</span></button>'; }).join('') + '</div>' +
-      '<div class="list" style="margin-top:14px">' + r('del', TRASH, it.rep ? 'Skip today <span class="qs-v">Only this day; it repeats as usual</span>' : 'Delete', 'danger') + '</div>', function (body) {
-      $$('[data-qs]', body).forEach(function (b) { b.addEventListener('click', function () {
-        const k = b.dataset.qs; closeSheet();
-        if (k === 'time') setTimeout(function () { timeSheet(id, d); }, 260);
-        else if (k === 'copy') setTimeout(function () { copyItemSheet(id, d); }, 260);
-        else if (k === 'rep') setTimeout(function () { const ex = it.rep && state.repeats.find(function (x) { return x.id === it.rep; }); repeatSheet(ex || { item: repItemCopy(it), meal: mealOf(it), days: [] }); }, 260);
-        else if (k === 'del') removeFoodItem(id, d);
-        else if (k === 'dup') { const snap = snapshot(), c = Object.assign({}, it, { id: newId() }); delete c.u; delete c.pic; addItems(d, [c]); save(); renderAll(); buzz('success'); toast('Added another ' + (it.name || 'food'), function () { restore(snap); }); }
-        else if (k === 'eat') { const snap = snapshot(); delete it.plan; if (d === todayISO()) it.t = nowHM(); save(); renderAll(); eatenFlash(it.id); buzz('success'); toast('Marked as eaten', function () { restore(snap); }); }
-        else if (k === 'fav') { if (fav) state.favs = state.favs.filter(function (x) { return x !== it.ref; }); else state.favs.unshift(it.ref); save(); buzz('light'); toast(fav ? 'Removed from favorites' : 'Added to favorites'); }
-      }); });
-      $$('[data-qm]', body).forEach(function (b) { b.addEventListener('click', function () {
-        const snap = snapshot(); it.meal = b.dataset.qm; closeSheet(); save(); renderAll(); buzz('success'); toast('Moved to ' + mealName(it.meal), function () { restore(snap); });
-      }); });
-    });
+    const fav = it.ref && isFav(it.ref), later = function (fn) { setTimeout(fn, 60); };
+    const I = function (p) { return '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + p + '</svg>'; };
+    const items = [];
+    if (it.plan && d <= todayISO()) items.push({ label: 'Mark as eaten', icon: I('<path d="M5 12.5l4.5 4.5L19 7.5"/>'), run: function () { const snap = snapshot(); delete it.plan; if (d === todayISO()) it.t = nowHM(); save(); renderAll(); eatenFlash(it.id); buzz('success'); toast('Marked as eaten', function () { restore(snap); }); } });
+    items.push({ label: 'Add another', icon: I('<path d="M12 6v12M6 12h12"/>'), run: function () { const snap = snapshot(), c = Object.assign({}, it, { id: newId() }); delete c.u; delete c.pic; addItems(d, [c]); save(); renderAll(); buzz('success'); toast('Added another ' + (it.name || 'food'), function () { restore(snap); }); } });
+    items.push({ label: 'Change time', sub: it.t ? fmtHM(it.t) : '', icon: I('<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>'), run: function () { later(function () { timeSheet(id, d); }); } });
+    items.push({ label: 'Copy to another day', icon: COPY_IC, run: function () { later(function () { copyItemSheet(id, d); }); } });
+    items.push({ label: 'Move to', icon: I('<path d="M5 12h14M13 6l6 6-6 6"/>'), items: MEALS.filter(function (m) { return m[0] !== mealOf(it); }).map(function (m) { return { label: m[1], icon: mealIcon(m[0]), run: function () { const snap = snapshot(); it.meal = m[0]; save(); renderAll(); buzz('success'); toast('Moved to ' + mealName(it.meal), function () { restore(snap); }); } }; }) });
+    items.push({ label: it.rep && state.repeats.some(function (x) { return x.id === it.rep; }) ? 'Edit repeat' : 'Repeat this', icon: REP_IC, run: function () { later(function () { const ex = it.rep && state.repeats.find(function (x) { return x.id === it.rep; }); repeatSheet(ex || { item: repItemCopy(it), meal: mealOf(it), days: [] }); }); } });
+    if (it.ref) items.push({ label: fav ? 'Remove from favorites' : 'Add to favorites', icon: STAR(fav), run: function () { if (fav) state.favs = state.favs.filter(function (x) { return x !== it.ref; }); else state.favs.unshift(it.ref); save(); buzz('light'); toast(fav ? 'Removed from favorites' : 'Added to favorites'); } });
+    items.push({ label: it.rep ? 'Skip today' : 'Delete', sub: it.rep ? 'Repeats as usual' : '', icon: TRASH, danger: true, sep: true, run: function () { removeFoodItem(id, d); } });
+    contextMenu(row, items);
   }
   // When you ate it (from the hold menu).
   function timeSheet(id, date) {
@@ -7849,6 +7841,34 @@
     if (r.closing) { r.onEnd = null; closeSheet(); }
     scrim.style.opacity = '';
   }
+  // iOS: a large sheet pushes the page back. The page shrinks a little behind it, with rounded corners on black,
+  // and follows the sheet while you drag it. Small sheets leave the page where it is, like iOS.
+  let backOn = false, backT0 = 0;
+  const BACK_S = 0.07;
+  function backEls() { return [$('.main-clip'), $('.tabbar')].filter(Boolean); }
+  function backWanted() { return sheet.classList.contains('open') && sheet.offsetHeight > innerHeight * 0.66; }
+  function backTf(p) { return p > 0.001 ? 'scale(' + (1 - BACK_S * p).toFixed(4) + ')' : 'none'; }
+  function backSet(p, anim) {
+    if (p > 0 && !backOn) {
+      backOn = true; clearTimeout(backT0);
+      const m = $('.main-clip'), tb = $('.tabbar'), vh = innerHeight, sy = scrollY;
+      m.style.transformOrigin = '50% ' + (sy + vh / 2) + 'px';
+      m.style.clipPath = 'inset(' + sy + 'px 0 ' + Math.max(0, m.offsetHeight - sy - vh) + 'px 0 round 16px)';
+      if (tb) tb.style.transformOrigin = '50% ' + (vh / 2 - tb.getBoundingClientRect().top) + 'px';
+      document.documentElement.classList.add('sheet-back');
+    }
+    if (!backOn) return;
+    const go = anim && !calmMotion();
+    backEls().forEach(function (el) { el.style.transition = go ? 'transform .5s cubic-bezier(.22,1,.36,1)' : 'none'; el.style.transform = backTf(p); });
+    if (p <= 0.001) { clearTimeout(backT0); backT0 = setTimeout(backClear, go ? 520 : 0); }
+  }
+  function backClear() {
+    if (backWanted()) return;
+    backOn = false; document.documentElement.classList.remove('sheet-back');
+    backEls().forEach(function (el) { el.style.transformOrigin = el.style.clipPath = el.style.transition = el.style.transform = ''; });
+  }
+  if (window.ResizeObserver) new ResizeObserver(function () { if (!sheet.classList.contains('open') || sheet.classList.contains('dragging') || sheetRun) return; const w = backWanted(); if (w && !backOn) backSet(1, true); else if (!w && backOn) backSet(0, true); }).observe(sheet);
+
   function openSheet(html, onMount, onClose) {
     sheetSettle();
     if (!sheet.classList.contains('open')) { sheetOpenAt = performance.now(); sheetTitleWas = null; }
@@ -7867,7 +7887,104 @@
     if (onMount) onMount(sheetBody);
     autoTall();
     addSheetX();
+    iosBar();
+    if (backWanted()) backSet(1, true); else if (backOn) backSet(0, true);
   }
+  // A simple sheet (a title, then a form or some info, then one main button) gets the iOS bar instead: Cancel on
+  // the left and the action (Save, Done…) on the right, with the title in the middle. The original button stays,
+  // hidden, so everything it does still works.
+  const BAR_ACT = /^(Save|Done|Add|Log|Create|Got it|Set|Update|Start|OK)$/;
+  function iosBar() {
+    const heads = $$('.sheet-head', sheetBody); if (heads.length !== 1) return;
+    const h = heads[0], title = h.querySelector('.sheet-title');
+    if (!title || h.querySelector('button, input, select, label, .rp-ic, .ft-ico')) return; // headers with their own controls stay as they are
+    const prim = $$('.btn.primary', sheetBody).filter(function (b) { return b.offsetParent !== null || b.closest('.sheet-foot'); });
+    if (prim.length !== 1) return;
+    const b = prim[0], label = b.textContent.trim(), row = b.closest('.btn-row');
+    if (!BAR_ACT.test(label) || (row && $$('button', row).filter(function (x) { return x !== b && !x.hidden; }).length)) return;
+    if ($$('.btn', sheetBody).filter(function (x) { return x !== b && !x.hidden && x.offsetParent !== null; }).length > 2) return; // a screen full of buttons keeps its own layout
+    const info = /^(Done|Got it|OK)$/.test(label);
+    h.classList.add('ios-bar');
+    h.insertAdjacentHTML('afterbegin', '<button type="button" class="bar-btn bar-l">' + (info ? '' : 'Cancel') + '</button>');
+    h.insertAdjacentHTML('beforeend', '<button type="button" class="bar-btn bar-r">' + esc(label === 'Got it' || label === 'OK' ? 'Done' : label) + '</button>');
+    h.querySelector('.bar-l').addEventListener('click', function () { closeSheet(); });
+    h.querySelector('.bar-r').addEventListener('click', function () { b.click(); });
+    (row || b).classList.add('bar-moved');
+  }
+
+  // iOS context menu: what you held lifts out (a copy of it, a little bigger) over a blurred screen, with a menu
+  // beside it. items: [{ label, icon, sub, danger, sep, run, items (a submenu) }]
+  function contextMenu(src, items) {
+    closeAction(true);
+    const r = src.getBoundingClientRect(), wrap = document.createElement('div');
+    wrap.className = 'as-wrap cm-wrap'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
+    const prev = src.cloneNode(true); prev.classList.add('cm-prev'); prev.removeAttribute('data-sw'); $$('[id]', prev).forEach(function (x) { x.removeAttribute('id'); });
+    prev.style.cssText = 'left:' + r.left + 'px;top:' + r.top + 'px;width:' + r.width + 'px;height:' + r.height + 'px';
+    const menu = document.createElement('div'); menu.className = 'cm-menu'; menu.setAttribute('role', 'menu');
+    const draw = function (list, back) {
+      menu.innerHTML = (back ? '<button type="button" class="cm-it cm-back" data-ci="-1"><span class="cm-l">' + esc(back) + '</span><svg class="cm-ic" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M15 6l-6 6 6 6"/></svg></button>' : '') +
+        list.map(function (it, i) { return '<button type="button" role="menuitem" class="cm-it' + (it.danger ? ' danger' : '') + (it.sep ? ' sep' : '') + '" data-ci="' + i + '"><span class="cm-l">' + esc(it.label) + (it.sub ? '<small>' + esc(it.sub) + '</small>' : '') + '</span><span class="cm-ic">' + (it.items ? '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M9 6l6 6-6 6"/></svg>' : it.icon || '') + '</span></button>'; }).join('');
+      menu.onclick = function (e) {
+        const b = e.target.closest('[data-ci]'); if (!b) return;
+        const i = +b.dataset.ci; if (i < 0) { draw(items); buzz('light'); return; }
+        const it = list[i]; if (it.items) { draw(it.items, it.label); buzz('light'); return; }
+        closeAction(); it.run();
+      };
+    };
+    draw(items);
+    wrap.innerHTML = '<div class="as-scrim cm-scrim"></div>';
+    wrap.appendChild(prev); wrap.appendChild(menu); document.body.appendChild(wrap);
+    // the menu goes under the row if it fits, otherwise above; if neither, the row moves up to make room (like iOS)
+    const mh = menu.offsetHeight, vh = innerHeight, top0 = (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-t')) || 0) + 12, bot = vh - 12 - (parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--safe-b')) || 0);
+    let py = r.top, my;
+    if (r.bottom + 10 + mh <= bot) my = r.bottom + 10;
+    else if (r.top - 10 - mh >= top0) my = r.top - 10 - mh;
+    else { py = Math.max(top0, bot - mh - 10 - r.height); my = py + r.height + 10; }
+    const rtl = document.documentElement.dir === 'rtl', mw = menu.offsetWidth;
+    menu.style.top = my + 'px'; menu.style.left = (rtl ? Math.max(12, r.right - mw) : Math.min(innerWidth - mw - 12, r.left)) + 'px';
+    menu.style.transformOrigin = (rtl ? 'right' : 'left') + (my > py ? ' top' : ' bottom');
+    prev.style.setProperty('--cm-dy', (py - r.top) + 'px');
+    src.style.visibility = 'hidden';
+    const restore = function () { src.style.visibility = ''; };
+    wrap.cmRestore = restore;
+    buzz('medium');
+    requestAnimationFrame(function () { wrap.classList.add('open'); });
+    wrap.querySelector('.cm-scrim').addEventListener('click', function () { closeAction(); });
+  }
+  // iOS action sheet: choices slide up from the bottom, with Cancel on its own. o: { title, message, actions: [{ label, danger, run }] }
+  function actionSheet(o) {
+    closeAction(true);
+    const wrap = document.createElement('div'); wrap.className = 'as-wrap'; wrap.setAttribute('role', 'dialog'); wrap.setAttribute('aria-modal', 'true');
+    wrap.innerHTML = '<div class="as-scrim"></div><div class="as"><div class="as-grp">' +
+      (o.title || o.message ? '<div class="as-head">' + (o.title ? '<div class="as-t">' + esc(o.title) + '</div>' : '') + (o.message ? '<div class="as-m">' + o.message + '</div>' : '') + '</div>' : '') +
+      o.actions.map(function (a, i) { return '<button type="button" class="as-btn' + (a.danger ? ' danger' : '') + '" data-ai="' + i + '">' + esc(a.label) + '</button>'; }).join('') +
+      '</div><button type="button" class="as-btn as-cancel" data-ai="-1">Cancel</button></div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.classList.add('open'); });
+    wrap.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-ai]'); if (!b && !e.target.classList.contains('as-scrim')) return;
+      const i = b ? +b.dataset.ai : -1; closeAction(); if (i >= 0) { buzz(o.actions[i].danger ? 'warn' : 'light'); o.actions[i].run(); }
+    });
+    const c = wrap.querySelector('.as-cancel'); if (c) c.focus({ preventScroll: true });
+  }
+  // iOS alert: a small card in the middle with its buttons side by side. o: { title, message, actions: [{ label, bold, danger, run }] }
+  function iosAlert(o) {
+    closeAction(true);
+    const wrap = document.createElement('div'); wrap.className = 'as-wrap al-wrap'; wrap.setAttribute('role', 'alertdialog'); wrap.setAttribute('aria-modal', 'true');
+    const acts = [{ label: 'Cancel', cancel: true }].concat(o.actions);
+    wrap.innerHTML = '<div class="as-scrim"></div><div class="al"><div class="al-head"><div class="al-t">' + esc(o.title) + '</div>' + (o.message ? '<div class="al-m">' + o.message + '</div>' : '') + '</div>' +
+      '<div class="al-btns' + (acts.length > 2 ? ' stack' : '') + '">' + acts.map(function (a, i) { return '<button type="button" class="al-btn' + (a.bold ? ' bold' : '') + (a.danger ? ' danger' : '') + '" data-ai="' + (i - 1) + '">' + esc(a.label) + '</button>'; }).join('') + '</div></div>';
+    document.body.appendChild(wrap);
+    requestAnimationFrame(function () { wrap.classList.add('open'); });
+    wrap.addEventListener('click', function (e) {
+      const b = e.target.closest('[data-ai]'); if (!b) return;
+      const i = +b.dataset.ai; closeAction(); if (i >= 0) { buzz('light'); o.actions[i].run(); }
+    });
+  }
+  function closeAction(now) {
+    $$('.as-wrap:not(.closing)').forEach(function (w) { w.classList.add('closing'); w.classList.remove('open'); setTimeout(function () { w.remove(); if (w.cmRestore) w.cmRestore(); }, now || calmMotion() ? 0 : 320); });
+  }
+  document.addEventListener('keydown', function (e) { if (e.key === 'Escape' && document.querySelector('.as-wrap.open')) { e.stopImmediatePropagation(); closeAction(); } }, true);
   // A small menu under a ⋯ button. items: [{ label, danger, run }]
   function popMenu(anchor, items) {
     closePop();
@@ -7901,7 +8018,7 @@
     if (!sheet.classList.contains('tall')) return;
     $$('.sheet-head', sheetBody).forEach(function (h) {
       if (h.querySelector('.back-btn, .sheet-x')) return;
-      h.insertAdjacentHTML('afterbegin', '<button type="button" class="icon-btn back-btn sheet-x" aria-label="Close">' + BACK_IC + '</button>');
+      h.insertAdjacentHTML('afterbegin', '<button type="button" class="icon-btn back-btn sheet-x" aria-label="Close"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"><path d="M7 7l10 10M17 7L7 17"/></svg></button>');
       h.firstElementChild.addEventListener('click', function () { closeSheet(); });
     });
   }
@@ -7981,6 +8098,7 @@
     if (navInstant) { sheet.style.transition = scrim.style.transition = 'none'; requestAnimationFrame(function () { requestAnimationFrame(function () { sheet.style.transition = scrim.style.transition = ''; }); }); }
     const wasTall = sheet.classList.contains('tall');
     sheet.classList.remove('open'); scrim.classList.remove('open');
+    if (backOn) backSet(0, !navInstant);
     // back to a normal sheet once it has slid away
     if (sheet.classList.contains('auto-tall')) setTimeout(function () { if (!sheet.classList.contains('open')) sheet.classList.remove('tall', 'auto-tall'); }, navInstant ? 0 : 360);
     sheet.style.transform = '';
@@ -8013,7 +8131,9 @@
     const vis = function (y) { return y >= 0 ? y : -rubber(-y, 44); }; // pulled up: a little give
     const place = function (y) {
       dy = y; sheet.style.transform = 'translate3d(0,' + vis(y).toFixed(2) + 'px,0)';
-      scrim.style.opacity = String(Math.max(0, Math.min(1, 1 - Math.max(0, y) / Math.max(260, sheet.offsetHeight))));
+      const o = Math.max(0, Math.min(1, 1 - Math.max(0, y) / Math.max(260, sheet.offsetHeight)));
+      scrim.style.opacity = String(o);
+      if (backOn) backSet(o, false); // the page comes forward as the sheet goes down
     };
     const isMoving = function () { return !!sheetRun || sheet.getAnimations().some(function (a) { return a.transitionProperty === 'transform' && a.playState === 'running'; }); };
     const goLive = function () {
@@ -8025,7 +8145,7 @@
       live = true;
     };
     const begin = function (y, x, t, fromHandle) {
-      if (!sheet.classList.contains('open') || sheet.classList.contains('tall') || dragActive) return false;
+      if (!sheet.classList.contains('open') || dragActive) return false;
       y0 = y; x0 = x; on = true; live = false; handle = fromHandle; moving = isMoving(); sp.reset(); sp.add(0, t);
       return true;
     };
@@ -8065,10 +8185,12 @@
       const from = vis(dy), to = close ? h + 40 : 0, so = parseFloat(scrim.style.opacity), s0 = isNaN(so) ? 1 : so;
       sheet.style.pointerEvents = close ? 'none' : '';
       if (calmMotion()) { sheet.classList.remove('dragging'); scrim.style.transition = ''; if (close) { closeSheet(); scrim.style.opacity = ''; sheet.style.pointerEvents = ''; } else { sheet.style.transform = ''; scrim.style.opacity = ''; } return; }
-      const run = sheetRun = springGroup([
+      const parts = [
         [sheet, { transform: 'translate3d(0,' + from + 'px,0)' }, { transform: 'translate3d(0,' + to + 'px,0)' }],
         [scrim, { opacity: s0 }, { opacity: close ? 0 : 1 }]
-      ], { response: close ? 0.4 : 0.42, damping: close ? 1 : 0.86, v: close ? v : (from > 0 ? -v : v), dist: Math.abs(to - from), noOver: close });
+      ];
+      if (backOn) backEls().forEach(function (el) { el.style.transition = 'none'; el.style.transform = backTf(close ? 0 : 1); parts.push([el, { transform: backTf(s0) }, { transform: backTf(close ? 0 : 1) }]); });
+      const run = sheetRun = springGroup(parts, { response: close ? 0.4 : 0.42, damping: close ? 1 : 0.86, v: close ? v : (from > 0 ? -v : v), dist: Math.abs(to - from), noOver: close });
       run.closing = close;
       run.onEnd = function () {
         if (sheetRun !== run) return; sheetRun = null;
@@ -8126,6 +8248,14 @@
     if (fn) { fn(); buzz('medium'); if (isUndo) setTimeout(function () { toast('Undone'); }, 150); }
   });
 
+  // The banner can be flicked up out of the way, like an iPhone notification.
+  (function () {
+    const t = $('#toast'); let y0 = null, dy = 0;
+    t.addEventListener('pointerdown', function (e) { if (e.target.closest('button')) return; y0 = e.clientY; dy = 0; t.classList.add('drag'); try { t.setPointerCapture(e.pointerId); } catch (x) {} });
+    t.addEventListener('pointermove', function (e) { if (y0 == null) return; dy = Math.min(0, e.clientY - y0); t.style.transform = 'translate(-50%,' + (dy - (dy < 0 ? 0 : 0)) + 'px)'; });
+    const end = function () { if (y0 == null) return; y0 = null; t.classList.remove('drag'); t.style.transform = ''; if (dy < -18) hideToast(); };
+    t.addEventListener('pointerup', end); t.addEventListener('pointercancel', end);
+  })();
   /* ================= Sheets ================= */
   function field(label, inner) { return '<label class="field"><span>' + label + '</span>' + inner + '</label>'; }
   function segHtml(id, opts, val) { return '<div class="seg" id="' + id + '">' + opts.map(function (o) { return '<button type="button" data-v="' + o[0] + '" aria-pressed="' + (String(val) === String(o[0])) + '">' + o[1] + '</button>'; }).join('') + '</div>'; }
@@ -8943,11 +9073,14 @@
       a('privacy.html', 'Privacy Policy', 'What we collect, and your rights') + a('terms.html', 'Terms of Use', 'Including: not medical advice') +
       a('cookies.html', 'Cookies &amp; storage', 'No tracking, nothing optional') + a('refunds.html', 'Refund Policy', 'For future paid features') + '</div>');
   }
+  // Asking before something can't be easily taken back: an iOS action sheet for destructive choices, an alert otherwise.
+  // Confirming closes whatever sheet was open underneath (as the old confirm screen did); Cancel leaves it as it was.
   function confirmSheet(title, text, okLabel, danger, onOk) {
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">' + esc(title) + '</h2></div><p class="sheet-text">' + text + '</p>' +
-      '<div class="btn-row"><button type="button" class="btn soft" id="cfNo">Cancel</button><button type="button" class="btn ' + (danger ? 'danger' : 'primary') + '" id="cfOk">' + esc(okLabel) + '</button></div>',
-      function (root) { $('#cfNo', root).addEventListener('click', function () { closeSheet(); }); $('#cfOk', root).addEventListener('click', function () { closeSheet(); onOk(); }); });
+    const go = function () { if (sheet.classList.contains('open')) closeSheet(); onOk(); };
+    if (danger) actionSheet({ title: title, message: text, actions: [{ label: okLabel, danger: true, run: go }] });
+    else iosAlert({ title: title, message: text, actions: [{ label: okLabel, bold: true, run: go }] });
   }
+
 
   /* ================= Account + sync ================= */
   // Setpoint's own Firebase project. Data lives at users/{uid}/setpoint/state, which the rules limit to its owner.
@@ -9675,7 +9808,7 @@
     else { const t = arr.find(function (x) { return x.id === tgt.dataset.sw; }); if (!t) return; it.meal = mealOf(t); let j = arr.indexOf(t); if (!before) j++; arr.splice(j, 0, it); }
     state.food[d] = arr; save(); renderAll(); buzz('success');
 
-  }, { also: '.meal-head', marker: '.meal-sec', onHold: function (w) { if (w.dataset.sw) quickSheet(w.dataset.sw, viewDay); } });
+  }, { also: '.meal-head', marker: '.meal-sec', onHold: function (w) { if (w.dataset.sw) foodMenu(w.dataset.sw, viewDay, w); } });
 
   // Swipe a weigh-in left to delete it (with Undo).
   (function swipeToDelete() {

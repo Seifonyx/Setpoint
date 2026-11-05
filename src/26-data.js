@@ -422,7 +422,7 @@
     else { const t = arr.find(function (x) { return x.id === tgt.dataset.sw; }); if (!t) return; it.meal = mealOf(t); let j = arr.indexOf(t); if (!before) j++; arr.splice(j, 0, it); }
     state.food[d] = arr; save(); renderAll(); buzz('success');
 
-  }, { also: '.meal-head', marker: '.meal-sec', onHold: function (w) { if (w.dataset.sw) quickSheet(w.dataset.sw, viewDay); } });
+  }, { also: '.meal-head', marker: '.meal-sec', onHold: function (w) { if (w.dataset.sw) foodMenu(w.dataset.sw, viewDay, w); } });
 
   // Swipe a weigh-in left to delete it (with Undo).
   (function swipeToDelete() {
