@@ -1,6 +1,9 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.4';
+  const APP_VERSION = '2.1.5';
   const CHANGES = [
+    { v: '2.1.5', items: [
+      "Settings icons are back to the softer tinted style."
+    ] },
     { v: '2.1.4', items: [
       "Fixed: the app no longer zooms in to follow the iPhone's text size, which made screens crowded. Use Settings \u203a Text size in Setpoint instead."
     ] },

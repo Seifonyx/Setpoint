@@ -2727,28 +2727,6 @@ html.sheet-back .scrim.open { background: rgba(0, 0, 0, .32); }
 .search-box svg { color: var(--text-3); }
 .search-box:focus-within { box-shadow: none !important; }
 
-/* ---- iOS icons (v2.1) ----
-   Settings-style rows: solid squircles in Apple's system colours with a white symbol. Line weights even out to match
-   SF Symbols: regular in lists and menus, a little bolder for chevrons. */
-.list > .row > .ico.ico-s, .list > label.row > .ico.ico-s { width: 30px; height: 30px; border-radius: 7px; color: #fff !important; background: #8e8e93 !important; }
-.list > .row > .ico.ico-s svg, .list > label.row > .ico.ico-s svg { width: 18px; height: 18px; stroke-width: 2.1; }
-.list > .row:nth-child(4n+1) > .ico.ico-s { background: #34c759 !important; }
-.list > .row:nth-child(4n+2) > .ico.ico-s, .list > label.row:nth-child(4n+2) > .ico.ico-s { background: #007aff !important; }
-.list > .row:nth-child(4n+3) > .ico.ico-s, .list > label.row:nth-child(4n+3) > .ico.ico-s { background: #ff9500 !important; }
-.list > .row:nth-child(4n) > .ico.ico-s, .list > label.row:nth-child(4n) > .ico.ico-s { background: #af52de !important; }
-.list > .row > .ico.ic-c-blue, .list > label.row > .ico.ic-c-blue { background: #007aff !important; }
-.list > .row > .ico.ic-c-green, .list > label.row > .ico.ic-c-green { background: #34c759 !important; }
-.list > .row > .ico.ic-c-orange, .list > label.row > .ico.ic-c-orange { background: #ff9500 !important; }
-.list > .row > .ico.ic-c-purple, .list > label.row > .ico.ic-c-purple { background: #af52de !important; }
-.list > .row > .ico.ic-c-pink, .list > label.row > .ico.ic-c-pink { background: #ff2d55 !important; }
-.list > .row > .ico.ico-danger { background: #ff3b30 !important; }
-:root[data-mode="dark"] .list > .row > .ico.ico-s { filter: brightness(1.06); }
-.list > .row > .ico:not(.ico-s) { border-radius: 10px; }
-.list > * + .row:has(> .ico.ico-s)::before, .list > * + label.row:has(> .ico.ico-s)::before { inset-inline-start: 62px; }
-.tab-ico svg, .cm-ic svg, .icon-btn svg, .pop-menu svg { stroke-width: 1.8; }
-.back-btn svg { stroke-width: 2.4; }
-.list > .row > .ico[class*="ic-c-"], .list > label.row > .ico[class*="ic-c-"], .list > .row > .ico.ico-danger { color: #fff !important; }
-.list > .row > .ico:not(.ico-s) { width: 36px; height: 36px; border-radius: 9px; }
 
 /* ---- Apple's welcome / What's New layout (v2.1) ---- */
 .wn-hero { text-align: center; margin: 22px 0 26px; }
