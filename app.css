@@ -2749,3 +2749,22 @@ html.sheet-back .scrim.open { background: rgba(0, 0, 0, .32); }
 .back-btn svg { stroke-width: 2.4; }
 .list > .row > .ico[class*="ic-c-"], .list > label.row > .ico[class*="ic-c-"], .list > .row > .ico.ico-danger { color: #fff !important; }
 .list > .row > .ico:not(.ico-s) { width: 36px; height: 36px; border-radius: 9px; }
+
+/* ---- Apple's welcome / What's New layout (v2.1) ---- */
+.wn-hero { text-align: center; margin: 22px 0 26px; }
+.wn-title { font-size: 34px; font-weight: 700; line-height: 1.12; margin: 4px 12px 0; }
+.wn-feats { display: flex; flex-direction: column; gap: 24px; margin: 0 6px 30px; }
+.wn-feat { display: flex; align-items: flex-start; gap: 16px; }
+.wn-ic { width: 44px; height: 44px; flex: none; display: grid; place-items: center; }
+.wn-ic svg { width: 34px; height: 34px; stroke-width: 1.9; }
+.wn-ft { font-size: 15px; font-weight: 600; }
+.wn-fd { font-size: 15px; color: var(--text-2); line-height: 1.35; margin-top: 1px; }
+.wn-ft + .wn-fd { margin-top: 2px; }
+
+/* ---- Increase Contrast (iPhone accessibility setting) ---- */
+@media (prefers-contrast: more) {
+  :root { --text-2: #3c3c43; --text-3: #545458; --line: #8e8e93; --chev-c: rgba(60, 60, 67, .6); }
+  :root[data-mode="dark"] { --text-2: #d1d1d6; --text-3: #aeaeb2; --line: #8e8e93; --chev-c: rgba(235, 235, 245, .6); }
+  .seg button[aria-pressed="true"] { outline: 1px solid currentColor; outline-offset: -1px; }
+}
+.center-btn { display: block; margin-left: auto; margin-right: auto; text-align: center; }

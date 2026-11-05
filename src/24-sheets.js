@@ -304,10 +304,15 @@
     const done = function () { state.ui.onboarded = true; save(); };
     let html;
     if (step === 1) {
-      html = dots + '<div class="ob-hero"><span class="ob-logo"><img src="icon-192.png" alt="" /></span><h2 class="sheet-title" id="sheetTitle" style="font-size:28px">Welcome to Setpoint</h2>' +
-        '<p class="sheet-text" style="margin:8px 0 0">Watch your trend, not the daily ups and downs.</p></div>' +
+      // Apple's welcome layout: a big title, three features with a symbol each, then Continue.
+      html = dots + '<div class="wn-hero"><h2 class="wn-title" id="sheetTitle">Welcome to Setpoint</h2></div>' +
+        '<div class="wn-feats">' +
+          wnFeat(0, 'Your trend, not the noise', 'A smooth weight line that sees past water and salt.') +
+          wnFeat(1, 'Every food, every nutrient', 'Log meals and see vitamins and minerals against your targets.') +
+          wnFeat(2, 'Targets that learn', 'Your expenditure adapts to your real results.') +
+        '</div>' +
         '<div class="field"><span>Units</span>' + segHtml('obUnit', [['kg', 'kg'], ['lb', 'lb']], unit()) + '</div>' +
-        '<button type="button" class="btn primary block" id="obNext">Get started</button>' +
+        '<button type="button" class="btn primary block" id="obNext">Continue</button>' +
         '<button type="button" class="text-btn center-btn" id="obAcct" style="margin-top:14px">I already have an account</button>' +
         '<p class="muted-note ob-legal">Setpoint gives estimates, not medical advice. By continuing you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>';
     } else if (step === 2) {
@@ -770,16 +775,37 @@
     openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Measured expenditure</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
+  // A feature row in Apple's welcome / What's New layout: a symbol in a system colour, a bold title and a line of text.
+  const WN_IC = [
+    ['#007aff', '<path d="M4 18l5-6 4 3 7-9"/><path d="M16 6h4v4"/>'],
+    ['#34c759', '<path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-1.7 1-2.5 3-2.5 6s1 4 2.5 4v8"/>'],
+    ['#ff9500', '<path d="M12 3.2c.5 2.9 4.9 5 4.9 9.9a4.9 4.9 0 0 1-9.8 0c0-2.2 1.1-3.8 2.3-4.8.4 1.4 1.2 2.2 2 2.4-.6-2.6-.1-5.1.6-7.5z"/>'],
+    ['#af52de', '<path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/>'],
+    ['#ff2d55', '<path d="M12 20s-7-4.3-7-9.5A4 4 0 0 1 12 8a4 4 0 0 1 7 2.5C19 15.7 12 20 12 20z"/>'],
+    ['#5ac8fa', '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>']
+  ];
+  function wnFeat(i, title, text) {
+    const ic = WN_IC[i % WN_IC.length];
+    return '<div class="wn-feat"><span class="wn-ic" style="color:' + ic[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ic[1] + '</svg></span><div class="grow">' + (title ? '<div class="wn-ft">' + esc(title) + '</div>' : '') + '<div class="wn-fd">' + esc(text) + '</div></div></div>';
+  }
   function whatsNewSheet() {
     hideToast();
-    openSheet('<div class="sheet-head"><div class="grow"><div class="label faint">Setpoint ' + APP_VERSION + '</div><h2 class="sheet-title" id="sheetTitle">What\'s new</h2></div></div><div class="changes" data-notr dir="ltr">' +
-      (function () { const one = function (c) { return '<h3>Version ' + c.v + '</h3><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>'; };
-        const n = /\.0$/.test(CHANGES[0].v) ? 1 : 3; // a big release stands on its own
-        return CHANGES.slice(0, n).map(one).join('') + (CHANGES.length > n ? '<details class="wn-old"><summary>Earlier versions (' + (CHANGES.length - n) + ')</summary>' + CHANGES.slice(n).map(one).join('') + '</details>' : ''); })() +
-      '</div><div style="height:20px"></div><div class="btn-row"><button type="button" class="btn soft" id="wnUp">Check for updates</button><button type="button" class="btn primary" id="wnOk">Done</button></div>',
+    const ar = state.settings.lang === 'ar' && typeof tr === 'function';
+    // The newest version as Apple's What's New: each change as a feature row ("Title: what it does" splits in two).
+    const feats = CHANGES[0].items.map(function (it, i) {
+      if (ar) return wnFeat(i, '', tr(it) || it);
+      const m = /^([^:]{3,60}):\s+(.+)$/.exec(it);
+      return m ? wnFeat(i, m[1], m[2].charAt(0).toUpperCase() + m[2].slice(1)) : wnFeat(i, '', it);
+    }).join('');
+    const one = function (c) { return '<h3>Version ' + c.v + '</h3><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>'; };
+    openSheet('<div class="wn-hero"><div class="label faint">Version ' + APP_VERSION + '</div><h2 class="wn-title" id="sheetTitle">What\'s New in Setpoint</h2></div>' +
+      '<div class="wn-feats">' + feats + '</div>' +
+      (CHANGES.length > 1 ? '<div class="changes" data-notr dir="ltr"><details class="wn-old"><summary>Earlier versions (' + (CHANGES.length - 1) + ')</summary>' + CHANGES.slice(1).map(one).join('') + '</details></div>' : '') +
+      '<div style="height:20px"></div><button type="button" class="btn primary block" id="wnOk">Continue</button><button type="button" class="text-btn center-btn" id="wnUp" style="margin-top:12px">Check for updates</button>',
       function (root) { $('#wnOk', root).addEventListener('click', function () { closeSheet(); }); $('#wnUp', root).addEventListener('click', function () { closeSheet(); checkUpdate(); }); });
     state.seenVersion = APP_VERSION; save();
   }
+
 
   // The newest feature you haven't seen yet (versions since the one you last opened), if any is worth announcing.
   function featureNews(seen) {

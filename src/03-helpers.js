@@ -70,6 +70,29 @@
     document.addEventListener('DOMContentLoaded', function () { nativeSwitches(document); });
     nativeSwitches(document);
   }
+  // Keyboard: every text field gets the iOS Return key that fits (Search, Next when another field follows, Done
+  // on the last one), number fields skip autocorrect, and Next moves on to the following field.
+  const KB_SEL = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=date]):not([type=time]):not([type=datetime-local]):not([type=hidden]), textarea';
+  function kbHints(root) {
+    if (!root || !root.querySelectorAll) return;
+    const scope = root.closest ? (root.closest('#sheetBody, .tab-panel, main') || document.body) : document.body;
+    const all = $$(KB_SEL, scope).filter(function (i) { return !i.disabled && !i.readOnly; });
+    all.forEach(function (i, n) {
+      if (i.tagName === 'TEXTAREA') return;
+      if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.type === 'search' ? 'search' : all[n + 1] && all[n + 1].tagName !== 'TEXTAREA' && i.closest('.sheet') && all[n + 1].closest('.sheet') ? 'next' : 'done');
+      const im = i.getAttribute('inputmode');
+      if ((im === 'numeric' || im === 'decimal') && !i.hasAttribute('autocorrect')) { i.setAttribute('autocorrect', 'off'); i.setAttribute('spellcheck', 'false'); }
+      if (im === 'numeric' && !i.hasAttribute('pattern')) i.setAttribute('pattern', '[0-9]*');
+    });
+  }
+  new MutationObserver(function (ms) { const seen = new Set(); ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1 && !seen.has(n.parentNode) && (n.matches(KB_SEL) || n.querySelector(KB_SEL))) { seen.add(n.parentNode); kbHints(n); } }); }); }).observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', function () { kbHints(document.body); });
+  document.addEventListener('keydown', function (e) {
+    const i = e.target; if (e.key !== 'Enter' || e.defaultPrevented || !i || i.getAttribute('enterkeyhint') !== 'next') return;
+    setTimeout(function () { if (e.defaultPrevented || document.activeElement !== i) return; const all = $$(KB_SEL, i.closest('#sheetBody') || document.body).filter(function (x) { return !x.disabled && x.offsetParent; }), n = all.indexOf(i); if (n >= 0 && all[n + 1]) all[n + 1].focus(); }, 0);
+  });
+  // The field you tap stays in view above the keyboard (iPhone doesn't always manage that inside a sheet).
+  document.addEventListener('focusin', function (e) { const i = e.target; if (!i.matches || !i.matches(KB_SEL) || !i.closest('.sheet')) return; setTimeout(function () { if (document.activeElement === i) i.scrollIntoView({ block: 'nearest', behavior: calmMotion() ? 'auto' : 'smooth' }); }, 350); });
   // Fewer animations when the phone asks for reduced motion.
   const calmMq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   function calmMotion() { return !!(calmMq && calmMq.matches); }

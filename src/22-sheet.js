@@ -79,9 +79,9 @@
     if ($$('.btn', sheetBody).filter(function (x) { return x !== b && !x.hidden && x.offsetParent !== null; }).length > 2) return; // a screen full of buttons keeps its own layout
     const info = /^(Done|Got it|OK)$/.test(label);
     h.classList.add('ios-bar');
-    h.insertAdjacentHTML('afterbegin', '<button type="button" class="bar-btn bar-l">' + (info ? '' : 'Cancel') + '</button>');
+    h.insertAdjacentHTML('afterbegin', info ? '<span class="bar-btn bar-l" aria-hidden="true"></span>' : '<button type="button" class="bar-btn bar-l">Cancel</button>'); // an info sheet only has Done; the empty slot keeps the title centred
     h.insertAdjacentHTML('beforeend', '<button type="button" class="bar-btn bar-r">' + esc(label === 'Got it' || label === 'OK' ? 'Done' : label) + '</button>');
-    h.querySelector('.bar-l').addEventListener('click', function () { closeSheet(); });
+    if (!info) h.querySelector('.bar-l').addEventListener('click', function () { closeSheet(); });
     h.querySelector('.bar-r').addEventListener('click', function () { b.click(); });
     (row || b).classList.add('bar-moved');
   }

@@ -292,6 +292,10 @@ server.listen(0, async () => {
       const kept = await p.evaluate(d => (JSON.parse(localStorage.getItem('setpoint')).food[d] || []).length, day(0));
       const gone = await p.evaluate(() => !document.querySelector('.as-wrap'));
       ok('erase asks with an iOS action sheet; Cancel keeps everything', as && kept === 1 && gone, as + ' ' + kept + ' ' + gone);
+      await p.evaluate(() => window.__setpoint.nav.tab('targets')); await p.waitForTimeout(300); await p.evaluate(() => document.querySelector('[data-tg="burn"]').click()); await p.waitForTimeout(400);
+      await p.evaluate(() => document.querySelector('[data-action="details"]').click()); await p.waitForTimeout(500);
+      const kb = await p.evaluate(() => [document.getElementById('dAge').getAttribute('enterkeyhint'), document.getElementById('dBf').getAttribute('enterkeyhint'), document.getElementById('dAge').getAttribute('pattern')]);
+      ok('keyboard: Next on fields with another after them, Done on the last, number pad pattern', kb[0] === 'next' && kb[1] === 'done' && kb[2] === '[0-9]*', kb.join(' '));
       await c.close();
     }
     // ---- 4f. Search: everyday picks first, whole words beat look-alikes ----

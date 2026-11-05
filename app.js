@@ -2,8 +2,13 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.2';
+  const APP_VERSION = '2.1.3';
   const CHANGES = [
+    { v: '2.1.3', items: [
+      "Keyboard: every field shows the right iPhone Return key (Next, Done or Search), Next jumps to the following field, and the field you're typing in stays above the keyboard.",
+      "A new welcome screen and What's New in Apple's own layout: a big title and each feature with its own symbol.",
+      "Accessibility: the app follows your iPhone's text size (Display & Brightness, Text Size), Increase Contrast darkens greys and lines, and Reduce Transparency gives solid backgrounds."
+    ] },
     { v: '2.1.2', items: [
       "Liquid Glass, like iOS 26: the tab bar and the floating buttons are clearer glass with a bright edge where the light catches them, and the current tab sits in a glass droplet. Turn on Reduce Transparency in iPhone settings for solid backgrounds instead.",
       "Settings-style icons: solid iPhone colours with white symbols, and line weights that match the iPhone's own icons.",
@@ -1065,6 +1070,29 @@
     document.addEventListener('DOMContentLoaded', function () { nativeSwitches(document); });
     nativeSwitches(document);
   }
+  // Keyboard: every text field gets the iOS Return key that fits (Search, Next when another field follows, Done
+  // on the last one), number fields skip autocorrect, and Next moves on to the following field.
+  const KB_SEL = 'input:not([type=checkbox]):not([type=radio]):not([type=range]):not([type=file]):not([type=date]):not([type=time]):not([type=datetime-local]):not([type=hidden]), textarea';
+  function kbHints(root) {
+    if (!root || !root.querySelectorAll) return;
+    const scope = root.closest ? (root.closest('#sheetBody, .tab-panel, main') || document.body) : document.body;
+    const all = $$(KB_SEL, scope).filter(function (i) { return !i.disabled && !i.readOnly; });
+    all.forEach(function (i, n) {
+      if (i.tagName === 'TEXTAREA') return;
+      if (!i.hasAttribute('enterkeyhint')) i.setAttribute('enterkeyhint', i.type === 'search' ? 'search' : all[n + 1] && all[n + 1].tagName !== 'TEXTAREA' && i.closest('.sheet') && all[n + 1].closest('.sheet') ? 'next' : 'done');
+      const im = i.getAttribute('inputmode');
+      if ((im === 'numeric' || im === 'decimal') && !i.hasAttribute('autocorrect')) { i.setAttribute('autocorrect', 'off'); i.setAttribute('spellcheck', 'false'); }
+      if (im === 'numeric' && !i.hasAttribute('pattern')) i.setAttribute('pattern', '[0-9]*');
+    });
+  }
+  new MutationObserver(function (ms) { const seen = new Set(); ms.forEach(function (m) { m.addedNodes.forEach(function (n) { if (n.nodeType === 1 && !seen.has(n.parentNode) && (n.matches(KB_SEL) || n.querySelector(KB_SEL))) { seen.add(n.parentNode); kbHints(n); } }); }); }).observe(document.documentElement, { childList: true, subtree: true });
+  document.addEventListener('DOMContentLoaded', function () { kbHints(document.body); });
+  document.addEventListener('keydown', function (e) {
+    const i = e.target; if (e.key !== 'Enter' || e.defaultPrevented || !i || i.getAttribute('enterkeyhint') !== 'next') return;
+    setTimeout(function () { if (e.defaultPrevented || document.activeElement !== i) return; const all = $$(KB_SEL, i.closest('#sheetBody') || document.body).filter(function (x) { return !x.disabled && x.offsetParent; }), n = all.indexOf(i); if (n >= 0 && all[n + 1]) all[n + 1].focus(); }, 0);
+  });
+  // The field you tap stays in view above the keyboard (iPhone doesn't always manage that inside a sheet).
+  document.addEventListener('focusin', function (e) { const i = e.target; if (!i.matches || !i.matches(KB_SEL) || !i.closest('.sheet')) return; setTimeout(function () { if (document.activeElement === i) i.scrollIntoView({ block: 'nearest', behavior: calmMotion() ? 'auto' : 'smooth' }); }, 350); });
   // Fewer animations when the phone asks for reduced motion.
   const calmMq = window.matchMedia ? matchMedia('(prefers-reduced-motion: reduce)') : null;
   function calmMotion() { return !!(calmMq && calmMq.matches); }
@@ -1596,6 +1624,14 @@
 
   /* ================= Appearance ================= */
   const mq = window.matchMedia ? matchMedia('(prefers-color-scheme: dark)') : null;
+  // How much bigger (or smaller) the iPhone's own text size is than the standard 17 pt. 1 anywhere else.
+  function dynType() {
+    if (!/iPhone|iPad|Macintosh/.test(navigator.userAgent) || !('ontouchend' in document)) return 1;
+    const t = document.createElement('span'); t.style.cssText = 'position:absolute;visibility:hidden;font:-apple-system-body';
+    document.body.appendChild(t); const px = parseFloat(getComputedStyle(t).fontSize); t.remove();
+    return px > 0 && px !== 16 ? Math.max(0.88, Math.min(1.35, px / 17)) : 1;
+  }
+  document.addEventListener('visibilitychange', function () { if (!document.hidden && state && state.settings) applyAppearance(); }); // text size changed in Settings while away
   function applyAppearance() {
     const s = state.settings, r = document.documentElement;
     const dark = s.theme === 'dark' || (s.theme === 'auto' && mq && mq.matches);
@@ -1603,7 +1639,10 @@
     r.setAttribute('data-style', s.style);
     if (s.oled) r.setAttribute('data-oled', ''); else r.removeAttribute('data-oled');
     r.classList.toggle('tabs-top', s.tabs === 'top');
-    r.style.zoom = { m: '', l: '1.08', xl: '1.16' }[s.textSize] || '';
+    // Your own Text size, times the iPhone's text size (Settings › Display & Brightness › Text Size), so the app
+    // follows Dynamic Type like built-in apps do.
+    const z = ({ m: 1, l: 1.08, xl: 1.16 }[s.textSize] || 1) * dynType();
+    r.style.zoom = Math.abs(z - 1) < 0.005 ? '' : String(Math.round(z * 1000) / 1000);
     applyLang(); // bigger text: the whole layout scales and reflows
     requestAnimationFrame(function () { placePill(false); });
     requestAnimationFrame(function () { $('#themeColor').setAttribute('content', getComputedStyle(document.body).backgroundColor); });
@@ -7915,9 +7954,9 @@
     if ($$('.btn', sheetBody).filter(function (x) { return x !== b && !x.hidden && x.offsetParent !== null; }).length > 2) return; // a screen full of buttons keeps its own layout
     const info = /^(Done|Got it|OK)$/.test(label);
     h.classList.add('ios-bar');
-    h.insertAdjacentHTML('afterbegin', '<button type="button" class="bar-btn bar-l">' + (info ? '' : 'Cancel') + '</button>');
+    h.insertAdjacentHTML('afterbegin', info ? '<span class="bar-btn bar-l" aria-hidden="true"></span>' : '<button type="button" class="bar-btn bar-l">Cancel</button>'); // an info sheet only has Done; the empty slot keeps the title centred
     h.insertAdjacentHTML('beforeend', '<button type="button" class="bar-btn bar-r">' + esc(label === 'Got it' || label === 'OK' ? 'Done' : label) + '</button>');
-    h.querySelector('.bar-l').addEventListener('click', function () { closeSheet(); });
+    if (!info) h.querySelector('.bar-l').addEventListener('click', function () { closeSheet(); });
     h.querySelector('.bar-r').addEventListener('click', function () { b.click(); });
     (row || b).classList.add('bar-moved');
   }
@@ -8572,10 +8611,15 @@
     const done = function () { state.ui.onboarded = true; save(); };
     let html;
     if (step === 1) {
-      html = dots + '<div class="ob-hero"><span class="ob-logo"><img src="icon-192.png" alt="" /></span><h2 class="sheet-title" id="sheetTitle" style="font-size:28px">Welcome to Setpoint</h2>' +
-        '<p class="sheet-text" style="margin:8px 0 0">Watch your trend, not the daily ups and downs.</p></div>' +
+      // Apple's welcome layout: a big title, three features with a symbol each, then Continue.
+      html = dots + '<div class="wn-hero"><h2 class="wn-title" id="sheetTitle">Welcome to Setpoint</h2></div>' +
+        '<div class="wn-feats">' +
+          wnFeat(0, 'Your trend, not the noise', 'A smooth weight line that sees past water and salt.') +
+          wnFeat(1, 'Every food, every nutrient', 'Log meals and see vitamins and minerals against your targets.') +
+          wnFeat(2, 'Targets that learn', 'Your expenditure adapts to your real results.') +
+        '</div>' +
         '<div class="field"><span>Units</span>' + segHtml('obUnit', [['kg', 'kg'], ['lb', 'lb']], unit()) + '</div>' +
-        '<button type="button" class="btn primary block" id="obNext">Get started</button>' +
+        '<button type="button" class="btn primary block" id="obNext">Continue</button>' +
         '<button type="button" class="text-btn center-btn" id="obAcct" style="margin-top:14px">I already have an account</button>' +
         '<p class="muted-note ob-legal">Setpoint gives estimates, not medical advice. By continuing you agree to the <a href="terms.html">Terms</a> and <a href="privacy.html">Privacy Policy</a>.</p>';
     } else if (step === 2) {
@@ -9038,16 +9082,37 @@
     openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Measured expenditure</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
+  // A feature row in Apple's welcome / What's New layout: a symbol in a system colour, a bold title and a line of text.
+  const WN_IC = [
+    ['#007aff', '<path d="M4 18l5-6 4 3 7-9"/><path d="M16 6h4v4"/>'],
+    ['#34c759', '<path d="M7 3v8a3 3 0 0 0 6 0V3M10 3v18M17 3c-1.7 1-2.5 3-2.5 6s1 4 2.5 4v8"/>'],
+    ['#ff9500', '<path d="M12 3.2c.5 2.9 4.9 5 4.9 9.9a4.9 4.9 0 0 1-9.8 0c0-2.2 1.1-3.8 2.3-4.8.4 1.4 1.2 2.2 2 2.4-.6-2.6-.1-5.1.6-7.5z"/>'],
+    ['#af52de', '<path d="M12 3l2.2 5.6L20 9.3l-4.4 3.9 1.3 5.8L12 16l-4.9 3 1.3-5.8L4 9.3l5.8-.7z"/>'],
+    ['#ff2d55', '<path d="M12 20s-7-4.3-7-9.5A4 4 0 0 1 12 8a4 4 0 0 1 7 2.5C19 15.7 12 20 12 20z"/>'],
+    ['#5ac8fa', '<circle cx="12" cy="12" r="8.5"/><path d="M12 7.5V12l3 2"/>']
+  ];
+  function wnFeat(i, title, text) {
+    const ic = WN_IC[i % WN_IC.length];
+    return '<div class="wn-feat"><span class="wn-ic" style="color:' + ic[0] + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">' + ic[1] + '</svg></span><div class="grow">' + (title ? '<div class="wn-ft">' + esc(title) + '</div>' : '') + '<div class="wn-fd">' + esc(text) + '</div></div></div>';
+  }
   function whatsNewSheet() {
     hideToast();
-    openSheet('<div class="sheet-head"><div class="grow"><div class="label faint">Setpoint ' + APP_VERSION + '</div><h2 class="sheet-title" id="sheetTitle">What\'s new</h2></div></div><div class="changes" data-notr dir="ltr">' +
-      (function () { const one = function (c) { return '<h3>Version ' + c.v + '</h3><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>'; };
-        const n = /\.0$/.test(CHANGES[0].v) ? 1 : 3; // a big release stands on its own
-        return CHANGES.slice(0, n).map(one).join('') + (CHANGES.length > n ? '<details class="wn-old"><summary>Earlier versions (' + (CHANGES.length - n) + ')</summary>' + CHANGES.slice(n).map(one).join('') + '</details>' : ''); })() +
-      '</div><div style="height:20px"></div><div class="btn-row"><button type="button" class="btn soft" id="wnUp">Check for updates</button><button type="button" class="btn primary" id="wnOk">Done</button></div>',
+    const ar = state.settings.lang === 'ar' && typeof tr === 'function';
+    // The newest version as Apple's What's New: each change as a feature row ("Title: what it does" splits in two).
+    const feats = CHANGES[0].items.map(function (it, i) {
+      if (ar) return wnFeat(i, '', tr(it) || it);
+      const m = /^([^:]{3,60}):\s+(.+)$/.exec(it);
+      return m ? wnFeat(i, m[1], m[2].charAt(0).toUpperCase() + m[2].slice(1)) : wnFeat(i, '', it);
+    }).join('');
+    const one = function (c) { return '<h3>Version ' + c.v + '</h3><ul>' + c.items.map(function (i) { return '<li>' + esc(i) + '</li>'; }).join('') + '</ul>'; };
+    openSheet('<div class="wn-hero"><div class="label faint">Version ' + APP_VERSION + '</div><h2 class="wn-title" id="sheetTitle">What\'s New in Setpoint</h2></div>' +
+      '<div class="wn-feats">' + feats + '</div>' +
+      (CHANGES.length > 1 ? '<div class="changes" data-notr dir="ltr"><details class="wn-old"><summary>Earlier versions (' + (CHANGES.length - 1) + ')</summary>' + CHANGES.slice(1).map(one).join('') + '</details></div>' : '') +
+      '<div style="height:20px"></div><button type="button" class="btn primary block" id="wnOk">Continue</button><button type="button" class="text-btn center-btn" id="wnUp" style="margin-top:12px">Check for updates</button>',
       function (root) { $('#wnOk', root).addEventListener('click', function () { closeSheet(); }); $('#wnUp', root).addEventListener('click', function () { closeSheet(); checkUpdate(); }); });
     state.seenVersion = APP_VERSION; save();
   }
+
 
   // The newest feature you haven't seen yet (versions since the one you last opened), if any is worth announcing.
   function featureNews(seen) {

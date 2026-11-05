@@ -1,6 +1,11 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.1.2';
+  const APP_VERSION = '2.1.3';
   const CHANGES = [
+    { v: '2.1.3', items: [
+      "Keyboard: every field shows the right iPhone Return key (Next, Done or Search), Next jumps to the following field, and the field you're typing in stays above the keyboard.",
+      "A new welcome screen and What's New in Apple's own layout: a big title and each feature with its own symbol.",
+      "Accessibility: the app follows your iPhone's text size (Display & Brightness, Text Size), Increase Contrast darkens greys and lines, and Reduce Transparency gives solid backgrounds."
+    ] },
     { v: '2.1.2', items: [
       "Liquid Glass, like iOS 26: the tab bar and the floating buttons are clearer glass with a bright edge where the light catches them, and the current tab sits in a glass droplet. Turn on Reduce Transparency in iPhone settings for solid backgrounds instead.",
       "Settings-style icons: solid iPhone colours with white symbols, and line weights that match the iPhone's own icons.",
