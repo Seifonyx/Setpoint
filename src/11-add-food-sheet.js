@@ -237,7 +237,7 @@
       if (qi && qi.dataset.ph !== ph) { qi.dataset.ph = ph; qi.placeholder = ph; qi.setAttribute('aria-label', ph); if (typeof tr === 'function' && state.settings.lang === 'ar') { qi.placeholder = tr(ph); qi.setAttribute('aria-label', tr(ph)); } }
       const needDB = !foodDB;
       if (needDB && !coreDB) loadCoreFoods().then(function (db) { if (db && !foodDB && $('#afList', root)) drawList(); });
-      if (needDB) loadFoods().then(function () { if ($('#afList', root)) drawList(); }, function () { const b = $('#afList', root); if (b && !foodDB) b.innerHTML = '<p class="muted-note fd-empty">Couldn\'t load the food list. Check your connection and try again. Quick add and My foods still work.</p>'; });
+      if (needDB) loadFoods().then(function () { if ($('#afList', root)) drawList(); }, function () { const b = $('#afList', root); if (b && !foodDB) b.innerHTML = '<p class="muted-note fd-empty">Couldn\'t load the food list. Quick add and My foods still work.</p>'; });
       const fu = foodUse();
       let html = '';
       const scope = state.ui.foodTab === 'mine' || state.ui.foodTab === 'favs' ? state.ui.foodTab : null;
@@ -306,7 +306,7 @@
         const kf = function (f) { return f.id; }, nf = function (f) { return f.name; };
         if (rcs.length) html += section('Recipes', sorted(rcs, kf, nf, fu).map(function (f) { return row(f); }).join(''));
         if (state.myFoods.length) html += section('Foods', sorted(state.myFoods.map(customFood), kf, nf, fu).map(function (f) { return row(f); }).join(''));
-        if (!state.myFoods.length && !state.recipes.length && !state.meals.length) html += '<p class="muted-note fd-empty">Create foods and recipes here. To save a whole meal, tap ⋯ next to it in the diary.</p>';
+        if (!state.myFoods.length && !state.recipes.length && !state.meals.length) html += '<p class="muted-note fd-empty">Create foods and recipes here. To save a meal, swipe its title in the Diary.</p>';
         html += mfNew;
         if (!pick && (state.myFoods.length || state.recipes.length || state.meals.length)) html += '<button type="button" class="text-btn fd-create" data-manage>Edit or delete in You → My foods</button>';
       } else if (state.ui.foodTab === 'favs') {
@@ -941,7 +941,7 @@
         '<div class="label faint fd-sec">Ingredients</div>' +
         (draft.items.length ? '<div class="list" id="rcIngs">' + draft.items.map(function (it, i) { const f = getFood(it.ref); return '<div class="row fd-row me-row" data-ing="' + i + '" role="button" tabindex="0">' + (draft.items.length > 1 ? '<span class="cat-grip me-grip" aria-label="Drag to reorder">' + GRIP + '</span>' : '') + '<div class="grow"><div class="row-t">' + esc(it.name) + '</div><div class="row-s">' + fmtAmt(it.qty, it.unit) + (f ? ' · ' + fmtKcal(macrosFor(f, it.g).kcal) + ' kcal' : '') + '</div></div><button type="button" class="icon-btn me-rm" data-rmi="' + i + '" aria-label="Remove ' + esc(it.name) + '">' + TRASH + '</button></div>'; }).join('') + '</div>' : '') +
         (adjust ? '<button type="button" class="btn soft block" id="rcAdd" style="margin-bottom:16px">+ Add ingredient</button>' : '<div class="rc-adds"><button type="button" class="btn soft" id="rcAdd">+ Add ingredient</button><button type="button" class="btn soft" id="rcPaste2">' + PASTE_IC + 'Paste a list</button></div>') +
-        (draft.items.length ? '' : '<p class="muted-note rc-hint">Got the recipe written down? Paste the ingredients, one per line (like “2 cups rice” or “500 g chicken”), and they\'re matched for you.</p>') +
+        (draft.items.length ? '' : '<p class="muted-note rc-hint">Paste the ingredients, one per line, like “2 cups rice”.</p>') +
         '<div class="sv-sum" id="rcSum"></div><div class="nut-drop" id="rcNuts" hidden></div><div id="rcKey"></div>' +
         '<p class="form-error" id="rcErr" hidden></p>' +
         (adjust && edit.rc ? '<button type="button" class="text-btn fd-create" id="rcReset">Use the saved recipe again</button>' : '') +

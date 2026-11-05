@@ -118,6 +118,7 @@
         ramAsk: typeof ui.ramAsk === 'string' ? ui.ramAsk.slice(0, 6) : null, // Islamic year the "turn on Ramadan mode" offer was dismissed
         ramOff: typeof ui.ramOff === 'string' ? ui.ramOff.slice(0, 6) : null,
         smartBurn: ui.smartBurn === true, // moved to the automatic burn once (v1.65)
+        oneBurn: ui.oneBurn === true, // Formula / Your log / Automatic folded into one switch once (v2.0.14)
         tune: ui.tune && typeof ui.tune === 'object' && typeof ui.tune.at === 'number' ? { at: ui.tune.at, change: numIn(ui.tune.change, -600, 600) || 0, hold: ui.tune.hold === true, over: numIn(ui.tune.over, -5000, 5000), actual: numIn(ui.tune.actual, -5, 5), planned: numIn(ui.tune.planned, -5, 5), plateau: ui.tune.plateau === true, goal: ui.tune.goal === true, before: numIn(ui.tune.before, -600, 600), after: numIn(ui.tune.after, -600, 600), undoPace: numIn(ui.tune.undoPace, -1.5, 1.5) } : null,
         goalHit: numIn(ui.goalHit, 20, 400),
         graphite: ui.graphite === true, // switched to Graphite once (v1.50); you can pick another theme after

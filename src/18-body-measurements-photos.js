@@ -106,7 +106,7 @@
       }).then(function (list) {
         list.sort(function (a, b) { return a.day < b.day ? 1 : -1; });
         root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Restore a backup</h2></div>' +
-          '<p class="muted-note" style="text-align:start;margin:0 2px 12px">Setpoint saves a copy of everything once a day and keeps the last 7, on this phone only.</p>' +
+          '<p class="muted-note" style="text-align:start;margin:0 2px 12px">A daily copy on this phone. The last 7 are kept.</p>' +
           (!list.length ? '<p class="muted-note fd-empty">No backups yet. The first one is made today.</p>' : '<div class="list">' + list.map(function (x, i) {
             let info = ''; try { const d = JSON.parse(x.v.data); info = Object.keys(d.food || {}).length + ' days of food · ' + (d.entries || []).length + ' weigh-ins'; } catch (e) {}
             return '<button type="button" class="row fd-row" data-bk="' + i + '"><div class="grow"><div class="row-t">' + esc(relDate(x.day)) + ' · ' + esc(fmtDate(x.day, { weekday: 'short', month: 'short', day: 'numeric' })) + '</div><div class="row-s">' + info + '</div></div>' + CHEV + '</button>';

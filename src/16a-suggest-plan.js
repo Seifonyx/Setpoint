@@ -132,7 +132,7 @@
           m.items.map(function (x) { const f = getFood(x.ref); return '<div class="pd-row">' + (f ? ftIcon(ftKind(f)) : '') + '<div class="grow"><div class="row-t">' + esc(shortName(x.name)) + '</div><div class="row-s">' + esc(fmtAmt(x.qty, x.unit)) + '</div></div><span class="num pd-rk">' + fmtKcal(x.kcal) + '</span></div>'; }).join('') +
           '<button type="button" class="pd-again" data-pd-shuf="' + m.meal + '">' + AGAIN + 'Another idea</button></div>';
       });
-      h += '<p class="muted-note sv-src">A starting point from your targets, not medical advice. Swap anything you don\'t like after adding it.</p>' +
+      h += '<p class="muted-note sv-src">A starting point from your targets. Swap anything after adding it.</p>' +
         '<div class="sheet-foot pd-foot"><button type="button" class="icon-btn pd-all" id="pdAll" aria-label="Shuffle the whole day">' + SHUF + '</button><button type="button" class="btn primary grow" id="pdNext">Add to diary</button></div>';
       root.innerHTML = h;
       const fg = $('.pd-ring-fg', root), off = fg ? +fg.getAttribute('stroke-dashoffset') : 0;

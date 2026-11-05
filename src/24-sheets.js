@@ -136,19 +136,16 @@
   }
 
   function adjustSheet() {
-    const p = state.profile, en = activeEnergy(), c = en && en.calc, auto = en && en.source === 'auto', t = state.ui.tune;
-    const total = auto ? Math.round(en.tdee - c.tdee) : p.adjustKcal;
+    const p = state.profile, en = activeEnergy(), c = en && en.calc, t = state.ui.tune, on = adaptive();
     const row = function (l, v) { return '<div class="row"><div class="grow row-t">' + l + '</div><span class="row-w num">' + v + '</span></div>'; };
     const sgn = function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmtKcal(Math.abs(Math.round(v))); };
     openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target learns</h2></div>' +
-      '<div class="num" style="font-size:44px;font-weight:700;letter-spacing:-.04em;line-height:1">' + sgn(total) + '<span class="unit">kcal</span></div>' +
-      '<p class="sheet-text" style="margin:10px 0 16px">' + (auto ? 'Your burn compared with the formula, learned from your real results.' : 'Change from weekly check-ins.') + '</p>' +
-      (c ? '<div class="list">' + row('Formula estimate', fmtKcal(roundKcal(c.tdee))) +
-        (state.settings.autoAdjust && p.adjustKcal ? row('Corrections from your weight trend', sgn(p.adjustKcal)) : '') +
-        (auto && en.m && en.m.ready ? row('Your log (food + weight)', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
-        row('Burn used for your target', fmtKcal(roundKcal(en.tdee))) + '</div>' : '') +
+      (c ? '<div class="list">' + row('Formula', fmtKcal(roundKcal(c.tdee))) +
+        (on && p.adjustKcal ? row('Weekly corrections', sgn(p.adjustKcal)) : '') +
+        (on && en.m && en.m.ready ? row('Your log', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
+        row('Burn used', fmtKcal(roundKcal(en.tdee))) + '</div>' : '') +
       (t ? '<div class="stat-box" style="margin-top:14px"><div class="row-t">Last check · ' + esc(fmtDate(isoFromDay(t.at), { month: 'short', day: 'numeric' })) + '</div><div class="row-s" style="white-space:normal;overflow:visible">' + esc(tuneWhy(t)) + '</div></div>' : '') +
-      '<p class="sheet-text" style="margin:16px 0 20px">This runs on its own. Each time you open the app, Setpoint compares your weight trend and what you logged with your plan. If you stall, it checks your food log first: if you ate over your target, the target stays; if you were on target, the estimate was off and the target moves (up to 150 kcal a week). The more days you log, the more your target is based on your real burn. Changing your goal or activity restarts the 2-week check, and reaching your goal switches you to maintenance.</p>' +
+      '<p class="sheet-text" style="margin:16px 0 20px">' + (on ? 'Weekly, it compares your weight with your plan. Ate over target? It stays. On target? It moves up to 150 kcal.' : 'Off: your target uses the formula only.') + '</p>' +
       '<div class="btn-row"><button type="button" class="btn soft" id="adjReset"' + (p.adjustKcal ? '' : ' disabled') + '>Reset corrections</button><button type="button" class="btn primary" id="adjOk">Done</button></div>',
       function (root) {
         $('#adjOk', root).addEventListener('click', function () { closeSheet(); });
@@ -160,52 +157,45 @@
   function targetExplainSheet() {
     const en = activeEnergy(), plan = makePlan(en); if (!en || !plan) return;
     const c = en.calc, p = state.profile, pace = plan.pace, u = unit(), t = p.training;
-    const k = function (v) { return fmtKcal(Math.abs(Math.round(v))); }, sg = function (v) { return (v < 0 ? '−' : '+') + k(v); };
+    const k = function (v) { return fmtKcal(Math.abs(roundKcal(v))); }, sg = function (v) { return (v < 0 ? '−' : '+') + k(v); }; // rounded like the rest of the app
     const goalK = Math.round(pace.kg * KCAL_PER_KG / 7), rate = Number(Math.abs(toDisp(pace.kg)).toFixed(2)) + ' ' + u;
     const row = function (l, v, cls) { return '<div class="tx-r' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><b class="num">' + v + '</b></div>'; };
     const step = function (n, title, body) { return '<section class="tx-step"><div class="tx-sh"><span class="tx-n num">' + n + '</span><h3 class="tx-h">' + title + '</h3></div>' + body + '</section>'; };
     const para = function (x) { return '<p class="tx-p">' + x + '</p>'; };
     const item = function (dot, name, val, desc) { return '<div class="tx-part"><i class="' + dot + '"></i><div class="grow"><div class="tx-pt"><span>' + name + '</span><b class="num">' + val + '</b></div><div class="tx-pd">' + desc + '</div></div></div>'; };
-    // The answer first, then where each number comes from.
-    let h = para(pace.dir === 'maintain' ? 'Your target is simply what you burn in a day, so your weight stays where it is.' : 'Your target is what you burn in a day, ' + (pace.dir === 'lose' ? 'minus' : 'plus') + ' what it takes to ' + (pace.dir === 'lose' ? 'lose' : 'gain') + ' ' + rate + ' a week.') +
-      '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
+    // The answer first, then where each number comes from. Kept short: the numbers do the explaining.
+    let h = '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
       (pace.dir !== 'maintain' ? row(pace.dir === 'lose' ? 'To lose ' + rate + ' a week' : 'To gain ' + rate + ' a week', sg(goalK)) : '') +
-      (plan.adjust ? row('Weekly corrections', sg(plan.adjust)) : '') +
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
       const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
-      h += step(1, 'How much you burn', para('Your body uses energy all day, even at rest. Eating this much keeps your weight steady. It adds up from four things:') +
-        '<div class="tx-parts">' +
-          item('o1', 'Resting', k(c.bmr), 'Keeping you alive: heart, brain, breathing. Based on your age, sex, height and weight' + (p.bodyFat ? ' and body fat' : '') + '.') +
-          item('o2', 'Daily life', k(life), 'Moving around, standing, chores and digesting food.') +
-          item('o3', 'Steps', k(c.steps), 'Your ' + fmtKcal(p.steps) + ' steps a day.') +
-          item('o4', 'Training', k(c.train), t.days ? 'Your ' + t.days + ' workouts a week, shared out over all 7 days.' : 'No workouts in your Activity.') +
+      h += step(1, 'What you burn', '<div class="tx-parts">' +
+          item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
+          item('o2', 'Daily life', k(life), 'Moving around and digesting') +
+          item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
+          item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
-        (Math.abs(learnedK) >= 10 || en.source !== 'calc' ? '<div class="tx-note"><b>Learned from you.</b> ' + (en.source === 'measured' ? 'This comes only from your food log and weight trend: what you ate, and how your weight moved.' : 'A formula is only a starting point. Setpoint compares what you eat with how your weight actually moves, and found you burn about ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula says.' + (en.source === 'auto' && en.w > 0 ? ' Right now ' + Math.round(en.w * 100) + '% of this number comes from your own log.' : '')) + '</div>' : ''));
+        (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
+          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Learn from my log</b> to use your real results.</div>' : ''));
     }
     // 2. Goal
-    h += step(2, 'What your goal changes', pace.dir === 'maintain' ? para('Nothing: you eat about what you burn, so your weight stays steady.')
-      : para('About 7,700 kcal makes 1 kg of body weight. ' + (pace.dir === 'lose' ? 'Losing' : 'Gaining') + ' ' + rate + ' a week takes about ' + k(Math.abs(goalK) * 7) + ' kcal a week, which is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'less' : 'more') + ' than you burn.') +
-        (plan.eta ? para('At this pace you reach your goal on ' + plan.eta.replace(/^goal by /, '') + '.') : ''));
+    if (pace.dir !== 'maintain') h += step(2, 'Your goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
     // 3. Macros
     const lb = u === 'lb', per = function (v) { return Number((lb ? v / LB : v).toFixed(1)) + ' g per ' + u; };
-    const refTxt = plan.refWhy === 'your weight' ? 'your weight' : plan.refWhy === 'your lean mass' ? 'your lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'a healthy weight for your height (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
-    const why = plan.kind === 'strength' ? 'Higher because you lift' : plan.kind === 'cardio' ? 'Set for cardio training' : 'Set for no regular training';
-    h += step(3, 'How the calories are split', para('Protein and fat are set first, because your body needs a certain amount of each. Carbs fill the rest.') +
-      '<div class="tx-parts">' +
-        item('d-p', 'Protein', plan.protein + ' g', per(plan.proteinPerKg) + ' of ' + refTxt + '. ' + (plan.custom ? 'You set this yourself.' : why + (pace.kg < 0 ? ', and a little higher while losing so you keep your muscle' : '') + '. Protein also keeps you full.')) +
-        item('d-f', 'Fat', plan.fat + ' g', per(plan.fatPerKg) + ' of ' + refTxt + '. Needed for hormones and absorbing vitamins' + (plan.custom ? '.' : ', so it never drops below about a fifth of your calories.')) +
-        item('d-c', 'Carbs', plan.carbs + ' g', 'Whatever is left. They are your main fuel for training and daily energy.') +
+    const refTxt = plan.refWhy === 'your weight' ? 'body weight' : plan.refWhy === 'your lean mass' ? 'lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'healthy weight (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
+    h += step(pace.dir !== 'maintain' ? 3 : 2, 'Macros', '<div class="tx-parts">' +
+        item('d-p', 'Protein', plan.protein + ' g', per(plan.proteinPerKg) + ' of ' + refTxt + (plan.custom ? ' · yours' : '')) +
+        item('d-f', 'Fat', plan.fat + ' g', per(plan.fatPerKg) + ' of ' + refTxt + (plan.custom ? ' · yours' : '')) +
+        item('d-c', 'Carbs', plan.carbs + ' g', 'The rest') +
       '</div>' +
-      (plan.refWhy === 'healthy weight for your height' ? '<div class="tx-note"><b>Why not your current weight?</b> Extra body fat doesn\'t need extra protein, so above a BMI of 25 these use the weight at BMI 25 for your height. If you add your body fat in About you, they use your lean mass instead.</div>' : ''));
+      (plan.refWhy === 'healthy weight for your height' ? '<div class="tx-note">Above BMI 25, protein and fat use the weight at BMI 25. Add body fat in About you to use lean mass.</div>' : ''));
     // Extras
     const sp = trainSplit();
-    if (sp) h += step(4, 'Training days', para('On training days (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + ') you get ' + k(Math.round(sp.tx / 10) * 10) + ' kcal more, and ' + k(Math.round(sp.rx / 10) * 10) + ' kcal less on rest days. The week adds up to the same total; only carbs move.'));
-    if (state.settings.flex && state.settings.flex.on) h += step(sp ? 5 : 4, 'Flexible week', para('Your week\'s calories stay the same, but each day moves with what you ate earlier in the week.'));
-    if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'Losing faster than about 1% of your weight a week makes it hard to keep muscle. A slower pace is easier to stick to.' : 'Very low targets make it hard to get enough nutrients. A slower pace would help.') + '</div>';
-    h += '<h3 class="tx-h tx-last">It stays up to date by itself</h3>' + para('Your target updates as your weight changes. Each time you open the app, Setpoint also checks your weight trend against your plan: if you stall while eating on target, your burn was overestimated and the target moves (up to 150 kcal a week). If you ate over your target, it stays. Changing your goal, activity or details updates it straight away.');
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">These are estimates from standard formulas and your own log, not medical advice. Check with a doctor or dietitian before big changes, especially if you\'re pregnant, have a medical condition or a history of eating disorders.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
+    if (sp) h += '<div class="tx-note"><b>Training days</b> (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + '): +' + k(Math.round(sp.tx / 10) * 10) + ' kcal, rest days −' + k(Math.round(sp.rx / 10) * 10) + '. Same weekly total.</div>';
+    if (state.settings.flex && state.settings.flex.on) h += '<div class="tx-note"><b>Flexible week:</b> days move with what you ate earlier in the week.</div>';
+    if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'A slower pace keeps more muscle.' : 'A slower pace would help.') + '</div>';
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
       $('#txOk', root).addEventListener('click', function () { closeSheet(); });
     });
   }
@@ -585,13 +575,6 @@
   }
 
   // How close the formula is to your real burn, and how much to trust that.
-  function estimateCheck(m, c) {
-    if (!m || !m.ready || !c) return '';
-    const diff = m.tdee - c.tdee, pct = Math.round(diff / c.tdee * 100);
-    const conf = m.calDays >= m.needCal * 1.6 && m.span >= m.needSpan * 1.5 ? ['High', 'hi'] : m.calDays >= m.needCal * 1.2 ? ['Medium', 'mid'] : ['Low', 'low'];
-    const verdict = Math.abs(pct) <= 5 ? 'The formula fits you well.' : (pct > 0 ? 'You burn about ' + pct + '% more than the formula thinks.' : 'You burn about ' + Math.abs(pct) + '% less than the formula thinks.') + (conf[1] === 'low' ? ' Keep logging to be sure.' : ' Basing your target on your log would be more accurate.');
-    return '<div class="ec-box"><div class="ec-top"><b>Estimate check</b><span class="src-tag src-' + conf[1] + '">' + conf[0] + ' confidence</span></div><p>' + verdict + '</p><small>' + m.calDays + ' days with calories over ' + m.span + ' days of weigh-ins</small></div>';
-  }
   // Patterns from your own log: what tends to come before a higher or lower weigh-in the next morning.
   function weightInsights() {
     const wBy = {}; state.entries.forEach(function (e) { wBy[dayNum(e.date)] = e.kg; });
@@ -633,9 +616,9 @@
     const draw = function (root) {
       const r = weightInsights();
       root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">What moves your weight</h2></div></div>' +
-        (r.n < 14 ? '<p class="muted-note fd-empty">Needs a bit more data: days with food logged and a weigh-in the next morning. ' + r.n + ' of 14 so far.</p>' :
+        (r.n < 14 ? '<p class="muted-note fd-empty">Needs 14 days with food logged and a weigh-in the next morning.</p>' :
           '<div class="list">' + r.items.map(function (x) { const up = x.d > 0; return '<div class="row fd-row ins-row"><div class="grow"><div class="row-t">' + esc(x.t) + '</div><div class="row-s" style="white-space:normal">' + esc(x.s) + '</div><div class="ins-note">' + esc(x.note) + '</div></div><span class="ins-v num ' + (Math.abs(x.d) < 0.15 && !x.week ? 'flat' : up ? 'up' : 'down') + '">' + (x.week ? '' : (up ? '+' : '−') + fmtW(Math.abs(x.d)) + ' ' + unit()) + '</span></div>'; }).join('') + '</div>' +
-          '<p class="muted-note sv-src">Next-morning change in your weigh-in, compared between your highest and lowest third of days. ' + r.n + ' days so far.</p>');
+          '<p class="muted-note sv-src">Next-morning weight: your highest third of days vs your lowest.</p>');
     };
     openSheet('<div id="insRoot"></div>', function (body) {
       sheet.classList.add('tall'); const root = $('#insRoot', body); root.innerHTML = '<p class="muted-note fd-empty">Looking for patterns…</p>';
@@ -698,7 +681,7 @@
     const draw = function (root) {
       const t = prayerTimes(new Date(), pick.lat, pick.lon, pick.fa);
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Ramadan mode</h2></div>' +
-        '<p class="sheet-text">Breakfast becomes Suhoor and dinner becomes Iftar, and today\'s Diary shows the time to Iftar or to the end of Suhoor, plus how much water is left before Fajr.</p>' +
+        '<p class="sheet-text">Breakfast becomes Suhoor, dinner becomes Iftar, and the Diary shows Iftar time and water left before Fajr.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Ramadan mode</div><span class="switch"><input type="checkbox" id="rmOn"' + (on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         '<div class="field" style="margin-top:14px"><span>City</span><select class="input" id="rmCity">' + RAM_CITIES.map(function (c) { return '<option' + (c[0] === pick.city ? ' selected' : '') + '>' + c[0] + '</option>'; }).join('') + (RAM_CITIES.some(function (c) { return c[0] === pick.city; }) ? '' : '<option selected>' + esc(pick.city || 'My location') + '</option>') + '</select></div>' +
         '<button type="button" class="text-btn" id="rmLoc">Use my location</button>' +
@@ -732,10 +715,10 @@
     const draw = function (root) {
       const c = state.settings.cycle;
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Cycle and weight</h2></div>' +
-        '<p class="sheet-text">Many women hold 0.5–2 kg of water in the days before and around their period. With this on, those days are shaded on your weight chart so a jump doesn\'t look like a stall.</p>' +
+        '<p class="sheet-text">Shades period days on your weight chart, since water can add 0.5–2 kg.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Show on the weight chart</div><span class="switch"><input type="checkbox" id="cyOn"' + (c.on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         (c.on ? '<div class="field" style="margin-top:14px"><span>Add a period start</span><div class="sv-amt" style="grid-template-columns:1fr auto;margin:0"><input class="input" type="date" id="cyD" max="' + todayISO() + '" value="' + todayISO() + '" /><button type="button" class="btn soft" id="cyAdd" style="height:50px">Add</button></div></div>' +
-          (c.starts.length ? '<div class="list">' + c.starts.slice().reverse().map(function (d) { return '<div class="row fd-row"><div class="grow row-t">' + esc(fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })) + '</div><button type="button" class="icon-btn me-rm" data-cyx="' + d + '" aria-label="Remove">' + TRASH + '</button></div>'; }).join('') + '</div>' : '<p class="muted-note">Add your last period start to begin. After two or more, the next one is estimated from your own cycle length.</p>') : '') +
+          (c.starts.length ? '<div class="list">' + c.starts.slice().reverse().map(function (d) { return '<div class="row fd-row"><div class="grow row-t">' + esc(fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })) + '</div><button type="button" class="icon-btn me-rm" data-cyx="' + d + '" aria-label="Remove">' + TRASH + '</button></div>'; }).join('') + '</div>' : '<p class="muted-note">Add your last period start. After two, the next is estimated.</p>') : '') +
         '<p class="muted-note sv-src">Stays private in your Setpoint data. It only changes how the chart is shaded.</p>';
       $('#cyOn', root).addEventListener('change', function () { c.on = this.checked; save(); renderChart(); buzz('light'); draw(root); });
       if ($('#cyAdd', root)) $('#cyAdd', root).addEventListener('click', function () { const v = $('#cyD', root).value; if (!ISO_RE.test(v) || v > todayISO()) return; if (c.starts.indexOf(v) < 0) { c.starts.push(v); c.starts.sort(); } save(); renderChart(); buzz('success'); draw(root); });
@@ -749,11 +732,11 @@
     const DAYS = [0, 1, 2, 3, 4, 5, 6].map(function (d) { return [d, new Date(Date.UTC(2024, 0, 7 + d)).toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' })]; });
     const draw = function (root) {
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Flexible week</h2></div>' +
-        '<p class="sheet-text">Your week\'s calories stay the same, but each day adjusts: eat less early in the week and later days get more, or the other way round. You can also give one day extra, like a family lunch.</p>' +
+        '<p class="sheet-text">Your weekly total stays the same: eat less one day and later days get more. You can give one day extra.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Flexible week</div><span class="switch"><input type="checkbox" id="fxOn"' + (on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         (on ? '<div class="field" style="margin-top:14px"><span>Bigger day</span><div class="seg fx-days" id="fxBig">' + DAYS.map(function (x) { return '<button type="button" data-v="' + x[0] + '" aria-pressed="' + (extra > 0 && big === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div></div>' +
           '<div class="field"><span>Extra on that day</span><div class="seg" id="fxEx">' + [0, 200, 400, 600, 800].map(function (v) { return '<button type="button" data-v="' + v + '" aria-pressed="' + (extra === v) + '">' + (v ? '+' + v : 'None') + '</button>'; }).join('') + '</div></div>' +
-          '<p class="muted-note" style="text-align:start">Days stay between 75% and 135% of your normal target, and never below ' + (state.profile.sex === 'male' ? '1,500' : '1,200') + ' kcal. Days you don\'t log count as on plan.</p>' : '') +
+          '<p class="muted-note" style="text-align:start">' + (state.profile.sex === 'male' ? 'Each day stays at 75–135% of normal, never under 1,500 kcal. Unlogged days count as on target.' : 'Each day stays at 75–135% of normal, never under 1,200 kcal. Unlogged days count as on target.') + '</p>' : '') +
         '<div class="sheet-foot"><button type="button" class="btn primary block" id="fxSave">Save</button></div>';
       $('#fxOn', root).addEventListener('change', function () { on = this.checked; buzz('light'); draw(root); });
       $$('#fxBig button', root).forEach(function (b) { b.addEventListener('click', function () { big = +b.dataset.v; if (!extra) extra = 400; buzz('light'); draw(root); }); });
@@ -763,25 +746,24 @@
     openSheet('<div id="fxRoot"></div>', function (body) { draw($('#fxRoot', body)); });
   }
   function realTdeeSheet() {
-    const m = measuredEnergy(), c = calcEnergy(), en = activeEnergy();
+    const m = measuredEnergy(), c = calcEnergy(), en = activeEnergy(), on = adaptive();
     let body;
     if (!m.ready) {
       const pct = (Math.min(m.calDays, m.needCal) / m.needCal + Math.min(m.span, m.needSpan) / m.needSpan) * 50;
-      body = '<p class="sheet-text">Formulas can be 10–15% off. Log everything you eat in the Diary, drinks and snacks too, and Setpoint will work out your real burn and start using it on its own.</p>' +
+      body = '<p class="sheet-text">Log every day and weigh in to learn your real burn.</p>' +
         '<div class="stat-box"><div class="two">' +
-          '<div><div class="num">' + Math.min(m.calDays, m.needCal) + '<span class="unit">/ ' + m.needCal + '</span></div><div class="label faint">days with calories</div></div>' +
+          '<div><div class="num">' + Math.min(m.calDays, m.needCal) + '<span class="unit">/ ' + m.needCal + '</span></div><div class="label faint">days logged</div></div>' +
           '<div><div class="num">' + Math.min(m.span, m.needSpan) + '<span class="unit">/ ' + m.needSpan + '</span></div><div class="label faint">days of weigh-ins</div></div>' +
         '</div><div class="bar" style="margin-top:16px"><i style="width:' + pct.toFixed(0) + '%"></i></div></div>';
     } else {
-      const sv = state.profile.tdeeSource;
+      const gaps = m.coverage < 0.8;
       body = '<div class="num" style="font-size:46px;font-weight:700;letter-spacing:-.04em;line-height:1">' + fmtKcal(roundKcal(m.tdee)) + '<span class="unit">kcal</span></div>' +
-        '<p class="sheet-text" style="margin:10px 0 20px">You ate ' + fmtKcal(roundKcal(m.intake)) + ' a day and your weight moved ' + fmtDelta(m.rateKgWk, 2) + ' ' + unit() + ' a week.' + (c ? ' The formula says ' + fmtKcal(roundKcal(c.tdee)) + '.' : '') + '</p>' + estimateCheck(m, c) +
-        '<div class="field"><span>Base your target on</span><div class="seg" id="rSrc"><button type="button" data-v="auto" aria-pressed="' + (sv === 'auto') + '"' + (c ? '' : ' disabled') + '>Automatic</button><button type="button" data-v="calc" aria-pressed="' + (sv === 'calc') + '"' + (c ? '' : ' disabled') + '>Formula</button><button type="button" data-v="measured" aria-pressed="' + (sv === 'measured') + '">Your log</button></div></div>' +
-        '<p class="muted-note" style="text-align:start">' + (sv === 'auto' ? 'Automatic uses ' + Math.round((en && en.w || 0) * 100) + '% your log right now, more as you log more days.' : sv === 'calc' ? 'Formula plus weekly corrections from your weight trend.' : 'Only your log, nothing from the formula.') + '</p>';
+        '<div class="sv-key wk-key" style="margin:14px 0"><div><b class="num">' + fmtKcal(roundKcal(m.intake)) + '</b><span>Ate a day</span></div><div><b class="num">' + fmtDelta(m.rateKgWk, 2) + '</b><span>' + unit() + ' a week</span></div><div><b class="num">' + m.calDays + '<small>/' + m.days + '</small></b><span>Days logged</span></div>' + (c ? '<div><b class="num">' + fmtKcal(roundKcal(c.tdee)) + '</b><span>Formula</span></div>' : '') + '</div>' +
+        (gaps ? '<div class="tx-note tx-warn">Unlogged days hide what you ate, so this may read low. It counts less until you log more days.</div>' : '') +
+        (m.partial ? '<p class="muted-note" style="text-align:start">Left out ' + m.partial + (m.partial === 1 ? ' day' : ' days') + ' that looked half-logged.</p>' : '') +
+        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Learn from my log') + '</p>';
     }
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Your real burn</h2></div><p class="sheet-text" style="margin-top:-4px">How many calories you actually burn in a day (also called TDEE), worked out from what you eat and how your weight changes, instead of a formula.</p>' + body, function (root) {
-      if ($('#rSrc', root)) bindSeg(root, 'rSrc', function (v) { state.profile.tdeeSource = v; save(); renderAll(); closeSheet(); realTdeeSheet(); });
-    });
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Burn from your log</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
   function whatsNewSheet() {

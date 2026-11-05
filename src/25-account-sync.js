@@ -196,13 +196,13 @@
       html = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Account</h2></div>' +
         '<div class="stat-box" style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><span class="ico" style="border-radius:50%;width:46px;height:46px"><b style="font-size:18px">' + esc((sy.email || '?').charAt(0).toUpperCase()) + '</b></span>' +
         '<div class="grow"><div class="row-t" style="overflow:hidden;text-overflow:ellipsis">' + esc(sy.email || 'Signed in') + '</div><div class="row-s" id="acStatus">' + esc(syncStatus()) + '</div></div></div>' +
-        '<p class="sheet-text" style="margin:0 0 18px">Your weigh-ins and settings sync to this account. Sign in on another device to see them there.</p>' +
+        '<p class="sheet-text" style="margin:0 0 18px">Your data syncs to every device you sign in on.</p>' +
         (needsVerify() ? '<div class="stat-box" id="acVerifyBox" style="margin-bottom:18px"><p class="sheet-text" style="margin:0 0 10px">Verify your email to keep your password safe. Signing in with Google before you verify removes it.</p><button type="button" class="btn soft block" id="acVerify">Send verification email</button></div>' : '') +
         '<div class="btn-row"><button type="button" class="btn soft" id="acOut">Sign out</button><button type="button" class="btn primary" id="acSync">Sync now</button></div>' +
         '<button type="button" class="text-btn ac-del" id="acDel">Delete account and cloud data</button>';
     } else {
       html = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Sign in</h2></div>' +
-        '<p class="sheet-text">Back up your data and sync it across devices. Your Study Planner account works here too.</p>' +
+        '<p class="sheet-text">Back up your data and sync it across devices.</p>' +
         '<button type="button" class="btn soft block" id="acGoogle" style="margin-bottom:16px;gap:10px">' + GOOGLE + 'Continue with Google</button>' +
         '<div class="field"><input class="input" id="acEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email" aria-label="Email" /></div>' +
         '<div class="field"><input class="input" id="acPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" /></div>' +
@@ -279,7 +279,7 @@
 
   // Delete the account and everything synced to it (the copy on this phone stays, so nothing is lost by accident).
   function deleteAccount() {
-    confirmSheet('Delete your account?', 'This permanently deletes your account and everything synced to it: weigh-ins, food log, settings and progress photos. Your Study Planner account is the same account, so it will be deleted too. The data on this phone stays until you clear it in Settings. This can\'t be undone.', 'Delete account', true, function () {
+    confirmSheet('Delete your account?', 'Deletes your account and everything synced to it, for good. Data on this phone stays until you clear it in Settings.', 'Delete account', true, function () {
       toast('Deleting your account…');
       loadFirebase().then(function () {
         const u = user; if (!u) throw { code: 'signed-out' };

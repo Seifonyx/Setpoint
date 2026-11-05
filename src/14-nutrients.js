@@ -132,7 +132,7 @@
           (nd.noData ? '<p class="muted-note ns-note">' + nd.noData + (nd.noData === 1 ? ' food has' : ' foods have') + ' calories only (quick adds or your own foods), so some totals are low. * = partly missing data.</p>' : '') +
           (!p.sex || !p.birthYear ? '<p class="muted-note ns-note">Add your age and sex in Targets for personal targets.</p>' : '') +
           nutPanel(nd.tot, tg, nd.cov, { tap: true })) +
-        '<p class="muted-note sv-src">Targets: US Dietary Reference Intakes. Tap a nutrient to see where it came from.</p>';
+        '<p class="muted-note sv-src">Tap a nutrient to see where it came from.</p>';
       $('#nsTargets', root).addEventListener('click', function () { closeSheet(); showTab('targets'); });
       $$('[data-high]', root).forEach(function (b) { b.addEventListener('click', function () { sourcesSheet(b.dataset.high, d); }); });
     };
@@ -249,7 +249,7 @@
         const keys = (g[2] || NUTS.filter(function (n) { return n[3] === g[0] && (!g[3] || g[3].indexOf(n[0]) < 0); }).map(function (n) { return n[0]; })).filter(function (k) { return NUT[k]; });
         return '<div class="group-label">' + g[1] + '</div><div class="card nt-group">' + keys.map(function (k) { return ntRowHtml(k, tg); }).join('') + '</div>';
       }).join('') +
-      '<p class="muted-note sv-src">From the US Dietary Reference Intakes: the target is the recommended amount, the max is the safe upper limit. Going over a max shows in red. Calorie, protein, carb and fat targets follow your plan.</p>';
+      '<p class="muted-note sv-src">From US Dietary Reference Intakes. Red means over the safe max.</p>';
   }
   function ntSaveRow(k, row) {
     const rec = nutRec()[k] || {}, o = {}, ins = $$('[data-nt-in]', row);

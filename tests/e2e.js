@@ -251,6 +251,20 @@ server.listen(0, async () => {
       const st = mk(() => 90, { food: food(2200, 27) }); st.entries = Array.from({ length: 28 }, (_, i) => ({ date: iso(27 - i), kg: 90 + (27 - i) * 0.5 / 7 }));
       e = await en(st);
       ok('targets: a well-logged month uses your real burn', e.w === 1 && Math.abs(e.tdee - 2750) < 30 && e.target === 2200, JSON.stringify(e));
+      // Learn from my log off: the formula alone, no matter what's logged
+      e = await en(Object.assign({}, st, { settings: { goalKg: 80, autoAdjust: false } }));
+      ok('targets: Learn from my log off really uses the formula only', e.source === 'calc' && e.adjust === 0 && !e.tune && Math.abs(e.tdee - e.calc) < 1, JSON.stringify(e));
+      // half-logged days (far under your usual) are left out, so they can't drag the burn down
+      const hl = JSON.parse(JSON.stringify(st)); [3, 7, 11, 15, 19].forEach(d => { hl.food[iso(d)][0].kcal = 1350; });
+      e = await en(hl);
+      ok('targets: half-logged days are left out of your real burn', Math.abs(e.tdee - 2750) < 30, JSON.stringify(e));
+      // days you didn't log count less: the burn leans on the formula until you log more
+      const gp = JSON.parse(JSON.stringify(st)); for (let d = 1; d <= 27; d++) if (d % 3 === 0) delete gp.food[iso(d)];
+      e = await en(gp);
+      ok('targets: gaps in the log lower how much your log counts', e.w > 0 && e.w < 0.7, JSON.stringify(e));
+      // plateau with only some days logged: no correction (unlogged days could explain it)
+      e = await en(mk(() => 90, { food: food(2000, 8) }));
+      ok('targets: weekly correction waits when the log has gaps', e.adjust === 0 && !e.tune, JSON.stringify(e));
       await p.context().close();
     }
     // ---- 4f. Search: everyday picks first, whole words beat look-alikes ----

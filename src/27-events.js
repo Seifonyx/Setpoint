@@ -75,7 +75,7 @@
     else lockVerify().then(function () { localStorage.removeItem(LOCK_KEY); buzz('light'); toast('App lock is off'); }, function () { el.checked = true; });
   });
   $('#weekStartSel').addEventListener('change', function () { state.settings.weekStart = +this.value; save(); buzz('light'); renderAll(); });
-  $('#autoAdjToggle').addEventListener('change', function () { state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); });
+  $('#autoAdjToggle').addEventListener('change', function () { const snap = snapshot(), was = roundKcal(makePlan(activeEnergy()) ? makePlan(activeEnergy()).target : 0); state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); const pl = makePlan(activeEnergy()); toast((this.checked ? 'Learning from your log' : 'Formula only') + (pl && roundKcal(pl.target) !== was ? ' · target ' + fmtKcal(roundKcal(pl.target)) + ' kcal' : ''), function () { restore(snap); }); });
 
   document.addEventListener('click', function (e) {
     if (sheet.contains(e.target)) return; // sheets bind their own controls

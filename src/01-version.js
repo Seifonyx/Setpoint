@@ -1,6 +1,12 @@
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.13';
+  const APP_VERSION = '2.0.14';
   const CHANGES = [
+    { v: '2.0.14', items: [
+      "Your burn now ignores days that look half-logged (far below your usual), and counts your log less when you skip days. Both used to make your burn look lower and cut your target.",
+      "The weekly target check no longer lowers your target when days are missing from your log, since unlogged days could explain the gap.",
+      "One switch instead of three modes: Learn from my log. On, your target learns from your food log and weigh-ins. Off, it uses the formula only (before, turning off auto-adjust still learned from your log).",
+      "Shorter explanations across the app, and the account screen no longer mentions Study Planner."
+    ] },
     { v: '2.0.13', items: [
       'The "Same as yesterday" cards on empty meals are gone. To copy a meal from yesterday, swipe its title right and tap ⋯ → Copy from yesterday.',
       'A logged meal or recipe that you changed for that day (amounts, foods or ingredients) now shows a small sliders icon next to its name, so you can tell it apart from the saved version.'

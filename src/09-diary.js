@@ -391,7 +391,7 @@
         return '<button type="button" class="row mf-row rp-row' + (r.paused ? ' paused' : '') + '" data-rep="' + r.id + '">' + diaryIcon(r.item) + '<div class="grow"><div class="row-t">' + esc(r.item.name || 'Quick add') + '</div><div class="row-s">' + esc(repDays(r)) + (r.time ? ' · ' + esc(fmtHM(r.time)) : '') + (r.item.ref ? ' · ' + esc(fmtAmt(r.item.qty, r.item.unit)) : '') + '</div>' + (stt.k === 'on' || stt.k === 'next' ? '' : '<span class="rp-st rp-' + stt.k + '">' + esc(stt.t) + '</span>') + '</div><span class="row-v num mf-k">' + fmtKcal(r.item.kcal) + '<small>kcal</small></span></button>';
       }).join('') + '</div>';
     });
-    if (!mine.length && !fq) h += '<p class="muted-note fd-empty">Nothing repeating yet. Pick a food below, tap New, or hold a food in your diary and choose Repeat.</p>';
+    if (!mine.length && !fq) h += '<p class="muted-note fd-empty">Nothing repeating yet. Pick a food below or tap New.</p>';
     const sug = fq ? [] : repeatSuggestions();
     if (sug.length) h += '<div class="group-label">Suggested from your diary</div><div class="list">' + sug.map(function (s, i) {
       return '<div class="row mf-row rp-sug">' + diaryIcon(s.item) + '<div class="grow"><div class="row-t">' + esc(s.item.name || '') + '</div><div class="row-s">' + esc(mealN(s.meal)) + ' · ' + s.n + ' of the last 14 days · ' + esc(fmtAmt(s.item.qty, s.item.unit)) + '</div></div><button type="button" class="mf-add" data-rsug="' + i + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12M12 6v12"/></svg>Repeat</button></div>';

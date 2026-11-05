@@ -32,16 +32,20 @@
     return energyFor(Object.assign({}, p, { age: ageNow() }), kg);
   }
   // Real TDEE from the last 28 days: average intake minus the energy in the weight change.
+  // Only days you actually logged count (never your target). Calories come from the same days the weigh-ins cover,
+  // and a day far under your usual (below 65% of your median day) is left out as probably half-logged.
+  // `coverage` is the share of those days you logged: gaps hide what you ate, so a low share makes the burn look low.
   function measuredEnergy() { return inPass('me', measuredEnergyNow); }
   function measuredEnergyNow() {
     const end = dayNum(todayISO());
     const win = state.entries.filter(function (e) { return dayNum(e.date) > end - 28; });
-    const cal = [];
-    // Days logged at under half your estimated burn are probably half-logged, and would make maintenance look too low.
-    const ce = calcEnergy(), lowCut = ce ? ce.tdee * 0.5 : 800;
-    for (let d = end - 27; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= lowCut) cal.push(k); }
-    const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length;
-    const res = { ready: false, calDays: cal.length, span: span, needCal: 10, needSpan: 14 };
+    const from = Math.max(end - 27, win.length ? dayNum(win[0].date) : end);
+    const ce = calcEnergy(), floor = ce ? ce.tdee * 0.5 : 800, raw = [];
+    for (let d = from; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= floor) raw.push(k); }
+    const srt = raw.slice().sort(function (a, b) { return a - b; }), med = srt.length ? srt[Math.floor(srt.length / 2)] : 0;
+    const cal = raw.filter(function (k) { return k >= med * 0.65; });
+    const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length, days = Math.max(1, end - from);
+    const res = { ready: false, calDays: cal.length, days: days, coverage: cal.length / days, partial: raw.length - cal.length, span: span, needCal: 10, needSpan: 14 };
     if (cal.length < res.needCal || span < res.needSpan) return res;
     const reg = linreg(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
     if (!reg) return res;
@@ -52,20 +56,19 @@
   function activeEnergy() { return inPass('ae', activeEnergyNow); }
   // Today's plan from today's burn (what the day plans below start from).
   function livePlan() { return inPass('lp', function () { return makePlan(activeEnergy()); }); }
+  // One switch decides the burn: "Learn from my log" (settings.autoAdjust) on, or the formula alone.
+  function adaptive() { return state.settings.autoAdjust !== false; }
   function activeEnergyNow() {
-    const c = calcEnergy(), m = measuredEnergy(), kg = currentKg(), src = state.profile.tdeeSource;
-    if (m.ready && kg != null && (src === 'measured' || !c)) return { tdee: m.tdee, source: 'measured', calc: c, kg: kg, m: m };
-    if (!c) return null;
-    if (src === 'auto') {
-      // Automatic: start from the formula plus the weekly corrections, then lean more and more on your real
-      // burn (food log + weight trend) as you log: from about 10 good days, all of it by 20 days over 4 weeks.
-      // Kept within 75–130% of the formula, so a few half-logged days can't send it somewhere silly.
-      const base = c.tdee + (state.settings.autoAdjust ? state.profile.adjustKcal : 0);
-      let w = 0, tdee = base;
-      if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
-      return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
-    }
-    return { tdee: c.tdee, source: 'calc', calc: c, kg: c.kg };
+    const c = calcEnergy(), m = measuredEnergy(), kg = currentKg();
+    if (!c) return adaptive() && m.ready && kg != null ? { tdee: m.tdee, source: 'measured', calc: null, kg: kg, m: m, w: 1 } : null;
+    if (!adaptive()) return { tdee: c.tdee, source: 'calc', calc: c, kg: c.kg };
+    // Learning: start from the formula plus the weekly corrections, then lean more and more on your real burn as you log:
+    // from about 10 good days, all of it by 20 days over 4 weeks, if you log nearly every day (gaps lower how much it counts).
+    // Kept within 75–130% of the formula, so a few half-logged days can't send it somewhere silly.
+    const base = c.tdee + state.profile.adjustKcal;
+    let w = 0, tdee = base;
+    if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1) * clamp((m.coverage - 0.5) / 0.35, 0, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
+    return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
   }
   // Pace in kg/week, snapped to the options shown for the current unit.
   function snapPace(pace) {
@@ -148,7 +151,7 @@
   function computeAdjust() { return onePass(computeAdjustNow); }
   function computeAdjustNow() {
     const en = activeEnergy();
-    if (!state.settings.autoAdjust || !en || !(en.source === 'calc' || (en.source === 'auto' && en.w < 1))) return null;
+    if (!adaptive() || !en || en.source !== 'auto' || en.w >= 1) return null;
     const today = dayNum(todayISO()), p = state.profile;
     if (p.adjustAt != null && today - p.adjustAt < 6) return null;
     if (p.paceAt != null && today - p.paceAt < 14) return null;
@@ -161,8 +164,14 @@
     // Your food log for the same two weeks (days that look fully logged).
     const lowCut = en.calc ? en.calc.tdee * 0.5 : 800;
     let n = 0, eat = 0, tgt = 0;
-    for (let d = today - 14; d < today; d++) { const iso = isoFromDay(d), k = dayKcal(iso); if (!k || k < lowCut) continue; const pl = dayPlan(iso); if (!pl) continue; n++; eat += k; tgt += pl.target; }
-    const over = n >= 7 ? (eat - tgt) / n : null;
+    const days = [];
+    for (let d = today - 14; d < today; d++) { const iso = isoFromDay(d), k = dayKcal(iso); if (!k) continue; const pl = dayPlanBase(iso); if (pl) days.push([k, pl.target]); } // the week's own targets, not the flexible-week shuffle
+    // Same rule as your real burn: skip days far under your usual (probably half-logged).
+    const ks = days.map(function (x) { return x[0]; }).sort(function (a, b) { return a - b; }), med = ks.length ? ks[Math.floor(ks.length / 2)] : 0;
+    days.forEach(function (x) { if (x[0] < lowCut || x[0] < med * 0.65) return; n++; eat += x[0]; tgt += x[1]; });
+    // You log food but missed days: unlogged days could explain the gap, so wait rather than blame the estimate.
+    if (days.length && n < 11) return null;
+    const over = n ? (eat - tgt) / n : null;
     const left = over != null && Math.sign(over) === Math.sign(gap) ? (Math.abs(over) >= Math.abs(gap) ? 0 : gap - over) : gap;
     const change = Math.round(Math.max(-150, Math.min(150, -left * 0.5)) / 10) * 10;
     const plateau = planned < 0 && Math.abs(actual) < 0.1 && actual > planned;
@@ -175,7 +184,7 @@
   function tuneWhy(a) {
     const r = unit() === 'lb' ? 'lb' : 'kg', fmt = function (x) { return Number(Math.abs(toDisp(x)).toFixed(2)) + ' ' + r + '/week'; };
     if (a.goal) return 'You reached your goal, so your target is now maintenance.';
-    if (a.hold) return (a.over > 0 ? 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day over your target' : 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day under your target') + ', which explains your weight, so the target stays. Hitting it should get you back on pace.';
+    if (a.hold) return 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day ' + (a.over > 0 ? 'over' : 'under') + ' target. That explains your weight, so the target stays.';
     const moved = a.plateau ? 'Your weight has held steady for 2 weeks' : a.planned === 0 ? (a.actual < 0 ? 'Your weight is drifting down' : 'Your weight is drifting up') + ' (' + fmt(a.actual) + ')'
       : (Math.abs(a.actual) < Math.abs(a.planned) || Math.sign(a.actual) !== Math.sign(a.planned) ? 'You\'re ' + (a.planned < 0 ? 'losing' : 'gaining') + ' slower than your plan' : 'You\'re ' + (a.planned < 0 ? 'losing' : 'gaining') + ' faster than your plan') + ' (' + fmt(a.actual) + ' vs ' + fmt(a.planned) + ')';
     return moved + (a.over != null && Math.abs(a.over) < 60 ? ' while eating on target' : '') + ', so your burn is ' + (a.change < 0 ? 'lower' : 'higher') + ' than estimated.';
@@ -286,7 +295,7 @@
   }
   function makePlan(en) {
     if (!en) return null;
-    const adjust = en.source === 'calc' && state.settings.autoAdjust ? state.profile.adjustKcal : 0;
+    const adjust = 0; // weekly corrections are already inside the learning burn; the formula alone has none
     const plan = planFor({ tdee: en.tdee, bmr: en.calc ? en.calc.bmr : null, kg: en.kg, pace: currentPace(), goal: state.settings.goalKg, p: state.profile, adjust: adjust });
     plan.adjust = adjust;
     plan.learned = en.source === 'auto' && en.calc ? Math.round(en.tdee - en.calc.tdee) : 0;

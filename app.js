@@ -2,8 +2,14 @@
   'use strict';
 
   /* ================= Version ================= */
-  const APP_VERSION = '2.0.13';
+  const APP_VERSION = '2.0.14';
   const CHANGES = [
+    { v: '2.0.14', items: [
+      "Your burn now ignores days that look half-logged (far below your usual), and counts your log less when you skip days. Both used to make your burn look lower and cut your target.",
+      "The weekly target check no longer lowers your target when days are missing from your log, since unlogged days could explain the gap.",
+      "One switch instead of three modes: Learn from my log. On, your target learns from your food log and weigh-ins. Off, it uses the formula only (before, turning off auto-adjust still learned from your log).",
+      "Shorter explanations across the app, and the account screen no longer mentions Study Planner."
+    ] },
     { v: '2.0.13', items: [
       'The "Same as yesterday" cards on empty meals are gone. To copy a meal from yesterday, swipe its title right and tap ⋯ → Copy from yesterday.',
       'A logged meal or recipe that you changed for that day (amounts, foods or ingredients) now shows a small sliders icon next to its name, so you can tell it apart from the saved version.'
@@ -695,6 +701,7 @@
         ramAsk: typeof ui.ramAsk === 'string' ? ui.ramAsk.slice(0, 6) : null, // Islamic year the "turn on Ramadan mode" offer was dismissed
         ramOff: typeof ui.ramOff === 'string' ? ui.ramOff.slice(0, 6) : null,
         smartBurn: ui.smartBurn === true, // moved to the automatic burn once (v1.65)
+        oneBurn: ui.oneBurn === true, // Formula / Your log / Automatic folded into one switch once (v2.0.14)
         tune: ui.tune && typeof ui.tune === 'object' && typeof ui.tune.at === 'number' ? { at: ui.tune.at, change: numIn(ui.tune.change, -600, 600) || 0, hold: ui.tune.hold === true, over: numIn(ui.tune.over, -5000, 5000), actual: numIn(ui.tune.actual, -5, 5), planned: numIn(ui.tune.planned, -5, 5), plateau: ui.tune.plateau === true, goal: ui.tune.goal === true, before: numIn(ui.tune.before, -600, 600), after: numIn(ui.tune.after, -600, 600), undoPace: numIn(ui.tune.undoPace, -1.5, 1.5) } : null,
         goalHit: numIn(ui.goalHit, 20, 400),
         graphite: ui.graphite === true, // switched to Graphite once (v1.50); you can pick another theme after
@@ -1250,16 +1257,20 @@
     return energyFor(Object.assign({}, p, { age: ageNow() }), kg);
   }
   // Real TDEE from the last 28 days: average intake minus the energy in the weight change.
+  // Only days you actually logged count (never your target). Calories come from the same days the weigh-ins cover,
+  // and a day far under your usual (below 65% of your median day) is left out as probably half-logged.
+  // `coverage` is the share of those days you logged: gaps hide what you ate, so a low share makes the burn look low.
   function measuredEnergy() { return inPass('me', measuredEnergyNow); }
   function measuredEnergyNow() {
     const end = dayNum(todayISO());
     const win = state.entries.filter(function (e) { return dayNum(e.date) > end - 28; });
-    const cal = [];
-    // Days logged at under half your estimated burn are probably half-logged, and would make maintenance look too low.
-    const ce = calcEnergy(), lowCut = ce ? ce.tdee * 0.5 : 800;
-    for (let d = end - 27; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= lowCut) cal.push(k); }
-    const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length;
-    const res = { ready: false, calDays: cal.length, span: span, needCal: 10, needSpan: 14 };
+    const from = Math.max(end - 27, win.length ? dayNum(win[0].date) : end);
+    const ce = calcEnergy(), floor = ce ? ce.tdee * 0.5 : 800, raw = [];
+    for (let d = from; d < end; d++) { const k = dayKcal(isoFromDay(d)); if (k && k >= floor) raw.push(k); }
+    const srt = raw.slice().sort(function (a, b) { return a - b; }), med = srt.length ? srt[Math.floor(srt.length / 2)] : 0;
+    const cal = raw.filter(function (k) { return k >= med * 0.65; });
+    const span = win.length > 1 ? dayNum(win[win.length - 1].date) - dayNum(win[0].date) + 1 : win.length, days = Math.max(1, end - from);
+    const res = { ready: false, calDays: cal.length, days: days, coverage: cal.length / days, partial: raw.length - cal.length, span: span, needCal: 10, needSpan: 14 };
     if (cal.length < res.needCal || span < res.needSpan) return res;
     const reg = linreg(win.map(function (e) { return { x: dayNum(e.date), y: e.kg }; }));
     if (!reg) return res;
@@ -1270,20 +1281,19 @@
   function activeEnergy() { return inPass('ae', activeEnergyNow); }
   // Today's plan from today's burn (what the day plans below start from).
   function livePlan() { return inPass('lp', function () { return makePlan(activeEnergy()); }); }
+  // One switch decides the burn: "Learn from my log" (settings.autoAdjust) on, or the formula alone.
+  function adaptive() { return state.settings.autoAdjust !== false; }
   function activeEnergyNow() {
-    const c = calcEnergy(), m = measuredEnergy(), kg = currentKg(), src = state.profile.tdeeSource;
-    if (m.ready && kg != null && (src === 'measured' || !c)) return { tdee: m.tdee, source: 'measured', calc: c, kg: kg, m: m };
-    if (!c) return null;
-    if (src === 'auto') {
-      // Automatic: start from the formula plus the weekly corrections, then lean more and more on your real
-      // burn (food log + weight trend) as you log: from about 10 good days, all of it by 20 days over 4 weeks.
-      // Kept within 75–130% of the formula, so a few half-logged days can't send it somewhere silly.
-      const base = c.tdee + (state.settings.autoAdjust ? state.profile.adjustKcal : 0);
-      let w = 0, tdee = base;
-      if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
-      return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
-    }
-    return { tdee: c.tdee, source: 'calc', calc: c, kg: c.kg };
+    const c = calcEnergy(), m = measuredEnergy(), kg = currentKg();
+    if (!c) return adaptive() && m.ready && kg != null ? { tdee: m.tdee, source: 'measured', calc: null, kg: kg, m: m, w: 1 } : null;
+    if (!adaptive()) return { tdee: c.tdee, source: 'calc', calc: c, kg: c.kg };
+    // Learning: start from the formula plus the weekly corrections, then lean more and more on your real burn as you log:
+    // from about 10 good days, all of it by 20 days over 4 weeks, if you log nearly every day (gaps lower how much it counts).
+    // Kept within 75–130% of the formula, so a few half-logged days can't send it somewhere silly.
+    const base = c.tdee + state.profile.adjustKcal;
+    let w = 0, tdee = base;
+    if (m.ready) { w = clamp((m.calDays - 7) / 13, 0, 1) * clamp(m.span / 28, 0.5, 1) * clamp((m.coverage - 0.5) / 0.35, 0, 1); tdee = base + w * (clamp(m.tdee, c.tdee * 0.75, c.tdee * 1.3) - base); }
+    return { tdee: tdee, source: 'auto', w: w, calc: c, kg: c.kg, m: m };
   }
   // Pace in kg/week, snapped to the options shown for the current unit.
   function snapPace(pace) {
@@ -1366,7 +1376,7 @@
   function computeAdjust() { return onePass(computeAdjustNow); }
   function computeAdjustNow() {
     const en = activeEnergy();
-    if (!state.settings.autoAdjust || !en || !(en.source === 'calc' || (en.source === 'auto' && en.w < 1))) return null;
+    if (!adaptive() || !en || en.source !== 'auto' || en.w >= 1) return null;
     const today = dayNum(todayISO()), p = state.profile;
     if (p.adjustAt != null && today - p.adjustAt < 6) return null;
     if (p.paceAt != null && today - p.paceAt < 14) return null;
@@ -1379,8 +1389,14 @@
     // Your food log for the same two weeks (days that look fully logged).
     const lowCut = en.calc ? en.calc.tdee * 0.5 : 800;
     let n = 0, eat = 0, tgt = 0;
-    for (let d = today - 14; d < today; d++) { const iso = isoFromDay(d), k = dayKcal(iso); if (!k || k < lowCut) continue; const pl = dayPlan(iso); if (!pl) continue; n++; eat += k; tgt += pl.target; }
-    const over = n >= 7 ? (eat - tgt) / n : null;
+    const days = [];
+    for (let d = today - 14; d < today; d++) { const iso = isoFromDay(d), k = dayKcal(iso); if (!k) continue; const pl = dayPlanBase(iso); if (pl) days.push([k, pl.target]); } // the week's own targets, not the flexible-week shuffle
+    // Same rule as your real burn: skip days far under your usual (probably half-logged).
+    const ks = days.map(function (x) { return x[0]; }).sort(function (a, b) { return a - b; }), med = ks.length ? ks[Math.floor(ks.length / 2)] : 0;
+    days.forEach(function (x) { if (x[0] < lowCut || x[0] < med * 0.65) return; n++; eat += x[0]; tgt += x[1]; });
+    // You log food but missed days: unlogged days could explain the gap, so wait rather than blame the estimate.
+    if (days.length && n < 11) return null;
+    const over = n ? (eat - tgt) / n : null;
     const left = over != null && Math.sign(over) === Math.sign(gap) ? (Math.abs(over) >= Math.abs(gap) ? 0 : gap - over) : gap;
     const change = Math.round(Math.max(-150, Math.min(150, -left * 0.5)) / 10) * 10;
     const plateau = planned < 0 && Math.abs(actual) < 0.1 && actual > planned;
@@ -1393,7 +1409,7 @@
   function tuneWhy(a) {
     const r = unit() === 'lb' ? 'lb' : 'kg', fmt = function (x) { return Number(Math.abs(toDisp(x)).toFixed(2)) + ' ' + r + '/week'; };
     if (a.goal) return 'You reached your goal, so your target is now maintenance.';
-    if (a.hold) return (a.over > 0 ? 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day over your target' : 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day under your target') + ', which explains your weight, so the target stays. Hitting it should get you back on pace.';
+    if (a.hold) return 'You ate about ' + fmtKcal(Math.abs(a.over)) + ' kcal a day ' + (a.over > 0 ? 'over' : 'under') + ' target. That explains your weight, so the target stays.';
     const moved = a.plateau ? 'Your weight has held steady for 2 weeks' : a.planned === 0 ? (a.actual < 0 ? 'Your weight is drifting down' : 'Your weight is drifting up') + ' (' + fmt(a.actual) + ')'
       : (Math.abs(a.actual) < Math.abs(a.planned) || Math.sign(a.actual) !== Math.sign(a.planned) ? 'You\'re ' + (a.planned < 0 ? 'losing' : 'gaining') + ' slower than your plan' : 'You\'re ' + (a.planned < 0 ? 'losing' : 'gaining') + ' faster than your plan') + ' (' + fmt(a.actual) + ' vs ' + fmt(a.planned) + ')';
     return moved + (a.over != null && Math.abs(a.over) < 60 ? ' while eating on target' : '') + ', so your burn is ' + (a.change < 0 ? 'lower' : 'higher') + ' than estimated.';
@@ -1504,7 +1520,7 @@
   }
   function makePlan(en) {
     if (!en) return null;
-    const adjust = en.source === 'calc' && state.settings.autoAdjust ? state.profile.adjustKcal : 0;
+    const adjust = 0; // weekly corrections are already inside the learning burn; the formula alone has none
     const plan = planFor({ tdee: en.tdee, bmr: en.calc ? en.calc.bmr : null, kg: en.kg, pace: currentPace(), goal: state.settings.goalKg, p: state.profile, adjust: adjust });
     plan.adjust = adjust;
     plan.learned = en.source === 'auto' && en.calc ? Math.round(en.tdee - en.calc.tdee) : 0;
@@ -2128,7 +2144,7 @@
         return '<button type="button" class="row mf-row rp-row' + (r.paused ? ' paused' : '') + '" data-rep="' + r.id + '">' + diaryIcon(r.item) + '<div class="grow"><div class="row-t">' + esc(r.item.name || 'Quick add') + '</div><div class="row-s">' + esc(repDays(r)) + (r.time ? ' · ' + esc(fmtHM(r.time)) : '') + (r.item.ref ? ' · ' + esc(fmtAmt(r.item.qty, r.item.unit)) : '') + '</div>' + (stt.k === 'on' || stt.k === 'next' ? '' : '<span class="rp-st rp-' + stt.k + '">' + esc(stt.t) + '</span>') + '</div><span class="row-v num mf-k">' + fmtKcal(r.item.kcal) + '<small>kcal</small></span></button>';
       }).join('') + '</div>';
     });
-    if (!mine.length && !fq) h += '<p class="muted-note fd-empty">Nothing repeating yet. Pick a food below, tap New, or hold a food in your diary and choose Repeat.</p>';
+    if (!mine.length && !fq) h += '<p class="muted-note fd-empty">Nothing repeating yet. Pick a food below or tap New.</p>';
     const sug = fq ? [] : repeatSuggestions();
     if (sug.length) h += '<div class="group-label">Suggested from your diary</div><div class="list">' + sug.map(function (s, i) {
       return '<div class="row mf-row rp-sug">' + diaryIcon(s.item) + '<div class="grow"><div class="row-t">' + esc(s.item.name || '') + '</div><div class="row-s">' + esc(mealN(s.meal)) + ' · ' + s.n + ' of the last 14 days · ' + esc(fmtAmt(s.item.qty, s.item.unit)) + '</div></div><button type="button" class="mf-add" data-rsug="' + i + '"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"><path d="M6 12h12M12 6v12"/></svg>Repeat</button></div>';
@@ -3756,7 +3772,7 @@
       if (qi && qi.dataset.ph !== ph) { qi.dataset.ph = ph; qi.placeholder = ph; qi.setAttribute('aria-label', ph); if (typeof tr === 'function' && state.settings.lang === 'ar') { qi.placeholder = tr(ph); qi.setAttribute('aria-label', tr(ph)); } }
       const needDB = !foodDB;
       if (needDB && !coreDB) loadCoreFoods().then(function (db) { if (db && !foodDB && $('#afList', root)) drawList(); });
-      if (needDB) loadFoods().then(function () { if ($('#afList', root)) drawList(); }, function () { const b = $('#afList', root); if (b && !foodDB) b.innerHTML = '<p class="muted-note fd-empty">Couldn\'t load the food list. Check your connection and try again. Quick add and My foods still work.</p>'; });
+      if (needDB) loadFoods().then(function () { if ($('#afList', root)) drawList(); }, function () { const b = $('#afList', root); if (b && !foodDB) b.innerHTML = '<p class="muted-note fd-empty">Couldn\'t load the food list. Quick add and My foods still work.</p>'; });
       const fu = foodUse();
       let html = '';
       const scope = state.ui.foodTab === 'mine' || state.ui.foodTab === 'favs' ? state.ui.foodTab : null;
@@ -3825,7 +3841,7 @@
         const kf = function (f) { return f.id; }, nf = function (f) { return f.name; };
         if (rcs.length) html += section('Recipes', sorted(rcs, kf, nf, fu).map(function (f) { return row(f); }).join(''));
         if (state.myFoods.length) html += section('Foods', sorted(state.myFoods.map(customFood), kf, nf, fu).map(function (f) { return row(f); }).join(''));
-        if (!state.myFoods.length && !state.recipes.length && !state.meals.length) html += '<p class="muted-note fd-empty">Create foods and recipes here. To save a whole meal, tap ⋯ next to it in the diary.</p>';
+        if (!state.myFoods.length && !state.recipes.length && !state.meals.length) html += '<p class="muted-note fd-empty">Create foods and recipes here. To save a meal, swipe its title in the Diary.</p>';
         html += mfNew;
         if (!pick && (state.myFoods.length || state.recipes.length || state.meals.length)) html += '<button type="button" class="text-btn fd-create" data-manage>Edit or delete in You → My foods</button>';
       } else if (state.ui.foodTab === 'favs') {
@@ -4460,7 +4476,7 @@
         '<div class="label faint fd-sec">Ingredients</div>' +
         (draft.items.length ? '<div class="list" id="rcIngs">' + draft.items.map(function (it, i) { const f = getFood(it.ref); return '<div class="row fd-row me-row" data-ing="' + i + '" role="button" tabindex="0">' + (draft.items.length > 1 ? '<span class="cat-grip me-grip" aria-label="Drag to reorder">' + GRIP + '</span>' : '') + '<div class="grow"><div class="row-t">' + esc(it.name) + '</div><div class="row-s">' + fmtAmt(it.qty, it.unit) + (f ? ' · ' + fmtKcal(macrosFor(f, it.g).kcal) + ' kcal' : '') + '</div></div><button type="button" class="icon-btn me-rm" data-rmi="' + i + '" aria-label="Remove ' + esc(it.name) + '">' + TRASH + '</button></div>'; }).join('') + '</div>' : '') +
         (adjust ? '<button type="button" class="btn soft block" id="rcAdd" style="margin-bottom:16px">+ Add ingredient</button>' : '<div class="rc-adds"><button type="button" class="btn soft" id="rcAdd">+ Add ingredient</button><button type="button" class="btn soft" id="rcPaste2">' + PASTE_IC + 'Paste a list</button></div>') +
-        (draft.items.length ? '' : '<p class="muted-note rc-hint">Got the recipe written down? Paste the ingredients, one per line (like “2 cups rice” or “500 g chicken”), and they\'re matched for you.</p>') +
+        (draft.items.length ? '' : '<p class="muted-note rc-hint">Paste the ingredients, one per line, like “2 cups rice”.</p>') +
         '<div class="sv-sum" id="rcSum"></div><div class="nut-drop" id="rcNuts" hidden></div><div id="rcKey"></div>' +
         '<p class="form-error" id="rcErr" hidden></p>' +
         (adjust && edit.rc ? '<button type="button" class="text-btn fd-create" id="rcReset">Use the saved recipe again</button>' : '') +
@@ -5033,7 +5049,7 @@
     const range = function () { return n === 1 ? fmtDate(d, { weekday: 'long', month: 'short', day: 'numeric' }) : fmtDate(d, { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(isoFromDay(dayNum(d) + n - 1), { month: 'short', day: 'numeric' }); };
     const draw = function (root) {
       root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Take a break</h2></div></div>' +
-        '<p class="sheet-text">Eat at maintenance instead of your usual target. A short break can help with energy, training and sticking with your plan.</p>' +
+        '<p class="sheet-text">Eat at maintenance for the day. Can help energy and training.</p>' +
         '<div class="label faint fd-sec">How many days?</div>' +
         '<div class="rates br-days">' + [1, 2, 3, 5, 7, 14].map(function (k) { return '<button type="button" data-brk="' + k + '" aria-pressed="' + (k === n) + '">' + (k === 1 ? '1 day' : k + ' days') + '</button>'; }).join('') + '</div>' +
         '<div class="stat-box br-sum"><b>' + esc(range()) + '</b><span>' + (n === 1 ? 'A refeed day: the extra calories come from carbs' : 'A diet break: the extra calories are split between carbs and fat') + '</span></div>' +
@@ -5217,7 +5233,7 @@
     const cur = state.settings.train || { days: [] }, t = state.profile.training;
     let days = cur.days.slice();
     openSheet('<div class="sheet-head"><div><h2 class="sheet-title" id="sheetTitle">Training days</h2></div></div>' +
-      '<p class="sheet-text">Pick the days you train. You eat more on those days and less on rest days. Your weekly total stays the same.</p>' +
+      '<p class="sheet-text">More on training days, less on rest days. Same weekly total.</p>' +
       '<div class="day-chips" id="trDays">' + weekOrder().map(function (d) { return '<button type="button" data-v="' + d + '" aria-pressed="' + (days.indexOf(d) >= 0) + '">' + dayAbbr(d) + '</button>'; }).join('') + '</div>' +
       '<div class="stat-box tr-split" id="trNote"></div>' +
       '<div class="sheet-foot"><button type="button" class="btn primary block" id="trSave">Save</button></div>',
@@ -5458,7 +5474,7 @@
           (nd.noData ? '<p class="muted-note ns-note">' + nd.noData + (nd.noData === 1 ? ' food has' : ' foods have') + ' calories only (quick adds or your own foods), so some totals are low. * = partly missing data.</p>' : '') +
           (!p.sex || !p.birthYear ? '<p class="muted-note ns-note">Add your age and sex in Targets for personal targets.</p>' : '') +
           nutPanel(nd.tot, tg, nd.cov, { tap: true })) +
-        '<p class="muted-note sv-src">Targets: US Dietary Reference Intakes. Tap a nutrient to see where it came from.</p>';
+        '<p class="muted-note sv-src">Tap a nutrient to see where it came from.</p>';
       $('#nsTargets', root).addEventListener('click', function () { closeSheet(); showTab('targets'); });
       $$('[data-high]', root).forEach(function (b) { b.addEventListener('click', function () { sourcesSheet(b.dataset.high, d); }); });
     };
@@ -5575,7 +5591,7 @@
         const keys = (g[2] || NUTS.filter(function (n) { return n[3] === g[0] && (!g[3] || g[3].indexOf(n[0]) < 0); }).map(function (n) { return n[0]; })).filter(function (k) { return NUT[k]; });
         return '<div class="group-label">' + g[1] + '</div><div class="card nt-group">' + keys.map(function (k) { return ntRowHtml(k, tg); }).join('') + '</div>';
       }).join('') +
-      '<p class="muted-note sv-src">From the US Dietary Reference Intakes: the target is the recommended amount, the max is the safe upper limit. Going over a max shows in red. Calorie, protein, carb and fat targets follow your plan.</p>';
+      '<p class="muted-note sv-src">From US Dietary Reference Intakes. Red means over the safe max.</p>';
   }
   function ntSaveRow(k, row) {
     const rec = nutRec()[k] || {}, o = {}, ins = $$('[data-nt-in]', row);
@@ -5927,7 +5943,7 @@
           m.items.map(function (x) { const f = getFood(x.ref); return '<div class="pd-row">' + (f ? ftIcon(ftKind(f)) : '') + '<div class="grow"><div class="row-t">' + esc(shortName(x.name)) + '</div><div class="row-s">' + esc(fmtAmt(x.qty, x.unit)) + '</div></div><span class="num pd-rk">' + fmtKcal(x.kcal) + '</span></div>'; }).join('') +
           '<button type="button" class="pd-again" data-pd-shuf="' + m.meal + '">' + AGAIN + 'Another idea</button></div>';
       });
-      h += '<p class="muted-note sv-src">A starting point from your targets, not medical advice. Swap anything you don\'t like after adding it.</p>' +
+      h += '<p class="muted-note sv-src">A starting point from your targets. Swap anything after adding it.</p>' +
         '<div class="sheet-foot pd-foot"><button type="button" class="icon-btn pd-all" id="pdAll" aria-label="Shuffle the whole day">' + SHUF + '</button><button type="button" class="btn primary grow" id="pdNext">Add to diary</button></div>';
       root.innerHTML = h;
       const fg = $('.pd-ring-fg', root), off = fg ? +fg.getAttribute('stroke-dashoffset') : 0;
@@ -6218,7 +6234,7 @@
     }
     const got = rows.filter(function (r) { return r.first != null && r.d < today; });
     const hm = function (m) { const d = new Date(); d.setHours(Math.floor(m / 60), Math.round(m % 60), 0, 0); return fmtClock(d.getTime()); };
-    if (got.length < 2) return '<div class="card"><div class="card-head"><h2 class="card-title">Eating window</h2></div><p class="muted-note">Food you log gets a time. After a few days, you\'ll see when you usually start and stop eating.</p></div>';
+    if (got.length < 2) return '<div class="card"><div class="card-head"><h2 class="card-title">Eating window</h2></div><p class="muted-note">Log a few days to see when you usually start and stop eating.</p></div>';
     const avg = function (k) { return got.reduce(function (a, r) { return a + r[k]; }, 0) / got.length; };
     const gaps = []; rows.forEach(function (r, i) { const nx = rows[i + 1]; if (r.last != null && nx && nx.first != null) gaps.push(24 * 60 - r.last + nx.first); });
     const win = avg('last') - avg('first'), gap = gaps.length ? gaps.reduce(function (a, x) { return a + x; }, 0) / gaps.length : null;
@@ -6708,7 +6724,7 @@
       }).then(function (list) {
         list.sort(function (a, b) { return a.day < b.day ? 1 : -1; });
         root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Restore a backup</h2></div>' +
-          '<p class="muted-note" style="text-align:start;margin:0 2px 12px">Setpoint saves a copy of everything once a day and keeps the last 7, on this phone only.</p>' +
+          '<p class="muted-note" style="text-align:start;margin:0 2px 12px">A daily copy on this phone. The last 7 are kept.</p>' +
           (!list.length ? '<p class="muted-note fd-empty">No backups yet. The first one is made today.</p>' : '<div class="list">' + list.map(function (x, i) {
             let info = ''; try { const d = JSON.parse(x.v.data); info = Object.keys(d.food || {}).length + ' days of food · ' + (d.entries || []).length + ' weigh-ins'; } catch (e) {}
             return '<button type="button" class="row fd-row" data-bk="' + i + '"><div class="grow"><div class="row-t">' + esc(relDate(x.day)) + ' · ' + esc(fmtDate(x.day, { weekday: 'short', month: 'short', day: 'numeric' })) + '</div><div class="row-s">' + info + '</div></div>' + CHEV + '</button>';
@@ -7350,9 +7366,15 @@
       const ps = p.dir === 'maintain' ? 'Keep your weight steady' : (p.dir === 'lose' ? 'Lose ' : 'Gain ') + RATES[unit()][p.dir][p.i] + ' ' + unit() + ' a week';
       h += row('goal', '', FLAG, 'ic-c-blue', 'Goal', esc(ps), g ? fmtW(g) + ' ' + unit() : 'Set');
     }
-    h += row('burn', '', FLAME, 'ic-c-orange', 'Energy expenditure', en ? esc(en.source === 'measured' ? 'From your food log' : en.source === 'auto' && (en.w > 0) ? 'Learned from you' : 'Estimated for you') : 'Activity, age, height and weight', en ? fmtKcal(roundKcal(en.tdee)) : '');
+    h += row('burn', '', FLAME, 'ic-c-orange', 'Energy expenditure', en ? esc(burnLabel(en)) : 'Activity, age, height and weight', en ? fmtKcal(roundKcal(en.tdee)) : '');
     menu.innerHTML = h;
     renderNutTable();
+  }
+  // Where today's burn comes from, in a few words.
+  function burnLabel(en) {
+    if (en.source === 'measured') return 'From your log';
+    if (en.source === 'calc') return 'Formula';
+    return en.w >= 0.99 ? 'From your log' : en.w > 0 ? 'Learning · ' + Math.round(en.w * 100) + '% your log' : 'Formula for now';
   }
   function renderEnergy() {
     const p = state.profile, en = activeEnergy(), plan = makePlan(en), m = measuredEnergy(), kgNow = currentKg();
@@ -7368,7 +7390,7 @@
         '<p class="tg-empty-s">' + (needD ? 'Add your age, sex and height' + (needW ? ', then log your weight.' : '.') : 'Log your weight to finish.') + '</p>' +
         '<button type="button" class="btn primary block" data-action="' + (needD ? 'details' : 'log') + '">' + (needD ? 'Get started' : 'Log weight') + '</button>';
     } else {
-      const c = en.calc, learned = en.source === 'measured' ? 'From your log' : en.source === 'auto' && (en.w > 0 || Math.abs(en.tdee - c.tdee) >= 10) ? 'Learned from you' : 'Estimated';
+      const c = en.calc, learned = burnLabel(en);
       let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Your daily burn</div>' +
         '<div class="tg-burn-v num">' + fmtKcal(roundKcal(en.tdee)) + '<span class="unit">kcal</span></div>' +
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
@@ -7411,8 +7433,11 @@
     } else $('#detailsSub').textContent = 'Not set';
     const own = Object.keys(state.profile.nutT || {}).length;
     $('#nutTSub').textContent = own ? own + (own === 1 ? ' set by you' : ' set by you') : state.profile.sex && state.profile.birthYear ? 'Recommended for your age and sex' : 'Add your age and sex for personal targets';
-    $('#realSub').textContent = m.ready ? (en && (en.source === 'measured' || en.source === 'auto' && en.w > 0) ? 'From your food log · in use' : 'From your food log · ready') : state.settings.trackCalories ? 'Learning from your food log' : 'Off';
-    $('#realVal').textContent = m.ready ? fmtKcal(roundKcal(m.tdee)) : state.settings.trackCalories ? Math.min(m.calDays, m.needCal) + '/' + m.needCal : '';
+    const on = adaptive();
+    $('#autoAdjToggle').checked = on;
+    $('#adaptSub').textContent = on ? 'Food log + weigh-ins' : 'Formula only';
+    $('#realSub').textContent = m.ready ? Math.round(m.coverage * 100) + '% of days logged' + (on ? '' : ' · not in use') : 'Learning · ' + Math.min(m.calDays, m.needCal) + '/' + m.needCal + ' days';
+    $('#realVal').textContent = m.ready ? fmtKcal(roundKcal(m.tdee)) : '';
     renderTgHome(plan, en);
   }
 
@@ -7478,7 +7503,6 @@
     $('#numpadToggle').checked = !!s.numpad;
     $('#oledToggle').checked = !!s.oled;
     $('#explodeToggle').checked = !!s.explode;
-    $('#autoAdjToggle').checked = s.autoAdjust;
     $('#fastToggle').checked = s.fasting;
     $('#lockRow').hidden = !lockSupported(); $('#lockToggle').checked = !!lockCfg();
     if ($('#themeVal')) $('#themeVal').textContent = (THEMES.find(function (t) { return t[0] === s.style; }) || THEMES[0])[1];
@@ -8185,19 +8209,16 @@
   }
 
   function adjustSheet() {
-    const p = state.profile, en = activeEnergy(), c = en && en.calc, auto = en && en.source === 'auto', t = state.ui.tune;
-    const total = auto ? Math.round(en.tdee - c.tdee) : p.adjustKcal;
+    const p = state.profile, en = activeEnergy(), c = en && en.calc, t = state.ui.tune, on = adaptive();
     const row = function (l, v) { return '<div class="row"><div class="grow row-t">' + l + '</div><span class="row-w num">' + v + '</span></div>'; };
     const sgn = function (v) { return (v > 0 ? '+' : v < 0 ? '−' : '') + fmtKcal(Math.abs(Math.round(v))); };
     openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target learns</h2></div>' +
-      '<div class="num" style="font-size:44px;font-weight:700;letter-spacing:-.04em;line-height:1">' + sgn(total) + '<span class="unit">kcal</span></div>' +
-      '<p class="sheet-text" style="margin:10px 0 16px">' + (auto ? 'Your burn compared with the formula, learned from your real results.' : 'Change from weekly check-ins.') + '</p>' +
-      (c ? '<div class="list">' + row('Formula estimate', fmtKcal(roundKcal(c.tdee))) +
-        (state.settings.autoAdjust && p.adjustKcal ? row('Corrections from your weight trend', sgn(p.adjustKcal)) : '') +
-        (auto && en.m && en.m.ready ? row('Your log (food + weight)', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
-        row('Burn used for your target', fmtKcal(roundKcal(en.tdee))) + '</div>' : '') +
+      (c ? '<div class="list">' + row('Formula', fmtKcal(roundKcal(c.tdee))) +
+        (on && p.adjustKcal ? row('Weekly corrections', sgn(p.adjustKcal)) : '') +
+        (on && en.m && en.m.ready ? row('Your log', fmtKcal(roundKcal(en.m.tdee)) + ' · ' + Math.round(en.w * 100) + '% used') : '') +
+        row('Burn used', fmtKcal(roundKcal(en.tdee))) + '</div>' : '') +
       (t ? '<div class="stat-box" style="margin-top:14px"><div class="row-t">Last check · ' + esc(fmtDate(isoFromDay(t.at), { month: 'short', day: 'numeric' })) + '</div><div class="row-s" style="white-space:normal;overflow:visible">' + esc(tuneWhy(t)) + '</div></div>' : '') +
-      '<p class="sheet-text" style="margin:16px 0 20px">This runs on its own. Each time you open the app, Setpoint compares your weight trend and what you logged with your plan. If you stall, it checks your food log first: if you ate over your target, the target stays; if you were on target, the estimate was off and the target moves (up to 150 kcal a week). The more days you log, the more your target is based on your real burn. Changing your goal or activity restarts the 2-week check, and reaching your goal switches you to maintenance.</p>' +
+      '<p class="sheet-text" style="margin:16px 0 20px">' + (on ? 'Weekly, it compares your weight with your plan. Ate over target? It stays. On target? It moves up to 150 kcal.' : 'Off: your target uses the formula only.') + '</p>' +
       '<div class="btn-row"><button type="button" class="btn soft" id="adjReset"' + (p.adjustKcal ? '' : ' disabled') + '>Reset corrections</button><button type="button" class="btn primary" id="adjOk">Done</button></div>',
       function (root) {
         $('#adjOk', root).addEventListener('click', function () { closeSheet(); });
@@ -8209,52 +8230,45 @@
   function targetExplainSheet() {
     const en = activeEnergy(), plan = makePlan(en); if (!en || !plan) return;
     const c = en.calc, p = state.profile, pace = plan.pace, u = unit(), t = p.training;
-    const k = function (v) { return fmtKcal(Math.abs(Math.round(v))); }, sg = function (v) { return (v < 0 ? '−' : '+') + k(v); };
+    const k = function (v) { return fmtKcal(Math.abs(roundKcal(v))); }, sg = function (v) { return (v < 0 ? '−' : '+') + k(v); }; // rounded like the rest of the app
     const goalK = Math.round(pace.kg * KCAL_PER_KG / 7), rate = Number(Math.abs(toDisp(pace.kg)).toFixed(2)) + ' ' + u;
     const row = function (l, v, cls) { return '<div class="tx-r' + (cls ? ' ' + cls : '') + '"><span>' + l + '</span><b class="num">' + v + '</b></div>'; };
     const step = function (n, title, body) { return '<section class="tx-step"><div class="tx-sh"><span class="tx-n num">' + n + '</span><h3 class="tx-h">' + title + '</h3></div>' + body + '</section>'; };
     const para = function (x) { return '<p class="tx-p">' + x + '</p>'; };
     const item = function (dot, name, val, desc) { return '<div class="tx-part"><i class="' + dot + '"></i><div class="grow"><div class="tx-pt"><span>' + name + '</span><b class="num">' + val + '</b></div><div class="tx-pd">' + desc + '</div></div></div>'; };
-    // The answer first, then where each number comes from.
-    let h = para(pace.dir === 'maintain' ? 'Your target is simply what you burn in a day, so your weight stays where it is.' : 'Your target is what you burn in a day, ' + (pace.dir === 'lose' ? 'minus' : 'plus') + ' what it takes to ' + (pace.dir === 'lose' ? 'lose' : 'gain') + ' ' + rate + ' a week.') +
-      '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
+    // The answer first, then where each number comes from. Kept short: the numbers do the explaining.
+    let h = '<div class="tx-eq">' + row('What you burn', k(en.tdee)) +
       (pace.dir !== 'maintain' ? row(pace.dir === 'lose' ? 'To lose ' + rate + ' a week' : 'To gain ' + rate + ' a week', sg(goalK)) : '') +
-      (plan.adjust ? row('Weekly corrections', sg(plan.adjust)) : '') +
       row('Your daily target', k(plan.target) + ' kcal', 'tx-tot') + '</div>';
     // 1. Burn
     if (c) {
       const life = Math.max(0, c.life + en.tdee - c.tdee), learnedK = Math.round(en.tdee - c.tdee);
-      h += step(1, 'How much you burn', para('Your body uses energy all day, even at rest. Eating this much keeps your weight steady. It adds up from four things:') +
-        '<div class="tx-parts">' +
-          item('o1', 'Resting', k(c.bmr), 'Keeping you alive: heart, brain, breathing. Based on your age, sex, height and weight' + (p.bodyFat ? ' and body fat' : '') + '.') +
-          item('o2', 'Daily life', k(life), 'Moving around, standing, chores and digesting food.') +
-          item('o3', 'Steps', k(c.steps), 'Your ' + fmtKcal(p.steps) + ' steps a day.') +
-          item('o4', 'Training', k(c.train), t.days ? 'Your ' + t.days + ' workouts a week, shared out over all 7 days.' : 'No workouts in your Activity.') +
+      h += step(1, 'What you burn', '<div class="tx-parts">' +
+          item('o1', 'Resting', k(c.bmr), 'Age, sex, height and weight' + (p.bodyFat ? ', body fat' : '')) +
+          item('o2', 'Daily life', k(life), 'Moving around and digesting') +
+          item('o3', 'Steps', k(c.steps), fmtKcal(p.steps) + ' steps a day') +
+          item('o4', 'Training', k(c.train), t.days ? t.days + ' workouts a week, spread over 7 days' : 'No workouts') +
         '</div>' +
-        (Math.abs(learnedK) >= 10 || en.source !== 'calc' ? '<div class="tx-note"><b>Learned from you.</b> ' + (en.source === 'measured' ? 'This comes only from your food log and weight trend: what you ate, and how your weight moved.' : 'A formula is only a starting point. Setpoint compares what you eat with how your weight actually moves, and found you burn about ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula says.' + (en.source === 'auto' && en.w > 0 ? ' Right now ' + Math.round(en.w * 100) + '% of this number comes from your own log.' : '')) + '</div>' : ''));
+        (en.source === 'auto' && Math.abs(learnedK) >= 10 ? '<div class="tx-note"><b>Learned from your log:</b> ' + k(learnedK) + ' kcal ' + (learnedK > 0 ? 'more' : 'less') + ' than the formula' + (en.w > 0 && en.w < 0.99 ? ' (' + Math.round(en.w * 100) + '% your log so far)' : '') + '.</div>'
+          : en.source === 'calc' ? '<div class="tx-note">Formula only. Turn on <b>Learn from my log</b> to use your real results.</div>' : ''));
     }
     // 2. Goal
-    h += step(2, 'What your goal changes', pace.dir === 'maintain' ? para('Nothing: you eat about what you burn, so your weight stays steady.')
-      : para('About 7,700 kcal makes 1 kg of body weight. ' + (pace.dir === 'lose' ? 'Losing' : 'Gaining') + ' ' + rate + ' a week takes about ' + k(Math.abs(goalK) * 7) + ' kcal a week, which is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'less' : 'more') + ' than you burn.') +
-        (plan.eta ? para('At this pace you reach your goal on ' + plan.eta.replace(/^goal by /, '') + '.') : ''));
+    if (pace.dir !== 'maintain') h += step(2, 'Your goal', para('1 kg ≈ 7,700 kcal, so ' + rate + ' a week is ' + k(goalK) + ' kcal a day ' + (pace.dir === 'lose' ? 'under' : 'over') + ' your burn.' + (plan.eta ? ' Goal by ' + plan.eta.replace(/^goal by /, '') + '.' : '')));
     // 3. Macros
     const lb = u === 'lb', per = function (v) { return Number((lb ? v / LB : v).toFixed(1)) + ' g per ' + u; };
-    const refTxt = plan.refWhy === 'your weight' ? 'your weight' : plan.refWhy === 'your lean mass' ? 'your lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'a healthy weight for your height (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
-    const why = plan.kind === 'strength' ? 'Higher because you lift' : plan.kind === 'cardio' ? 'Set for cardio training' : 'Set for no regular training';
-    h += step(3, 'How the calories are split', para('Protein and fat are set first, because your body needs a certain amount of each. Carbs fill the rest.') +
-      '<div class="tx-parts">' +
-        item('d-p', 'Protein', plan.protein + ' g', per(plan.proteinPerKg) + ' of ' + refTxt + '. ' + (plan.custom ? 'You set this yourself.' : why + (pace.kg < 0 ? ', and a little higher while losing so you keep your muscle' : '') + '. Protein also keeps you full.')) +
-        item('d-f', 'Fat', plan.fat + ' g', per(plan.fatPerKg) + ' of ' + refTxt + '. Needed for hormones and absorbing vitamins' + (plan.custom ? '.' : ', so it never drops below about a fifth of your calories.')) +
-        item('d-c', 'Carbs', plan.carbs + ' g', 'Whatever is left. They are your main fuel for training and daily energy.') +
+    const refTxt = plan.refWhy === 'your weight' ? 'body weight' : plan.refWhy === 'your lean mass' ? 'lean mass (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')' : 'healthy weight (' + Math.round(toDisp(plan.ref)) + ' ' + u + ')';
+    h += step(pace.dir !== 'maintain' ? 3 : 2, 'Macros', '<div class="tx-parts">' +
+        item('d-p', 'Protein', plan.protein + ' g', per(plan.proteinPerKg) + ' of ' + refTxt + (plan.custom ? ' · yours' : '')) +
+        item('d-f', 'Fat', plan.fat + ' g', per(plan.fatPerKg) + ' of ' + refTxt + (plan.custom ? ' · yours' : '')) +
+        item('d-c', 'Carbs', plan.carbs + ' g', 'The rest') +
       '</div>' +
-      (plan.refWhy === 'healthy weight for your height' ? '<div class="tx-note"><b>Why not your current weight?</b> Extra body fat doesn\'t need extra protein, so above a BMI of 25 these use the weight at BMI 25 for your height. If you add your body fat in About you, they use your lean mass instead.</div>' : ''));
+      (plan.refWhy === 'healthy weight for your height' ? '<div class="tx-note">Above BMI 25, protein and fat use the weight at BMI 25. Add body fat in About you to use lean mass.</div>' : ''));
     // Extras
     const sp = trainSplit();
-    if (sp) h += step(4, 'Training days', para('On training days (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + ') you get ' + k(Math.round(sp.tx / 10) * 10) + ' kcal more, and ' + k(Math.round(sp.rx / 10) * 10) + ' kcal less on rest days. The week adds up to the same total; only carbs move.'));
-    if (state.settings.flex && state.settings.flex.on) h += step(sp ? 5 : 4, 'Flexible week', para('Your week\'s calories stay the same, but each day moves with what you ate earlier in the week.'));
-    if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'Losing faster than about 1% of your weight a week makes it hard to keep muscle. A slower pace is easier to stick to.' : 'Very low targets make it hard to get enough nutrients. A slower pace would help.') + '</div>';
-    h += '<h3 class="tx-h tx-last">It stays up to date by itself</h3>' + para('Your target updates as your weight changes. Each time you open the app, Setpoint also checks your weight trend against your plan: if you stall while eating on target, your burn was overestimated and the target moves (up to 150 kcal a week). If you ate over your target, it stays. Changing your goal, activity or details updates it straight away.');
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">These are estimates from standard formulas and your own log, not medical advice. Check with a doctor or dietitian before big changes, especially if you\'re pregnant, have a medical condition or a history of eating disorders.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
+    if (sp) h += '<div class="tx-note"><b>Training days</b> (' + weekOrder().filter(function (d) { return sp.days.indexOf(d) >= 0; }).map(function (d) { return dayAbbr(d); }).join(', ') + '): +' + k(Math.round(sp.tx / 10) * 10) + ' kcal, rest days −' + k(Math.round(sp.rx / 10) * 10) + '. Same weekly total.</div>';
+    if (state.settings.flex && state.settings.flex.on) h += '<div class="tx-note"><b>Flexible week:</b> days move with what you ate earlier in the week.</div>';
+    if (plan.warn) h += '<div class="tx-note tx-warn"><b>' + esc(plan.warn) + '.</b> ' + (plan.warn.indexOf('1%') >= 0 ? 'A slower pace keeps more muscle.' : 'A slower pace would help.') + '</div>';
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">How your target is worked out</h2></div>' + h + '<p class="muted-note sv-src">Estimates, not medical advice. See a doctor first if you\'re pregnant, ill or have had an eating disorder.</p><div style="height:12px"></div><button type="button" class="btn primary block" id="txOk">Got it</button>', function (root) {
       $('#txOk', root).addEventListener('click', function () { closeSheet(); });
     });
   }
@@ -8634,13 +8648,6 @@
   }
 
   // How close the formula is to your real burn, and how much to trust that.
-  function estimateCheck(m, c) {
-    if (!m || !m.ready || !c) return '';
-    const diff = m.tdee - c.tdee, pct = Math.round(diff / c.tdee * 100);
-    const conf = m.calDays >= m.needCal * 1.6 && m.span >= m.needSpan * 1.5 ? ['High', 'hi'] : m.calDays >= m.needCal * 1.2 ? ['Medium', 'mid'] : ['Low', 'low'];
-    const verdict = Math.abs(pct) <= 5 ? 'The formula fits you well.' : (pct > 0 ? 'You burn about ' + pct + '% more than the formula thinks.' : 'You burn about ' + Math.abs(pct) + '% less than the formula thinks.') + (conf[1] === 'low' ? ' Keep logging to be sure.' : ' Basing your target on your log would be more accurate.');
-    return '<div class="ec-box"><div class="ec-top"><b>Estimate check</b><span class="src-tag src-' + conf[1] + '">' + conf[0] + ' confidence</span></div><p>' + verdict + '</p><small>' + m.calDays + ' days with calories over ' + m.span + ' days of weigh-ins</small></div>';
-  }
   // Patterns from your own log: what tends to come before a higher or lower weigh-in the next morning.
   function weightInsights() {
     const wBy = {}; state.entries.forEach(function (e) { wBy[dayNum(e.date)] = e.kg; });
@@ -8682,9 +8689,9 @@
     const draw = function (root) {
       const r = weightInsights();
       root.innerHTML = '<div class="sheet-head"><div><div class="label faint">From your own log</div><h2 class="sheet-title" id="sheetTitle">What moves your weight</h2></div></div>' +
-        (r.n < 14 ? '<p class="muted-note fd-empty">Needs a bit more data: days with food logged and a weigh-in the next morning. ' + r.n + ' of 14 so far.</p>' :
+        (r.n < 14 ? '<p class="muted-note fd-empty">Needs 14 days with food logged and a weigh-in the next morning.</p>' :
           '<div class="list">' + r.items.map(function (x) { const up = x.d > 0; return '<div class="row fd-row ins-row"><div class="grow"><div class="row-t">' + esc(x.t) + '</div><div class="row-s" style="white-space:normal">' + esc(x.s) + '</div><div class="ins-note">' + esc(x.note) + '</div></div><span class="ins-v num ' + (Math.abs(x.d) < 0.15 && !x.week ? 'flat' : up ? 'up' : 'down') + '">' + (x.week ? '' : (up ? '+' : '−') + fmtW(Math.abs(x.d)) + ' ' + unit()) + '</span></div>'; }).join('') + '</div>' +
-          '<p class="muted-note sv-src">Next-morning change in your weigh-in, compared between your highest and lowest third of days. ' + r.n + ' days so far.</p>');
+          '<p class="muted-note sv-src">Next-morning weight: your highest third of days vs your lowest.</p>');
     };
     openSheet('<div id="insRoot"></div>', function (body) {
       sheet.classList.add('tall'); const root = $('#insRoot', body); root.innerHTML = '<p class="muted-note fd-empty">Looking for patterns…</p>';
@@ -8747,7 +8754,7 @@
     const draw = function (root) {
       const t = prayerTimes(new Date(), pick.lat, pick.lon, pick.fa);
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Ramadan mode</h2></div>' +
-        '<p class="sheet-text">Breakfast becomes Suhoor and dinner becomes Iftar, and today\'s Diary shows the time to Iftar or to the end of Suhoor, plus how much water is left before Fajr.</p>' +
+        '<p class="sheet-text">Breakfast becomes Suhoor, dinner becomes Iftar, and the Diary shows Iftar time and water left before Fajr.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Ramadan mode</div><span class="switch"><input type="checkbox" id="rmOn"' + (on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         '<div class="field" style="margin-top:14px"><span>City</span><select class="input" id="rmCity">' + RAM_CITIES.map(function (c) { return '<option' + (c[0] === pick.city ? ' selected' : '') + '>' + c[0] + '</option>'; }).join('') + (RAM_CITIES.some(function (c) { return c[0] === pick.city; }) ? '' : '<option selected>' + esc(pick.city || 'My location') + '</option>') + '</select></div>' +
         '<button type="button" class="text-btn" id="rmLoc">Use my location</button>' +
@@ -8781,10 +8788,10 @@
     const draw = function (root) {
       const c = state.settings.cycle;
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Cycle and weight</h2></div>' +
-        '<p class="sheet-text">Many women hold 0.5–2 kg of water in the days before and around their period. With this on, those days are shaded on your weight chart so a jump doesn\'t look like a stall.</p>' +
+        '<p class="sheet-text">Shades period days on your weight chart, since water can add 0.5–2 kg.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Show on the weight chart</div><span class="switch"><input type="checkbox" id="cyOn"' + (c.on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         (c.on ? '<div class="field" style="margin-top:14px"><span>Add a period start</span><div class="sv-amt" style="grid-template-columns:1fr auto;margin:0"><input class="input" type="date" id="cyD" max="' + todayISO() + '" value="' + todayISO() + '" /><button type="button" class="btn soft" id="cyAdd" style="height:50px">Add</button></div></div>' +
-          (c.starts.length ? '<div class="list">' + c.starts.slice().reverse().map(function (d) { return '<div class="row fd-row"><div class="grow row-t">' + esc(fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })) + '</div><button type="button" class="icon-btn me-rm" data-cyx="' + d + '" aria-label="Remove">' + TRASH + '</button></div>'; }).join('') + '</div>' : '<p class="muted-note">Add your last period start to begin. After two or more, the next one is estimated from your own cycle length.</p>') : '') +
+          (c.starts.length ? '<div class="list">' + c.starts.slice().reverse().map(function (d) { return '<div class="row fd-row"><div class="grow row-t">' + esc(fmtDate(d, { weekday: 'short', month: 'short', day: 'numeric', year: 'numeric' })) + '</div><button type="button" class="icon-btn me-rm" data-cyx="' + d + '" aria-label="Remove">' + TRASH + '</button></div>'; }).join('') + '</div>' : '<p class="muted-note">Add your last period start. After two, the next is estimated.</p>') : '') +
         '<p class="muted-note sv-src">Stays private in your Setpoint data. It only changes how the chart is shaded.</p>';
       $('#cyOn', root).addEventListener('change', function () { c.on = this.checked; save(); renderChart(); buzz('light'); draw(root); });
       if ($('#cyAdd', root)) $('#cyAdd', root).addEventListener('click', function () { const v = $('#cyD', root).value; if (!ISO_RE.test(v) || v > todayISO()) return; if (c.starts.indexOf(v) < 0) { c.starts.push(v); c.starts.sort(); } save(); renderChart(); buzz('success'); draw(root); });
@@ -8798,11 +8805,11 @@
     const DAYS = [0, 1, 2, 3, 4, 5, 6].map(function (d) { return [d, new Date(Date.UTC(2024, 0, 7 + d)).toLocaleDateString(undefined, { weekday: 'short', timeZone: 'UTC' })]; });
     const draw = function (root) {
       root.innerHTML = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Flexible week</h2></div>' +
-        '<p class="sheet-text">Your week\'s calories stay the same, but each day adjusts: eat less early in the week and later days get more, or the other way round. You can also give one day extra, like a family lunch.</p>' +
+        '<p class="sheet-text">Your weekly total stays the same: eat less one day and later days get more. You can give one day extra.</p>' +
         '<div class="list"><label class="row"><div class="grow row-t">Flexible week</div><span class="switch"><input type="checkbox" id="fxOn"' + (on ? ' checked' : '') + ' /><i></i></span></label></div>' +
         (on ? '<div class="field" style="margin-top:14px"><span>Bigger day</span><div class="seg fx-days" id="fxBig">' + DAYS.map(function (x) { return '<button type="button" data-v="' + x[0] + '" aria-pressed="' + (extra > 0 && big === x[0]) + '">' + esc(x[1]) + '</button>'; }).join('') + '</div></div>' +
           '<div class="field"><span>Extra on that day</span><div class="seg" id="fxEx">' + [0, 200, 400, 600, 800].map(function (v) { return '<button type="button" data-v="' + v + '" aria-pressed="' + (extra === v) + '">' + (v ? '+' + v : 'None') + '</button>'; }).join('') + '</div></div>' +
-          '<p class="muted-note" style="text-align:start">Days stay between 75% and 135% of your normal target, and never below ' + (state.profile.sex === 'male' ? '1,500' : '1,200') + ' kcal. Days you don\'t log count as on plan.</p>' : '') +
+          '<p class="muted-note" style="text-align:start">' + (state.profile.sex === 'male' ? 'Each day stays at 75–135% of normal, never under 1,500 kcal. Unlogged days count as on target.' : 'Each day stays at 75–135% of normal, never under 1,200 kcal. Unlogged days count as on target.') + '</p>' : '') +
         '<div class="sheet-foot"><button type="button" class="btn primary block" id="fxSave">Save</button></div>';
       $('#fxOn', root).addEventListener('change', function () { on = this.checked; buzz('light'); draw(root); });
       $$('#fxBig button', root).forEach(function (b) { b.addEventListener('click', function () { big = +b.dataset.v; if (!extra) extra = 400; buzz('light'); draw(root); }); });
@@ -8812,25 +8819,24 @@
     openSheet('<div id="fxRoot"></div>', function (body) { draw($('#fxRoot', body)); });
   }
   function realTdeeSheet() {
-    const m = measuredEnergy(), c = calcEnergy(), en = activeEnergy();
+    const m = measuredEnergy(), c = calcEnergy(), en = activeEnergy(), on = adaptive();
     let body;
     if (!m.ready) {
       const pct = (Math.min(m.calDays, m.needCal) / m.needCal + Math.min(m.span, m.needSpan) / m.needSpan) * 50;
-      body = '<p class="sheet-text">Formulas can be 10–15% off. Log everything you eat in the Diary, drinks and snacks too, and Setpoint will work out your real burn and start using it on its own.</p>' +
+      body = '<p class="sheet-text">Log every day and weigh in to learn your real burn.</p>' +
         '<div class="stat-box"><div class="two">' +
-          '<div><div class="num">' + Math.min(m.calDays, m.needCal) + '<span class="unit">/ ' + m.needCal + '</span></div><div class="label faint">days with calories</div></div>' +
+          '<div><div class="num">' + Math.min(m.calDays, m.needCal) + '<span class="unit">/ ' + m.needCal + '</span></div><div class="label faint">days logged</div></div>' +
           '<div><div class="num">' + Math.min(m.span, m.needSpan) + '<span class="unit">/ ' + m.needSpan + '</span></div><div class="label faint">days of weigh-ins</div></div>' +
         '</div><div class="bar" style="margin-top:16px"><i style="width:' + pct.toFixed(0) + '%"></i></div></div>';
     } else {
-      const sv = state.profile.tdeeSource;
+      const gaps = m.coverage < 0.8;
       body = '<div class="num" style="font-size:46px;font-weight:700;letter-spacing:-.04em;line-height:1">' + fmtKcal(roundKcal(m.tdee)) + '<span class="unit">kcal</span></div>' +
-        '<p class="sheet-text" style="margin:10px 0 20px">You ate ' + fmtKcal(roundKcal(m.intake)) + ' a day and your weight moved ' + fmtDelta(m.rateKgWk, 2) + ' ' + unit() + ' a week.' + (c ? ' The formula says ' + fmtKcal(roundKcal(c.tdee)) + '.' : '') + '</p>' + estimateCheck(m, c) +
-        '<div class="field"><span>Base your target on</span><div class="seg" id="rSrc"><button type="button" data-v="auto" aria-pressed="' + (sv === 'auto') + '"' + (c ? '' : ' disabled') + '>Automatic</button><button type="button" data-v="calc" aria-pressed="' + (sv === 'calc') + '"' + (c ? '' : ' disabled') + '>Formula</button><button type="button" data-v="measured" aria-pressed="' + (sv === 'measured') + '">Your log</button></div></div>' +
-        '<p class="muted-note" style="text-align:start">' + (sv === 'auto' ? 'Automatic uses ' + Math.round((en && en.w || 0) * 100) + '% your log right now, more as you log more days.' : sv === 'calc' ? 'Formula plus weekly corrections from your weight trend.' : 'Only your log, nothing from the formula.') + '</p>';
+        '<div class="sv-key wk-key" style="margin:14px 0"><div><b class="num">' + fmtKcal(roundKcal(m.intake)) + '</b><span>Ate a day</span></div><div><b class="num">' + fmtDelta(m.rateKgWk, 2) + '</b><span>' + unit() + ' a week</span></div><div><b class="num">' + m.calDays + '<small>/' + m.days + '</small></b><span>Days logged</span></div>' + (c ? '<div><b class="num">' + fmtKcal(roundKcal(c.tdee)) + '</b><span>Formula</span></div>' : '') + '</div>' +
+        (gaps ? '<div class="tx-note tx-warn">Unlogged days hide what you ate, so this may read low. It counts less until you log more days.</div>' : '') +
+        (m.partial ? '<p class="muted-note" style="text-align:start">Left out ' + m.partial + (m.partial === 1 ? ' day' : ' days') + ' that looked half-logged.</p>' : '') +
+        '<p class="muted-note" style="text-align:start">' + (on ? (en && en.source === 'auto' && en.w < 0.99 ? 'In use · ' + Math.round(en.w * 100) + '% of your burn' : 'In use for your target') : 'Not in use · turn on Learn from my log') + '</p>';
     }
-    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Your real burn</h2></div><p class="sheet-text" style="margin-top:-4px">How many calories you actually burn in a day (also called TDEE), worked out from what you eat and how your weight changes, instead of a formula.</p>' + body, function (root) {
-      if ($('#rSrc', root)) bindSeg(root, 'rSrc', function (v) { state.profile.tdeeSource = v; save(); renderAll(); closeSheet(); realTdeeSheet(); });
-    });
+    openSheet('<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Burn from your log</h2></div><p class="sheet-text" style="margin-top:-4px">What you ate vs how your weight moved, last 4 weeks.</p>' + body);
   }
 
   function whatsNewSheet() {
@@ -9082,13 +9088,13 @@
       html = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Account</h2></div>' +
         '<div class="stat-box" style="display:flex;align-items:center;gap:14px;margin-bottom:18px"><span class="ico" style="border-radius:50%;width:46px;height:46px"><b style="font-size:18px">' + esc((sy.email || '?').charAt(0).toUpperCase()) + '</b></span>' +
         '<div class="grow"><div class="row-t" style="overflow:hidden;text-overflow:ellipsis">' + esc(sy.email || 'Signed in') + '</div><div class="row-s" id="acStatus">' + esc(syncStatus()) + '</div></div></div>' +
-        '<p class="sheet-text" style="margin:0 0 18px">Your weigh-ins and settings sync to this account. Sign in on another device to see them there.</p>' +
+        '<p class="sheet-text" style="margin:0 0 18px">Your data syncs to every device you sign in on.</p>' +
         (needsVerify() ? '<div class="stat-box" id="acVerifyBox" style="margin-bottom:18px"><p class="sheet-text" style="margin:0 0 10px">Verify your email to keep your password safe. Signing in with Google before you verify removes it.</p><button type="button" class="btn soft block" id="acVerify">Send verification email</button></div>' : '') +
         '<div class="btn-row"><button type="button" class="btn soft" id="acOut">Sign out</button><button type="button" class="btn primary" id="acSync">Sync now</button></div>' +
         '<button type="button" class="text-btn ac-del" id="acDel">Delete account and cloud data</button>';
     } else {
       html = '<div class="sheet-head"><h2 class="sheet-title" id="sheetTitle">Sign in</h2></div>' +
-        '<p class="sheet-text">Back up your data and sync it across devices. Your Study Planner account works here too.</p>' +
+        '<p class="sheet-text">Back up your data and sync it across devices.</p>' +
         '<button type="button" class="btn soft block" id="acGoogle" style="margin-bottom:16px;gap:10px">' + GOOGLE + 'Continue with Google</button>' +
         '<div class="field"><input class="input" id="acEmail" type="email" inputmode="email" autocomplete="email" placeholder="Email" aria-label="Email" /></div>' +
         '<div class="field"><input class="input" id="acPass" type="password" autocomplete="current-password" placeholder="Password" aria-label="Password" /></div>' +
@@ -9165,7 +9171,7 @@
 
   // Delete the account and everything synced to it (the copy on this phone stays, so nothing is lost by accident).
   function deleteAccount() {
-    confirmSheet('Delete your account?', 'This permanently deletes your account and everything synced to it: weigh-ins, food log, settings and progress photos. Your Study Planner account is the same account, so it will be deleted too. The data on this phone stays until you clear it in Settings. This can\'t be undone.', 'Delete account', true, function () {
+    confirmSheet('Delete your account?', 'Deletes your account and everything synced to it, for good. Data on this phone stays until you clear it in Settings.', 'Delete account', true, function () {
       toast('Deleting your account…');
       loadFirebase().then(function () {
         const u = user; if (!u) throw { code: 'signed-out' };
@@ -9729,7 +9735,7 @@
     else lockVerify().then(function () { localStorage.removeItem(LOCK_KEY); buzz('light'); toast('App lock is off'); }, function () { el.checked = true; });
   });
   $('#weekStartSel').addEventListener('change', function () { state.settings.weekStart = +this.value; save(); buzz('light'); renderAll(); });
-  $('#autoAdjToggle').addEventListener('change', function () { state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); });
+  $('#autoAdjToggle').addEventListener('change', function () { const snap = snapshot(), was = roundKcal(makePlan(activeEnergy()) ? makePlan(activeEnergy()).target : 0); state.settings.autoAdjust = this.checked; save(); buzz('medium'); renderAll(); const pl = makePlan(activeEnergy()); toast((this.checked ? 'Learning from your log' : 'Formula only') + (pl && roundKcal(pl.target) !== was ? ' · target ' + fmtKcal(roundKcal(pl.target)) + ' kcal' : ''), function () { restore(snap); }); });
 
   document.addEventListener('click', function (e) {
     if (sheet.contains(e.target)) return; // sheets bind their own controls
@@ -9999,6 +10005,8 @@
   if (shortcut) history.replaceState(null, '', location.pathname);
   // Graphite is the main theme now: switch once from the old default (Emerald). Any theme you choose after that stays.
   if (!state.ui.smartBurn) { state.ui.smartBurn = true; if (state.profile.tdeeSource === 'calc') state.profile.tdeeSource = 'auto'; save(); renderAll(); }
+  // Burn: one switch now (Learn from my log). Formula users keep the formula; "Your log" users keep learning.
+  if (!state.ui.oneBurn) { state.ui.oneBurn = true; const s0 = state.profile.tdeeSource; if (s0 === 'calc') state.settings.autoAdjust = false; else if (s0 === 'measured') state.settings.autoAdjust = true; state.profile.tdeeSource = 'auto'; save(); renderAll(); }
   if (!state.ui.graphite) { state.ui.graphite = true; if (state.settings.style === 'classic') { state.settings.style = 'graphite'; applyAppearance(); renderAll(); } save(); }
   if (applyRepeats()) renderAll();
   // Repeat items with a set time are added when that time comes, even with the app open.

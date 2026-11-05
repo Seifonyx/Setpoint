@@ -36,9 +36,15 @@
       const ps = p.dir === 'maintain' ? 'Keep your weight steady' : (p.dir === 'lose' ? 'Lose ' : 'Gain ') + RATES[unit()][p.dir][p.i] + ' ' + unit() + ' a week';
       h += row('goal', '', FLAG, 'ic-c-blue', 'Goal', esc(ps), g ? fmtW(g) + ' ' + unit() : 'Set');
     }
-    h += row('burn', '', FLAME, 'ic-c-orange', 'Energy expenditure', en ? esc(en.source === 'measured' ? 'From your food log' : en.source === 'auto' && (en.w > 0) ? 'Learned from you' : 'Estimated for you') : 'Activity, age, height and weight', en ? fmtKcal(roundKcal(en.tdee)) : '');
+    h += row('burn', '', FLAME, 'ic-c-orange', 'Energy expenditure', en ? esc(burnLabel(en)) : 'Activity, age, height and weight', en ? fmtKcal(roundKcal(en.tdee)) : '');
     menu.innerHTML = h;
     renderNutTable();
+  }
+  // Where today's burn comes from, in a few words.
+  function burnLabel(en) {
+    if (en.source === 'measured') return 'From your log';
+    if (en.source === 'calc') return 'Formula';
+    return en.w >= 0.99 ? 'From your log' : en.w > 0 ? 'Learning · ' + Math.round(en.w * 100) + '% your log' : 'Formula for now';
   }
   function renderEnergy() {
     const p = state.profile, en = activeEnergy(), plan = makePlan(en), m = measuredEnergy(), kgNow = currentKg();
@@ -54,7 +60,7 @@
         '<p class="tg-empty-s">' + (needD ? 'Add your age, sex and height' + (needW ? ', then log your weight.' : '.') : 'Log your weight to finish.') + '</p>' +
         '<button type="button" class="btn primary block" data-action="' + (needD ? 'details' : 'log') + '">' + (needD ? 'Get started' : 'Log weight') + '</button>';
     } else {
-      const c = en.calc, learned = en.source === 'measured' ? 'From your log' : en.source === 'auto' && (en.w > 0 || Math.abs(en.tdee - c.tdee) >= 10) ? 'Learned from you' : 'Estimated';
+      const c = en.calc, learned = burnLabel(en);
       let h = '<button type="button" class="tg-burn-top" data-action="tg-explain"><div class="grow"><div class="tg-k">Your daily burn</div>' +
         '<div class="tg-burn-v num">' + fmtKcal(roundKcal(en.tdee)) + '<span class="unit">kcal</span></div>' +
         '<div class="tg-burn-s">' + esc(learned) + (c ? ' · ' + esc(c.level) : '') + '</div></div>' + CHEV + '</button>';
@@ -97,8 +103,11 @@
     } else $('#detailsSub').textContent = 'Not set';
     const own = Object.keys(state.profile.nutT || {}).length;
     $('#nutTSub').textContent = own ? own + (own === 1 ? ' set by you' : ' set by you') : state.profile.sex && state.profile.birthYear ? 'Recommended for your age and sex' : 'Add your age and sex for personal targets';
-    $('#realSub').textContent = m.ready ? (en && (en.source === 'measured' || en.source === 'auto' && en.w > 0) ? 'From your food log · in use' : 'From your food log · ready') : state.settings.trackCalories ? 'Learning from your food log' : 'Off';
-    $('#realVal').textContent = m.ready ? fmtKcal(roundKcal(m.tdee)) : state.settings.trackCalories ? Math.min(m.calDays, m.needCal) + '/' + m.needCal : '';
+    const on = adaptive();
+    $('#autoAdjToggle').checked = on;
+    $('#adaptSub').textContent = on ? 'Food log + weigh-ins' : 'Formula only';
+    $('#realSub').textContent = m.ready ? Math.round(m.coverage * 100) + '% of days logged' + (on ? '' : ' · not in use') : 'Learning · ' + Math.min(m.calDays, m.needCal) + '/' + m.needCal + ' days';
+    $('#realVal').textContent = m.ready ? fmtKcal(roundKcal(m.tdee)) : '';
     renderTgHome(plan, en);
   }
 

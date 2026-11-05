@@ -183,7 +183,7 @@
     }
     const got = rows.filter(function (r) { return r.first != null && r.d < today; });
     const hm = function (m) { const d = new Date(); d.setHours(Math.floor(m / 60), Math.round(m % 60), 0, 0); return fmtClock(d.getTime()); };
-    if (got.length < 2) return '<div class="card"><div class="card-head"><h2 class="card-title">Eating window</h2></div><p class="muted-note">Food you log gets a time. After a few days, you\'ll see when you usually start and stop eating.</p></div>';
+    if (got.length < 2) return '<div class="card"><div class="card-head"><h2 class="card-title">Eating window</h2></div><p class="muted-note">Log a few days to see when you usually start and stop eating.</p></div>';
     const avg = function (k) { return got.reduce(function (a, r) { return a + r[k]; }, 0) / got.length; };
     const gaps = []; rows.forEach(function (r, i) { const nx = rows[i + 1]; if (r.last != null && nx && nx.first != null) gaps.push(24 * 60 - r.last + nx.first); });
     const win = avg('last') - avg('first'), gap = gaps.length ? gaps.reduce(function (a, x) { return a + x; }, 0) / gaps.length : null;

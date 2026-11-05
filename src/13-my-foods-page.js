@@ -283,7 +283,7 @@
     const range = function () { return n === 1 ? fmtDate(d, { weekday: 'long', month: 'short', day: 'numeric' }) : fmtDate(d, { month: 'short', day: 'numeric' }) + ' – ' + fmtDate(isoFromDay(dayNum(d) + n - 1), { month: 'short', day: 'numeric' }); };
     const draw = function (root) {
       root.innerHTML = '<div class="sheet-head"><div><div class="label faint">' + esc(relDate(d)) + '</div><h2 class="sheet-title" id="sheetTitle">Take a break</h2></div></div>' +
-        '<p class="sheet-text">Eat at maintenance instead of your usual target. A short break can help with energy, training and sticking with your plan.</p>' +
+        '<p class="sheet-text">Eat at maintenance for the day. Can help energy and training.</p>' +
         '<div class="label faint fd-sec">How many days?</div>' +
         '<div class="rates br-days">' + [1, 2, 3, 5, 7, 14].map(function (k) { return '<button type="button" data-brk="' + k + '" aria-pressed="' + (k === n) + '">' + (k === 1 ? '1 day' : k + ' days') + '</button>'; }).join('') + '</div>' +
         '<div class="stat-box br-sum"><b>' + esc(range()) + '</b><span>' + (n === 1 ? 'A refeed day: the extra calories come from carbs' : 'A diet break: the extra calories are split between carbs and fat') + '</span></div>' +
@@ -467,7 +467,7 @@
     const cur = state.settings.train || { days: [] }, t = state.profile.training;
     let days = cur.days.slice();
     openSheet('<div class="sheet-head"><div><h2 class="sheet-title" id="sheetTitle">Training days</h2></div></div>' +
-      '<p class="sheet-text">Pick the days you train. You eat more on those days and less on rest days. Your weekly total stays the same.</p>' +
+      '<p class="sheet-text">More on training days, less on rest days. Same weekly total.</p>' +
       '<div class="day-chips" id="trDays">' + weekOrder().map(function (d) { return '<button type="button" data-v="' + d + '" aria-pressed="' + (days.indexOf(d) >= 0) + '">' + dayAbbr(d) + '</button>'; }).join('') + '</div>' +
       '<div class="stat-box tr-split" id="trNote"></div>' +
       '<div class="sheet-foot"><button type="button" class="btn primary block" id="trSave">Save</button></div>',

@@ -60,7 +60,6 @@
     $('#numpadToggle').checked = !!s.numpad;
     $('#oledToggle').checked = !!s.oled;
     $('#explodeToggle').checked = !!s.explode;
-    $('#autoAdjToggle').checked = s.autoAdjust;
     $('#fastToggle').checked = s.fasting;
     $('#lockRow').hidden = !lockSupported(); $('#lockToggle').checked = !!lockCfg();
     if ($('#themeVal')) $('#themeVal').textContent = (THEMES.find(function (t) { return t[0] === s.style; }) || THEMES[0])[1];
