@@ -1,0 +1,41 @@
+{
+  "name": "Setpoint",
+  "identifier": "app.setpoint.source",
+  "sourceURL": "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/sidestore.json",
+  "iconURL": "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+  "website": "https://setpoint-tracker.web.app",
+  "tintColor": "1C1C1E",
+  "apps": [
+    {
+      "name": "Setpoint",
+      "bundleIdentifier": "app.setpoint.ios",
+      "developerName": "Seifonyx",
+      "subtitle": "Food, nutrition and weight tracker",
+      "tintColor": "1C1C1E",
+      "localizedDescription": "Track food, nutrients and your weight trend, with targets that learn from your results.",
+      "iconURL": "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+      "screenshots": [
+        "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/diary-light.png",
+        "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/progress-light.png",
+        "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/foods-light.png",
+        "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/you-light.png"
+      ],
+      "versions": [
+        {
+          "version": "0.1.3",
+          "buildVersion": "3",
+          "date": "2026-11-08T13:40:37Z",
+          "localizedDescription": "Build 3.",
+          "downloadURL": "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/Setpoint.ipa",
+          "size": 372287,
+          "minOSVersion": "26.0"
+        }
+      ],
+      "appPermissions": {
+        "entitlements": [],
+        "privacy": {}
+      }
+    }
+  ],
+  "news": []
+}
