@@ -102,5 +102,7 @@ jobs:
         if: failure()
         run: |
           gh release delete ios-log -y --cleanup-tag || true
-          touch ios/build.log ios/sim.log
-          gh release create ios-log ios/build.log ios/sim.log --prerelease --title "iOS build log (failed)" --notes "Build ${{ github.run_number }} failed."
+          git push origin :refs/tags/ios-log || true
+          mkdir -p logs && cp ios/build.log ios/sim.log logs/ 2>/dev/null || true
+          ls logs | grep -q . || echo "No build output (failed before compiling)" > logs/build.log
+          gh release create ios-log logs/* --target "$GITHUB_SHA" --prerelease --title "iOS build log (failed)" --notes "Build ${{ github.run_number }} failed."
