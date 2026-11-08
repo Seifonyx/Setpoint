@@ -1,0 +1,386 @@
+{
+  "sourceLanguage": "en",
+  "strings": {
+    "Oats": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شوفان"
+          }
+        }
+      }
+    },
+    "Banana": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موز"
+          }
+        }
+      }
+    },
+    "Chicken rice": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رز بالفراخ"
+          }
+        }
+      }
+    },
+    "%lld kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld سعرة"
+          }
+        }
+      }
+    },
+    "/ %lld kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ %lld سعرة"
+          }
+        }
+      }
+    },
+    "%lld left": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld متبقي"
+          }
+        }
+      }
+    },
+    "Coming in Phase 4": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قريبًا في المرحلة 4"
+          }
+        }
+      }
+    },
+    "Custom foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلات خاصة"
+          }
+        }
+      }
+    },
+    "Native preview · Phase 0": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معاينة التطبيق الأصلي · المرحلة 0"
+          }
+        }
+      }
+    },
+    "Diary": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوميات"
+          }
+        }
+      }
+    },
+    "Progress": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التقدّم"
+          }
+        }
+      }
+    },
+    "Foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأطعمة"
+          }
+        }
+      }
+    },
+    "You": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت"
+          }
+        }
+      }
+    },
+    "Today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم"
+          }
+        }
+      }
+    },
+    "Add": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة"
+          }
+        }
+      }
+    },
+    "Add food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة أكل"
+          }
+        }
+      }
+    },
+    "Delete": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف"
+          }
+        }
+      }
+    },
+    "Add another": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف واحدًا آخر"
+          }
+        }
+      }
+    },
+    "Copy to another day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ ليوم آخر"
+          }
+        }
+      }
+    },
+    "Calories": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات"
+          }
+        }
+      }
+    },
+    "Breakfast": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفطار"
+          }
+        }
+      }
+    },
+    "Lunch": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الغدا"
+          }
+        }
+      }
+    },
+    "Dinner": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العشا"
+          }
+        }
+      }
+    },
+    "Snacks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سناكس"
+          }
+        }
+      }
+    },
+    "Range": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفرق"
+          }
+        }
+      }
+    },
+    "Weight trend": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاه الوزن"
+          }
+        }
+      }
+    },
+    "Your foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أطعمتك"
+          }
+        }
+      }
+    },
+    "Meals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجبات"
+          }
+        }
+      }
+    },
+    "Recipes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوصفات"
+          }
+        }
+      }
+    },
+    "Search foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن أكل"
+          }
+        }
+      }
+    },
+    "Settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإعدادات"
+          }
+        }
+      }
+    },
+    "Plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الخطة"
+          }
+        }
+      }
+    },
+    "Energy expenditure": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صرف الطاقة"
+          }
+        }
+      }
+    },
+    "Adaptive expenditure": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحرق التكيّفي"
+          }
+        }
+      }
+    },
+    "Version": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإصدار"
+          }
+        }
+      }
+    },
+    "Weight chart": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رسم الوزن"
+          }
+        }
+      }
+    },
+    "Nutrition history": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجل التغذية"
+          }
+        }
+      }
+    },
+    "Body measurements": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قياسات الجسم"
+          }
+        }
+      }
+    }
+  },
+  "version": "1.0"
+}

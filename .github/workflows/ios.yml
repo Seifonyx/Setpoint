@@ -1,0 +1,71 @@
+# Builds the native iPhone app on GitHub's Mac servers: an unsigned .ipa for SideStore, plus simulator screenshots.
+# Everything lands on the "ios-latest" release (a fixed download link); a failed build posts its log to "ios-log".
+name: iOS
+on:
+  push:
+    branches: [main]
+    paths: ['ios/**', '.github/workflows/ios.yml']
+  workflow_dispatch:
+permissions:
+  contents: write
+concurrency:
+  group: ios
+  cancel-in-progress: true
+jobs:
+  build:
+    runs-on: macos-26
+    timeout-minutes: 45
+    env:
+      GH_TOKEN: ${{ github.token }}
+    steps:
+      - uses: actions/checkout@v4
+      - name: Xcode 26
+        run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
+      - name: Generate the Xcode project
+        run: brew install xcodegen && cd ios && xcodegen generate
+      - name: Build for iPhone (unsigned, SideStore signs it)
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Release -sdk iphoneos \
+            -destination 'generic/platform=iOS' -derivedDataPath build \
+            CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
+          mkdir -p out/Payload
+          cp -R build/Build/Products/Release-iphoneos/Setpoint.app out/Payload/
+          (cd out && zip -qry Setpoint.ipa Payload && rm -rf Payload)
+      - name: Screenshots in the iPhone simulator
+        run: |
+          cd ios
+          set -o pipefail
+          xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Debug -sdk iphonesimulator \
+            -destination 'generic/platform=iOS Simulator' -derivedDataPath simbuild CODE_SIGNING_ALLOWED=NO build 2>&1 | tee sim.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
+          UDID=$(xcrun simctl list devices available -j | python3 -c '
+          import json, sys
+          d = json.load(sys.stdin)["devices"]
+          phones = [x for k, v in sorted(d.items(), reverse=True) if "iOS-26" in k for x in v if x["name"].startswith("iPhone")]
+          pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
+          print((pro or phones)[0]["udid"])')
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
+          xcrun simctl install "$UDID" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
+          for mode in light dark; do
+            xcrun simctl ui "$UDID" appearance $mode
+            for tab in diary progress foods you; do
+              xcrun simctl launch "$UDID" app.setpoint.ios -tab $tab; sleep 4
+              xcrun simctl io "$UDID" screenshot "out/$tab-$mode.png"
+              xcrun simctl terminate "$UDID" app.setpoint.ios || true
+            done
+          done
+          xcrun simctl launch "$UDID" app.setpoint.ios -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; sleep 4
+          xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png
+      - name: Publish to the ios-latest release
+        run: |
+          gh release delete ios-latest -y --cleanup-tag || true
+          gh release create ios-latest ios/out/* --prerelease --title "Setpoint for iPhone (latest build)" \
+            --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
+      - name: Post the log if the build failed
+        if: failure()
+        run: |
+          gh release delete ios-log -y --cleanup-tag || true
+          touch ios/build.log ios/sim.log
+          gh release create ios-log ios/build.log ios/sim.log --prerelease --title "iOS build log (failed)" --notes "Build ${{ github.run_number }} failed."
