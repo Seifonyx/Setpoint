@@ -380,6 +380,786 @@
           }
         }
       }
+    },
+    "%@ options": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خيارات %@"
+          }
+        }
+      }
+    },
+    "/ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ %@"
+          }
+        }
+      }
+    },
+    "/ %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/ %@ جم"
+          }
+        }
+      }
+    },
+    "%@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة"
+          }
+        }
+      }
+    },
+    "Goal %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف %@"
+          }
+        }
+      }
+    },
+    "Remove %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شيل %@"
+          }
+        }
+      }
+    },
+    "Removed %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتشال %@"
+          }
+        }
+      }
+    },
+    "Copied %lld foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتنسخ %lld أكلات"
+          }
+        }
+      }
+    },
+    "Imported %lld days and %lld weigh-ins.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتستورد %lld يوم و%lld وزنة."
+          }
+        }
+      }
+    },
+    "1M": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شهر"
+          }
+        }
+      }
+    },
+    "3M": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٣ شهور"
+          }
+        }
+      }
+    },
+    "6M": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٦ شهور"
+          }
+        }
+      }
+    },
+    "1Y": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سنة"
+          }
+        }
+      }
+    },
+    "88.7 kg": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "88.7 كجم"
+          }
+        }
+      }
+    },
+    "Bring your diary over": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل يومياتك"
+          }
+        }
+      }
+    },
+    "In the Setpoint web app, open Settings › Back up, then import that file here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في تطبيق Setpoint على الويب، افتح الإعدادات › نسخة احتياطية، وبعدين استورد الملف هنا."
+          }
+        }
+      }
+    },
+    "Import backup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد نسخة احتياطية"
+          }
+        }
+      }
+    },
+    "Import from the web app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد من تطبيق الويب"
+          }
+        }
+      }
+    },
+    "Choose day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر اليوم"
+          }
+        }
+      }
+    },
+    "Copy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ"
+          }
+        }
+      }
+    },
+    "Copy to": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ إلى"
+          }
+        }
+      }
+    },
+    "Copy food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ الأكلة"
+          }
+        }
+      }
+    },
+    "Copy meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ الوجبة"
+          }
+        }
+      }
+    },
+    "Couldn't back up": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "معرفناش نعمل نسخة احتياطية"
+          }
+        }
+      }
+    },
+    "Day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم"
+          }
+        }
+      }
+    },
+    "Days logged": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام متسجلة"
+          }
+        }
+      }
+    },
+    "Delete this weigh-in?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحذف الوزنة دي؟"
+          }
+        }
+      }
+    },
+    "Delete weigh-in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الوزنة"
+          }
+        }
+      }
+    },
+    "Everything on this iPhone is replaced with the backup.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل حاجة على الآيفون ده هتتبدّل بالنسخة الاحتياطية."
+          }
+        }
+      }
+    },
+    "For bloating, a salty meal or travel. It stays in your history.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للانتفاخ أو أكلة مالحة أو سفر. بتفضل في سجلك."
+          }
+        }
+      }
+    },
+    "Import a backup made in the web app (Settings › Back up). Backups made here can be restored in the web app too.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استورد نسخة احتياطية من تطبيق الويب (الإعدادات › نسخة احتياطية). والنسخ اللي بتتعمل هنا تقدر ترجّعها في تطبيق الويب كمان."
+          }
+        }
+      }
+    },
+    "Replace the data on this iPhone?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تستبدل البيانات اللي على الآيفون ده؟"
+          }
+        }
+      }
+    },
+    "Replace with backup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استبدال بالنسخة الاحتياطية"
+          }
+        }
+      }
+    },
+    "Your targets appear here once they're set in the web app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أهدافك هتظهر هنا لما تتحدد في تطبيق الويب."
+          }
+        }
+      }
+    },
+    "Weigh-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزنات"
+          }
+        }
+      }
+    },
+    "Your data": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بياناتك"
+          }
+        }
+      }
+    },
+    "Nothing logged": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة متسجلة"
+          }
+        }
+      }
+    },
+    "Left": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقي"
+          }
+        }
+      }
+    },
+    "Over": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة"
+          }
+        }
+      }
+    },
+    "Log": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل"
+          }
+        }
+      }
+    },
+    "Previous day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم السابق"
+          }
+        }
+      }
+    },
+    "Next day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم التالي"
+          }
+        }
+      }
+    },
+    "That isn't a Setpoint backup.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ده مش ملف نسخة احتياطية من Setpoint."
+          }
+        }
+      }
+    },
+    "Meal cleared": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجبة اتمسحت"
+          }
+        }
+      }
+    },
+    "Weight saved": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن اتحفظ"
+          }
+        }
+      }
+    },
+    "Weight deleted": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن اتحذف"
+          }
+        }
+      }
+    },
+    "Water added": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المية اتضافت"
+          }
+        }
+      }
+    },
+    "Added from yesterday": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتضاف من امبارح"
+          }
+        }
+      }
+    },
+    "Log weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الوزن"
+          }
+        }
+      }
+    },
+    "Edit weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل الوزن"
+          }
+        }
+      }
+    },
+    "Yesterday": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أمس"
+          }
+        }
+      }
+    },
+    "Tomorrow": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بكرة"
+          }
+        }
+      }
+    },
+    "Glass": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كوباية"
+          }
+        }
+      }
+    },
+    "Can": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علبة"
+          }
+        }
+      }
+    },
+    "Bottle": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زجاجة"
+          }
+        }
+      }
+    },
+    "Jug": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إبريق"
+          }
+        }
+      }
+    },
+    "kg": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كجم"
+          }
+        }
+      }
+    },
+    "lb": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رطل"
+          }
+        }
+      }
+    },
+    "Add a glass of water": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف كوباية مياه"
+          }
+        }
+      }
+    },
+    "Adjusted for this day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متعدّلة لليوم ده"
+          }
+        }
+      }
+    },
+    "Back up": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ احتياطي"
+          }
+        }
+      }
+    },
+    "Cancel": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إلغاء"
+          }
+        }
+      }
+    },
+    "Copy from yesterday": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخ من أمس"
+          }
+        }
+      }
+    },
+    "Done": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم"
+          }
+        }
+      }
+    },
+    "Exclude from trend": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استبعاد من الاتجاه"
+          }
+        }
+      }
+    },
+    "Excluded": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مستبعد"
+          }
+        }
+      }
+    },
+    "Mark as eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علّم كمأكول"
+          }
+        }
+      }
+    },
+    "Move to": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انقل إلى"
+          }
+        }
+      }
+    },
+    "Note": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملاحظة"
+          }
+        }
+      }
+    },
+    "Planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متخططة"
+          }
+        }
+      }
+    },
+    "Quick add": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة سريعة"
+          }
+        }
+      }
+    },
+    "Remove all": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة الكل"
+          }
+        }
+      }
+    },
+    "Repeat item": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر متكرر"
+          }
+        }
+      }
+    },
+    "Save": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حفظ"
+          }
+        }
+      }
+    },
+    "Undo": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تراجع"
+          }
+        }
+      }
+    },
+    "Water": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المياه"
+          }
+        }
+      }
+    },
+    "Weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن"
+          }
+        }
+      }
+    },
+    "OK": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمام"
+          }
+        }
+      }
     }
   },
   "version": "1.0"

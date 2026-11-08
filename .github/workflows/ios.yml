@@ -49,16 +49,19 @@ jobs:
           xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b
           xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl install "$UDID" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
+          shot() { xcrun simctl launch "$UDID" app.setpoint.ios -demo YES "$@"; sleep 5; }
           for mode in light dark; do
             xcrun simctl ui "$UDID" appearance $mode
             for tab in diary progress foods you; do
-              xcrun simctl launch "$UDID" app.setpoint.ios -tab $tab; sleep 4
+              shot -tab $tab
               xcrun simctl io "$UDID" screenshot "out/$tab-$mode.png"
               xcrun simctl terminate "$UDID" app.setpoint.ios || true
             done
           done
-          xcrun simctl launch "$UDID" app.setpoint.ios -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; sleep 4
-          xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png
+          shot -tab diary -sheet weight; xcrun simctl io "$UDID" screenshot out/weight-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          xcrun simctl ui "$UDID" appearance light
+          xcrun simctl launch "$UDID" app.setpoint.ios -tab diary; sleep 5; xcrun simctl io "$UDID" screenshot out/empty-light.png
       - name: Publish to the ios-latest release
         run: |
           gh release delete ios-latest -y --cleanup-tag || true

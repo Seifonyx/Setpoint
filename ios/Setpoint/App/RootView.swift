@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// The four main sections in the iOS 26 tab bar (real Liquid Glass, drawn by the system).
 enum AppTab: String, Hashable, CaseIterable {
@@ -6,13 +7,17 @@ enum AppTab: String, Hashable, CaseIterable {
 }
 
 struct RootView: View {
+    @State private var store = Store()
     // Screenshots on the build server open a given tab with the launch argument `-tab progress`.
     @State private var tab: AppTab = AppTab(rawValue: UserDefaults.standard.string(forKey: "tab") ?? "") ?? .diary
+    @State private var importing = false
+    @State private var pending: Data?
+    @State private var message: String?
 
     var body: some View {
         TabView(selection: $tab) {
             Tab("Diary", systemImage: "book.pages", value: AppTab.diary) {
-                DiaryView()
+                DiaryView(importing: $importing)
             }
             // bars read the same in Arabic (the trend arrow flipped and looked like going down)
             Tab("Progress", systemImage: "chart.bar.xaxis", value: AppTab.progress) {
@@ -22,10 +27,37 @@ struct RootView: View {
                 FoodsView()
             }
             Tab("You", systemImage: "person.crop.circle", value: AppTab.you) {
-                YouView()
+                YouView(importing: $importing)
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .environment(store)
+        .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
+            guard case .success(let url) = result else { return }
+            let ok = url.startAccessingSecurityScopedResource()
+            defer { if ok { url.stopAccessingSecurityScopedResource() } }
+            if let data = try? Data(contentsOf: url) {
+                if store.isEmpty { apply(data) } else { pending = data }
+            }
+        }
+        .confirmationDialog("Replace the data on this iPhone?", isPresented: Binding(get: { pending != nil }, set: { if !$0 { pending = nil } }), titleVisibility: .visible) {
+            Button("Replace with backup", role: .destructive) { if let d = pending { apply(d) }; pending = nil }
+        } message: {
+            Text("Everything on this iPhone is replaced with the backup.")
+        }
+        .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
+            Button("OK", role: .cancel) {}
+        }
+    }
+
+    private func apply(_ data: Data) {
+        do {
+            try store.importBackup(data)
+            message = String(localized: "Imported \(store.food.keys.count) days and \(store.entries.count) weigh-ins.")
+            tab = .diary
+        } catch {
+            message = error.localizedDescription
+        }
     }
 }
 
