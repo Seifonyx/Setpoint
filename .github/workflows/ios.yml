@@ -29,6 +29,7 @@ jobs:
           set -o pipefail
           xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Release -sdk iphoneos \
             -destination 'generic/platform=iOS' -derivedDataPath build \
+            MARKETING_VERSION=0.1.${{ github.run_number }} CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
           mkdir -p out/Payload
           cp -R build/Build/Products/Release-iphoneos/Setpoint.app out/Payload/
@@ -63,6 +64,40 @@ jobs:
           gh release delete ios-latest -y --cleanup-tag || true
           gh release create ios-latest ios/out/* --prerelease --title "Setpoint for iPhone (latest build)" \
             --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
+      - name: Update the SideStore source (sidestore.json)
+        run: |
+          python3 - <<'PY'
+          import json, os, datetime
+          run = os.environ["GITHUB_RUN_NUMBER"]
+          raw = "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/"
+          rel = "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/"
+          src = {
+            "name": "Setpoint", "identifier": "app.setpoint.source", "sourceURL": raw + "sidestore.json",
+            "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+            "website": "https://setpoint-tracker.web.app", "tintColor": "1C1C1E",
+            "apps": [{
+              "name": "Setpoint", "bundleIdentifier": "app.setpoint.ios", "developerName": "Seifonyx",
+              "subtitle": "Food, nutrition and weight tracker", "tintColor": "1C1C1E",
+              "localizedDescription": "Track food, nutrients and your weight trend, with targets that learn from your results.",
+              "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+              "screenshots": [rel + n for n in ("diary-light.png", "progress-light.png", "foods-light.png", "you-light.png")],
+              "versions": [{
+                "version": "0.1." + run, "buildVersion": run,
+                "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "localizedDescription": "Build " + run + ".", "downloadURL": rel + "Setpoint.ipa",
+                "size": os.path.getsize("ios/out/Setpoint.ipa"), "minOSVersion": "26.0"
+              }],
+              "appPermissions": {"entitlements": [], "privacy": {}}
+            }],
+            "news": []
+          }
+          json.dump(src, open("sidestore.json", "w"), indent=2)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sidestore.json
+          git commit -m "SideStore source: build ${{ github.run_number }}" || exit 0
+          git pull --rebase origin main && git push origin HEAD:main
       - name: Post the log if the build failed
         if: failure()
         run: |

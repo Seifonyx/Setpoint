@@ -14,7 +14,7 @@ struct RootView: View {
             Tab("Diary", systemImage: "book.pages", value: AppTab.diary) {
                 DiaryView()
             }
-            Tab("Progress", systemImage: "chart.line.uptrend.xyaxis", value: AppTab.progress) {
+            Tab("Progress", systemImage: "chart.bar.xaxis", value: AppTab.progress) // bars read the same in Arabic (the trend arrow flipped and looked like going down) {
                 ProgressScreen()
             }
             Tab("Foods", systemImage: "fork.knife", value: AppTab.foods) {
