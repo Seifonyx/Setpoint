@@ -26,7 +26,8 @@ enum Fmt {
         (unit == "lb" ? kg * 2.20462 : kg).formatted(.number.precision(.fractionLength(1)))
     }
     static func ml(_ v: Double) -> String {
-        v >= 1000 ? (v / 1000).formatted(.number.precision(.fractionLength(0...2))) + " L" : Int(v).formatted(.number) + " ml"
+        v >= 1000 ? (v / 1000).formatted(.number.precision(.fractionLength(0...2))) + " " + String(localized: "L")
+            : Int(v).formatted(.number) + " " + String(localized: "ml")
     }
     static func amount(_ qty: Double, _ unit: String) -> String {
         qty.formatted(.number.precision(.fractionLength(0...2))) + " " + unit

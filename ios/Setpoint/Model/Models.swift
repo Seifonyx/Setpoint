@@ -26,6 +26,10 @@ struct FoodItem: Identifiable, Equatable, Sendable {
         set { if newValue { raw["plan"] = .bool(true) } else { raw.removeValue(forKey: "plan") } }
     }
     var isRepeat: Bool { raw["rep"]?.string != nil }
+    /// A saved meal logged as one entry carries its foods (name and calories of each).
+    var mealContents: [(name: String, kcal: Double)] {
+        (raw["mi"]?.array ?? []).compactMap { $0.object }.map { ($0["name"]?.string ?? "", $0["kcal"]?.number ?? 0) }
+    }
     var isAdjusted: Bool { raw["adj"]?.bool == true || (raw["rc"] != nil && (ref ?? "").hasPrefix("r")) }
     /// Calories saved with a weigh-in by older versions: shown on their own, not in a meal.
     var isDailyTotal: Bool { id.hasPrefix("w-") || (ref == nil && name == "Daily total") }

@@ -7,6 +7,7 @@ struct DiaryView: View {
     @State private var waterSheet = false
     @State private var pickDay = false
     @State private var copying: [FoodItem]?
+    @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
 
     var body: some View {
@@ -25,6 +26,8 @@ struct DiaryView: View {
                 }
                 Section {
                     SummaryCard(totals: store.totals(day), plan: store.plan(day))
+                        .contentShape(.rect)
+                        .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded(swiped)) // swipe the card to change day
                 }
                 Section {
                     HStack(spacing: 12) {
@@ -33,6 +36,18 @@ struct DiaryView: View {
                     }
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
+                }
+                let totalsSaved = store.dailyTotals(day)
+                if !totalsSaved.isEmpty {
+                    Section {
+                        ForEach(totalsSaved) { f in
+                            LabeledContent { Text(Fmt.kcal(f.kcal)).monospacedDigit() } label: {
+                                Text("Daily total")
+                                Text("Calories saved with your weigh-in")
+                            }
+                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } } }
+                        }
+                    }
                 }
                 ForEach(store.meals) { meal in
                     MealSection(meal: meal, day: day, copying: $copying)
@@ -61,6 +76,14 @@ struct DiaryView: View {
             .sensoryFeedback(.selection, trigger: day)
             .task { if UserDefaults.standard.string(forKey: "sheet") == "weight" { weightSheet = true } } // build-server screenshots
         }
+    }
+
+    private func swiped(_ v: DragGesture.Value) {
+        let dx = v.translation.width
+        guard abs(dx) > 60, abs(dx) > abs(v.translation.height) * 1.5 else { return }
+        let forward = direction == .rightToLeft ? dx > 0 : dx < 0 // swipe towards the start of the line for the next day
+        if forward && day >= Day.add(Day.today, 14) { return }
+        step(forward ? 1 : -1)
     }
 
     private func step(_ n: Int) {

@@ -6,6 +6,7 @@ struct MealSection: View {
     let meal: MealCategory
     let day: String
     @Binding var copying: [FoodItem]?
+    @State private var open: FoodItem?
 
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
@@ -13,7 +14,8 @@ struct MealSection: View {
     var body: some View {
         Section {
             ForEach(foods) { food in
-                FoodRow(food: food, day: day)
+                Button { open = food } label: { FoodRow(food: food, day: day) }
+                    .buttonStyle(.plain)
                     .swipeActions(edge: .trailing) {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
@@ -59,6 +61,8 @@ struct MealSection: View {
                 .accessibilityLabel(Text("\(meal.name) options"))
             }
         }
+        .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day) }
+        .task { if UserDefaults.standard.string(forKey: "sheet") == "food", meal.key == store.meals.first?.key { open = foods.first } } // build-server screenshots
     }
 }
 
@@ -82,6 +86,7 @@ struct FoodRow: View {
             Spacer()
             Text(Fmt.kcal(food.kcal)).monospacedDigit().foregroundStyle(.secondary)
         }
+        .contentShape(.rect)
         .opacity(food.isPlanned && day <= Day.today ? 0.55 : 1)
     }
 

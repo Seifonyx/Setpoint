@@ -59,6 +59,7 @@ jobs:
             done
           done
           shot -tab diary -sheet weight; xcrun simctl io "$UDID" screenshot out/weight-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -sheet food; xcrun simctl io "$UDID" screenshot out/food-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance light
           xcrun simctl launch "$UDID" app.setpoint.ios -tab diary; sleep 5; xcrun simctl io "$UDID" screenshot out/empty-light.png

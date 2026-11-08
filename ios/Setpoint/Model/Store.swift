@@ -213,6 +213,18 @@ final class Store {
         save()
     }
 
+    /// Time, meal and note from the food's details (amounts change in Phase 2, with the food list).
+    func updateDetails(_ item: FoodItem, on day: String, time: String?, meal: String, note: String) {
+        remember(String(localized: "Food updated"))
+        edit(day, item.id) { f in
+            if let time { f.raw["t"] = .string(time) } else { f.raw.removeValue(forKey: "t") }
+            f.meal = meal
+            let n = note.trimmingCharacters(in: .whitespacesAndNewlines)
+            if n.isEmpty { f.raw.removeValue(forKey: "note") } else { f.raw["note"] = .string(String(n.prefix(140))) }
+        }
+    }
+    func dailyTotals(_ day: String) -> [FoodItem] { items(day).filter(\.isDailyTotal) }
+
     func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool) {
         remember(String(localized: "Weight saved"))
         var raw = entry(day)?.raw ?? [:]

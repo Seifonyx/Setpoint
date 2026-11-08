@@ -1160,6 +1160,156 @@
           }
         }
       }
+    },
+    "ml": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مل"
+          }
+        }
+      }
+    },
+    "L": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لتر"
+          }
+        }
+      }
+    },
+    "%@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ جم"
+          }
+        }
+      }
+    },
+    "In this meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في الوجبة دي"
+          }
+        }
+      }
+    },
+    "Time eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقت الأكل"
+          }
+        }
+      }
+    },
+    "Time": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوقت"
+          }
+        }
+      }
+    },
+    "Meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجبة"
+          }
+        }
+      }
+    },
+    "Food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكلة"
+          }
+        }
+      }
+    },
+    "Delete %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحذف %@؟"
+          }
+        }
+      }
+    },
+    "Food updated": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكلة اتعدّلت"
+          }
+        }
+      }
+    },
+    "Calories saved with your weigh-in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات اللي اتحفظت مع وزنتك"
+          }
+        }
+      }
+    },
+    "Protein": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بروتين"
+          }
+        }
+      }
+    },
+    "Carbs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كربوهيدرات"
+          }
+        }
+      }
+    },
+    "Fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دهون"
+          }
+        }
+      }
+    },
+    "Daily total": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي اليوم"
+          }
+        }
+      }
     }
   },
   "version": "1.0"
