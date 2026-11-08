@@ -12,3 +12,5 @@ Weight and food tracker PWA. Live at https://setpoint-tracker.web.app (Firebase 
 - Native SwiftUI app, minimum iOS 26. There's no Mac: code is built by GitHub Actions (`.github/workflows/ios.yml`) from `ios/project.yml` via XcodeGen.
 - Results: the `ios-latest` release (Setpoint.ipa + simulator screenshots); a failed build posts `build.log`/`sim.log` to the `ios-log` release. Both are public downloads.
 - The user installs the .ipa with SideStore. New features go into the native app; the web app is frozen for now.
+- Progress: Phase 0 done (build pipeline, SideStore source at sidestore.json). Phase 1 part 1 done (web-format Store, backup import/export, Diary with targets/meals/weight/water/actions/undo). Next: Phase 1 polish (swipe between days, user feedback), then Phase 2 (adding food: bundled food DB, search, amounts, barcode).
+- Plan: 0 foundation · 1 diary · 2 adding food · 3 plan & maths (golden tests vs web) · 4 progress · 5 Firebase account & sync (same data as web) · 6 free iPhone extras · 7 paid extras (Health, widgets, Live Activity) · 8 parity & switch-over.
