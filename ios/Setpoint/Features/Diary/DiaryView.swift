@@ -226,6 +226,34 @@ struct SummaryCard: View {
         }
         .padding(.vertical, 8)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
+        .overlay(alignment: .top) {
+            if let c = cheer {
+                Label(c, systemImage: "sparkles").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
+                    .padding(.horizontal, 14).padding(.vertical, 8).background(Brand.greenSoft, in: Capsule())
+                    .transition(.scale.combined(with: .opacity))
+            }
+        }
+        .onChange(of: totals) { old, new in
+            guard let plan else { return }
+            // A small moment when you reach a target (only when it's crossed, not every time).
+            if old.protein < plan.protein && new.protein >= plan.protein { celebrate(String(localized: "Protein target hit")) }
+            else if old.kcal < plan.kcal * 0.95 && new.kcal >= plan.kcal * 0.95 && new.kcal <= plan.kcal * 1.05 { celebrate(String(localized: "Calories on target")) }
+        }
+        .sensoryFeedback(.success, trigger: cheer) { _, n in n != nil }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(accessibilityText)
+    }
+
+    @State private var cheer: String?
+    private func celebrate(_ text: String) {
+        withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { cheer = text }
+        Task { try? await Task.sleep(for: .seconds(2.5)); withAnimation { cheer = nil } }
+    }
+    private var accessibilityText: Text {
+        guard let plan else { return Text("\(Fmt.kcal(totals.kcal)) calories eaten") }
+        let left = plan.kcal - totals.kcal
+        return Text(left >= 0 ? "\(Fmt.kcal(left)) calories left of \(Fmt.kcal(plan.kcal))" : "\(Fmt.kcal(-left)) calories over \(Fmt.kcal(plan.kcal))")
+            + Text(". ") + Text("Protein \(Fmt.grams(totals.protein)) of \(Fmt.grams(plan.protein)) grams, carbs \(Fmt.grams(totals.carbs)) of \(Fmt.grams(plan.carbs)), fat \(Fmt.grams(totals.fat)) of \(Fmt.grams(plan.fat)).")
     }
 }
 

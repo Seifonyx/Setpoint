@@ -31,6 +31,36 @@
         }
       }
     },
+    "%@ calories eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة مأكولة"
+          }
+        }
+      }
+    },
+    "%@ calories left of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقي %@ سعرة من %@"
+          }
+        }
+      }
+    },
+    "%@ calories over %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة %@ سعرة عن %@"
+          }
+        }
+      }
+    },
     "%@ g": {
       "localizations": {
         "ar": {
@@ -357,6 +387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "+%lld"
+          }
+        }
+      }
+    },
+    ". ": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": ". "
           }
         }
       }
@@ -1087,6 +1127,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "السعرات اللي كلتها"
+          }
+        }
+      }
+    },
+    "Calories on target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات على الهدف"
           }
         }
       }
@@ -4031,6 +4081,16 @@
         }
       }
     },
+    "Protein %@ of %@ grams, carbs %@ of %@, fat %@ of %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بروتين %@ من %@ جرام، كربوهيدرات %@ من %@، دهون %@ من %@."
+          }
+        }
+      }
+    },
     "Protein and fat are set per kg of a healthy weight for your height (%lld kg). Carbs are the rest.": {
       "localizations": {
         "ar": {
@@ -6231,12 +6291,32 @@
         }
       }
     },
+    "kg · cm": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كجم · سم"
+          }
+        }
+      }
+    },
     "lb": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "رطل"
+          }
+        }
+      }
+    },
+    "lb · ft": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رطل · قدم"
           }
         }
       }
