@@ -1,11 +1,17 @@
 import SwiftUI
 
-/// Foods: your own foods, recipes, saved meals and favorites. Same data as the web app's My foods page.
-struct FoodsView: View {
+/// One food category: your own foods, recipes, saved meals or favorites (same data as the web app's My foods page).
+struct FoodLists: View {
+    enum Kind: Hashable { case mine, recipes, meals, favorites }
+    let kind: Kind
     @Environment(Store.self) private var store
     @State private var editing: EditFood?
     @State private var recipeEdit: EditFood?
     @State private var favorites: [FoodHit] = []
+
+    private var title: LocalizedStringKey {
+        switch kind { case .mine: "My foods"; case .recipes: "Recipes"; case .meals: "Saved meals"; case .favorites: "Favorites" }
+    }
 
     struct EditFood: Identifiable { let id: String; let food: [String: JSONValue]? }
 
@@ -15,8 +21,10 @@ struct FoodsView: View {
     }
 
     var body: some View {
-        NavigationStack {
+        Group {
             List {
+                switch kind {
+                case .mine:
                 Section {
                     let mine = list("myFoods")
                     if mine.isEmpty { Text("Foods you make show up here, like a protein shake or your mum's lasagna.").foregroundStyle(.secondary) }
@@ -37,6 +45,7 @@ struct FoodsView: View {
                     Button("New food", systemImage: "plus") { editing = EditFood(id: "new", food: nil) }
                 } header: { Text("My foods") }
 
+                case .recipes:
                 let recipes = list("recipes")
                 Section {
                     ForEach(recipes.indices, id: \.self) { i in
@@ -55,7 +64,9 @@ struct FoodsView: View {
                     Button("New recipe", systemImage: "plus") { recipeEdit = EditFood(id: "new", food: nil) }
                 } header: { Text("Recipes") }
 
+                case .meals:
                 let meals = list("meals")
+                if meals.isEmpty { Text("Save a meal from the Diary (a meal's ⋯ menu › Save as meal) to log it again in one tap.").foregroundStyle(.secondary) }
                 if !meals.isEmpty {
                     Section("Saved meals") {
                         ForEach(meals.indices, id: \.self) { i in
@@ -71,6 +82,8 @@ struct FoodsView: View {
                     }
                 }
 
+                case .favorites:
+                if favorites.isEmpty { Text("Tap the star on any food to keep it here.").foregroundStyle(.secondary) }
                 if !favorites.isEmpty {
                     Section("Favorites") {
                         ForEach(favorites) { f in
@@ -83,9 +96,10 @@ struct FoodsView: View {
                         }
                     }
                 }
+                }
             }
             .brandList()
-            .navigationTitle("Foods")
+            .navigationTitle(title)
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
             .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }
@@ -173,5 +187,60 @@ struct CustomFoodSheet: View {
         if let i = all.firstIndex(where: { $0["id"]?.string == v["id"]?.string }) { all[i] = v } else { all.append(v) }
         store.setRoot("myFoods", .array(all.map { .object($0) }))
         dismiss()
+    }
+}
+
+/// Foods: categories, each on its own page, plus your diet plan.
+struct FoodsView: View {
+    @Environment(Store.self) private var store
+    private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
+    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
+
+    var body: some View {
+        NavigationStack {
+            ScrollView {
+                VStack(spacing: 12) {
+                    LazyVGrid(columns: cols, spacing: 12) {
+                        tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
+                        tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
+                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
+                        tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
+                    }
+                    NavigationLink { PlanView() } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: "target").font(.title2).foregroundStyle(Brand.green)
+                                .frame(width: 48, height: 48).background(Brand.greenSoft, in: .rect(cornerRadius: 14))
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Diet plan").font(Brand.display(19, .bold))
+                                Text(store.overview?.plan.map { "\(Fmt.kcal(($0.target / 10).rounded() * 10)) kcal · P \(Fmt.grams($0.protein)) · C \(Fmt.grams($0.carbs)) · F \(Fmt.grams($0.fat))" } ?? String(localized: "Targets, goal and expenditure"))
+                                    .font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
+                        }
+                        .brandCard()
+                    }
+                    .buttonStyle(.plain)
+                }
+                .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
+            }
+            .background(Brand.bg.ignoresSafeArea())
+            .navigationTitle("Foods")
+        }
+    }
+
+    private func tile<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {
+        NavigationLink { dest() } label: {
+            VStack(alignment: .leading, spacing: 10) {
+                Image(systemName: icon).font(.title3).foregroundStyle(color)
+                    .frame(width: 44, height: 44).background(color.opacity(0.14), in: .rect(cornerRadius: 13))
+                Spacer(minLength: 6)
+                Text(title).font(Brand.display(18, .bold)).lineLimit(1).minimumScaleFactor(0.8)
+                Text(n == 1 ? String(localized: "1 item") : String(localized: "\(n) items")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+            }
+            .frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
+            .brandCard()
+        }
+        .buttonStyle(.plain)
     }
 }

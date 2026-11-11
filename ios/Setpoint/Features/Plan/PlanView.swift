@@ -8,33 +8,58 @@ struct PlanView: View {
     @State private var goalWeight = false
     @State private var measured = false
 
+    enum Page: Hashable { case goal, week, energy }
+    /// nil: the overview (target and categories); otherwise one category's page.
+    var page: Page? = nil
+
     var body: some View {
         List {
             if let o = store.overview {
-                if !o.ready || o.kg == nil {
-                    Section {
-                        ContentUnavailableView {
-                            Label("Let's work out your targets", systemImage: "target")
-                        } description: {
-                            Text(!o.ready ? "Add your age, sex and height." : "Log your weight in the Diary to finish.")
-                        } actions: {
-                            if !o.ready { Button("About you") { about = true }.buttonStyle(.glassProminent) }
+                switch page {
+                case nil:
+                    if !o.ready || o.kg == nil {
+                        Section {
+                            ContentUnavailableView {
+                                Label("Let's work out your targets", systemImage: "target")
+                            } description: {
+                                Text(!o.ready ? "Add your age, sex and height." : "Log your weight in the Diary to finish.")
+                            } actions: {
+                                if !o.ready { Button("About you") { about = true }.buttonStyle(.glassProminent) }
+                            }
                         }
                     }
+                    if let p = o.plan { targetSection(p, o) }
+                    Section {
+                        if let p = o.plan {
+                            NavigationLink { PlanView(page: .goal) } label: {
+                                row("Goal", goalSummary(p, o), "flag.checkered", Brand.amber)
+                            }
+                            NavigationLink { PlanView(page: .week) } label: {
+                                row("Your week", weekSummary, "calendar", Brand.water)
+                            }
+                        }
+                        NavigationLink { PlanView(page: .energy) } label: {
+                            row("Energy expenditure", o.energy.map { "\(Fmt.kcal(round10($0.tdee))) kcal · " + sourceLabel($0) } ?? "", "flame.fill", Brand.protein)
+                        }
+                    }
+                    Section("Inputs") {
+                        Button { activity = true } label: { row("Activity", activitySummary(o), "figure.walk", Brand.green) }
+                        Button { about = true } label: { row("About you", aboutSummary(o), "person.text.rectangle", Brand.fat) }
+                    }
+                    .tint(.primary)
+                case .goal?:
+                    if let p = o.plan { goalSection(p, o) }
+                case .week?:
+                    WeekPlanSection()
+                case .energy?:
+                    expenditureSection(o)
                 }
-                if let p = o.plan { targetSection(p, o) ; goalSection(p, o); WeekPlanSection() }
-                expenditureSection(o)
-                Section("Inputs") {
-                    Button { activity = true } label: { row("Activity", activitySummary(o), "figure.walk") }
-                    Button { about = true } label: { row("About you", aboutSummary(o), "person.text.rectangle") }
-                }
-                .tint(.primary)
             } else {
                 ProgressView()
             }
         }
         .brandList()
-        .navigationTitle("Plan")
+        .navigationTitle(pageTitle)
         .sheet(isPresented: $about) { AboutYouSheet() }
         .sheet(isPresented: $activity) { ActivitySheet() }
         .sheet(isPresented: $goalWeight) { GoalWeightSheet() }
@@ -93,7 +118,7 @@ struct PlanView: View {
             }
             .tint(.primary)
             if !p.eta.isEmpty { Text(LocalizedStringKey(p.eta.prefix(1).uppercased() + p.eta.dropFirst())).font(.brand(.subheadline)).foregroundStyle(.secondary) }
-        } header: { Text("Goal") }
+        }
     }
 
     @ViewBuilder private func expenditureSection(_ o: Overview) -> some View {
@@ -135,7 +160,7 @@ struct PlanView: View {
                 }
                 .padding(.vertical, 2)
             }
-        } header: { Text("Energy expenditure") }
+        }
     }
 
     // MARK: Bits
@@ -155,8 +180,31 @@ struct PlanView: View {
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
-    private func row(_ title: LocalizedStringKey, _ sub: String, _ icon: String) -> some View {
-        Label { VStack(alignment: .leading, spacing: 2) { Text(title); Text(sub).font(.brand(.subheadline)).foregroundStyle(.secondary) } } icon: { Image(systemName: icon) }
+    private func row(_ title: LocalizedStringKey, _ sub: String, _ icon: String, _ color: Color) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).font(.body.weight(.semibold)).foregroundStyle(color)
+                .frame(width: 34, height: 34).background(color.opacity(0.14), in: .rect(cornerRadius: 10))
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.brand(.body, .semibold))
+                if !sub.isEmpty { Text(sub).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }
+            }
+        }
+    }
+    private var pageTitle: LocalizedStringKey {
+        switch page { case nil: "Plan"; case .goal?: "Goal"; case .week?: "Your week"; case .energy?: "Energy expenditure" }
+    }
+    private func goalSummary(_ p: Overview.Plan, _ o: Overview) -> String {
+        let pace = Fmt.weight(abs(p.pace.kg), unit: o.unit) + " " + o.unit
+        let dir = p.pace.dir == "lose" ? String(localized: "Lose \(pace) a week") : p.pace.dir == "gain" ? String(localized: "Gain \(pace) a week") : String(localized: "Maintain")
+        return o.goalKg.map { dir + " · " + String(localized: "goal \(Fmt.weight($0, unit: o.unit)) \(o.unit)") } ?? dir
+    }
+    private var weekSummary: String {
+        let s = store.root["settings"]?.object ?? [:]
+        var parts: [String] = []
+        if !(s["train"]?["days"]?.array ?? []).isEmpty { parts.append(String(localized: "Training days")) }
+        if s["flex"]?["on"]?.bool == true { parts.append(String(localized: "Flexible week")) }
+        if s["cycle"]?["on"]?.bool == true { parts.append(String(localized: "Cycle")) }
+        return parts.isEmpty ? String(localized: "Same target every day") : parts.joined(separator: " · ")
     }
     private func activitySummary(_ o: Overview) -> String {
         let steps = (o.profile.steps ?? 0).formatted()

@@ -31,21 +31,7 @@ struct DiaryView: View {
                     Section { RamadanBanner() }
                 }
                 Section {
-                    SummaryCard(totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
-                        .contentShape(.rect)
-                        .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded(swiped)) // swipe the card to change day
-                    if let sc = score {
-                        Button { showScore = true } label: {
-                            LabeledContent {
-                                Text("\(sc.score)/100").monospacedDigit().foregroundStyle(.secondary)
-                            } label: {
-                                Label { Text("Day score") } icon: {
-                                    Text(sc.grade).font(.brand(.headline, .bold)).foregroundStyle(gradeColor(sc.grade))
-                                }
-                            }
-                        }
-                        .tint(.primary)
-                    }
+                    SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                 }
                 Section {
                     HStack(spacing: 12) {
@@ -69,11 +55,6 @@ struct DiaryView: View {
                 }
                 ForEach(store.meals) { meal in
                     MealSection(meal: meal, day: day, copying: $copying) { adding = AddJob(meal: meal.key) }
-                }
-                if !store.items(day).isEmpty {
-                    Section {
-                        NavigationLink { NutrientsView(day: day) } label: { Label("Vitamins & minerals", systemImage: "leaf") }
-                    }
                 }
             }
             .listSectionSpacing(14)
@@ -170,32 +151,63 @@ struct CopyJob: Identifiable {
 
 // MARK: - Summary
 
+/// The top of the Diary: swipe between the calorie dial and your vitamins and minerals.
+struct SummaryPager: View {
+    let day: String
+    let totals: Totals
+    let plan: DayPlan?
+    @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
+
+    var body: some View {
+        VStack(spacing: 10) {
+            TabView(selection: $page) {
+                SummaryCard(totals: totals, plan: plan).tag(0)
+                MicrosCard(day: day).tag(1)
+            }
+            .tabViewStyle(.page(indexDisplayMode: .never))
+            .frame(height: 428)
+            HStack(spacing: 6) {
+                ForEach(0..<2, id: \.self) { i in
+                    Capsule().fill(i == page ? Brand.green : Brand.ink2.opacity(0.25)).frame(width: i == page ? 18 : 6, height: 6)
+                }
+            }
+            .animation(.snappy, value: page)
+            .accessibilityHidden(true)
+        }
+        .padding(.bottom, 4)
+        .sensoryFeedback(.selection, trigger: page)
+    }
+}
+
 struct SummaryCard: View {
     let totals: Totals
     let plan: DayPlan?
 
     var body: some View {
-        VStack(spacing: 18) {
+        VStack(spacing: 14) {
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
-                    .frame(width: 236, height: 236)
+                    .frame(width: 262, height: 262)
+                // inside the rings: what's left
                 VStack(spacing: 0) {
                     if let plan {
                         let left = plan.kcal - totals.kcal
                         Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
-                            .font(.brand(.subheadline, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.2)
-                        Text(Fmt.kcal(abs(left))).font(Brand.display(50, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
-                            .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
-                        Text("\(Fmt.kcal(totals.kcal)) of \(Fmt.kcal(plan.kcal)) kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2).monospacedDigit()
+                            .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
+                        Text(Fmt.kcal(abs(left))).font(Brand.display(44, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                            .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     } else {
-                        Text("eaten").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.2)
-                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(54, .heavy)).contentTransition(.numericText()).monospacedDigit()
-                        Text("kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+                        Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
+                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(44, .heavy)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     }
                 }
-                .padding(.horizontal, 62)
-                .offset(y: -10)
+                .frame(maxWidth: 124)
+                // in the opening at the bottom of the dial: eaten of target
+                Text(plan.map { "\(Fmt.kcal(totals.kcal)) / \(Fmt.kcal($0.kcal)) kcal" } ?? String(localized: "kcal"))
+                    .font(.brand(.footnote, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
+                    .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 140)
+                    .offset(y: 112)
             }
             .frame(maxWidth: .infinity)
             if let plan {
@@ -208,8 +220,64 @@ struct SummaryCard: View {
                 Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
             }
         }
-        .padding(.vertical, 10)
+        .padding(.vertical, 8)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
+    }
+}
+
+/// The second page: the vitamins and minerals people most often run low on, for this day. Tap for all of them.
+struct MicrosCard: View {
+    @Environment(Store.self) private var store
+    let day: String
+    @State private var data: NutrientData?
+    private static let keys = ["fib", "fe", "ca", "k", "mg", "vD", "b12", "vC", "zn", "na"]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Vitamins & minerals").font(Brand.display(20, .bold))
+                Spacer()
+                NavigationLink { NutrientsView(day: day) } label: {
+                    HStack(spacing: 2) { Text("All"); Image(systemName: "chevron.right").font(.brand(.caption, .bold)) }
+                        .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
+                }
+            }
+            if let d = data, d.items > 0 {
+                let rows = Self.keys.compactMap { k in d.rows.first { $0.key == k } }
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 14) {
+                    ForEach(rows, id: \.key) { r in cell(r) }
+                }
+            } else {
+                Spacer()
+                Text("Log some food to see your vitamins and minerals.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).frame(maxWidth: .infinity)
+                Spacer()
+            }
+            Spacer(minLength: 0)
+        }
+        .padding(.vertical, 8)
+        .task(id: "\(day)|\(store.version)|\(store.foodsReady)") { data = await store.engineRef.nutrients(day) }
+    }
+
+    private func cell(_ r: NutrientData.Row) -> some View {
+        let target = r.goal ?? r.hi ?? 0
+        let pct = target > 0 ? r.v / target : 0
+        let limit = r.goal == nil && r.hi != nil // things to keep under (sodium)
+        let color = limit ? (pct > 1 ? Brand.over : Brand.ink2) : (pct >= 1 ? Brand.green : pct >= 0.5 ? Brand.amber : Brand.protein)
+        return VStack(alignment: .leading, spacing: 5) {
+            HStack {
+                Text(r.label).font(.brand(.caption, .semibold)).lineLimit(1)
+                Spacer(minLength: 4)
+                Text("\(Int((pct * 100).rounded()))%").font(.brand(.caption, .bold)).monospacedDigit().foregroundStyle(color)
+            }
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Brand.card2)
+                    Capsule().fill(color).frame(width: g.size.width * min(1, pct))
+                }
+            }
+            .frame(height: 5)
+        }
+        .opacity(r.cov < 0.5 && r.v > 0 ? 0.55 : 1)
     }
 }
 

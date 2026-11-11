@@ -11,6 +11,16 @@
         }
       }
     },
+    "%@ / %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / %@ سعرة"
+          }
+        }
+      }
+    },
     "%@ g": {
       "localizations": {
         "ar": {
@@ -191,6 +201,16 @@
         }
       }
     },
+    "%lld items": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld عناصر"
+          }
+        }
+      }
+    },
     "%lld kcal": {
       "localizations": {
         "ar": {
@@ -287,6 +307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "/ %lld سعرة"
+          }
+        }
+      }
+    },
+    "1 item": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عنصر واحد"
           }
         }
       }
@@ -1251,6 +1281,16 @@
         }
       }
     },
+    "Cycle": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدورة"
+          }
+        }
+      }
+    },
     "Cycle and weight": {
       "localizations": {
         "ar": {
@@ -1447,6 +1487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوميات"
+          }
+        }
+      }
+    },
+    "Diet plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطة الأكل"
           }
         }
       }
@@ -2021,6 +2071,16 @@
         }
       }
     },
+    "Gain %@ a week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زوّد %@ في الأسبوع"
+          }
+        }
+      }
+    },
     "Give it a name": {
       "localizations": {
         "ar": {
@@ -2567,6 +2627,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خسارة"
+          }
+        }
+      }
+    },
+    "Lose %@ a week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اخسر %@ في الأسبوع"
           }
         }
       }
@@ -3621,6 +3691,16 @@
         }
       }
     },
+    "Same target every day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نفس الهدف كل يوم"
+          }
+        }
+      }
+    },
     "Saturated fat": {
       "localizations": {
         "ar": {
@@ -3637,6 +3717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حفظ"
+          }
+        }
+      }
+    },
+    "Save a meal from the Diary (a meal's ⋯ menu › Save as meal) to log it again in one tap.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ وجبة من اليوميات (قائمة ⋯ بتاعة الوجبة › احفظ كوجبة) عشان تسجلها تاني بضغطة."
           }
         }
       }
@@ -4101,6 +4191,16 @@
         }
       }
     },
+    "Tap the star on any food to keep it here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط النجمة على أي أكلة عشان تفضل هنا."
+          }
+        }
+      }
+    },
     "Target breakdown": {
       "localizations": {
         "ar": {
@@ -4127,6 +4227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الهدف زاد %@ سعرة"
+          }
+        }
+      }
+    },
+    "Targets, goal and expenditure": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأهداف والهدف والحرق"
           }
         }
       }
@@ -4977,6 +5087,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جم/كجم"
+          }
+        }
+      }
+    },
+    "goal %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف %@ %@"
           }
         }
       }
