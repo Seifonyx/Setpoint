@@ -132,7 +132,7 @@ struct FoodRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            FoodIcon(kind: kind ?? (food.ref == nil ? "quick" : "food"), size: 36)
+            FoodIcon(kind: kind ?? (food.ref == nil ? "quick" : "food"), size: 36, name: food.displayName)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(food.displayName).lineLimit(1)

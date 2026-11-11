@@ -76,7 +76,7 @@ struct FoodDetailSheet: View {
     private var header: some View {
         Section {
             HStack(spacing: 14) {
-                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 52)
+                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 52, name: food.displayName)
                 VStack(alignment: .leading, spacing: 3) {
                     Text(food.displayName).font(Brand.display(22, .bold)).lineLimit(3)
                     Text(subtitle).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)

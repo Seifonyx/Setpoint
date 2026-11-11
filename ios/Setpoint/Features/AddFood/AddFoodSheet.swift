@@ -408,7 +408,7 @@ struct FoodHitRow: View {
     let hit: FoodHit
     var body: some View {
         HStack(spacing: 12) {
-            FoodIcon(kind: hit.quick == true ? "quick" : hit.kind ?? "food")
+            FoodIcon(kind: hit.quick == true ? "quick" : hit.kind ?? "food", name: hit.name)
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
                     Text(hit.name).lineLimit(2).font(.brand(.body))
@@ -446,19 +446,31 @@ struct FoodHitRow: View {
     }
 }
 
-/// A food's kind as a small emoji tile (egg, grain, fruit…), so lists read at a glance.
+/// A food's kind as a small drawn icon on a tinted tile (Setpoint's own set, matching the web app's).
 struct FoodIcon: View {
     let kind: String
     var size: CGFloat = 38
+    var name: String? = nil
+
+    private var key: String {
+        // rice gets its own bowl rather than bread
+        if kind == "grain", let n = name?.lowercased(), n.contains("rice") || n.contains("أرز") || n.contains("رز") { return "rice" }
+        return Self.colors[kind] == nil ? "food" : kind
+    }
     var body: some View {
-        Text(Self.emoji[kind] ?? "🍽️").font(.system(size: size * 0.5))
+        let c = Self.colors[key] ?? Brand.green
+        Image("food-\(key)").resizable().renderingMode(.template).scaledToFit()
+            .foregroundStyle(c)
+            .frame(width: size * 0.56, height: size * 0.56)
             .frame(width: size, height: size)
-            .background(Brand.card2, in: .rect(cornerRadius: size * 0.3))
+            .background(c.opacity(0.14), in: .rect(cornerRadius: size * 0.3))
             .accessibilityHidden(true)
     }
-    static let emoji: [String: String] = [
-        "drink": "☕️", "egg": "🥚", "soup": "🍲", "dish": "🍛", "fish": "🐟", "poultry": "🍗", "meat": "🥩", "dairy": "🥛",
-        "sweet": "🍫", "snack": "🥨", "oil": "🫒", "nut": "🥜", "legume": "🫘", "grain": "🍞", "fruit": "🍎", "veg": "🥦",
-        "spice": "🧂", "recipe": "🍳", "mine": "🥣", "pack": "📦", "rest": "🍽️", "food": "🍽️", "quick": "⚡️"
+    static let colors: [String: Color] = [
+        "fruit": Brand.protein, "veg": Brand.green, "meat": Brand.over, "poultry": Brand.amber, "fish": Brand.water, "dairy": Brand.fat,
+        "egg": Brand.amber, "grain": Brand.dyn(0xA8722F, 0xD6A15E), "rice": Brand.dyn(0xA8722F, 0xD6A15E), "drink": Brand.water,
+        "sweet": Brand.dyn(0xB9507F, 0xDC86AB), "nut": Brand.dyn(0x8C6239, 0xC4986A), "legume": Brand.dyn(0x6E7F2E, 0xA9BA62),
+        "oil": Brand.dyn(0x7D7A26, 0xBDB85E), "dish": Brand.green, "soup": Brand.protein, "snack": Brand.amber, "spice": Brand.over,
+        "recipe": Brand.protein, "meal": Brand.green, "mine": Brand.green, "pack": Brand.ink2, "rest": Brand.ink2, "quick": Brand.amber, "food": Brand.green
     ]
 }
