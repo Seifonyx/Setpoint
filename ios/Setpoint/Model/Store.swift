@@ -247,6 +247,14 @@ final class Store {
         save()
     }
 
+    /// Everything on this iPhone, gone (after signing out, so the cloud copy stays).
+    func eraseAll() {
+        load(Data("{}".utf8))
+        clearUndo()
+        try? FileManager.default.removeItem(at: Self.photosURL)
+        save()
+    }
+
     /// A backup in the same format the web app writes, so it can be restored there too.
     func exportBackup() throws -> URL {
         save()

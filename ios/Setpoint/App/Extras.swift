@@ -91,6 +91,7 @@ struct DeviceSettingsView: View {
     @AppStorage(DeviceSettings.foodReminder) private var foodOn = false
     @AppStorage(DeviceSettings.foodTime) private var foodTime = 20 * 60 + 30
     @State private var denied = false
+    @State private var confirmErase = false
 
     var body: some View {
         Form {
@@ -102,6 +103,12 @@ struct DeviceSettingsView: View {
                                                             set: { store.setSetting("weekStart", .number(Double($0))) })) {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
                 }
+                Picker("Theme", selection: Binding(get: { store.root["settings"]?.object?["style"]?.string ?? "graphite" }, set: { store.setSetting("style", .string($0)) })) {
+                    ForEach(Theme.all, id: \.key) { t in
+                        Label { Text(t.name) } icon: { Image(systemName: "circle.fill").foregroundStyle(Theme.color(t.key)) }.tag(t.key)
+                    }
+                }
+                .pickerStyle(.navigationLink)
                 Toggle("Track calories", isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
                                                        set: { store.setSetting("trackCalories", .bool($0)) }))
             } footer: { Text("These sync with the web app.") }
@@ -118,6 +125,12 @@ struct DeviceSettingsView: View {
                 Toggle("Lock with Face ID", isOn: $lock)
                 Toggle("Haptics", isOn: $haptics)
             } footer: { Text("These are for this iPhone only.") }
+            Section {
+                Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }
+                    .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {
+                        Button("Erase", role: .destructive) { Account.shared.signOut(); store.eraseAll() }
+                    } message: { Text("Your weigh-ins, food log and settings on this iPhone are deleted. If you're signed in, you're signed out first, so your account keeps its copy.") }
+            }
             Section {
                 Link(destination: URL(string: UIApplication.openSettingsURLString)!) { Label("Language", systemImage: "globe") }
             } footer: { Text("Choose English or العربية for Setpoint in the Settings app.") }
@@ -138,5 +151,20 @@ struct DeviceSettingsView: View {
     private func time(_ m: Binding<Int>) -> Binding<Date> {
         Binding(get: { Calendar.current.date(bySettingHour: m.wrappedValue / 60, minute: m.wrappedValue % 60, second: 0, of: Date()) ?? Date() },
                 set: { let c = Calendar.current.dateComponents([.hour, .minute], from: $0); m.wrappedValue = (c.hour ?? 0) * 60 + (c.minute ?? 0) })
+    }
+}
+
+/// The web app's color themes (settings.style): the accent color in light and dark.
+enum Theme {
+    static let all: [(key: String, name: LocalizedStringKey, light: UInt32, dark: UInt32)] = [
+        ("graphite", "Graphite", 0x1c1c1e, 0xf2f2f5), ("classic", "Emerald", 0x0f9a6c, 0x5fdcab), ("ocean", "Ocean", 0x1f6fe5, 0x6aa8ff),
+        ("rose", "Rose", 0xc2416b, 0xff8db0), ("violet", "Midnight", 0x6c4cf1, 0xa594ff), ("sand", "Terracotta", 0xc4602f, 0xf0955f), ("luxe", "Luxe", 0x0f5c45, 0xdcb86e)
+    ]
+    static func color(_ key: String?) -> Color {
+        let t = all.first { $0.key == key } ?? all[0]
+        return Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(t.dark) : rgb(t.light) })
+    }
+    private static func rgb(_ v: UInt32) -> UIColor {
+        UIColor(red: CGFloat((v >> 16) & 0xff) / 255, green: CGFloat((v >> 8) & 0xff) / 255, blue: CGFloat(v & 0xff) / 255, alpha: 1)
     }
 }

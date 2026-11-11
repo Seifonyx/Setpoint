@@ -19,16 +19,20 @@ struct ProgressScreen: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Show", selection: $page) { Text("Weight").tag("weight"); Text("Nutrition").tag("nutrition") }
+                    Picker("Show", selection: $page) { Text("Weight").tag("weight"); Text("Nutrition").tag("nutrition"); Text("Body").tag("body") }
                         .pickerStyle(.segmented)
-                    Picker("Range", selection: $range) {
+                    if page != "body" { Picker("Range", selection: $range) {
                         Text("1M").tag(30); Text("3M").tag(90); Text("6M").tag(180); Text("1Y").tag(365); Text("All").tag(0)
                     }
-                    .pickerStyle(.segmented)
+                    .pickerStyle(.segmented) }
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 4, leading: 0, bottom: 4, trailing: 0))
-                if page == "weight" { weightPage } else { nutritionPage }
+                switch page {
+                case "weight": weightPage
+                case "nutrition": nutritionPage
+                default: BodySection()
+                }
             }
             .navigationTitle("Progress")
             .task(id: "\(store.version)|\(range)|\(store.foodsReady)") { await load() }
@@ -76,6 +80,7 @@ struct ProgressScreen: View {
                 weekRow(w)
             }
         }
+        if (data?.points.count ?? 0) >= 2 || !(store.root["phases"]?.array ?? []).isEmpty { PhasesSection() }
         if let d = data, !d.points.isEmpty {
             Section {
                 Picker("History", selection: $showWeeks) { Text("Days").tag(false); Text("Weeks").tag(true) }.pickerStyle(.segmented)

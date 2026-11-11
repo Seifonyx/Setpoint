@@ -175,6 +175,8 @@ struct Overview: Decodable, Sendable {
     struct Plan: Decodable, Sendable {
         let target: Double; let protein: Double; let carbs: Double; let fat: Double; let pace: Pace; let warn: String; let eta: String
         let ref: Double; let refWhy: String; let proteinPerKg: Double; let fatPerKg: Double; let kind: String; let custom: Bool
+        struct Ranges: Decodable, Sendable { let protein: [Double]; let fat: [Double] }
+        let ranges: Ranges?
     }
     struct Training: Decodable, Sendable { let days: Int; let type: String; let minutes: Int; let intensity: String }
     struct Profile: Decodable, Sendable { let sex: String?; let birthYear: Int?; let heightCm: Double?; let bodyFat: Double?; let steps: Int?; let training: Training? }

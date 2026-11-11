@@ -28,6 +28,11 @@ struct YouView: View {
                     }
                 }
                 Section {
+                    NavigationLink { FastingView() } label: {
+                        LabeledContent {
+                            if store.root["fast"]?.object?["start"]?.number != nil { Text("Fasting").foregroundStyle(.green) }
+                        } label: { Label("Fasting timer", systemImage: "timer") }
+                    }
                     NavigationLink { DeviceSettingsView() } label: { Label("Settings", systemImage: "gearshape") }
                 }
                 Section {

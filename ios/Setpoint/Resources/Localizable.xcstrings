@@ -101,6 +101,16 @@
         }
       }
     },
+    "%@ to go": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاضل %@"
+          }
+        }
+      }
+    },
     "%lld days weighed": {
       "localizations": {
         "ar": {
@@ -131,6 +141,16 @@
         }
       }
     },
+    "%lld h": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld ساعة"
+          }
+        }
+      }
+    },
     "%lld kcal": {
       "localizations": {
         "ar": {
@@ -157,6 +177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld دقيقة"
+          }
+        }
+      }
+    },
+    "%lld servings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld حصص"
           }
         }
       }
@@ -247,6 +277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "88.7 كجم"
+          }
+        }
+      }
+    },
+    "A quick check that today's meals are in your diary.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراجعة سريعة إن وجبات النهارده في يومياتك."
           }
         }
       }
@@ -351,6 +391,16 @@
         }
       }
     },
+    "Add measurements": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف قياسات"
+          }
+        }
+      }
+    },
     "Add to favorites": {
       "localizations": {
         "ar": {
@@ -397,6 +447,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتضاف من امبارح"
+          }
+        }
+      }
+    },
+    "Added. %@ today.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتضاف. %@ النهارده."
+          }
+        }
+      }
+    },
+    "Adds water to today in Setpoint.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيضيف مية للنهارده في Setpoint."
           }
         }
       }
@@ -451,12 +521,32 @@
         }
       }
     },
+    "Amount (ml)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكمية (مل)"
+          }
+        }
+      }
+    },
     "Amount changed": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "تم تغيير الكمية"
+          }
+        }
+      }
+    },
+    "Arm": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الذراع"
           }
         }
       }
@@ -517,6 +607,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "رقم الباركود"
+          }
+        }
+      }
+    },
+    "Body": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الجسم"
           }
         }
       }
@@ -651,12 +751,62 @@
         }
       }
     },
+    "Change since your first measurement.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التغيير من أول قياس."
+          }
+        }
+      }
+    },
+    "Check the numbers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع الأرقام"
+          }
+        }
+      }
+    },
+    "Check the weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع الوزن"
+          }
+        }
+      }
+    },
+    "Chest": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصدر"
+          }
+        }
+      }
+    },
     "Chicken rice": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "رز بالفراخ"
+          }
+        }
+      }
+    },
+    "Choose English or العربية for Setpoint in the Settings app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختار English أو العربية لـ Setpoint من تطبيق الإعدادات."
           }
         }
       }
@@ -881,6 +1031,16 @@
         }
       }
     },
+    "Date": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التاريخ"
+          }
+        }
+      }
+    },
     "Day": {
       "localizations": {
         "ar": {
@@ -1021,6 +1181,16 @@
         }
       }
     },
+    "Edit food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل الأكل"
+          }
+        }
+      }
+    },
     "Edit weight": {
       "localizations": {
         "ar": {
@@ -1051,12 +1221,42 @@
         }
       }
     },
+    "Emerald": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زمردي"
+          }
+        }
+      }
+    },
+    "End fast": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنهِ الصيام"
+          }
+        }
+      }
+    },
     "Energy expenditure": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "صرف الطاقة"
+          }
+        }
+      }
+    },
+    "Enter the calories per serving": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب السعرات لكل حصة"
           }
         }
       }
@@ -1077,6 +1277,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "اكتب كلمة السر"
+          }
+        }
+      }
+    },
+    "Erase": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح"
+          }
+        }
+      }
+    },
+    "Erase all data on this iPhone": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح كل البيانات على الآيفون ده"
+          }
+        }
+      }
+    },
+    "Erase everything on this iPhone?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمسح كل حاجة على الآيفون ده؟"
           }
         }
       }
@@ -1151,12 +1381,42 @@
         }
       }
     },
+    "Fasting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصيام"
+          }
+        }
+      }
+    },
+    "Fasting timer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مؤقت الصيام"
+          }
+        }
+      }
+    },
     "Fat": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "دهون"
+          }
+        }
+      }
+    },
+    "Fat per kg": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دهون لكل كيلو"
           }
         }
       }
@@ -1191,6 +1451,26 @@
         }
       }
     },
+    "Fill in any you measured.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "املا اللي قسته بس."
+          }
+        }
+      }
+    },
+    "Fill in at least one": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "املا واحد على الأقل"
+          }
+        }
+      }
+    },
     "Food": {
       "localizations": {
         "ar": {
@@ -1211,6 +1491,16 @@
         }
       }
     },
+    "Food log reminder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكير تسجيل الأكل"
+          }
+        }
+      }
+    },
     "Food updated": {
       "localizations": {
         "ar": {
@@ -1227,6 +1517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأطعمة"
+          }
+        }
+      }
+    },
+    "Foods you make show up here, like a protein shake or your mum's lasagna.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكلات اللي بتعملها بتظهر هنا، زي شيك البروتين أو مكرونة مامتك."
           }
         }
       }
@@ -1301,6 +1601,16 @@
         }
       }
     },
+    "Give it a name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب اسمًا"
+          }
+        }
+      }
+    },
     "Glass": {
       "localizations": {
         "ar": {
@@ -1331,6 +1641,26 @@
         }
       }
     },
+    "Goal %lld h": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف %lld ساعة"
+          }
+        }
+      }
+    },
+    "Goal reached": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصلت للهدف"
+          }
+        }
+      }
+    },
     "Goal reached! Your target is now maintenance": {
       "localizations": {
         "ar": {
@@ -1351,12 +1681,32 @@
         }
       }
     },
+    "Graphite": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرافيت"
+          }
+        }
+      }
+    },
     "HIIT": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "HIIT"
+          }
+        }
+      }
+    },
+    "Haptics": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاهتزاز"
           }
         }
       }
@@ -1387,6 +1737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأعلى"
+          }
+        }
+      }
+    },
+    "Hips": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأرداف"
           }
         }
       }
@@ -1501,6 +1861,16 @@
         }
       }
     },
+    "Language": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اللغة"
+          }
+        }
+      }
+    },
     "Last weekly check": {
       "localizations": {
         "ar": {
@@ -1601,12 +1971,32 @@
         }
       }
     },
+    "Lock with Face ID": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القفل بـ Face ID"
+          }
+        }
+      }
+    },
     "Log": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "سجّل"
+          }
+        }
+      }
+    },
+    "Log %@ ml of water": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل %@ مل مية"
           }
         }
       }
@@ -1627,6 +2017,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجّل شوية أكل عشان تشوف متوسطاتك هنا."
+          }
+        }
+      }
+    },
+    "Log today's food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل أكل النهارده"
+          }
+        }
+      }
+    },
+    "Log water": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل مية"
           }
         }
       }
@@ -1701,6 +2111,16 @@
         }
       }
     },
+    "Luxe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاخر"
+          }
+        }
+      }
+    },
     "Macros": {
       "localizations": {
         "ar": {
@@ -1721,12 +2141,42 @@
         }
       }
     },
+    "Make and edit recipes in the web app for now. They show up here and in Add food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعمل الوصفات وعدّلها من تطبيق الويب دلوقتي. هتظهر هنا وفي إضافة أكل."
+          }
+        }
+      }
+    },
     "Male": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "ذكر"
+          }
+        }
+      }
+    },
+    "Mark a cut, bulk or diet break": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علّم تنشيف أو تضخيم أو استراحة"
+          }
+        }
+      }
+    },
+    "Mark a cut, bulk or diet break.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدد فترة تنشيف أو تضخيم أو راحة من الدايت."
           }
         }
       }
@@ -1771,12 +2221,42 @@
         }
       }
     },
+    "Measure your waist and more every few weeks. They often move when the scale doesn't.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيس وسطك وغيره كل كام أسبوع. ساعات بيتغيروا والميزان ثابت."
+          }
+        }
+      }
+    },
     "Measured expenditure": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الحرق المقاس"
+          }
+        }
+      }
+    },
+    "Measurements": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القياسات"
+          }
+        }
+      }
+    },
+    "Midnight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "منتصف الليل"
           }
         }
       }
@@ -1831,6 +2311,26 @@
         }
       }
     },
+    "Name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم"
+          }
+        }
+      }
+    },
+    "Name (e.g. Cut)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاسم (مثلاً تنشيف)"
+          }
+        }
+      }
+    },
     "Name (optional)": {
       "localizations": {
         "ar": {
@@ -1851,6 +2351,36 @@
         }
       }
     },
+    "Neck": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرقبة"
+          }
+        }
+      }
+    },
+    "New food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكل جديد"
+          }
+        }
+      }
+    },
+    "New phase": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مرحلة جديدة"
+          }
+        }
+      }
+    },
     "Next day": {
       "localizations": {
         "ar": {
@@ -1867,6 +2397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش نتايج"
+          }
+        }
+      }
+    },
+    "Not fasting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مش صايم"
           }
         }
       }
@@ -1921,6 +2461,26 @@
         }
       }
     },
+    "Notifications are off for Setpoint. Turn them on in the Settings app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإشعارات مقفولة لـ Setpoint. شغّلها من تطبيق الإعدادات."
+          }
+        }
+      }
+    },
+    "Now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الآن"
+          }
+        }
+      }
+    },
     "Nutrition": {
       "localizations": {
         "ar": {
@@ -1961,12 +2521,32 @@
         }
       }
     },
+    "Ocean": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محيط"
+          }
+        }
+      }
+    },
     "On target": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "ضمن الهدف"
+          }
+        }
+      }
+    },
+    "Opens Setpoint ready to search for a food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيفتح Setpoint جاهز تدوّر على أكل."
           }
         }
       }
@@ -2021,12 +2601,42 @@
         }
       }
     },
+    "Per serving": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لكل حصة"
+          }
+        }
+      }
+    },
     "Per week": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "في الأسبوع"
+          }
+        }
+      }
+    },
+    "Phase": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فترة"
+          }
+        }
+      }
+    },
+    "Phases": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المراحل"
           }
         }
       }
@@ -2111,6 +2721,16 @@
         }
       }
     },
+    "Protein per kg": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بروتين لكل كيلو"
+          }
+        }
+      }
+    },
     "Protein target hit": {
       "localizations": {
         "ar": {
@@ -2171,12 +2791,42 @@
         }
       }
     },
+    "Recent fasts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر مرات صيام"
+          }
+        }
+      }
+    },
     "Recipes": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الوصفات"
+          }
+        }
+      }
+    },
+    "Reminders": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التذكيرات"
+          }
+        }
+      }
+    },
+    "Remove": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إزالة"
           }
         }
       }
@@ -2281,6 +2931,16 @@
         }
       }
     },
+    "Rose": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وردي"
+          }
+        }
+      }
+    },
     "Same as your expenditure": {
       "localizations": {
         "ar": {
@@ -2307,6 +2967,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "حفظ"
+          }
+        }
+      }
+    },
+    "Saved %@ %@ for today.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتحفظ %@ %@ للنهارده."
+          }
+        }
+      }
+    },
+    "Saved meals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجبات المحفوظة"
+          }
+        }
+      }
+    },
+    "Saves today's weigh-in in Setpoint, in your app's unit (kg or lb).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيحفظ وزن النهارده في Setpoint بوحدة التطبيق (كجم أو رطل)."
           }
         }
       }
@@ -2361,12 +3051,32 @@
         }
       }
     },
+    "Serving (e.g. scoop, slice)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحصة (مثلاً مغرفة، شريحة)"
+          }
+        }
+      }
+    },
     "Set": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "حدّد"
+          }
+        }
+      }
+    },
+    "Setpoint is locked": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Setpoint مقفول"
           }
         }
       }
@@ -2387,6 +3097,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الجنس"
+          }
+        }
+      }
+    },
+    "Share day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شارك اليوم"
           }
         }
       }
@@ -2481,6 +3201,16 @@
         }
       }
     },
+    "Since %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من %@"
+          }
+        }
+      }
+    },
     "Snacks": {
       "localizations": {
         "ar": {
@@ -2511,12 +3241,62 @@
         }
       }
     },
+    "Start a phase": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ مرحلة"
+          }
+        }
+      }
+    },
+    "Start fast": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ الصيام"
+          }
+        }
+      }
+    },
+    "Start today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابدأ النهارده"
+          }
+        }
+      }
+    },
+    "Started": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بدأ"
+          }
+        }
+      }
+    },
     "Steady": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "ثابت"
+          }
+        }
+      }
+    },
+    "Step on the scale before you eat or drink, and log it in Setpoint.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اطلع على الميزان قبل ما تاكل أو تشرب، وسجّله في Setpoint."
           }
         }
       }
@@ -2601,6 +3381,16 @@
         }
       }
     },
+    "Terracotta": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طوبي"
+          }
+        }
+      }
+    },
     "That email doesn't look right.": {
       "localizations": {
         "ar": {
@@ -2621,12 +3411,62 @@
         }
       }
     },
+    "That weight doesn't look right.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن ده شكله مش مظبوط."
+          }
+        }
+      }
+    },
+    "Theme": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المظهر"
+          }
+        }
+      }
+    },
     "There's already an account with this email. Sign in instead.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "فيه حساب بالإيميل ده بالفعل. سجّل دخول بدل كده."
+          }
+        }
+      }
+    },
+    "These are for this iPhone only.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دي للآيفون ده بس."
+          }
+        }
+      }
+    },
+    "These sync with the web app.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دي بتتزامن مع تطبيق الويب."
+          }
+        }
+      }
+    },
+    "Thigh": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفخذ"
           }
         }
       }
@@ -2691,6 +3531,16 @@
         }
       }
     },
+    "Time to weigh in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقت الوزن"
+          }
+        }
+      }
+    },
     "To delete your account, sign in on the web app and use Settings › Account.": {
       "localizations": {
         "ar": {
@@ -2747,6 +3597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "محاولات كتير. استنى شوية."
+          }
+        }
+      }
+    },
+    "Track calories": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتبع السعرات"
           }
         }
       }
@@ -2811,6 +3671,26 @@
         }
       }
     },
+    "Unlock": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح"
+          }
+        }
+      }
+    },
+    "Unlock Setpoint": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح Setpoint"
+          }
+        }
+      }
+    },
     "Unlogged days hide what you ate, so this may read low. It counts less until you log more days.": {
       "localizations": {
         "ar": {
@@ -2827,6 +3707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استخدم ٦ حروف على الأقل في كلمة السر."
+          }
+        }
+      }
+    },
+    "Use recommended": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم الموصى به"
           }
         }
       }
@@ -2871,6 +3761,16 @@
         }
       }
     },
+    "Waist": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوسط"
+          }
+        }
+      }
+    },
     "Water": {
       "localizations": {
         "ar": {
@@ -2891,12 +3791,32 @@
         }
       }
     },
+    "Week starts on": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بداية الأسبوع"
+          }
+        }
+      }
+    },
     "Weeks": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "أسابيع"
+          }
+        }
+      }
+    },
+    "Weigh-in reminder": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تذكير الوزن"
           }
         }
       }
@@ -2951,6 +3871,16 @@
         }
       }
     },
+    "Weight of a serving (optional)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزن الحصة (اختياري)"
+          }
+        }
+      }
+    },
     "Weight saved": {
       "localizations": {
         "ar": {
@@ -2971,12 +3901,32 @@
         }
       }
     },
+    "Weight unit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وحدة الوزن"
+          }
+        }
+      }
+    },
     "What you ate vs how your weight moved, last 4 weeks.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اللي كلته مقابل حركة وزنك، آخر 4 أسابيع."
+          }
+        }
+      }
+    },
+    "What's your weight in %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزنك كام بالـ %@؟"
           }
         }
       }
@@ -3077,6 +4027,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أهدافك هتظهر هنا لما تتحدد في تطبيق الويب."
+          }
+        }
+      }
+    },
+    "Your weigh-ins, food log and settings on this iPhone are deleted. If you're signed in, you're signed out first, so your account keeps its copy.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوزانك وسجل الأكل والإعدادات على الآيفون ده هتتمسح. لو مسجل دخول، هيتسجل خروجك الأول عشان حسابك يفضل محتفظ بنسخته."
           }
         }
       }

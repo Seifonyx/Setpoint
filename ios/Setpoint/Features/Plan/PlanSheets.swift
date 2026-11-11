@@ -207,6 +207,15 @@ struct BreakdownView: View {
                     LabeledContent("Protein") { Text("\(Fmt.grams(p.protein)) g · \(perKg(p.proteinPerKg)) g/kg") }
                     LabeledContent("Fat") { Text("\(Fmt.grams(p.fat)) g · \(perKg(p.fatPerKg)) g/kg") }
                     LabeledContent("Carbs") { Text("\(Fmt.grams(p.carbs)) g") }
+                    if let r = p.ranges, r.protein.count >= 2, r.fat.count >= 2 {
+                        Stepper(value: Binding(get: { p.proteinPerKg }, set: { v in setMacro("protein", v) }), in: r.protein[0]...r.protein[1], step: 0.1) {
+                            LabeledContent("Protein per kg") { Text(perKg(p.proteinPerKg)).monospacedDigit() }
+                        }
+                        Stepper(value: Binding(get: { p.fatPerKg }, set: { v in setMacro("fat", v) }), in: r.fat[0]...r.fat[1], step: 0.1) {
+                            LabeledContent("Fat per kg") { Text(perKg(p.fatPerKg)).monospacedDigit() }
+                        }
+                        if p.custom { Button("Use recommended") { store.setProfile { $0["macros"] = .object(["protein": .null, "fat": .null]) } } }
+                    }
                 } header: { Text("Macros") } footer: {
                     let ref = Int(p.ref.rounded())
                     switch p.refWhy {
@@ -219,6 +228,13 @@ struct BreakdownView: View {
             }
         }
         .navigationTitle("Target breakdown")
+    }
+    private func setMacro(_ k: String, _ v: Double) {
+        store.setProfile { p in
+            var m = p["macros"]?.object ?? ["protein": .null, "fat": .null]
+            m[k] = .number((v * 10).rounded() / 10)
+            p["macros"] = .object(m)
+        }
     }
     private func perKg(_ v: Double) -> String { v.formatted(.number.precision(.fractionLength(0...1))) }
 }
