@@ -29,6 +29,8 @@ struct AddFoodSheet: View {
     @State private var selected: [String: FoodHit] = [:]
     @State private var startIDs: Set<String> = []
     @AppStorage("addFoodClosed") private var closedGroups = ""
+    @AppStorage("searchSort") private var sort = "best"
+    @AppStorage("verifiedOnly") private var verifiedOnly = false
 
     enum Tab: String, CaseIterable, Identifiable {
         case all, favorites, mine
@@ -90,10 +92,10 @@ struct AddFoodSheet: View {
             } message: { Text("This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.") }
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
             .task(id: "\(meal)|\(store.version)|\(store.foodsReady)") { await loadLists() }
-            .task(id: "\(query)|\(meal)|\(store.foodsReady)") {
+            .task(id: "\(query)|\(meal)|\(store.foodsReady)|\(sort)|\(verifiedOnly)") {
                 guard !query.isEmpty else { hits = []; return }
                 try? await Task.sleep(for: .milliseconds(150)) // wait for typing to pause
-                hits = await store.engineRef.search(query, meal: meal)
+                hits = await store.engineRef.search(query, meal: meal, sort: sort, verifiedOnly: verifiedOnly)
             }
             .onAppear { if startIDs.isEmpty { startIDs = Set(store.items(day).map(\.id)) } }
             .sensoryFeedback(.success, trigger: added.count)
@@ -145,6 +147,24 @@ struct AddFoodSheet: View {
     }
 
     @ViewBuilder private var searchResults: some View {
+        SwiftUI.Section {
+            HStack(spacing: 8) {
+                Menu {
+                    Picker("Sort", selection: $sort) {
+                        Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best")
+                        Label("Most recent", systemImage: "clock").tag("recent")
+                        Label("Most frequent", systemImage: "chart.bar").tag("frequent")
+                    }
+                } label: {
+                    chip(sort == "recent" ? "Most recent" : sort == "frequent" ? "Most frequent" : "Best match", icon: "arrow.up.arrow.down", on: sort != "best")
+                }
+                Button { verifiedOnly.toggle() } label: { chip("Verified", icon: "checkmark.seal.fill", on: verifiedOnly, tint: .blue) }
+                    .buttonStyle(.plain)
+                Spacer()
+            }
+        }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         if !store.foodsReady {
             SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
         }
@@ -201,6 +221,14 @@ struct AddFoodSheet: View {
                 Button(h.fav == true ? "Remove from favorites" : "Add to favorites", systemImage: h.fav == true ? "star.slash" : "star") { toggleFav(h) }.tint(Brand.amber)
             }
         }
+    }
+
+    private func chip(_ t: LocalizedStringKey, icon: String, on: Bool, tint: Color = Brand.green) -> some View {
+        HStack(spacing: 5) { Image(systemName: icon).font(.caption.weight(.semibold)); Text(t).font(.brand(.subheadline, .semibold)) }
+            .padding(.horizontal, 12).padding(.vertical, 7)
+            .background(on ? tint.opacity(0.18) : Brand.card, in: Capsule())
+            .overlay(Capsule().strokeBorder(on ? tint.opacity(0.5) : Brand.line, lineWidth: 1))
+            .foregroundStyle(on ? tint : Brand.ink)
     }
 
     private func addButton(_ action: @escaping () -> Void) -> some View {
@@ -384,6 +412,7 @@ struct FoodHitRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
                     Text(hit.name).lineLimit(2).font(.brand(.body))
+                    if hit.verified == true { Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Verified")) }
                     if hit.fav == true { Image(systemName: "star.fill").font(.caption2).foregroundStyle(Brand.amber) }
                 }
                 HStack(spacing: 6) {

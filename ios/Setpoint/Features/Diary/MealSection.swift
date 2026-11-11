@@ -60,8 +60,14 @@ struct MealSection: View {
             }
             }
         } header: {
-            HStack(alignment: .firstTextBaseline) {
-                // the name opens the meal; the chevron folds it
+            HStack(alignment: .center, spacing: 8) {
+                // + adds to this meal; the name opens the meal; the chevron folds it
+                Button(action: addFood) {
+                    Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
+                        .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Add food to \(meal.name)"))
                 Button { summary = true } label: {
                     Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil).contentShape(.rect)
                 }
@@ -84,7 +90,6 @@ struct MealSection: View {
                     Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2).textCase(nil)
                 }
                 Menu {
-                    Button("Add food", systemImage: "plus", action: addFood)
                     Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
                         withAnimation { _ = store.copyFromYesterday(meal: meal.key, to: day) }
                     }

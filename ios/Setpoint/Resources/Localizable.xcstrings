@@ -731,6 +731,16 @@
         }
       }
     },
+    "Add food to %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف أكل لـ %@"
+          }
+        }
+      }
+    },
     "Add ingredient": {
       "localizations": {
         "ar": {
@@ -1017,6 +1027,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "رقم الباركود"
+          }
+        }
+      }
+    },
+    "Best match": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأنسب"
           }
         }
       }
@@ -3561,6 +3581,26 @@
         }
       }
     },
+    "Most frequent": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكثر تكرارًا"
+          }
+        }
+      }
+    },
+    "Most recent": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأحدث"
+          }
+        }
+      }
+    },
     "Move to": {
       "localizations": {
         "ar": {
@@ -5011,6 +5051,16 @@
         }
       }
     },
+    "Sort": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الترتيب"
+          }
+        }
+      }
+    },
     "Split into %lld foods": {
       "localizations": {
         "ar": {
@@ -5787,6 +5837,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استخدم الأربعة الأساسية"
+          }
+        }
+      }
+    },
+    "Verified": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "موثّقة"
           }
         }
       }

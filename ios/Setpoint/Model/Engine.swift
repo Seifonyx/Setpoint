@@ -53,6 +53,7 @@ actor Engine {
     // MARK: Adding food
 
     func search(_ q: String, meal: String) -> [FoodHit] { decode([FoodHit].self, "search", [q, meal]) ?? [] }
+    func search(_ q: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "searchSorted", [q, meal, sort, verifiedOnly]) ?? [] }
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
     func savedMeals() -> [SavedMeal] { decode([SavedMeal].self, "savedMeals") ?? [] }
     func food(_ id: String, meal: String) -> FoodInfo? { decode(FoodInfo.self, "food", [id, meal]) }
@@ -128,8 +129,9 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
     let u: String?
     let amt: String?
     let usual: Bool?
+    let verified: Bool?
 
-    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual }
+    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual, verified }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: CodingKeys.self)
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
@@ -151,6 +153,7 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
         u = try c.decodeIfPresent(String.self, forKey: .u)
         amt = try c.decodeIfPresent(String.self, forKey: .amt)
         usual = try c.decodeIfPresent(Bool.self, forKey: .usual)
+        verified = try c.decodeIfPresent(Bool.self, forKey: .verified)
     }
 }
 

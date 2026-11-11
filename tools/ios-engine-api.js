@@ -9,13 +9,15 @@
   var lang = 'en';
   function L(s) { return lang === 'ar' && typeof s === 'string' && s ? (tr(s) || s) : s; }
   function setMeals() { MEALS = state.settings.meals && state.settings.meals.length ? state.settings.meals.map(function (x) { return [x.k, x.n]; }) : DEFAULT_MEALS; }
+  // Verified: lab-measured USDA data or a restaurant's own published numbers (not estimates, community barcode data or your own foods).
+  function isVerified(f) { if (f.est || f.custom || f.recipe || f.off) return false; var m = /^u(\d+)$/.exec(f.id); return m ? +m[1] < 9000000 : /^ur/.test(f.id); }
   function row(f, meal) {
     // Your usual amount (or a sensible serving), with its numbers, so the list can add it in one tap.
     var us = unitsFor(f), lp = lastPortion(f.id, meal), u = lp && us.find(function (x) { return x.label === lp.unit; }), q, lbl, g;
     if (u) { q = lp.qty; lbl = lp.unit; g = q * u.g; } else { var ds = defaultServing(f); q = ds.qty; lbl = ds.unit.label; g = q * ds.unit.g; }
     var m = macrosFor(f, g);
     return { id: f.id, name: L(f.name), sub: L(servingLine(f, meal)), via: f.via || null, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom,
-      off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
+      off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), verified: isVerified(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
       kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
   }
   function itemFor(f, qty, label, meal) {
@@ -33,6 +35,15 @@
     ready: false,
 
     // ---- Adding food ----
+    // sort: 'best' (the web app's ranking), 'recent' (what you logged lately first) or 'frequent' (most logged first).
+    searchSorted: function (q, meal, sort, verifiedOnly) {
+      var list = JSON.parse(this.search(q, meal)), fu = foodUse(), rec = {};
+      fu.order.forEach(function (o, i) { if (o.item.ref && rec[o.item.ref] == null) rec[o.item.ref] = i; });
+      if (verifiedOnly) list = list.filter(function (r) { return r.verified; });
+      if (sort === 'recent') list = list.map(function (r, i) { return [r, i]; }).sort(function (a, b) { var x = rec[a[0].id], y = rec[b[0].id]; return (x == null ? 1e9 : x) - (y == null ? 1e9 : y) || a[1] - b[1]; }).map(function (x) { return x[0]; });
+      if (sort === 'frequent') list = list.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return ((fu.use[b[0].id] || 0) - (fu.use[a[0].id] || 0)) || a[1] - b[1]; }).map(function (x) { return x[0]; });
+      return J(list);
+    },
     search: function (q, meal) {
       if (!foodDB || !String(q).trim()) return '[]';
       var fu = foodUse(), rec = {}, mu = {}, from = dayNum(todayISO()) - 90;

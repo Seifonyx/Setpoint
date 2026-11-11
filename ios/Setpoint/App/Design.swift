@@ -5,20 +5,20 @@ import UIKit
 /// Bricolage Grotesque for headlines and numbers, Figtree for text (IBM Plex Sans Arabic in Arabic).
 enum Brand {
     // MARK: Colours (light, dark)
-    static let bg = dyn(0xF5EFE4, 0x100F0D)          // the page: warm paper / warm near-black
-    static let card = dyn(0xFFFBF4, 0x1B1915)        // cards
-    static let card2 = dyn(0xEFE7DA, 0x26231E)       // inset wells, tracks
-    static let ink = dyn(0x1E1A14, 0xF4EEE3)
-    static let ink2 = dyn(0x766D60, 0xA69D8F)        // secondary text
-    static let line = dyn(0xE4DACB, 0x2E2A24)
-    static let green = dyn(0x0F5C45, 0x5CC49A)       // the signature
-    static let greenSoft = dyn(0xDCEBE2, 0x173329)
-    static let amber = dyn(0xC9801F, 0xF0B35A)       // highlights, carbs
-    static let protein = dyn(0xC4553A, 0xF08166)     // terracotta
+    static let bg = dyn(0xF5EFE4, 0x0A0A09)          // the page: warm paper / warm near-black
+    static let card = dyn(0xFFFBF4, 0x161513)        // cards
+    static let card2 = dyn(0xEFE7DA, 0x24221E)       // inset wells, tracks
+    static let ink = dyn(0x1E1A14, 0xEAE5DC)
+    static let ink2 = dyn(0x766D60, 0x9A9286)        // secondary text
+    static let line = dyn(0xE4DACB, 0x292622)
+    static let green = dyn(0x0F5C45, 0x55AF8B)       // the signature
+    static let greenSoft = dyn(0xDCEBE2, 0x14261F)
+    static let amber = dyn(0xC9801F, 0xE2A758)       // highlights, carbs
+    static let protein = dyn(0xC4553A, 0xDD7860)     // terracotta
     static let carbs = amber
-    static let fat = dyn(0x4F6FA3, 0x8FAAE0)         // slate blue
-    static let water = dyn(0x2C88A8, 0x6CC3E0)
-    static let over = dyn(0xB8412E, 0xF27A62)
+    static let fat = dyn(0x4F6FA3, 0x87A0D2)         // slate blue
+    static let water = dyn(0x2C88A8, 0x60B2CC)
+    static let over = dyn(0xB8412E, 0xE2705A)
 
     static func dyn(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
