@@ -53,6 +53,11 @@ struct DiaryView: View {
                 ForEach(store.meals) { meal in
                     MealSection(meal: meal, day: day, copying: $copying) { adding = AddJob(meal: meal.key) }
                 }
+                if !store.items(day).isEmpty {
+                    Section {
+                        NavigationLink { NutrientsView(day: day) } label: { Label("Vitamins & minerals", systemImage: "leaf") }
+                    }
+                }
             }
             .listSectionSpacing(14)
             .navigationTitle(title)

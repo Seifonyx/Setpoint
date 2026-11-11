@@ -125,6 +125,14 @@
       return J(data);
     },
 
+    // ---- Vitamins and minerals: a day's totals against your targets, and what's often low (last 2 weeks) ----
+    nutrients: function (d) {
+      var nd = dayNutrients(d), tg = nutTargets(d);
+      return J({ items: nd.items, kcal: nd.kcal, groups: NUT_GROUPS.map(function (g) { return { key: g[0], label: L(g[1]) }; }),
+        rows: NUTS.map(function (n) { var t = tg[n[0]] || {}; return { key: n[0], label: L(n[1]), unit: n[2], group: n[3], v: nd.tot[n[0]] || 0, cov: nd.cov[n[0]], goal: t.goal == null ? null : t.goal, hi: t.hi == null ? null : t.hi }; }),
+        low: oftenLow().low.map(function (x) { return { key: x.key, label: L(NUT[x.key].label), pct: x.pct }; }) });
+    },
+
     // ---- Progress ----
     // Every weigh-in with its trend, the weeks (average, days weighed, calories), and which way counts as progress.
     progress: function () {

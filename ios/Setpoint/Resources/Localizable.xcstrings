@@ -1661,6 +1661,16 @@
         }
       }
     },
+    "Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكلات اللي بتسجلها بالاسم بس (الإضافة السريعة) مش بتتحسب هنا. الصفوف الباهتة بياناتها قليلة في اليوم ده."
+          }
+        }
+      }
+    },
     "Foods you make show up here, like a protein shake or your mum's lasagna.": {
       "localizations": {
         "ar": {
@@ -2161,12 +2171,32 @@
         }
       }
     },
+    "Log meals as separate foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الوجبات كأطعمة منفصلة"
+          }
+        }
+      }
+    },
     "Log some food to see your averages here.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "سجّل شوية أكل عشان تشوف متوسطاتك هنا."
+          }
+        }
+      }
+    },
+    "Log some food to see your vitamins and minerals.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل شوية أكل عشان تشوف الفيتامينات والمعادن."
           }
         }
       }
@@ -2747,6 +2777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إيقاف"
+          }
+        }
+      }
+    },
+    "Often low": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غالبًا ناقص"
           }
         }
       }
@@ -4051,6 +4091,16 @@
         }
       }
     },
+    "Vitamins & minerals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفيتامينات والمعادن"
+          }
+        }
+      }
+    },
     "Waist": {
       "localizations": {
         "ar": {
@@ -4277,6 +4327,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتسجل خروجك. ادخل تاني."
+          }
+        }
+      }
+    },
+    "Your average over the last 2 weeks, as a share of your target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسطك في آخر أسبوعين، كنسبة من هدفك."
           }
         }
       }

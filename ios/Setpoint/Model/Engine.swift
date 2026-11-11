@@ -85,6 +85,7 @@ actor Engine {
     }
     func syncHasData(_ text: String) -> Bool { sp.invokeMethod("syncHasData", withArguments: [text])?.toBool() ?? false }
     func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
+    func nutrients(_ day: String) -> NutrientData? { decode(NutrientData.self, "nutrients", [day]) }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
@@ -211,4 +212,14 @@ struct ProgressData: Decodable, Sendable {
 struct NutritionDay: Decodable, Sendable, Identifiable {
     let date: String; let kcal: Double; let protein: Double; let carbs: Double; let fat: Double; let target: Double?; let proteinTarget: Double?
     var id: String { date }
+}
+
+struct NutrientData: Decodable, Sendable {
+    struct Group: Decodable, Sendable { let key: String; let label: String }
+    struct Row: Decodable, Sendable { let key: String; let label: String; let unit: String; let group: String; let v: Double; let cov: Double; let goal: Double?; let hi: Double? }
+    struct Low: Decodable, Sendable { let key: String; let label: String; let pct: Double }
+    let items: Int
+    let groups: [Group]
+    let rows: [Row]
+    let low: [Low]
 }

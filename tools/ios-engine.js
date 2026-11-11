@@ -50,6 +50,7 @@ ${read('10-food-database.js')}
 ${extract(read('06-appearance.js'), ['trWord', 'tr'])}
 ${extract(read('25-account-sync.js'), ['mergeData', 'hasData'])}
 ${extract(read('24-sheets.js'), ['cycleWindows', 'inCycleWindow'])}
+${extract(read('14-nutrients.js'), ['NUTS', 'NUT', 'NUT_GROUPS', 'MICROS', 'DRI', 'DRI_TEEN', 'UL', 'nutRec', 'nutTargets', 'itemNutrients', 'dayNutrients', 'oftenLow', 'oftenLowNow'])}
 ${fs.readFileSync(path.join(__dirname, 'ios-engine-api.js'), 'utf8')}
 })();
 `;

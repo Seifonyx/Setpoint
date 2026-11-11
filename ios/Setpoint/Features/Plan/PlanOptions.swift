@@ -52,7 +52,7 @@ struct WeekPlanSection: View {
 }
 
 /// Weekdays in your week's order (settings.weekStart, Friday unless changed).
-private func weekOrder(_ store: Store) -> [Int] {
+@MainActor private func weekOrder(_ store: Store) -> [Int] {
     let ws = Int(store.root["settings"]?["weekStart"]?.number ?? 5)
     return (0..<7).map { (ws + $0) % 7 }
 }

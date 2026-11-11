@@ -109,6 +109,8 @@ struct DeviceSettingsView: View {
                     }
                 }
                 .pickerStyle(.navigationLink)
+                Toggle("Log meals as separate foods", isOn: Binding(get: { store.root["settings"]?.object?["explode"]?.bool ?? false },
+                                                                    set: { store.setSetting("explode", .bool($0)) }))
                 Toggle("Track calories", isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
                                                        set: { store.setSetting("trackCalories", .bool($0)) }))
             } footer: { Text("These sync with the web app.") }
