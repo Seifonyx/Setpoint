@@ -165,7 +165,7 @@ struct SummaryPager: View {
                 MicrosCard(day: day).tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 428)
+            .frame(height: 372)
             HStack(spacing: 6) {
                 ForEach(0..<2, id: \.self) { i in
                     Capsule().fill(i == page ? Brand.green : Brand.ink2.opacity(0.25)).frame(width: i == page ? 18 : 6, height: 6)
@@ -244,7 +244,7 @@ struct MicrosCard: View {
             }
             if let d = data, d.items > 0 {
                 let rows = Self.keys.compactMap { k in d.rows.first { $0.key == k } }
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 16), GridItem(.flexible(), spacing: 16)], spacing: 14) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 20) {
                     ForEach(rows, id: \.key) { r in cell(r) }
                 }
             } else {

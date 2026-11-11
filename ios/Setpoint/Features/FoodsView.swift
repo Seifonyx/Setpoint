@@ -190,7 +190,7 @@ struct CustomFoodSheet: View {
     }
 }
 
-/// Foods: categories, each on its own page, plus your diet plan.
+/// Foods: categories, each on its own page.
 struct FoodsView: View {
     @Environment(Store.self) private var store
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
@@ -206,21 +206,6 @@ struct FoodsView: View {
                         tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
                         tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
                     }
-                    NavigationLink { PlanView() } label: {
-                        HStack(spacing: 14) {
-                            Image(systemName: "target").font(.title2).foregroundStyle(Brand.green)
-                                .frame(width: 48, height: 48).background(Brand.greenSoft, in: .rect(cornerRadius: 14))
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Diet plan").font(Brand.display(19, .bold))
-                                Text(store.overview?.plan.map { "\(Fmt.kcal(($0.target / 10).rounded() * 10)) kcal · P \(Fmt.grams($0.protein)) · C \(Fmt.grams($0.carbs)) · F \(Fmt.grams($0.fat))" } ?? String(localized: "Targets, goal and expenditure"))
-                                    .font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
-                        }
-                        .brandCard()
-                    }
-                    .buttonStyle(.plain)
                 }
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
             }
