@@ -85,6 +85,28 @@
       var n = itemFor(f, qty, label, it.meal); delete n.id; delete n.name; delete n.meal;
       return J(Object.assign(it, n));
     },
+    // A logged recipe's ingredients for this day: its own copy if adjusted (it.rc), else the saved recipe's.
+    recipeOf: function (txt) {
+      var it = JSON.parse(txt), rc = it.rc || (state.recipes.find(function (r) { return r.id === it.ref; }) || null);
+      if (!rc) return 'null';
+      return J({ servings: rc.servings || 1, cookedG: rc.cookedG || null, items: (rc.items || []).map(function (x) {
+        var f = getFood(x.ref), m = f ? macrosFor(f, x.g || 0) : { kcal: 0, protein: 0, carbs: 0, fat: 0 };
+        return { ref: x.ref, name: x.name || (f && f.name) || '', g: x.g, qty: x.qty, unit: x.unit, kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
+      }) });
+    },
+    // Save a recipe adjusted for this day only (rc), or go back to the saved recipe (rcTxt null), as the web app does.
+    applyRecipe: function (txt, rcTxt) {
+      var it = JSON.parse(txt);
+      if (rcTxt) { var rc = JSON.parse(rcTxt); it.rc = { servings: rc.servings, cookedG: rc.cookedG || null, items: rc.items.map(function (x) { return { ref: x.ref, name: x.name, g: x.g, qty: x.qty, unit: x.unit }; }) }; }
+      else delete it.rc;
+      var f = itemFood(it);
+      if (f) {
+        var u = unitsFor(f).find(function (x) { return x.label === it.unit; });
+        if (u) it.g = Math.round(it.qty * u.g * 10) / 10;
+        var m = macrosFor(f, it.g); it.kcal = Math.min(m.kcal, 10000); it.protein = m.protein; it.carbs = m.carbs; it.fat = m.fat;
+      }
+      return J(it);
+    },
     fmtAmt: function (qty, unit) { return L(fmtAmt(qty, unit)); },
     setLang: function (l) { lang = l === 'ar' ? 'ar' : 'en'; return 'ok'; },
     tr: function (s) { return L(s); },

@@ -25,6 +25,54 @@ struct MealSection: View {
 
     var body: some View {
         Section {
+            // the meal's heading, inside its card (like Cronometer): + adds, the name opens the meal, the chevron folds it
+            Group {
+            HStack(alignment: .center, spacing: 8) {
+                // + adds to this meal; the name opens the meal; the chevron folds it
+                Button(action: addFood) {
+                    Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
+                        .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text("Add food to \(meal.name)"))
+                Button { summary = true } label: {
+                    Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                Button(action: toggleOpen) {
+                    HStack(spacing: 6) {
+                        Image(systemName: "chevron.down").font(.brand(.caption, .bold)).foregroundStyle(Brand.ink2)
+                            .rotationEffect(.degrees(expanded ? 0 : -90))
+                        if !expanded && !foods.isEmpty {
+                            Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                                .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
+                        }
+                    }
+                    .frame(minWidth: 28, minHeight: 28).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
+                Spacer()
+                if !counted.isEmpty {
+                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
+                }
+                Menu {
+                    Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
+                        withAnimation { _ = store.copyFromYesterday(meal: meal.key, to: day) }
+                    }
+                    if !foods.isEmpty {
+                        Button("Copy to another day", systemImage: "doc.on.doc") { copying = foods }
+                        Button("Save as meal", systemImage: "square.and.arrow.down.on.square") { mealName = meal.name; naming = true }
+                        Button("Remove all", systemImage: "trash", role: .destructive) { withAnimation { store.removeMeal(meal.key, on: day) } }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis").font(.brand(.body, .semibold)).frame(width: 30, height: 24).contentShape(.rect)
+                }
+                .accessibilityLabel(Text("\(meal.name) options"))
+            }
+            }
+            .padding(.vertical, 2)
+            .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
             if expanded {
             ForEach(foods) { food in
                 Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
@@ -55,53 +103,6 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
             }
-            Button(action: addFood) {
-                Label("Add food", systemImage: "plus.circle.fill").font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
-            }
-            }
-        } header: {
-            HStack(alignment: .center, spacing: 8) {
-                // + adds to this meal; the name opens the meal; the chevron folds it
-                Button(action: addFood) {
-                    Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
-                        .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text("Add food to \(meal.name)"))
-                Button { summary = true } label: {
-                    Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil).contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                Button(action: toggleOpen) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.down").font(.brand(.caption, .bold)).foregroundStyle(Brand.ink2)
-                            .rotationEffect(.degrees(expanded ? 0 : -90))
-                        if !expanded && !foods.isEmpty {
-                            Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
-                                .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
-                        }
-                    }
-                    .frame(minWidth: 28, minHeight: 28).contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
-                Spacer()
-                if !counted.isEmpty {
-                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2).textCase(nil)
-                }
-                Menu {
-                    Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
-                        withAnimation { _ = store.copyFromYesterday(meal: meal.key, to: day) }
-                    }
-                    if !foods.isEmpty {
-                        Button("Copy to another day", systemImage: "doc.on.doc") { copying = foods }
-                        Button("Save as meal", systemImage: "square.and.arrow.down.on.square") { mealName = meal.name; naming = true }
-                        Button("Remove all", systemImage: "trash", role: .destructive) { withAnimation { store.removeMeal(meal.key, on: day) } }
-                    }
-                } label: {
-                    Image(systemName: "ellipsis").font(.brand(.body, .semibold)).frame(width: 30, height: 24).contentShape(.rect)
-                }
-                .accessibilityLabel(Text("\(meal.name) options"))
             }
         }
         .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
@@ -214,9 +215,6 @@ struct MealSummarySheet: View {
                     }
                     HStack(spacing: 10) {
                         cell("Protein", t.protein, Brand.protein); cell("Carbs", t.carbs, Brand.carbs); cell("Fat", t.fat, Brand.fat)
-                    }
-                    if let plan = store.plans[day] ?? store.plan(day), plan.kcal > 0 {
-                        Text("\(Int((t.kcal / plan.kcal * 100).rounded()))% of your calories for the day").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
                 }
                 Section {

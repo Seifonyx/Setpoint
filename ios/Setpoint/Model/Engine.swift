@@ -97,6 +97,19 @@ actor Engine {
     func itemKinds(_ day: String) -> [String: String] { decode([String: String].self, "itemKinds", [day]) ?? [:] }
     func expenditureHistory(weeks: Int) -> [ExpPoint] { decode([ExpPoint].self, "expenditureHistory", [weeks]) ?? [] }
     func nutrientSources(_ key: String, day: String, days: Int) -> NutrientSources? { decode(NutrientSources.self, "nutrientSources", [key, day, days]) }
+    /// A logged recipe's ingredients (its own copy for this day if adjusted, else the saved recipe).
+    func recipeOf(_ item: [String: JSONValue]) -> [String: JSONValue]? {
+        guard let t = text(item) else { return nil }
+        return decode(JSONValue.self, "recipeOf", [t])?.object
+    }
+    /// The logged recipe with its ingredients for this day (nil goes back to the saved recipe).
+    func applyRecipe(_ item: [String: JSONValue], _ rc: [String: JSONValue]?) -> [String: JSONValue]? {
+        guard let t = text(item) else { return nil }
+        return decode(JSONValue.self, "applyRecipe", [t, rc.flatMap { text($0) } ?? NSNull()])?.object
+    }
+    private func text(_ o: [String: JSONValue]) -> String? {
+        (try? JSONEncoder().encode(JSONValue.object(o))).map { String(decoding: $0, as: UTF8.self) }
+    }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }

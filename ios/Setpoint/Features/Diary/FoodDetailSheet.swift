@@ -15,6 +15,12 @@ struct FoodDetailSheet: View {
     @State private var factor = 1.0            // for quick adds and meals: how many of the logged amount
     @State private var live: Totals?
     @State private var parts: [[String: JSONValue]] = []   // a meal's foods, as edited
+    @State private var partsEdited = false
+    @State private var recipe: [String: JSONValue]?         // a recipe's ingredients for this day
+    @State private var recipeEdited = false
+    @State private var resetRecipe = false
+    @State private var editingPart: PartJob?
+    struct PartJob: Identifiable { let id = UUID(); let index: Int; let part: [String: JSONValue]; let inRecipe: Bool }
     @State private var meal = ""
     @State private var hasTime = false
     @State private var time = Date()
@@ -28,6 +34,8 @@ struct FoodDetailSheet: View {
         return (store.root["repeats"]?.array ?? []).compactMap { $0.object }.first { $0["id"]?.string == rid }
     }
     private var isMeal: Bool { !(food.raw["mi"]?.array ?? []).isEmpty }
+    private var isRecipe: Bool { food.ref?.hasPrefix("r") == true }
+    private var recipeItems: [[String: JSONValue]] { (recipe?["items"]?.array ?? []).compactMap { $0.object } }
     private var byFood: Bool { food.ref != nil && info != nil && !isMeal }
     private var qty: Double? { Double(qtyText.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: "٫", with: ".")).flatMap { $0 > 0 ? $0 : nil } }
     private var base: Double { food.qty ?? info?.def.qty ?? 1 }
@@ -39,7 +47,8 @@ struct FoodDetailSheet: View {
                 header
                 portion
                 if isMeal { mealFoods }
-                share
+                if isRecipe && recipe != nil { recipeFoods }
+                if !isMeal { share }
                 if byFood, info?.per100 != nil { nutrients }
                 details
             }
@@ -60,12 +69,23 @@ struct FoodDetailSheet: View {
                 }
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent) }
             }
+            .sheet(item: $editingPart) { job in
+                PartAmountSheet(part: job.part) { updated in
+                    if job.inRecipe {
+                        var items = recipe?["items"]?.array ?? []
+                        if job.index < items.count { items[job.index] = .object(updated) }
+                        recipe?["items"] = .array(items); recipeEdited = true
+                    } else if job.index < parts.count {
+                        parts[job.index] = updated; partsEdited = true
+                    }
+                }
+            }
             .sheet(isPresented: $repeating) { RepeatSheet(item: repeatRec?["item"]?.object ?? food.raw, existing: repeatRec) }
             .confirmationDialog("Delete \(food.displayName)?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) { store.delete(food, on: day); dismiss() }
             }
             .task { await load() }
-            .task(id: "\(qtyText)|\(unit)|\(factor)|\(parts.count)") { await recalc() }
+            .task(id: "\(qtyText)|\(unit)|\(factor)|\(parts.count)|\(partsEdited)|\(parts.description.count)|\(recipe?.description.count ?? 0)") { await recalc() }
         }
         .presentationDetents([.large])
         .sensoryFeedback(.selection, trigger: qtyText)
@@ -144,6 +164,7 @@ struct FoodDetailSheet: View {
         Section {
             ForEach(parts.indices, id: \.self) { i in
                 let it = parts[i]
+                Button { if it["ref"]?.string != nil { editingPart = PartJob(index: i, part: it, inRecipe: false) } } label: {
                 HStack(spacing: 10) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(it["name"]?.string ?? String(localized: "Quick add")).lineLimit(1)
@@ -151,10 +172,44 @@ struct FoodDetailSheet: View {
                     }
                     Spacer()
                     Text(Fmt.kcal((it["kcal"]?.number ?? 0) * factor)).font(.brand(.body, .semibold)).monospacedDigit()
+                    if it["ref"]?.string != nil { Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Brand.ink2) }
                 }
-                .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i) } } }
+                .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
             }
-        } header: { Text("In this meal") } footer: { Text("Swipe a food to take it out of this meal. ⋯ › Split turns it into separate foods.") }
+        } header: { Text("In this meal") } footer: { Text("Changes this day only. Tap a food to change its amount, swipe to take it out. ⋯ › Split turns it into separate foods.") }
+    }
+
+    private var recipeFoods: some View {
+        Section {
+            ForEach(recipeItems.indices, id: \.self) { i in
+                let it = recipeItems[i]
+                Button { editingPart = PartJob(index: i, part: it, inRecipe: true) } label: {
+                    HStack(spacing: 10) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(it["name"]?.string ?? "").lineLimit(1)
+                            if let q = it["qty"]?.number, let u = it["unit"]?.string { Text(Fmt.amount(q, u)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+                        }
+                        Spacer()
+                        Text(Fmt.kcal(it["kcal"]?.number ?? 0)).font(.brand(.body, .semibold)).monospacedDigit()
+                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Brand.ink2)
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .swipeActions {
+                    Button("Remove", systemImage: "minus.circle", role: .destructive) {
+                        var items = recipe?["items"]?.array ?? []; items.remove(at: i); recipe?["items"] = .array(items); recipeEdited = true
+                    }
+                }
+            }
+            if food.raw["rc"] != nil || recipeEdited {
+                Button("Use the saved recipe", systemImage: "arrow.uturn.backward") { resetRecipe = true; recipeEdited = false; Task { await loadRecipe(saved: true) } }
+                    .tint(Brand.green)
+            }
+        } header: { Text("Ingredients") } footer: { Text("Changes this day only. To change the recipe itself, go to Foods › Recipes.") }
     }
 
     @ViewBuilder private var share: some View {
@@ -262,13 +317,31 @@ struct FoodDetailSheet: View {
             if p.count == 2, let d = Calendar.current.date(bySettingHour: p[0], minute: p[1], second: 0, of: Date()) { time = d; hasTime = true }
         }
         parts = (food.raw["mi"]?.array ?? []).compactMap { $0.object }
+        if isRecipe { await loadRecipe(saved: false) }
         guard !isMeal, let ref = food.ref, let i = await store.engineRef.food(ref, meal: food.meal) else { return }
         info = i
         qtyText = (food.qty ?? i.def.qty).formatted(.number.precision(.fractionLength(0...3)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
         unit = food.unit ?? i.def.unit
     }
+    private func loadRecipe(saved: Bool) async {
+        var raw = food.raw
+        if saved { raw.removeValue(forKey: "rc") }
+        recipe = await store.engineRef.recipeOf(raw)
+    }
+    /// The item as it would be saved: new amount, then (for recipes) this day's ingredients.
+    private func edited() async -> [String: JSONValue] {
+        var raw = food.raw
+        if byFood, let q = qty, q != food.qty || unit != food.unit, let r = await store.engineRef.reamount(raw, qty: q, unit: unit) { raw = r }
+        if isRecipe && (recipeEdited || resetRecipe) {
+            if let r = await store.engineRef.applyRecipe(raw, recipeEdited ? recipe : nil) { raw = r }
+        }
+        return raw
+    }
     private func recalc() async {
-        if byFood, let q = qty, let m = await store.engineRef.macros(food.ref!, qty: q, unit: unit) {
+        if isRecipe && (recipeEdited || resetRecipe) {
+            let r = await edited()
+            live = Totals(kcal: r["kcal"]?.number ?? 0, protein: r["protein"]?.number ?? 0, carbs: r["carbs"]?.number ?? 0, fat: r["fat"]?.number ?? 0)
+        } else if byFood, let q = qty, let m = await store.engineRef.macros(food.ref!, qty: q, unit: unit) {
             live = Totals(kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat)
         } else if isMeal {
             let t = parts.reduce(into: Totals()) { t, x in t.kcal += x["kcal"]?.number ?? 0; t.protein += x["protein"]?.number ?? 0; t.carbs += x["carbs"]?.number ?? 0; t.fat += x["fat"]?.number ?? 0 }
@@ -282,18 +355,15 @@ struct FoodDetailSheet: View {
         var t: String?
         if hasTime { let c = Calendar.current.dateComponents([.hour, .minute], from: time); t = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0) }
         Task {
-            var raw = food.raw
-            if byFood, let q = qty, q != food.qty || unit != food.unit, let r = await store.engineRef.reamount(food.raw, qty: q, unit: unit) {
-                raw = r
-            } else if isMeal || !byFood {
-                let originalParts = (food.raw["mi"]?.array ?? []).compactMap { $0.object }
-                if factor != 1 || parts.count != originalParts.count {
+            var raw = await edited()
+            if isMeal || !byFood {
+                if factor != 1 || partsEdited {
                     func scale(_ o: [String: JSONValue]) -> [String: JSONValue] {
                         var x = o
                         for k in ["kcal", "protein", "carbs", "fat", "g", "qty"] { if let v = x[k]?.number { x[k] = .number(k == "qty" || k == "g" ? (v * factor * 1000).rounded() / 1000 : (v * factor).rounded()) } }
                         return x
                     }
-                    if isMeal { raw["mi"] = .array(parts.map { .object(scale($0)) }) }
+                    if isMeal { raw["mi"] = .array(parts.map { .object(scale($0)) }); raw["adj"] = .bool(true) } // adjusted for this day, like the web app
                     let s = shown
                     raw["kcal"] = .number(min(10000, s.kcal.rounded())); raw["protein"] = .number(s.protein.rounded())
                     raw["carbs"] = .number(s.carbs.rounded()); raw["fat"] = .number(s.fat.rounded())
@@ -333,5 +403,63 @@ struct MacroDonut: View {
     }
     private func seg(_ a: Double, _ b: Double, _ col: Color) -> some View {
         Circle().trim(from: a + 0.006, to: max(a + 0.006, b - 0.006)).stroke(col, style: StrokeStyle(lineWidth: 10, lineCap: .butt)).rotationEffect(.degrees(-90))
+    }
+}
+
+/// Change the amount of one food inside a logged meal or recipe (this day only).
+struct PartAmountSheet: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let part: [String: JSONValue]
+    let done: ([String: JSONValue]) -> Void
+    @State private var units: [FoodUnit] = []
+    @State private var qtyText = ""
+    @State private var unit = ""
+    @State private var kcal: Double?
+
+    private var qty: Double? { Double(qtyText.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: "٫", with: ".")).flatMap { $0 > 0 ? $0 : nil } }
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section {
+                    HStack {
+                        TextField("Amount", text: $qtyText).keyboardType(.decimalPad).font(Brand.display(28, .bold)).frame(maxWidth: 120)
+                        Picker("Unit", selection: $unit) { ForEach(units, id: \.label) { Text($0.display).tag($0.label) } }.labelsHidden()
+                    }
+                    if let k = kcal { LabeledContent("Calories") { Text("\(Fmt.kcal(k)) kcal").monospacedDigit().contentTransition(.numericText()) } }
+                } header: { Text(part["name"]?.string ?? "") }
+            }
+            .brandList()
+            .navigationTitle("Amount")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: save).disabled(qty == nil) }
+            }
+            .task {
+                guard let ref = part["ref"]?.string, let info = await store.engineRef.food(ref, meal: "lunch") else { return }
+                units = info.units
+                unit = part["unit"]?.string ?? info.def.unit
+                qtyText = (part["qty"]?.number ?? info.def.qty).formatted(.number.precision(.fractionLength(0...2)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
+            }
+            .task(id: "\(qtyText)|\(unit)") {
+                guard let ref = part["ref"]?.string, let q = qty, !unit.isEmpty else { return }
+                kcal = await store.engineRef.macros(ref, qty: q, unit: unit)?.kcal
+            }
+        }
+        .presentationDetents([.height(280)])
+    }
+    private func save() {
+        guard let q = qty else { return }
+        Task {
+            var raw = part
+            if raw["meal"] == nil { raw["meal"] = .string("lunch") } // reamount needs a full item; recipe ingredients keep only their own fields
+            if var r = await store.engineRef.reamount(raw, qty: q, unit: unit) {
+                if part["meal"] == nil { r.removeValue(forKey: "meal") }
+                done(r)
+            }
+            dismiss()
+        }
     }
 }

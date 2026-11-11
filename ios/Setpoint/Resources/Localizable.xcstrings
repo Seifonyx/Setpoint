@@ -1261,6 +1261,26 @@
         }
       }
     },
+    "Changes this day only. Tap a food to change its amount, swipe to take it out. ⋯ › Split turns it into separate foods.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التغيير لليوم ده بس. اضغط على أكلة عشان تغيّر كميتها، واسحبها عشان تشيلها. ⋯ › فصل بيحولها لأكلات منفصلة."
+          }
+        }
+      }
+    },
+    "Changes this day only. To change the recipe itself, go to Foods › Recipes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التغيير لليوم ده بس. عشان تغيّر الوصفة نفسها، روح الأطعمة › الوصفات."
+          }
+        }
+      }
+    },
     "Check the cooked weight": {
       "localizations": {
         "ar": {
@@ -5827,6 +5847,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استخدم نفس حساب تطبيق الويب"
+          }
+        }
+      }
+    },
+    "Use the saved recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم الوصفة المحفوظة"
           }
         }
       }
