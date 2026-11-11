@@ -247,6 +247,18 @@ final class Store {
         save()
     }
 
+    /// Saves a meal's foods so they can be logged again in one tap (state.meals, like the web app).
+    func saveMeal(_ name: String, items: [FoodItem]) {
+        let clean: [JSONValue] = items.prefix(40).map { it in
+            var c = it.raw; for k in ["id", "meal", "t", "plan", "u"] { c.removeValue(forKey: k) }; return .object(c)
+        }
+        var all = root["meals"]?.array ?? []
+        all.append(.object(["id": .string("m" + Ids.new()), "name": .string(String(name.prefix(40))), "items": .array(clean)]))
+        root["meals"] = .array(all)
+        remember(String(localized: "Meal saved"))
+        save()
+    }
+
     /// Everything on this iPhone, gone (after signing out, so the cloud copy stays).
     func eraseAll() {
         load(Data("{}".utf8))

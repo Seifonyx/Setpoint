@@ -15,12 +15,13 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Search (the web app's own search), recents, favorites, my foods, meals, recipes
 - ✅ Amounts and units, quick add, barcode with Open Food Facts
 - ⬜ Food photo / camera estimate
-- ⬜ Making recipes and saved meals (they can be logged and deleted here, but are made in the web app)
+- ✅ Making recipes (Foods) and saving a meal (Diary › meal ⋯ › Save as meal)
 
 ## Plan
 - ✅ Target, macros, goal and pace, goal weight, expenditure, adaptive tuning, measured expenditure, activity, about you, breakdown
 - ✅ Custom protein and fat per kg (Target breakdown)
-- ⬜ Flexible week, training days, Ramadan mode, cycle and weight, plan for someone else
+- ✅ Your week (next 7 days' targets), training days, flexible week, cycle and weight (shaded on the chart)
+- ⬜ Ramadan mode, plan for someone else
 - ⬜ Vitamins and minerals
 
 ## Progress
@@ -32,7 +33,7 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ⬜ Insights, week review, achievements
 
 ## Foods
-- ✅ My foods (make, edit, delete), recipes and saved meals (delete), favorites (remove)
+- ✅ My foods and recipes (make, edit, delete), saved meals (delete), favorites (remove)
 - ⬜ Find duplicates
 
 ## You and settings

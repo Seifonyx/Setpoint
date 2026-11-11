@@ -138,7 +138,7 @@
         }
       }
       return J({ points: all.map(function (e) { return { date: e.date, kg: e.kg, trend: e.trend == null ? e.kg : e.trend, x: e.x, note: e.note || '', kcal: dayKcal(e.date) }; }),
-        weeks: weeks, down: goodWhenDown(), goalKg: state.settings.goalKg || null, now: currentKg(), unit: unit() });
+        weeks: weeks, cycle: cycleWindows().map(function (w) { return { from: isoFromDay(w.a), to: isoFromDay(w.b), guess: !!w.guess }; }), down: goodWhenDown(), goalKg: state.settings.goalKg || null, now: currentKg(), unit: unit() });
     },
     // Food eaten each day for the last n days, with that day's targets (days with nothing logged are left out).
     nutrition: function (n) {

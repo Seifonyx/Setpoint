@@ -31,6 +31,16 @@
         }
       }
     },
+    "%@ kcal a serving": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة للحصة"
+          }
+        }
+      }
+    },
     "%@ kcal above your expenditure": {
       "localizations": {
         "ar": {
@@ -197,6 +207,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld%% من الأيام متسجلة"
+          }
+        }
+      }
+    },
+    "+%lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%lld"
           }
         }
       }
@@ -371,6 +391,16 @@
         }
       }
     },
+    "Add a period start": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف بداية دورة"
+          }
+        }
+      }
+    },
     "Add another": {
       "localizations": {
         "ar": {
@@ -381,12 +411,32 @@
         }
       }
     },
+    "Add at least one ingredient": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف مكوّنًا واحدًا على الأقل"
+          }
+        }
+      }
+    },
     "Add food": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "إضافة أكل"
+          }
+        }
+      }
+    },
+    "Add ingredient": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة مكوّن"
           }
         }
       }
@@ -611,6 +661,16 @@
         }
       }
     },
+    "Bigger day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم أكبر"
+          }
+        }
+      }
+    },
     "Body": {
       "localizations": {
         "ar": {
@@ -761,6 +821,16 @@
         }
       }
     },
+    "Check the cooked weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع الوزن بعد الطهي"
+          }
+        }
+      }
+    },
     "Check the numbers": {
       "localizations": {
         "ar": {
@@ -837,6 +907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المتابعة بجوجل"
+          }
+        }
+      }
+    },
+    "Cooked weight (optional)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن بعد الطبخ (اختياري)"
           }
         }
       }
@@ -987,6 +1067,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أكلات خاصة"
+          }
+        }
+      }
+    },
+    "Cycle and weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدورة والوزن"
           }
         }
       }
@@ -1161,6 +1251,26 @@
         }
       }
     },
+    "Each day stays at 75–135% of normal, never under 1,200 kcal. Unlogged days count as on target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم بيفضل بين 75–135% من العادي، ومش أقل من 1,200 سعرة. الأيام اللي مش متسجلة بتتحسب على الهدف."
+          }
+        }
+      }
+    },
+    "Each day stays at 75–135% of normal, never under 1,500 kcal. Unlogged days count as on target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم بيفضل بين 75–135% من العادي، ومش أقل من 1,500 سعرة. الأيام اللي مش متسجلة بتتحسب على الهدف."
+          }
+        }
+      }
+    },
     "Easy": {
       "localizations": {
         "ar": {
@@ -1187,6 +1297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعديل الأكل"
+          }
+        }
+      }
+    },
+    "Edit recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل الوصفة"
           }
         }
       }
@@ -1381,6 +1501,16 @@
         }
       }
     },
+    "Extra on that day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة في ذلك اليوم"
+          }
+        }
+      }
+    },
     "Fasting": {
       "localizations": {
         "ar": {
@@ -1467,6 +1597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "املا واحد على الأقل"
+          }
+        }
+      }
+    },
+    "Flexible week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسبوع مرن"
           }
         }
       }
@@ -1831,6 +1971,16 @@
         }
       }
     },
+    "Ingredients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المكونات"
+          }
+        }
+      }
+    },
     "Inputs": {
       "localizations": {
         "ar": {
@@ -2017,6 +2167,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجّل شوية أكل عشان تشوف متوسطاتك هنا."
+          }
+        }
+      }
+    },
+    "Log these foods again in one tap from Add food › Meals.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الأكلات دي تاني بضغطة من إضافة أكل › الوجبات."
           }
         }
       }
@@ -2211,6 +2371,16 @@
         }
       }
     },
+    "Meal saved": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم حفظ الوجبة"
+          }
+        }
+      }
+    },
     "Meals": {
       "localizations": {
         "ar": {
@@ -2277,6 +2447,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نشاط متوسط"
+          }
+        }
+      }
+    },
+    "More on training days, less on rest days. Same weekly total.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكتر في أيام التمرين وأقل في أيام الراحة. نفس إجمالي الأسبوع."
           }
         }
       }
@@ -2381,6 +2561,16 @@
         }
       }
     },
+    "New recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصفة جديدة"
+          }
+        }
+      }
+    },
     "Next day": {
       "localizations": {
         "ar": {
@@ -2391,12 +2581,32 @@
         }
       }
     },
+    "No days picked: every day has the same target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تختر أيامًا: كل الأيام نفس الهدف."
+          }
+        }
+      }
+    },
     "No matches": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مفيش نتايج"
+          }
+        }
+      }
+    },
+    "None": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء"
           }
         }
       }
@@ -2527,6 +2737,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "محيط"
+          }
+        }
+      }
+    },
+    "Off": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إيقاف"
+          }
+        }
+      }
+    },
+    "On": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّال"
           }
         }
       }
@@ -2971,6 +3201,16 @@
         }
       }
     },
+    "Save as meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ كوجبة"
+          }
+        }
+      }
+    },
     "Saved %@ %@ for today.": {
       "localizations": {
         "ar": {
@@ -3061,6 +3301,16 @@
         }
       }
     },
+    "Servings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحصص"
+          }
+        }
+      }
+    },
     "Set": {
       "localizations": {
         "ar": {
@@ -3101,6 +3351,16 @@
         }
       }
     },
+    "Shades period days on your weight chart, since water can add 0.5–2 kg.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيظلّل أيام الدورة على رسم الوزن، لأن المية ممكن تزوّد 0.5–2 كجم."
+          }
+        }
+      }
+    },
     "Share day": {
       "localizations": {
         "ar": {
@@ -3137,6 +3397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعرض الـ %lld أسبوع"
+          }
+        }
+      }
+    },
+    "Show on the weight chart": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إظهار على رسم الوزن"
           }
         }
       }
@@ -3277,6 +3547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بدأ"
+          }
+        }
+      }
+    },
+    "Stays private in your Setpoint data. It only changes how the chart is shaded.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تبقى خاصة في بياناتك. تغيّر فقط تظليل الرسم."
           }
         }
       }
@@ -3621,6 +3901,16 @@
         }
       }
     },
+    "Training days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام التمرين"
+          }
+        }
+      }
+    },
     "Trend weight": {
       "localizations": {
         "ar": {
@@ -3807,6 +4097,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أسابيع"
+          }
+        }
+      }
+    },
+    "Weigh the whole pot after cooking to log it by weight later.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اوزن الحلة كلها بعد الطبخ عشان تسجّلها بالوزن بعدين."
           }
         }
       }
@@ -4027,6 +4327,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "أهدافك هتظهر هنا لما تتحدد في تطبيق الويب."
+          }
+        }
+      }
+    },
+    "Your week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسبوعك"
+          }
+        }
+      }
+    },
+    "Your weekly total stays the same: eat less one day and later days get more. You can give one day extra.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إجمالي الأسبوع ثابت: كُل أقل يوم والأيام اللي بعده تزيد. وتقدر تدي يوم واحد زيادة."
           }
         }
       }

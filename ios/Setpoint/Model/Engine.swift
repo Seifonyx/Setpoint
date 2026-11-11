@@ -200,6 +200,8 @@ struct ProgressData: Decodable, Sendable {
     struct Week: Decodable, Sendable, Identifiable { let start: String; let label: String; let n: Int; let avg: Double; let lo: Double; let hi: Double; let kcal: Double?; let delta: Double?; var id: String { start } }
     let points: [Point]
     let weeks: [Week]
+    struct Window: Decodable, Sendable { let from: String; let to: String; let guess: Bool }
+    let cycle: [Window]?
     let down: Bool?
     let goalKg: Double?
     let now: Double?

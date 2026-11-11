@@ -7,6 +7,8 @@ struct FoodAmountView: View {
     @State var meal: String
     let day: String
     let done: () -> Void
+    /// Set when picking an ingredient for a recipe: hands the item back instead of logging it.
+    var pick: (([String: JSONValue]) -> Void)? = nil
     @State private var info: FoodInfo?
     @State private var qtyText = "1"
     @State private var unit = ""
@@ -81,6 +83,7 @@ struct FoodAmountView: View {
         guard let q = qty else { return }
         Task {
             guard let item = await store.engineRef.item(foodID, qty: q, unit: unit, meal: meal) else { return }
+            if let pick { pick(item); done(); return }
             store.add([item], to: day, label: String(localized: "Added \(info?.name ?? "")"))
             done()
         }

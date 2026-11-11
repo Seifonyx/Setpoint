@@ -107,7 +107,13 @@ struct ProgressScreen: View {
         let lo = pts.map { min($0.kg, $0.trend) }.min() ?? 0, hi = pts.map { max($0.kg, $0.trend) }.max() ?? 1
         let goal = data?.goalKg.flatMap { g in (g >= lo - 3 && g <= hi + 3) ? g : nil }
         let yLo = disp(min(lo, goal ?? lo)) - 0.5, yHi = disp(max(hi, goal ?? hi)) + 0.5
+        let first = pts.first?.date ?? "", last = pts.last?.date ?? ""
+        let windows = (data?.cycle ?? []).filter { $0.to >= first && $0.from <= Day.add(last, 3) }
         return Chart {
+            ForEach(windows, id: \.from) { w in
+                RectangleMark(xStart: .value("From", Day.date(max(w.from, first))), xEnd: .value("To", Day.date(w.to)))
+                    .foregroundStyle(Color.pink.opacity(w.guess ? 0.06 : 0.1))
+            }
             ForEach(pts) { p in
                 PointMark(x: .value("Day", Day.date(p.date), unit: .day), y: .value("Weight", disp(p.kg)))
                     .symbolSize(pts.count > 60 ? 12 : 26)

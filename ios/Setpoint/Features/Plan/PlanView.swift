@@ -22,7 +22,7 @@ struct PlanView: View {
                         }
                     }
                 }
-                if let p = o.plan { targetSection(p, o) ; goalSection(p, o) }
+                if let p = o.plan { targetSection(p, o) ; goalSection(p, o); WeekPlanSection() }
                 expenditureSection(o)
                 Section("Inputs") {
                     Button { activity = true } label: { row("Activity", activitySummary(o), "figure.walk") }

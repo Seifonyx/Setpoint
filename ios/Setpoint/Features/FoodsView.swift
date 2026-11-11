@@ -4,6 +4,7 @@ import SwiftUI
 struct FoodsView: View {
     @Environment(Store.self) private var store
     @State private var editing: EditFood?
+    @State private var recipeEdit: EditFood?
     @State private var favorites: [FoodHit] = []
 
     struct EditFood: Identifiable { let id: String; let food: [String: JSONValue]? }
@@ -37,20 +38,22 @@ struct FoodsView: View {
                 } header: { Text("My foods") }
 
                 let recipes = list("recipes")
-                if !recipes.isEmpty {
-                    Section {
-                        ForEach(recipes.indices, id: \.self) { i in
-                            let r = recipes[i]
+                Section {
+                    ForEach(recipes.indices, id: \.self) { i in
+                        let r = recipes[i]
+                        Button { recipeEdit = EditFood(id: r["id"]?.string ?? "", food: r) } label: {
                             LabeledContent {
                                 Text("\((r["items"]?.array ?? []).count)").foregroundStyle(.secondary)
                             } label: {
                                 Text(r["name"]?.string ?? "")
-                                Text("\(Int(r["serv"]?.number ?? 1)) servings")
+                                Text("\(Int(r["servings"]?.number ?? 1)) servings")
                             }
-                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") } }
                         }
-                    } header: { Text("Recipes") } footer: { Text("Make and edit recipes in the web app for now. They show up here and in Add food.") }
-                }
+                        .tint(.primary)
+                        .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") } }
+                    }
+                    Button("New recipe", systemImage: "plus") { recipeEdit = EditFood(id: "new", food: nil) }
+                } header: { Text("Recipes") }
 
                 let meals = list("meals")
                 if !meals.isEmpty {
@@ -84,6 +87,7 @@ struct FoodsView: View {
             .navigationTitle("Foods")
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
+            .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }
         }
     }
 }

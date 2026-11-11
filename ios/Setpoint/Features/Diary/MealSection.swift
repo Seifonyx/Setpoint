@@ -8,6 +8,8 @@ struct MealSection: View {
     @Binding var copying: [FoodItem]?
     let addFood: () -> Void
     @State private var open: FoodItem?
+    @State private var naming = false
+    @State private var mealName = ""
 
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
@@ -53,6 +55,7 @@ struct MealSection: View {
                     }
                     if !foods.isEmpty {
                         Button("Copy to another day", systemImage: "doc.on.doc") { copying = foods }
+                        Button("Save as meal", systemImage: "square.and.arrow.down.on.square") { mealName = meal.name; naming = true }
                         Button("Remove all", systemImage: "trash", role: .destructive) { withAnimation { store.removeMeal(meal.key, on: day) } }
                     }
                 } label: {
@@ -62,6 +65,14 @@ struct MealSection: View {
             }
         }
         .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day) }
+        .alert("Save as meal", isPresented: $naming) {
+            TextField("Name", text: $mealName)
+            Button("Cancel", role: .cancel) {}
+            Button("Save") {
+                let n = mealName.trimmingCharacters(in: .whitespaces)
+                if !n.isEmpty { store.saveMeal(n, items: foods) }
+            }
+        } message: { Text("Log these foods again in one tap from Add food › Meals.") }
         .task { if UserDefaults.standard.string(forKey: "sheet") == "food", meal.key == store.meals.first?.key { open = foods.first } } // build-server screenshots
     }
 }
