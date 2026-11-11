@@ -45,6 +45,7 @@ jobs:
           codesign --force --sign - --entitlements Setpoint/Setpoint-health.entitlements health/Payload/Setpoint.app
           (cd health && zip -qry ../out/Setpoint-health.ipa Payload) && rm -rf health
       - name: Screenshots in the iPhone simulator
+        if: env.RELEASE != 'true' # a release reuses the screenshots of the preview that was approved
         run: |
           cd ios
           set -o pipefail
@@ -89,6 +90,7 @@ jobs:
       - name: Publish to the ios-latest release
         if: env.RELEASE == 'true'
         run: |
+          gh release download ios-preview --pattern '*.png' --dir ios/out --clobber || true
           gh release delete ios-latest -y --cleanup-tag || true
           gh release create ios-latest ios/out/* --prerelease --title "Setpoint for iPhone (latest build)" \
             --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
