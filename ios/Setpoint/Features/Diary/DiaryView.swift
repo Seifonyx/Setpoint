@@ -49,7 +49,7 @@ struct DiaryView: View {
                 }
                 Section {
                     HStack(spacing: 12) {
-                        WeightTile(entry: store.entry(day), unit: store.unit) { weightSheet = true }
+                        WeightTile(entry: store.entry(day), unit: store.unit, recent: store.entries.filter { $0.date <= day && !$0.excluded }.suffix(14).map(\.kg)) { weightSheet = true }
                         WaterTile(ml: store.waterOn(day), goal: store.waterGoal) { store.addWater(store.waterSizes[0], on: day) } open: { waterSheet = true }
                     }
                     .listRowInsets(EdgeInsets())
@@ -248,6 +248,7 @@ struct MacroBar: View {
 struct WeightTile: View {
     let entry: WeighIn?
     let unit: String
+    var recent: [Double] = []
     let open: () -> Void
 
     var body: some View {
@@ -257,18 +258,36 @@ struct WeightTile: View {
                 if let entry {
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
                         Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.display(30, .bold)).monospacedDigit()
-                        Text(LocalizedStringKey(unit)).font(.brand(.subheadline)).foregroundStyle(.secondary)
+                        Text(LocalizedStringKey(unit)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
-                    if entry.excluded { Text("Excluded").font(.brand(.caption)).foregroundStyle(.secondary) }
+                    if entry.excluded { Text("Excluded").font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                 } else {
-                    Text("Log").font(Brand.display(24, .bold)).foregroundStyle(Brand.green)
+                    Text("Log").font(Brand.display(30, .bold)).foregroundStyle(Brand.green)
                 }
+                Spacer(minLength: 0)
+                Sparkline(values: recent).frame(height: 18)
             }
-            .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
             .padding(14)
             .background(Brand.card, in: .rect(cornerRadius: 22))
         }
         .buttonStyle(.plain)
+    }
+}
+
+/// Your last couple of weeks of weigh-ins as a tiny line, ending on today's point.
+struct Sparkline: View {
+    let values: [Double]
+    var body: some View {
+        GeometryReader { g in
+            if values.count >= 2, let lo = values.min(), let hi = values.max() {
+                let span = max(hi - lo, 0.4), w = g.size.width, h = g.size.height
+                let pts = values.enumerated().map { i, v in CGPoint(x: w * CGFloat(i) / CGFloat(values.count - 1), y: h - h * CGFloat((v - lo) / span)) }
+                Path { p in p.addLines(pts) }
+                    .stroke(Brand.green.opacity(0.7), style: StrokeStyle(lineWidth: 2, lineCap: .round, lineJoin: .round))
+                Circle().fill(Brand.amber).frame(width: 7, height: 7).position(pts.last!)
+            }
+        }
     }
 }
 
@@ -286,7 +305,12 @@ struct WaterTile: View {
                     Button("Add a glass of water", systemImage: "plus", action: add)
                         .labelStyle(.iconOnly).symbolEffect(.bounce, value: ml).buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
                 }
-                Text(Fmt.ml(ml)).font(Brand.display(30, .bold)).contentTransition(.numericText()).monospacedDigit()
+                HStack(alignment: .firstTextBaseline, spacing: 4) {
+                    Text(Fmt.ml(ml)).font(Brand.display(30, .bold)).contentTransition(.numericText()).monospacedDigit()
+                    Text("of \(Fmt.ml(goal))").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                }
+                .lineLimit(1).minimumScaleFactor(0.7)
+                Spacer(minLength: 0)
                 GeometryReader { g in
                     ZStack(alignment: .leading) {
                         Capsule().fill(Brand.card2)
@@ -296,7 +320,7 @@ struct WaterTile: View {
                 .frame(height: 6)
                 .animation(.spring(response: 0.5, dampingFraction: 0.75), value: ml)
         }
-        .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
+        .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
         .padding(14)
         .background(Brand.card, in: .rect(cornerRadius: 22))
         .contentShape(.rect(cornerRadius: 22))

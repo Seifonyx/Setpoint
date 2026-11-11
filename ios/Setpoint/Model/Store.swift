@@ -38,10 +38,27 @@ final class Store {
     init() {
         demo = ProcessInfo.processInfo.arguments.contains("-demo")
         if demo, let url = Bundle.main.url(forResource: "Demo", withExtension: "json"), let data = try? Data(contentsOf: url) {
-            load(data)
+            load(Self.shiftedToToday(data))
         } else if let data = try? Data(contentsOf: Self.fileURL) {
             load(data)
         }
+    }
+
+    /// Screenshot data ends "today", whenever the screenshots are taken: every date moves by the same number of days.
+    private static func shiftedToToday(_ data: Data) -> Data {
+        let text = String(decoding: data, as: UTF8.self)
+        guard let re = try? NSRegularExpression(pattern: "\\d{4}-\\d{2}-\\d{2}") else { return data }
+        let all = re.matches(in: text, range: NSRange(text.startIndex..., in: text)).compactMap { Range($0.range, in: text).map { String(text[$0]) } }
+        guard let last = all.filter({ $0 <= "2100" }).max() else { return data }
+        let shift = Day.number(Day.today) - Day.number(last)
+        guard shift != 0 else { return data }
+        var out = "", i = text.startIndex
+        for m in re.matches(in: text, range: NSRange(text.startIndex..., in: text)) {
+            guard let r = Range(m.range, in: text) else { continue }
+            out += text[i..<r.lowerBound]; out += Day.add(String(text[r]), shift); i = r.upperBound
+        }
+        out += text[i...]
+        return Data(out.utf8)
     }
 
     // MARK: Files

@@ -5041,6 +5041,16 @@
         }
       }
     },
+    "of %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من %@"
+          }
+        }
+      }
+    },
     "over": {
       "localizations": {
         "ar": {
