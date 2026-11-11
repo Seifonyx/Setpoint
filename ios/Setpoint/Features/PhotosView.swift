@@ -7,7 +7,7 @@ import PhotosUI
 @Observable
 final class PhotoLibrary {
     static let shared = PhotoLibrary()
-    struct Photo: Identifiable, Hashable { let id: String; var date: String; let added: Double; var pose: String?; let full: String; let thumb: String }
+    struct Photo: Identifiable, Hashable { let id: String; var date: String; let added: Double; var pose: String?; let full: String; let thumb: String; var u: Double? = nil; var syncUid: String? = nil }
     private(set) var photos: [Photo] = []
     private var other: [String: JSONValue] = [:]
     private var loaded = false
@@ -20,7 +20,7 @@ final class PhotoLibrary {
         other = o
         photos = list.compactMap { $0.object }.compactMap { p in
             guard let id = p["id"]?.string, let full = p["full"]?.string, let date = p["date"]?.string else { return nil }
-            return Photo(id: id, date: date, added: p["added"]?.number ?? 0, pose: p["pose"]?.string, full: full, thumb: p["thumb"]?.string ?? full)
+            return Photo(id: id, date: date, added: p["added"]?.number ?? 0, pose: p["pose"]?.string, full: full, thumb: p["thumb"]?.string ?? full, u: p["u"]?.number, syncUid: p["syncUid"]?.string)
         }
         sort()
     }
@@ -28,20 +28,54 @@ final class PhotoLibrary {
     private func save() {
         var o = other
         o["bodyPhotos"] = .array(photos.map { p in
-            .object(["id": .string(p.id), "date": .string(p.date), "added": .number(p.added), "pose": p.pose.map { .string($0) } ?? .null, "full": .string(p.full), "thumb": .string(p.thumb)])
+            var o: [String: JSONValue] = ["id": .string(p.id), "date": .string(p.date), "added": .number(p.added), "pose": p.pose.map { .string($0) } ?? .null, "full": .string(p.full), "thumb": .string(p.thumb)]
+            if let u = p.u { o["u"] = .number(u) }
+            if let s = p.syncUid { o["syncUid"] = .string(s) }
+            return .object(o)
         })
         if let d = try? JSONEncoder().encode(JSONValue.object(o)) { try? d.write(to: Store.photosURL, options: .atomic) }
     }
     func add(_ data: Data, date: String, pose: String?) {
         guard let img = UIImage(data: data), let full = Self.dataURL(img, max: 1600, q: 0.8), let thumb = Self.dataURL(img, max: 400, q: 0.7) else { return }
-        photos.append(Photo(id: "p" + Ids.new(), date: date, added: Store.nowMs, pose: pose, full: full, thumb: thumb))
+        photos.append(Photo(id: "p" + Ids.new(), date: date, added: Store.nowMs, pose: pose, full: full, thumb: thumb, u: Store.nowMs))
         sort(); save()
+        Task { await Account.shared.photoSync() }
     }
-    func delete(_ p: Photo) { photos.removeAll { $0.id == p.id }; save() }
+    func delete(_ p: Photo, remember: Bool = true) {
+        photos.removeAll { $0.id == p.id }; save()
+        if remember { var d = Self.deleted; d.append(p.id); Self.deleted = d; Task { await Account.shared.photoSync() } }
+    }
+
+    // MARK: Sync bookkeeping (see Account.photoSync)
+    /// Photos deleted on this iPhone that the account still has to forget.
+    static var deleted: [String] {
+        get { UserDefaults.standard.stringArray(forKey: "setpoint-phdel") ?? [] }
+        set { UserDefaults.standard.set(Array(newValue.suffix(500)), forKey: "setpoint-phdel") }
+    }
+    func markSynced(_ id: String, uid: String, u: Double) {
+        guard let i = photos.firstIndex(where: { $0.id == id }) else { return }
+        photos[i].syncUid = uid; photos[i].u = u; save()
+    }
+    func updateFromCloud(_ id: String, date: String, pose: String?, u: Double, uid: String) {
+        guard let i = photos.firstIndex(where: { $0.id == id }) else { return }
+        photos[i].date = date; photos[i].pose = pose; photos[i].u = u; photos[i].syncUid = uid; sort(); save()
+    }
+    func addFromCloud(id: String, date: String, added: Double, pose: String?, u: Double, full: String, thumb: String, uid: String) {
+        guard !photos.contains(where: { $0.id == id }) else { return }
+        photos.append(Photo(id: id, date: date, added: added, pose: pose, full: full, thumb: thumb, u: u, syncUid: uid)); sort(); save()
+    }
+    /// A copy small enough for one cloud record (under about 900 KB), like the web app's.
+    static func cloudCopy(_ url: String) -> String {
+        guard url.count > 900_000, let img = image(url) else { return url }
+        for (m, q) in [(1280.0, 0.8), (1080.0, 0.72), (900.0, 0.65)] {
+            if let u = dataURL(img, max: m, q: q), u.count <= 900_000 { return u }
+        }
+        return dataURL(img, max: 800, q: 0.6) ?? url
+    }
     /// After a backup import replaced photos.json.
     func reload() { loaded = false; photos = []; load() }
 
-    private static func dataURL(_ img: UIImage, max: CGFloat, q: CGFloat) -> String? {
+    static func dataURL(_ img: UIImage, max: CGFloat, q: CGFloat) -> String? {
         let k = min(1, max / Swift.max(img.size.width, img.size.height))
         let size = CGSize(width: (img.size.width * k).rounded(), height: (img.size.height * k).rounded())
         let small = UIGraphicsImageRenderer(size: size).image { _ in img.draw(in: CGRect(origin: .zero, size: size)) }

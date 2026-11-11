@@ -11,6 +11,11 @@ struct FoodDetailSheet: View {
     @State private var meal = ""
     @State private var note = ""
     @State private var confirmDelete = false
+    @State private var repeating = false
+    private var repeatRec: [String: JSONValue]? {
+        guard let rid = food.raw["rep"]?.string else { return nil }
+        return (store.root["repeats"]?.array ?? []).compactMap { $0.object }.first { $0["id"]?.string == rid }
+    }
     @State private var units: [FoodUnit] = []
     @State private var qtyText = ""
     @State private var unit = ""
@@ -59,6 +64,9 @@ struct FoodDetailSheet: View {
                     TextField("Note", text: $note, axis: .vertical).lineLimit(1...4)
                 }
                 Section {
+                    Button(repeatRec == nil ? "Repeat this food" : "Repeating", systemImage: "repeat") { repeating = true }
+                } footer: { if repeatRec == nil { Text("Have it added for you on the days you choose, like your morning coffee.") } }
+                Section {
                     Button("Delete", role: .destructive) { confirmDelete = true }
                 }
             }
@@ -74,6 +82,7 @@ struct FoodDetailSheet: View {
                     }
                 }
             }
+            .sheet(isPresented: $repeating) { RepeatSheet(item: repeatRec?["item"]?.object ?? food.raw, existing: repeatRec) }
             .confirmationDialog("Delete \(food.displayName)?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) { store.delete(food, on: day); dismiss() }
             }

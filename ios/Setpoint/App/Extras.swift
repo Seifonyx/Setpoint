@@ -104,6 +104,8 @@ struct DeviceSettingsView: View {
                                                             set: { store.setSetting("weekStart", .number(Double($0))) })) {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
                 }
+                NavigationLink("Meals") { MealsEditor() }
+                NavigationLink("Repeating foods") { RepeatsView() }
                 Button { ramadan = true } label: {
                     LabeledContent("Ramadan mode") { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) }
                 }.tint(.primary)

@@ -142,7 +142,10 @@ final class Account {
         guard let store else { return }
         if store.syncValue("dirty")?.bool == true { await run { try await $0.push() } } else { await pull(fresh: false) }
     }
-    func pull(fresh: Bool) async { await run { try await $0.pullNow(fresh: fresh) } }
+    func pull(fresh: Bool) async {
+        await run { try await $0.pullNow(fresh: fresh) }
+        await photoSync()
+    }
 
     /// One sync at a time; a request that comes in meanwhile runs once more afterwards.
     private func run(_ work: @escaping (Account) async throws -> Void) async {
@@ -208,6 +211,74 @@ final class Account {
             if stillSame { s["dirty"] = .bool(false) }
         }
         if !stillSame { schedulePush() } // something changed while uploading
+    }
+
+    // MARK: Deleting the account (everything in the cloud; this iPhone keeps its copy)
+
+    func deleteAccount() async throws {
+        guard let s = try await validSession() else { return }
+        let fs = Firestore(token: s.idToken), base = "users/\(s.uid)/setpoint/state"
+        var paths = [base, "\(base)/photomap/index"]
+        if let idx = try await fs.get("\(base)/photomap/index") { paths += idx.map("items").keys.map { "\(base)/photos/\($0)" } }
+        if let months = try? await fs.listNames("\(base)/food") { paths += months.map { "\(base)/food/\($0)" } }
+        for chunk in stride(from: 0, to: paths.count, by: 400).map({ Array(paths[$0..<min($0 + 400, paths.count)]) }) {
+            try await fs.run(chunk.map { .delete($0) })
+        }
+        _ = try await Auth.post("accounts:delete", ["idToken": s.idToken])
+        signOut()
+    }
+
+    // MARK: Progress photos (users/{uid}/setpoint/state/photos/{id} plus an index, exactly as the web app keeps them)
+
+    func photoSync() async {
+        guard let s = try? await validSession() else { return }
+        let lib = PhotoLibrary.shared; lib.load()
+        let fs = Firestore(token: s.idToken), base = "users/\(s.uid)/setpoint/state", uid = s.uid
+        do {
+            var idx: [String: Firestore.Value] = [:]
+            let remoteDoc = try await fs.get("\(base)/photomap/index")
+            let remote = remoteDoc?.map("items") ?? [:]
+            for (id, m) in remote { idx[id] = Self.meta(m) }
+            var changed = false, ops: [Firestore.Op] = []
+            let local = Dictionary(lib.photos.map { ($0.id, $0) }, uniquingKeysWith: { a, _ in a })
+            let dels = PhotoLibrary.deleted
+            for id in dels where local[id] == nil {
+                if idx.removeValue(forKey: id) != nil { changed = true; ops.append(.delete("\(base)/photos/\(id)")) }
+            }
+            for p in lib.photos {
+                let lu = p.u ?? p.added
+                if let rm = remote[p.id] {
+                    let ru = rm.number("u") ?? 0
+                    if lu > ru {
+                        let m = Self.meta(p); idx[p.id] = .map(m); changed = true
+                        ops.append(.merge("\(base)/photos/\(p.id)", m)); lib.markSynced(p.id, uid: uid, u: lu)
+                    } else if ru > lu || p.syncUid != uid {
+                        lib.updateFromCloud(p.id, date: rm.string("date") ?? p.date, pose: rm.string("pose"), u: ru, uid: uid)
+                    }
+                } else if p.syncUid == uid {
+                    lib.delete(p, remember: false) // deleted on another phone
+                } else {
+                    let m = Self.meta(p)
+                    var f = m; f["id"] = .string(p.id); f["img"] = .string(PhotoLibrary.cloudCopy(p.full)); f["thumb"] = .string(p.thumb)
+                    try await fs.run([.set("\(base)/photos/\(p.id)", f)])
+                    idx[p.id] = .map(m); changed = true; lib.markSynced(p.id, uid: uid, u: lu)
+                }
+            }
+            for (id, m) in remote where local[id] == nil && !dels.contains(id) {
+                guard let d = try await fs.get("\(base)/photos/\(id)"), let img = d.string("img") else { idx.removeValue(forKey: id); changed = true; continue }
+                lib.addFromCloud(id: id, date: m.string("date") ?? d.string("date") ?? Day.today, added: m.number("added") ?? 0, pose: m.string("pose"),
+                                 u: m.number("u") ?? 0, full: img, thumb: d.string("thumb") ?? img, uid: uid)
+            }
+            if !ops.isEmpty { try await fs.run(ops) }
+            if changed { try await fs.run([.set("\(base)/photomap/index", ["items": .map(idx), "at": .int(Int64(Store.nowMs))])]) }
+            PhotoLibrary.deleted = []
+        } catch { print("Photo sync:", error) }
+    }
+    private static func meta(_ d: Firestore.Doc) -> Firestore.Value {
+        .map(["u": .int(Int64(d.number("u") ?? 0)), "date": .string(d.string("date") ?? ""), "pose": d.string("pose").map { .string($0) } ?? .null, "added": .int(Int64(d.number("added") ?? 0))])
+    }
+    private static func meta(_ p: PhotoLibrary.Photo) -> [String: Firestore.Value] {
+        ["u": .int(Int64(p.u ?? p.added)), "date": .string(p.date), "pose": p.pose.map { .string($0) } ?? .null, "added": .int(Int64(p.added))]
     }
 
     private func done() {
@@ -290,11 +361,21 @@ private struct Firestore {
     let token: String
     static let root = "projects/setpoint-tracker/databases/(default)/documents"
 
-    enum Value {
-        case string(String), int(Int64)
+    indirect enum Value {
+        case string(String), int(Int64), null, map([String: Value])
         var json: [String: Any] {
-            switch self { case .string(let s): ["stringValue": s]; case .int(let i): ["integerValue": String(i)] }
+            switch self {
+            case .string(let s): ["stringValue": s]
+            case .int(let i): ["integerValue": String(i)]
+            case .null: ["nullValue": NSNull()]
+            case .map(let m): ["mapValue": ["fields": m.mapValues { $0.json }]]
+            }
         }
+    }
+    enum Op {
+        case set(String, [String: Value])
+        case merge(String, [String: Value])
+        case delete(String)
     }
     struct Doc {
         let fields: [String: Any]
@@ -304,6 +385,10 @@ private struct Firestore {
             if let s = f["integerValue"] as? String { return Double(s) }
             if let d = f["doubleValue"] as? Double { return d }
             return f["integerValue"] as? Double
+        }
+        func map(_ k: String) -> [String: Doc] {
+            let m = ((fields[k] as? [String: Any])?["mapValue"] as? [String: Any])?["fields"] as? [String: Any] ?? [:]
+            return m.compactMapValues { v in ((v as? [String: Any])?["mapValue"] as? [String: Any]).map { Doc(fields: $0["fields"] as? [String: Any] ?? [:]) } }
         }
     }
 
@@ -334,12 +419,29 @@ private struct Firestore {
         } while page != nil
         return out
     }
-    func commit(_ writes: [(String, [String: Value])]) async throws {
+    /// The document ids in a collection (without reading their contents).
+    func listNames(_ path: String) async throws -> [String] {
+        var out: [String] = [], page: String? = nil
+        repeat {
+            let q = "?pageSize=300&mask.fieldPaths=updatedAt" + (page.map { "&pageToken=\($0.addingPercentEncoding(withAllowedCharacters: .alphanumerics) ?? $0)" } ?? "")
+            let (d, code) = try await send(URLRequest(url: url(path, q)))
+            guard code < 400, let o = try JSONSerialization.jsonObject(with: d) as? [String: Any] else { throw AuthError.message("Firestore \(code)") }
+            out += (o["documents"] as? [[String: Any]] ?? []).compactMap { ($0["name"] as? String)?.split(separator: "/").last.map(String.init) }
+            page = o["nextPageToken"] as? String
+        } while page != nil
+        return out
+    }
+    func commit(_ writes: [(String, [String: Value])]) async throws { try await run(writes.map { .set($0.0, $0.1) }) }
+    func run(_ ops: [Op]) async throws {
         var r = URLRequest(url: URL(string: "https://firestore.googleapis.com/v1/\(Self.root.replacingOccurrences(of: "/documents", with: ""))/documents:commit")!)
         r.httpMethod = "POST"
         r.setValue("application/json", forHTTPHeaderField: "Content-Type")
-        let body: [String: Any] = ["writes": writes.map { path, fields in
-            ["update": ["name": "\(Self.root)/\(path)", "fields": fields.mapValues { $0.json }]]
+        let body: [String: Any] = ["writes": ops.map { op -> [String: Any] in
+            switch op {
+            case .set(let path, let fields): return ["update": ["name": "\(Self.root)/\(path)", "fields": fields.mapValues { $0.json }]]
+            case .merge(let path, let fields): return ["update": ["name": "\(Self.root)/\(path)", "fields": fields.mapValues { $0.json }], "updateMask": ["fieldPaths": Array(fields.keys)]]
+            case .delete(let path): return ["delete": "\(Self.root)/\(path)"]
+            }
         }]
         r.httpBody = try JSONSerialization.data(withJSONObject: body)
         let (d, code) = try await send(r)

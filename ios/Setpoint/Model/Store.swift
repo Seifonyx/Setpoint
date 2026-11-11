@@ -413,6 +413,27 @@ final class Store {
             }
         }
     }
+    /// Start or change a repeating food. It begins tomorrow (or today, at a time still to come), as in the web app.
+    func saveRepeat(_ rec: [String: JSONValue], startsToday: Bool) {
+        guard let id = rec["id"]?.string else { return }
+        var list = (root["repeats"]?.array ?? []).compactMap { $0.object }
+        if let i = list.firstIndex(where: { $0["id"]?.string == id }) { list[i] = rec } else { list.append(rec) }
+        root["repeats"] = .array(list.map { .object($0) })
+        var del = root["del"]?.object ?? [:]
+        del.removeValue(forKey: "rp:" + id)
+        let todayID = "rp" + id + Day.today.replacingOccurrences(of: "-", with: "")
+        if !startsToday && !items(Day.today).contains(where: { $0.id == todayID }) { del[todayID] = .number(Self.nowMs) }
+        root["del"] = .object(del)
+        remember(String(localized: "Repeat saved"))
+        save()
+    }
+    func stopRepeat(_ id: String) {
+        root["repeats"] = .array((root["repeats"]?.array ?? []).filter { $0["id"]?.string != id })
+        var del = root["del"]?.object ?? [:]; del["rp:" + id] = .number(Self.nowMs); root["del"] = .object(del)
+        remember(String(localized: "Stopped repeating"))
+        save()
+    }
+
     /// The same food again in another meal on the same day.
     func copyToMeal(_ item: FoodItem, meal: String, on day: String) {
         var r = item.raw
@@ -453,9 +474,11 @@ final class Store {
     }
     func dailyTotals(_ day: String) -> [FoodItem] { items(day).filter(\.isDailyTotal) }
 
-    func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool) {
+    func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool, kcal: Double?? = nil) {
         remember(String(localized: "Weight saved"))
         var raw = entry(day)?.raw ?? [:]
+        // The day's calories as one total (for days you didn't log food), like the web app.
+        if let k = kcal { if let k { raw["kcal"] = .number(min(10000, k.rounded())) } else { raw.removeValue(forKey: "kcal") } }
         raw["date"] = .string(day)
         raw["kg"] = .number((kg * 10000).rounded() / 10000)
         raw["note"] = .string(note)

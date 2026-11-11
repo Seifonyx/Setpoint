@@ -8,6 +8,7 @@ struct WeightSheet: View {
     @State private var text = ""
     @State private var note = ""
     @State private var excluded = false
+    @State private var kcal = ""
     @State private var confirmDelete = false
     @FocusState private var focused: Bool
 
@@ -23,6 +24,14 @@ struct WeightSheet: View {
                         Text(LocalizedStringKey(store.unit)).font(.brand(.title3)).foregroundStyle(.secondary)
                     }
                     TextField("Note", text: $note)
+                }
+                if store.items(day).isEmpty {
+                    Section {
+                        HStack {
+                            TextField("Calories eaten", text: $kcal).keyboardType(.numberPad)
+                            Text("kcal").foregroundStyle(.secondary)
+                        }
+                    } footer: { Text("Didn't log food this day? Enter the total, and your expenditure still learns from it.") }
                 }
                 Section {
                     Toggle("Exclude from trend", isOn: $excluded)
@@ -46,7 +55,7 @@ struct WeightSheet: View {
                 Button("Delete", role: .destructive) { store.deleteWeight(on: day); dismiss() }
             }
             .onAppear {
-                if let e = store.entry(day) { text = Fmt.weight(e.kg, unit: store.unit); note = e.note; excluded = e.excluded }
+                if let e = store.entry(day) { text = Fmt.weight(e.kg, unit: store.unit); note = e.note; excluded = e.excluded; kcal = e.kcal.map { String(Int($0)) } ?? "" }
                 focused = true
             }
         }
@@ -61,7 +70,8 @@ struct WeightSheet: View {
     }
     private func save() {
         guard let kg = value else { return }
-        store.logWeight(kg, on: day, note: note.trimmingCharacters(in: .whitespaces), excluded: excluded)
+        let k = Double(kcal.filter(\.isNumber)).flatMap { $0 > 0 ? $0 : nil }
+        store.logWeight(kg, on: day, note: note.trimmingCharacters(in: .whitespaces), excluded: excluded, kcal: store.items(day).isEmpty ? .some(k) : nil)
         dismiss()
     }
 }

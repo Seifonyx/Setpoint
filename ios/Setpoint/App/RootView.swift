@@ -16,6 +16,7 @@ struct RootView: View {
     @State private var message: String?
     @Environment(\.scenePhase) private var phase
     @AppStorage(DeviceSettings.haptics) private var haptics = true
+    @State private var onboarding = false
 
     init() {
         _store = State(initialValue: Store.shared)
@@ -42,6 +43,12 @@ struct RootView: View {
         .sensoryFeedback(trigger: store.changeCount) { _, _ in haptics ? .success : nil }
         .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
         .modifier(LockCover())
+        .fullScreenCover(isPresented: $onboarding) { OnboardingView { onboarding = false }.environment(store).environment(account) }
+        .onAppear {
+            // First launch on a fresh install (or the build server's -onboarding screenshot).
+            let args = ProcessInfo.processInfo.arguments
+            if args.contains("-onboarding") || (!args.contains("-demo") && store.isEmpty && !account.signedIn && !UserDefaults.standard.bool(forKey: "onboarded")) { onboarding = true }
+        }
         .tint(Brand.green)
         .font(.brand(.body))
         .foregroundStyle(Brand.ink)

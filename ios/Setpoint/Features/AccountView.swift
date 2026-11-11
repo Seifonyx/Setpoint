@@ -13,6 +13,7 @@ struct AccountView: View {
     @State private var error: String?
     @State private var note: String?
     @State private var confirmOut = false
+    @State private var confirmDelete = false
     @FocusState private var field: Int?
 
     var body: some View {
@@ -52,15 +53,21 @@ struct AccountView: View {
             Button("Sync now", systemImage: "arrow.triangle.2.circlepath") { Task { await account.syncNow() } }
                 .disabled(account.busy)
         } footer: {
-            Text("Your weigh-ins, food log, foods, recipes, plan and settings sync with the web app. Photos stay on this iPhone for now.")
+            Text("Your weigh-ins, food log, foods, recipes, plan, settings and progress photos sync with the web app.")
         }
         Section {
             Button("Sign out", role: .destructive) { confirmOut = true }
                 .confirmationDialog("Sign out?", isPresented: $confirmOut, titleVisibility: .visible) {
                     Button("Sign out", role: .destructive) { account.signOut() }
                 } message: { Text("Your data stays on this iPhone. Sign in again to sync.") }
-        } footer: {
-            Text("To delete your account, sign in on the web app and use Settings › Account.")
+        }
+        Section {
+            Button("Delete account", role: .destructive) { confirmDelete = true }
+                .confirmationDialog("Delete your account?", isPresented: $confirmDelete, titleVisibility: .visible) {
+                    Button("Delete account", role: .destructive) {
+                        act { try await account.deleteAccount(); note = String(localized: "Account deleted. Your data on this iPhone is still here.") }
+                    }
+                } message: { Text("Deletes your account and everything synced to it, for good. Data on this iPhone stays.") }
         }
     }
 

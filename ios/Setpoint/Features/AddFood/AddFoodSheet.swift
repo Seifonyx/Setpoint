@@ -21,7 +21,10 @@ struct AddFoodSheet: View {
     @State private var scanning = false
     @State private var describing = false
     @State private var creating: String?
+    @State private var labelCam = false
+    @State private var labelValues: LabelValuesBox?
     @State private var scanMessage: String?
+    @State private var notFound = false
     @State private var selecting = false
     @State private var selected: [String: FoodHit] = [:]
     @State private var startIDs: Set<String> = []
@@ -69,7 +72,21 @@ struct AddFoodSheet: View {
             .sheet(isPresented: $quickAdd) { QuickAddView(meal: meal, day: day) {} }
             .sheet(isPresented: $describing) { DescribeMealSheet(meal: meal, day: day) }
             .sheet(item: Binding(get: { creating.map(Prefill.init) }, set: { creating = $0?.name })) { p in CustomFoodSheet(food: nil, prefill: p.name) }
+            .fullScreenCover(isPresented: $labelCam) {
+                LabelCamera { img in
+                    labelCam = false
+                    guard let img else { return }
+                    Task { labelValues = LabelValuesBox(values: await LabelReader.read(img)) }
+                }
+                .ignoresSafeArea()
+            }
+            .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
+            .alert("Product not found", isPresented: $notFound) {
+                Button("Scan the label") { labelCam = true }
+                Button("Quick add") { quickAdd = true }
+                Button("Cancel", role: .cancel) {}
+            } message: { Text("This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.") }
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
             .task(id: "\(meal)|\(store.version)|\(store.foodsReady)") { await loadLists() }
             .task(id: "\(query)|\(meal)|\(store.foodsReady)") {
@@ -83,6 +100,7 @@ struct AddFoodSheet: View {
     }
 
     struct Prefill: Identifiable { let name: String; var id: String { name } }
+    struct LabelValuesBox: Identifiable { let id = UUID(); let values: LabelReader.Values }
 
     // MARK: Tabs
 
@@ -139,6 +157,7 @@ struct AddFoodSheet: View {
                 .padding(.vertical, 4)
                 Button { creating = query } label: { Label("Create “\(query)”", systemImage: "plus.circle.fill") }.tint(Brand.green)
                 Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }.tint(Brand.green)
+                Button { labelCam = true } label: { Label("Scan the nutrition label", systemImage: "text.viewfinder") }.tint(Brand.green)
                 Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }.tint(Brand.green)
             }
             .listRowBackground(Brand.card)
@@ -243,6 +262,7 @@ struct AddFoodSheet: View {
             }
             Menu {
                 Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
+                Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
                 Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
                 Button("New food", systemImage: "carrot") { creating = "" }
                 if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "sparkles") { describing = true } }
@@ -349,7 +369,7 @@ struct AddFoodSheet: View {
             if let off = await e.part("offFoods") { store.setRoot("offFoods", off) }
             path.append(id)
         } else {
-            scanMessage = String(localized: "This product isn't in Open Food Facts yet. Use Quick add with the numbers from the label.")
+            notFound = true
         }
     }
 }

@@ -65,6 +65,7 @@ jobs:
           done
           shot -tab diary -sheet weight; xcrun simctl io "$UDID" screenshot out/weight-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -sheet food; xcrun simctl io "$UDID" screenshot out/food-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -onboarding YES; xcrun simctl io "$UDID" screenshot out/onboarding-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -page micros; xcrun simctl io "$UDID" screenshot out/micros-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -sheet add; xcrun simctl io "$UDID" screenshot out/add-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open plan; xcrun simctl io "$UDID" screenshot out/plan-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
