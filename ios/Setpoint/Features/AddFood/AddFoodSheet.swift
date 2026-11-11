@@ -8,7 +8,7 @@ struct AddFoodSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State var meal: String
     let day: String
-    @State private var query = ""
+    @State private var query = UserDefaults.standard.string(forKey: "search") ?? "" // build-server screenshots can open with a search
     @State private var tab = Tab.all
     @State private var hits: [FoodHit] = []
     @State private var recents: [FoodHit] = []
