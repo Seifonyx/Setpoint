@@ -1,5 +1,6 @@
 # Builds the native iPhone app on GitHub's Mac servers: an unsigned .ipa for SideStore, plus simulator screenshots.
-# Everything lands on the "ios-latest" release (a fixed download link); a failed build posts its log to "ios-log".
+# Every build lands on the "ios-preview" release (screenshots + .ipa) for review. Only an approved build (a commit
+# message containing [release], or a manual run) goes to "ios-latest" and the SideStore source. A failed build posts its log to "ios-log".
 name: iOS
 on:
   push:
@@ -17,6 +18,7 @@ jobs:
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
+      RELEASE: ${{ github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]') }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode 26
@@ -68,12 +70,19 @@ jobs:
           shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance light
           xcrun simctl launch "$UDID" app.setpoint.ios -tab diary; sleep 5; xcrun simctl io "$UDID" screenshot out/empty-light.png
+      - name: Publish a preview (screenshots and .ipa, not sent to SideStore)
+        run: |
+          gh release delete ios-preview -y --cleanup-tag || true
+          gh release create ios-preview ios/out/* --prerelease --target "$GITHUB_SHA" --title "Setpoint for iPhone (preview, not released)" \
+            --notes "Preview of build ${{ github.run_number }} · ${{ github.sha }}. Not in the SideStore source until approved."
       - name: Publish to the ios-latest release
+        if: env.RELEASE == 'true'
         run: |
           gh release delete ios-latest -y --cleanup-tag || true
           gh release create ios-latest ios/out/* --prerelease --title "Setpoint for iPhone (latest build)" \
             --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
       - name: Update the SideStore source (sidestore.json)
+        if: env.RELEASE == 'true'
         run: |
           python3 - <<'PY'
           import json, os, datetime
