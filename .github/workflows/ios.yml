@@ -1,3 +1,4 @@
+# Stuck in "queued" with no job? A new push replaces it (previews cancel older previews).
 # Builds the native iPhone app on GitHub's Mac servers: an unsigned .ipa for SideStore, plus simulator screenshots.
 # Every build lands on the "ios-preview" release (screenshots + .ipa) for review. Only an approved build (a commit
 # message containing [release], or a manual run) goes to "ios-latest" and the SideStore source. A failed build posts its log to "ios-log".
