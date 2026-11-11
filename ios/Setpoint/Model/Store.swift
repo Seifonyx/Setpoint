@@ -6,7 +6,13 @@ import Observation
 @MainActor
 @Observable
 final class Store {
+    /// The one copy of your data (the screens, Siri and Shortcuts all use it).
+    static let shared = Store()
     private(set) var root: [String: JSONValue] = [:]
+    /// Goes up on every change you make (for haptics).
+    private(set) var changeCount = 0
+    /// Something Siri or a shortcut asked the app to open.
+    var request: AppRequest?
     private(set) var food: [String: [FoodItem]] = [:]
     private(set) var entries: [WeighIn] = []
     private(set) var water: [String: Double] = [:]
@@ -24,6 +30,8 @@ final class Store {
     private(set) var plans: [String: DayPlan] = [:]
     /// The Plan screens' numbers.
     private(set) var overview: Overview?
+
+    enum AppRequest: Equatable { case addFood, logWeight }
 
     private struct Snapshot { var food: [String: [FoodItem]]; var entries: [WeighIn]; var water: [String: Double] }
 
@@ -314,6 +322,7 @@ final class Store {
     // MARK: Changes (each can be undone from the banner)
 
     private func remember(_ label: String) {
+        changeCount += 1
         undoSnap = Snapshot(food: food, entries: entries, water: water)
         undoAction = nil
         undoLabel = label

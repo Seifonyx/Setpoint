@@ -15,11 +15,11 @@ struct RootView: View {
     @State private var pending: Data?
     @State private var message: String?
     @Environment(\.scenePhase) private var phase
+    @AppStorage(DeviceSettings.haptics) private var haptics = true
 
     init() {
-        let s = Store()
-        _store = State(initialValue: s)
-        _account = State(initialValue: Account(store: s))
+        _store = State(initialValue: Store.shared)
+        _account = State(initialValue: Account.shared)
     }
 
     var body: some View {
@@ -39,6 +39,9 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
+        .sensoryFeedback(trigger: store.changeCount) { _, _ in haptics ? .success : nil }
+        .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
+        .modifier(LockCover())
         .environment(store)
         .environment(account)
         .task { await store.start(); await account.pull(fresh: false) }

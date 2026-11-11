@@ -29,6 +29,8 @@ final class Account {
     @ObservationIgnored private var running = false
     @ObservationIgnored private var again = false
 
+    static let shared = Account(store: Store.shared)
+
     init(store: Store) {
         self.store = store
         session = ProcessInfo.processInfo.arguments.contains("-demo") ? nil : Keychain.load() // screenshots never sync

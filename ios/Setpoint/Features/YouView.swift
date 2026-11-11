@@ -28,6 +28,9 @@ struct YouView: View {
                     }
                 }
                 Section {
+                    NavigationLink { DeviceSettingsView() } label: { Label("Settings", systemImage: "gearshape") }
+                }
+                Section {
                     Button { importing = true } label: { Label("Import from the web app", systemImage: "square.and.arrow.down") }
                     Button {
                         do { shareURL = try store.exportBackup() } catch { self.error = error.localizedDescription }

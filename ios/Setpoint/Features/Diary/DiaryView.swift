@@ -64,6 +64,7 @@ struct DiaryView: View {
                         .disabled(day >= Day.add(Day.today, 14))
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
+                    ShareLink(item: shareText) { Label("Share day", systemImage: "square.and.arrow.up") }
                     Button("Choose day", systemImage: "calendar") { pickDay = true }
                     Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
                         .buttonStyle(.glassProminent)
@@ -78,9 +79,29 @@ struct DiaryView: View {
             }
             .sensoryFeedback(.selection, trigger: day)
             .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day) }
+            .onChange(of: store.request) { _, r in
+                if r == .addFood { day = Day.today; adding = AddJob(meal: mealNow); store.request = nil }
+            }
+            .task { if store.request == .addFood { adding = AddJob(meal: mealNow); store.request = nil } }
             .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day) }
             .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
         }
+    }
+
+    /// The day as plain text, for Messages, Notes or a coach.
+    private var shareText: String {
+        let t = store.totals(day)
+        var lines = [Day.date(day).formatted(.dateTime.weekday(.wide).month(.wide).day()),
+                     "\(Fmt.kcal(t.kcal)) kcal · P \(Fmt.grams(t.protein)) g · C \(Fmt.grams(t.carbs)) g · F \(Fmt.grams(t.fat)) g"]
+        for m in store.meals {
+            let list = store.items(day).filter { $0.meal == m.key }
+            guard !list.isEmpty else { continue }
+            lines.append("")
+            lines.append(m.name)
+            lines += list.map { "• \($0.displayName) · \(Fmt.kcal($0.kcal)) kcal" }
+        }
+        if let w = store.entry(day) { lines.append(""); lines.append(String(localized: "Weight") + ": \(Fmt.weight(w.kg, unit: store.unit)) \(store.unit)") }
+        return lines.joined(separator: "\n")
     }
 
     private func swiped(_ v: DragGesture.Value) {

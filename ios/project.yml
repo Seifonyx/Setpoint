@@ -44,3 +44,4 @@ targets:
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
         NSCameraUsageDescription: Setpoint uses the camera to scan food barcodes.
+        NSFaceIDUsageDescription: Setpoint uses Face ID to unlock the app when you turn on the lock.
