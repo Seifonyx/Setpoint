@@ -156,7 +156,7 @@ struct DeviceSettingsView: View {
 
 /// The web app's color themes (settings.style): the accent color in light and dark.
 enum Theme {
-    static let all: [(key: String, name: LocalizedStringKey, light: UInt32, dark: UInt32)] = [
+    nonisolated(unsafe) static let all: [(key: String, name: LocalizedStringKey, light: UInt32, dark: UInt32)] = [
         ("graphite", "Graphite", 0x1c1c1e, 0xf2f2f5), ("classic", "Emerald", 0x0f9a6c, 0x5fdcab), ("ocean", "Ocean", 0x1f6fe5, 0x6aa8ff),
         ("rose", "Rose", 0xc2416b, 0xff8db0), ("violet", "Midnight", 0x6c4cf1, 0xa594ff), ("sand", "Terracotta", 0xc4602f, 0xf0955f), ("luxe", "Luxe", 0x0f5c45, 0xdcb86e)
     ]
