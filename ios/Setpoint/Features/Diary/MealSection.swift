@@ -40,13 +40,15 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
             }
-            Button("Add food", systemImage: "plus", action: addFood)
+            Button(action: addFood) {
+                Label("Add food", systemImage: "plus.circle.fill").font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
+            }
         } header: {
-            HStack {
-                Text(meal.name)
+            HStack(alignment: .firstTextBaseline) {
+                Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil)
                 Spacer()
                 if !counted.isEmpty {
-                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").monospacedDigit()
+                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2).textCase(nil)
                 }
                 Menu {
                     Button("Add food", systemImage: "plus", action: addFood)
@@ -95,7 +97,10 @@ struct FoodRow: View {
                 if let note = food.note { Text(note).font(.brand(.footnote)).italic().foregroundStyle(.secondary).lineLimit(1) }
             }
             Spacer()
-            Text(Fmt.kcal(food.kcal)).monospacedDigit().foregroundStyle(.secondary)
+            VStack(alignment: .trailing, spacing: 4) {
+                Text(Fmt.kcal(food.kcal)).font(.brand(.body, .semibold)).monospacedDigit()
+                MacroSplit(p: food.protein, c: food.carbs, f: food.fat).frame(width: 46, height: 4)
+            }
         }
         .contentShape(.rect)
         .opacity(food.isPlanned && day <= Day.today ? 0.55 : 1)
@@ -111,5 +116,22 @@ struct FoodRow: View {
             if !m.isEmpty { parts.append(m.joined(separator: " · ")) }
         }
         return parts.joined(separator: " · ")
+    }
+}
+
+/// A food's calories split into protein, carbs and fat, as one thin bar.
+struct MacroSplit: View {
+    let p: Double, c: Double, f: Double
+    var body: some View {
+        let kp = p * 4, kc = c * 4, kf = f * 9, t = kp + kc + kf
+        GeometryReader { g in
+            if t > 0 {
+                HStack(spacing: 1.5) {
+                    Capsule().fill(Brand.protein).frame(width: max(0, g.size.width * kp / t - 1))
+                    Capsule().fill(Brand.carbs).frame(width: max(0, g.size.width * kc / t - 1))
+                    Capsule().fill(Brand.fat).frame(width: max(0, g.size.width * kf / t - 1))
+                }
+            }
+        }
     }
 }
