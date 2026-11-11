@@ -185,7 +185,7 @@ struct SummaryCard: View {
                         let left = plan.kcal - totals.kcal
                         Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
                             .font(.brand(.subheadline, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.2)
-                        Text(Fmt.kcal(abs(left))).font(Brand.display(54, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                        Text(Fmt.kcal(abs(left))).font(Brand.display(50, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
                         Text("\(Fmt.kcal(totals.kcal)) of \(Fmt.kcal(plan.kcal)) kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2).monospacedDigit()
                     } else {
@@ -194,8 +194,8 @@ struct SummaryCard: View {
                         Text("kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                     }
                 }
-                .padding(.horizontal, 50)
-                .offset(y: 6)
+                .padding(.horizontal, 62)
+                .offset(y: -10)
             }
             .frame(maxWidth: .infinity)
             if let plan {
