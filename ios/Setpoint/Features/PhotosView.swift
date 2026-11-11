@@ -70,7 +70,7 @@ struct PhotosSection: View {
                         Button { showing = p } label: {
                             ZStack(alignment: .bottomLeading) {
                                 if let ui = PhotoLibrary.image(p.thumb) { Image(uiImage: ui).resizable().scaledToFill() } else { Color.gray.opacity(0.2) }
-                                Text(Day.date(p.date), format: .dateTime.month(.abbreviated).day()).font(.caption2.weight(.semibold))
+                                Text(Day.date(p.date), format: .dateTime.month(.abbreviated).day()).font(.brand(.caption2, .semibold))
                                     .padding(.horizontal, 6).padding(.vertical, 3).background(.ultraThinMaterial, in: Capsule()).padding(4)
                             }
                             .frame(height: 130).frame(maxWidth: .infinity).clipShape(RoundedRectangle(cornerRadius: 10))
@@ -105,6 +105,7 @@ private struct PhotoViewer: View {
         NavigationStack {
             Group { if let ui = PhotoLibrary.image(photo.full) { Image(uiImage: ui).resizable().scaledToFit() } }
                 .frame(maxWidth: .infinity, maxHeight: .infinity).background(.black)
+                .brandList()
                 .navigationTitle(Day.date(photo.date).formatted(.dateTime.month(.wide).day().year()))
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -131,6 +132,7 @@ private struct CompareView: View {
                 HStack(spacing: 6) { side($a); side($b) }
             }
             .padding()
+            .brandList()
             .navigationTitle("Compare")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

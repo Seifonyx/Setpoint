@@ -43,7 +43,8 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 
 ## You and settings
 - ✅ Account sign-in (email, Google) and sync with the web app
-- ✅ Units, week start, track calories, color themes (all synced)
+- ✅ Units, week start, track calories (synced)
+- One Setpoint look instead of themes (warm & editorial; the web app's themes are ignored)
 - ✅ Reminders, Face ID lock, haptics (this iPhone only)
 - ✅ Fasting timer
 - ✅ Import web backup, back up, erase data

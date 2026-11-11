@@ -23,6 +23,7 @@ struct RamadanSheet: View {
                     }
                 } footer: { Text("Calculated times can differ from your local mosque by a few minutes.") }
             }
+            .brandList()
             .navigationTitle("Ramadan mode")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -64,17 +65,17 @@ struct RamadanBanner: View {
                 TimelineView(.periodic(from: .now, by: 60)) { ctx in
                     let now = ctx.date.timeIntervalSince1970 * 1000
                     HStack(spacing: 12) {
-                        Image(systemName: "moon.stars.fill").font(.title3).foregroundStyle(.tint)
+                        Image(systemName: "moon.stars.fill").font(.brand(.title3)).foregroundStyle(.tint)
                         VStack(alignment: .leading, spacing: 2) {
                             if now >= t.fajr && now < t.maghrib {
-                                Text("Fasting · Iftar at \(clock(t.maghrib))").font(.subheadline.weight(.semibold))
-                                Text("\(left(t.maghrib - now)) to go").font(.subheadline).foregroundStyle(.secondary)
+                                Text("Fasting · Iftar at \(clock(t.maghrib))").font(.brand(.subheadline, .semibold))
+                                Text("\(left(t.maghrib - now)) to go").font(.brand(.subheadline)).foregroundStyle(.secondary)
                             } else {
                                 let fajr = now < t.fajr ? t.fajr : t.fajrNext
                                 let water = max(0, store.waterGoal - store.waterOn(Day.today))
-                                Text("Eating window · Suhoor until \(clock(fajr))").font(.subheadline.weight(.semibold))
+                                Text("Eating window · Suhoor until \(clock(fajr))").font(.brand(.subheadline, .semibold))
                                 Text(water > 0 ? "\(left(fajr - now)) left · drink \(Fmt.ml(water)) more before Fajr" : "\(left(fajr - now)) left · water goal done")
-                                    .font(.subheadline).foregroundStyle(.secondary)
+                                    .font(.brand(.subheadline)).foregroundStyle(.secondary)
                             }
                         }
                         Spacer()
@@ -83,10 +84,10 @@ struct RamadanBanner: View {
                 }
             } else if isRamadan && !store.ramadanOn {
                 HStack(spacing: 12) {
-                    Image(systemName: "moon.stars.fill").font(.title3).foregroundStyle(.tint)
+                    Image(systemName: "moon.stars.fill").font(.brand(.title3)).foregroundStyle(.tint)
                     VStack(alignment: .leading, spacing: 4) {
-                        Text("Ramadan Mubarak").font(.subheadline.weight(.semibold))
-                        Text("Turn on Ramadan mode: Suhoor and Iftar meals, with fasting times for your city.").font(.subheadline).foregroundStyle(.secondary)
+                        Text("Ramadan Mubarak").font(.brand(.subheadline, .semibold))
+                        Text("Turn on Ramadan mode: Suhoor and Iftar meals, with fasting times for your city.").font(.brand(.subheadline)).foregroundStyle(.secondary)
                         Button("Turn on") { sheet = true }.buttonStyle(.glassProminent).controlSize(.small)
                     }
                 }

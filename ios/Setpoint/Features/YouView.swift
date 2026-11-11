@@ -31,7 +31,7 @@ struct YouView: View {
                 Section {
                     NavigationLink { FastingView() } label: {
                         LabeledContent {
-                            if store.root["fast"]?.object?["start"]?.number != nil { Text("Fasting").foregroundStyle(.green) }
+                            if store.root["fast"]?.object?["start"]?.number != nil { Text("Fasting").foregroundStyle(Brand.green) }
                         } label: { Label("Fasting timer", systemImage: "timer") }
                     }
                     NavigationLink { DeviceSettingsView() } label: { Label("Settings", systemImage: "gearshape") }
@@ -54,6 +54,7 @@ struct YouView: View {
                     LabeledContent("Version", value: Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "")
                 }
             }
+            .brandList()
             .navigationTitle("You")
             .navigationDestination(isPresented: $showPlan) { PlanView() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in

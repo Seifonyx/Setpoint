@@ -18,9 +18,9 @@ struct WeightSheet: View {
                     HStack {
                         TextField("Weight", text: $text)
                             .keyboardType(.decimalPad)
-                            .font(.system(size: 34, weight: .bold, design: .rounded))
+                            .font(Brand.display(34, .bold))
                             .focused($focused)
-                        Text(LocalizedStringKey(store.unit)).font(.title3).foregroundStyle(.secondary)
+                        Text(LocalizedStringKey(store.unit)).font(.brand(.title3)).foregroundStyle(.secondary)
                     }
                     TextField("Note", text: $note)
                 }
@@ -35,6 +35,7 @@ struct WeightSheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle(store.entry(day) == nil ? "Log weight" : "Edit weight")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -76,9 +77,9 @@ struct WaterSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(Fmt.ml(store.waterOn(day))).font(.system(size: 40, weight: .bold, design: .rounded)).contentTransition(.numericText())
-                        ProgressView(value: min(store.waterOn(day), store.waterGoal), total: store.waterGoal).tint(.cyan)
-                        Text("Goal \(Fmt.ml(store.waterGoal))").font(.subheadline).foregroundStyle(.secondary)
+                        Text(Fmt.ml(store.waterOn(day))).font(Brand.display(40, .bold)).contentTransition(.numericText())
+                        ProgressView(value: min(store.waterOn(day), store.waterGoal), total: store.waterGoal).tint(Brand.water)
+                        Text("Goal \(Fmt.ml(store.waterGoal))").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     }
                     .padding(.vertical, 4)
                 }
@@ -96,6 +97,7 @@ struct WaterSheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Water")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
@@ -116,6 +118,7 @@ struct DayPickerSheet: View {
             DatePicker("Day", selection: $date, in: ...Calendar.current.date(byAdding: .day, value: 14, to: Date())!, displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .padding(.horizontal)
+                .brandList()
                 .navigationTitle("Choose day")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
@@ -141,6 +144,7 @@ struct CopyDaySheet: View {
             DatePicker("Copy to", selection: $date, displayedComponents: .date)
                 .datePickerStyle(.graphical)
                 .padding(.horizontal)
+                .brandList()
                 .navigationTitle(items.count == 1 ? "Copy food" : "Copy meal")
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {

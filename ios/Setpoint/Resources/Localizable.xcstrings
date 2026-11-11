@@ -101,6 +101,16 @@
         }
       }
     },
+    "%@ of %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ من %@ سعرة"
+          }
+        }
+      }
+    },
     "%@ options": {
       "localizations": {
         "ar": {
@@ -3751,6 +3761,16 @@
         }
       }
     },
+    "Set up your plan in You › Plan to see your targets here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهّز خطتك من أنت › الخطة عشان تشوف أهدافك هنا."
+          }
+        }
+      }
+    },
     "Setpoint is locked": {
       "localizations": {
         "ar": {
@@ -4931,6 +4951,16 @@
         }
       }
     },
+    "eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مأكول"
+          }
+        }
+      }
+    },
     "g": {
       "localizations": {
         "ar": {
@@ -4981,6 +5011,16 @@
         }
       }
     },
+    "left": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقي"
+          }
+        }
+      }
+    },
     "mg": {
       "localizations": {
         "ar": {
@@ -4997,6 +5037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مل"
+          }
+        }
+      }
+    },
+    "over": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة"
           }
         }
       }

@@ -23,7 +23,7 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
                     .swipeActions(edge: .leading) {
-                        Button("Add another", systemImage: "plus") { withAnimation { store.addAnother(food, on: day) } }.tint(.green)
+                        Button("Add another", systemImage: "plus") { withAnimation { store.addAnother(food, on: day) } }.tint(Brand.green)
                     }
                     .contextMenu {
                         if food.isPlanned && day <= Day.today {
@@ -59,7 +59,7 @@ struct MealSection: View {
                         Button("Remove all", systemImage: "trash", role: .destructive) { withAnimation { store.removeMeal(meal.key, on: day) } }
                     }
                 } label: {
-                    Image(systemName: "ellipsis").font(.body.weight(.semibold)).frame(width: 30, height: 24).contentShape(.rect)
+                    Image(systemName: "ellipsis").font(.brand(.body, .semibold)).frame(width: 30, height: 24).contentShape(.rect)
                 }
                 .accessibilityLabel(Text("\(meal.name) options"))
             }
@@ -86,13 +86,13 @@ struct FoodRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(food.displayName).lineLimit(1)
-                    if food.isAdjusted { Image(systemName: "slider.horizontal.3").font(.caption).foregroundStyle(.secondary).accessibilityLabel(Text("Adjusted for this day")) }
-                    if food.isRepeat { Image(systemName: "repeat").font(.caption).foregroundStyle(.secondary).accessibilityLabel(Text("Repeat item")) }
+                    if food.isAdjusted { Image(systemName: "slider.horizontal.3").font(.brand(.caption)).foregroundStyle(.secondary).accessibilityLabel(Text("Adjusted for this day")) }
+                    if food.isRepeat { Image(systemName: "repeat").font(.brand(.caption)).foregroundStyle(.secondary).accessibilityLabel(Text("Repeat item")) }
                 }
                 if !detail.isEmpty {
-                    Text(detail).font(.subheadline).foregroundStyle(.secondary).lineLimit(1)
+                    Text(detail).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1)
                 }
-                if let note = food.note { Text(note).font(.footnote).italic().foregroundStyle(.secondary).lineLimit(1) }
+                if let note = food.note { Text(note).font(.brand(.footnote)).italic().foregroundStyle(.secondary).lineLimit(1) }
             }
             Spacer()
             Text(Fmt.kcal(food.kcal)).monospacedDigit().foregroundStyle(.secondary)

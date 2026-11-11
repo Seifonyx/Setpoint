@@ -14,7 +14,7 @@ struct WeekPlanSection: View {
             ForEach(days, id: \.0) { d, p in
                 LabeledContent {
                     HStack(spacing: 6) {
-                        if p.training == true { Image(systemName: "dumbbell.fill").font(.caption).foregroundStyle(.tint) }
+                        if p.training == true { Image(systemName: "dumbbell.fill").font(.brand(.caption)).foregroundStyle(.tint) }
                         Text(Fmt.kcal(p.kcal)).monospacedDigit().fontWeight(d == Day.today ? .bold : .regular)
                     }
                 } label: {
@@ -68,7 +68,7 @@ private struct DayChips: View {
                 Button {
                     if single { picked = on ? [] : [d] } else if on { picked.remove(d) } else { picked.insert(d) }
                 } label: {
-                    Text(Calendar.current.veryShortWeekdaySymbols[d]).font(.subheadline.weight(.semibold))
+                    Text(Calendar.current.veryShortWeekdaySymbols[d]).font(.brand(.subheadline, .semibold))
                         .frame(maxWidth: .infinity, minHeight: 40)
                         .background(Circle().fill(on ? AnyShapeStyle(.tint) : AnyShapeStyle(.quaternary)))
                         .foregroundStyle(on ? Color(uiColor: .systemBackground) : Color.primary)
@@ -96,6 +96,7 @@ struct TrainingDaysSheet: View {
                     else { Text("More on training days, less on rest days. Same weekly total.") }
                 }
             }
+            .brandList()
             .navigationTitle("Training days")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -146,6 +147,7 @@ struct FlexSheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Flexible week")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -202,6 +204,7 @@ struct CycleSheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Cycle and weight")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

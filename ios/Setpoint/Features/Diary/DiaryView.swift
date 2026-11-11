@@ -40,7 +40,7 @@ struct DiaryView: View {
                                 Text("\(sc.score)/100").monospacedDigit().foregroundStyle(.secondary)
                             } label: {
                                 Label { Text("Day score") } icon: {
-                                    Text(sc.grade).font(.headline.weight(.bold)).foregroundStyle(gradeColor(sc.grade))
+                                    Text(sc.grade).font(.brand(.headline, .bold)).foregroundStyle(gradeColor(sc.grade))
                                 }
                             }
                         }
@@ -77,6 +77,7 @@ struct DiaryView: View {
                 }
             }
             .listSectionSpacing(14)
+            .brandList()
             .navigationTitle(title)
             .navigationSubtitle(subtitle)
             .toolbar {
@@ -111,7 +112,7 @@ struct DiaryView: View {
         }
     }
 
-    private func gradeColor(_ g: String) -> Color { g == "A" ? .green : g == "B" ? .blue : g == "C" ? .orange : .red }
+    private func gradeColor(_ g: String) -> Color { g == "A" ? Brand.green : g == "B" ? Brand.water : g == "C" ? Brand.amber : Brand.over }
 
     /// The day as plain text, for Messages, Notes or a coach.
     private var shareText: String {
@@ -174,39 +175,41 @@ struct SummaryCard: View {
     let plan: DayPlan?
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 14) {
-            HStack(alignment: .firstTextBaseline) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Calories").font(.subheadline).foregroundStyle(.secondary)
-                    HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(Fmt.kcal(totals.kcal)).font(.system(size: 40, weight: .bold, design: .rounded)).contentTransition(.numericText())
-                        if let plan { Text("/ \(Fmt.kcal(plan.kcal))").foregroundStyle(.secondary) }
+        VStack(spacing: 18) {
+            ZStack {
+                CalorieDial(eaten: totals.kcal, target: plan?.kcal,
+                            protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
+                    .frame(width: 236, height: 236)
+                VStack(spacing: 0) {
+                    if let plan {
+                        let left = plan.kcal - totals.kcal
+                        Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
+                            .font(.brand(.subheadline, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.2)
+                        Text(Fmt.kcal(abs(left))).font(Brand.display(54, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                            .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.6).lineLimit(1)
+                        Text("\(Fmt.kcal(totals.kcal)) of \(Fmt.kcal(plan.kcal)) kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2).monospacedDigit()
+                    } else {
+                        Text("eaten").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.2)
+                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(54, .heavy)).contentTransition(.numericText()).monospacedDigit()
+                        Text("kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                     }
                 }
-                Spacer()
-                if let plan {
-                    let left = plan.kcal - totals.kcal
-                    VStack(alignment: .trailing, spacing: 2) {
-                        Text(left >= 0 ? LocalizedStringKey("Left") : LocalizedStringKey("Over")).font(.subheadline).foregroundStyle(.secondary)
-                        Text(Fmt.kcal(abs(left))).font(.title2.weight(.semibold)).fontDesign(.rounded)
-                            .foregroundStyle(left >= 0 ? Color.primary : Color.red)
-                    }
-                }
+                .padding(.horizontal, 50)
+                .offset(y: 6)
             }
-            ProgressView(value: min(totals.kcal, plan?.kcal ?? max(totals.kcal, 1)), total: plan?.kcal ?? max(totals.kcal, 1))
-                .tint(plan.map { totals.kcal > $0.kcal * 1.05 } == true ? .red : .orange)
+            .frame(maxWidth: .infinity)
             if let plan {
                 HStack(spacing: 14) {
-                    MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: .green)
-                    MacroBar(label: "Carbs", value: totals.carbs, target: plan.carbs, color: .blue)
-                    MacroBar(label: "Fat", value: totals.fat, target: plan.fat, color: .purple)
+                    MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: Brand.protein)
+                    MacroBar(label: "Carbs", value: totals.carbs, target: plan.carbs, color: Brand.carbs)
+                    MacroBar(label: "Fat", value: totals.fat, target: plan.fat, color: Brand.fat)
                 }
             } else {
-                Text("Your targets appear here once they're set in the web app.").font(.footnote).foregroundStyle(.secondary)
+                Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
             }
         }
-        .padding(.vertical, 6)
-        .animation(.snappy, value: totals)
+        .padding(.vertical, 10)
+        .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
     }
 }
 
@@ -217,14 +220,24 @@ struct MacroBar: View {
     let color: Color
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 4) {
-            Text(label).font(.caption).foregroundStyle(.secondary)
+        VStack(alignment: .leading, spacing: 6) {
+            HStack(spacing: 5) {
+                Circle().fill(color).frame(width: 7, height: 7)
+                Text(label).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+            }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.grams(value)).font(.headline).fontDesign(.rounded)
-                Text("/ \(Fmt.grams(target)) g").font(.caption2).foregroundStyle(.secondary)
+                Text(Fmt.grams(value)).font(Brand.display(19, .bold)).monospacedDigit().contentTransition(.numericText())
+                Text("/ \(Fmt.grams(target)) g").font(.brand(.caption2)).foregroundStyle(Brand.ink2)
             }
             .lineLimit(1).minimumScaleFactor(0.7)
-            ProgressView(value: min(value, max(target, 1)), total: max(target, 1)).tint(value > target * 1.1 ? .red : color)
+            GeometryReader { g in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Brand.card2)
+                    Capsule().fill(value > target * 1.1 ? Brand.over : color)
+                        .frame(width: g.size.width * min(1, value / max(target, 1)))
+                }
+            }
+            .frame(height: 5)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -240,20 +253,20 @@ struct WeightTile: View {
     var body: some View {
         Button(action: open) {
             VStack(alignment: .leading, spacing: 6) {
-                Label("Weight", systemImage: "scalemass").font(.subheadline).foregroundStyle(.secondary)
+                Label("Weight", systemImage: "scalemass.fill").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                 if let entry {
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(Fmt.weight(entry.kg, unit: unit)).font(.title.weight(.bold)).fontDesign(.rounded)
-                        Text(LocalizedStringKey(unit)).font(.subheadline).foregroundStyle(.secondary)
+                        Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.display(30, .bold)).monospacedDigit()
+                        Text(LocalizedStringKey(unit)).font(.brand(.subheadline)).foregroundStyle(.secondary)
                     }
-                    if entry.excluded { Text("Excluded").font(.caption).foregroundStyle(.secondary) }
+                    if entry.excluded { Text("Excluded").font(.brand(.caption)).foregroundStyle(.secondary) }
                 } else {
-                    Text("Log").font(.title3.weight(.semibold)).foregroundStyle(.tint)
+                    Text("Log").font(Brand.display(24, .bold)).foregroundStyle(Brand.green)
                 }
             }
             .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
             .padding(14)
-            .background(Color(uiColor: .secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+            .background(Brand.card, in: .rect(cornerRadius: 22))
         }
         .buttonStyle(.plain)
     }
@@ -268,17 +281,24 @@ struct WaterTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Label("Water", systemImage: "drop.fill").font(.subheadline).foregroundStyle(.secondary)
+                    Label("Water", systemImage: "drop.fill").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.water)
                     Spacer()
                     Button("Add a glass of water", systemImage: "plus", action: add)
-                        .labelStyle(.iconOnly).buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
+                        .labelStyle(.iconOnly).symbolEffect(.bounce, value: ml).buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
                 }
-                Text(Fmt.ml(ml)).font(.title.weight(.bold)).fontDesign(.rounded).contentTransition(.numericText())
-                ProgressView(value: min(ml, goal), total: goal).tint(.cyan)
+                Text(Fmt.ml(ml)).font(Brand.display(30, .bold)).contentTransition(.numericText()).monospacedDigit()
+                GeometryReader { g in
+                    ZStack(alignment: .leading) {
+                        Capsule().fill(Brand.card2)
+                        Capsule().fill(Brand.water).frame(width: g.size.width * min(1, ml / max(goal, 1)))
+                    }
+                }
+                .frame(height: 6)
+                .animation(.spring(response: 0.5, dampingFraction: 0.75), value: ml)
         }
         .frame(maxWidth: .infinity, minHeight: 84, alignment: .topLeading)
         .padding(14)
-        .background(Color(uiColor: .secondarySystemGroupedBackground), in: .rect(cornerRadius: 22))
+        .background(Brand.card, in: .rect(cornerRadius: 22))
         .contentShape(.rect(cornerRadius: 22))
         .onTapGesture(perform: open) // the tile opens Water; its + adds a glass (a button inside a button would swallow taps)
         .accessibilityAddTraits(.isButton)
@@ -295,7 +315,7 @@ struct UndoBanner: View {
     var body: some View {
         if let label = store.undoLabel {
             HStack {
-                Text(label).font(.subheadline.weight(.medium)).lineLimit(1)
+                Text(label).font(.brand(.subheadline, .medium)).lineLimit(1)
                 Spacer()
                 Button("Undo") { withAnimation { store.undo() } }.fontWeight(.semibold)
             }

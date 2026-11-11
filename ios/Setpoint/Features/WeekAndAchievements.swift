@@ -10,9 +10,9 @@ struct YouHighlights: View {
         Section {
             if let a = ach {
                 HStack {
-                    stat("\(a.streak)", "Day streak", "flame.fill", .orange)
-                    stat("\(store.food.keys.count)", "Days logged", "calendar", .blue)
-                    stat("\(a.list.filter(\.got).count)/\(a.list.count)", "Achievements", "trophy.fill", .yellow)
+                    stat("\(a.streak)", "Day streak", "flame.fill", Brand.protein)
+                    stat("\(store.food.keys.count)", "Days logged", "calendar", Brand.water)
+                    stat("\(a.list.filter(\.got).count)/\(a.list.count)", "Achievements", "trophy.fill", Brand.amber)
                 }
                 .padding(.vertical, 4)
             }
@@ -36,8 +36,8 @@ struct YouHighlights: View {
     }
     private func stat(_ v: String, _ l: LocalizedStringKey, _ icon: String, _ c: Color) -> some View {
         VStack(spacing: 3) {
-            HStack(spacing: 4) { Image(systemName: icon).foregroundStyle(c).font(.subheadline); Text(v).font(.title3.weight(.bold)).fontDesign(.rounded).monospacedDigit() }
-            Text(l).font(.caption).foregroundStyle(.secondary)
+            HStack(spacing: 4) { Image(systemName: icon).foregroundStyle(c).font(.brand(.subheadline)); Text(v).font(.brand(.title3, .bold)).monospacedDigit() }
+            Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -62,6 +62,7 @@ struct WeekReviewView: View {
                 }
             } footer: { Text("On target means within 10% of that day's calories.") }
         }
+        .brandList()
         .navigationTitle("Your week")
         .navigationSubtitle(r.label)
     }
@@ -75,14 +76,15 @@ struct AchievementsView: View {
                 ForEach(ach.list.indices, id: \.self) { i in
                     let a = ach.list[i]
                     HStack(spacing: 12) {
-                        Image(systemName: a.got ? "checkmark.seal.fill" : "seal").font(.title3).foregroundStyle(a.got ? Color.yellow : Color.secondary)
+                        Image(systemName: a.got ? "checkmark.seal.fill" : "seal").font(.brand(.title3)).foregroundStyle(a.got ? Brand.amber : Color.secondary)
                         Text(a.t).foregroundStyle(a.got ? Color.primary : Color.secondary)
                         Spacer()
-                        if !a.got && !a.p.isEmpty { Text(a.p).font(.subheadline).monospacedDigit().foregroundStyle(.secondary) }
+                        if !a.got && !a.p.isEmpty { Text(a.p).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(.secondary) }
                     }
                 }
             } footer: { Text("Your streak allows one missed day a week.") }
         }
+        .brandList()
         .navigationTitle("Achievements")
     }
 }
@@ -103,13 +105,13 @@ struct InsightsView: View {
                             let x = d.items[i]
                             VStack(alignment: .leading, spacing: 4) {
                                 HStack {
-                                    Text(x.t).font(.headline)
+                                    Text(x.t).font(.brand(.headline))
                                     Spacer()
                                     Text((x.d > 0 ? "+" : x.d < 0 ? "−" : "") + Fmt.weight(abs(x.d), unit: store.unit) + " " + store.unit)
-                                        .monospacedDigit().foregroundStyle(abs(x.d) >= 0.15 ? (x.d > 0 ? Color.orange : Color.green) : Color.secondary)
+                                        .monospacedDigit().foregroundStyle(abs(x.d) >= 0.15 ? (x.d > 0 ? Brand.amber : Brand.green) : Color.secondary)
                                 }
-                                Text(x.s).font(.subheadline).foregroundStyle(.secondary)
-                                Text(x.note).font(.subheadline)
+                                Text(x.s).font(.brand(.subheadline)).foregroundStyle(.secondary)
+                                Text(x.note).font(.brand(.subheadline))
                             }
                             .padding(.vertical, 2)
                         }
@@ -117,6 +119,7 @@ struct InsightsView: View {
                 }
             } else { ProgressView() }
         }
+        .brandList()
         .navigationTitle("Weight factors")
         .task(id: "\(store.version)|\(store.foodsReady)") { data = await store.engineRef.insights() }
     }
@@ -131,8 +134,8 @@ struct DayScoreSheet: View {
             List {
                 Section {
                     HStack(alignment: .firstTextBaseline) {
-                        Text(score.grade).font(.system(size: 48, weight: .bold, design: .rounded))
-                        Text("\(score.score)/100").font(.title3).foregroundStyle(.secondary).monospacedDigit()
+                        Text(score.grade).font(Brand.display(48, .bold))
+                        Text("\(score.score)/100").font(.brand(.title3)).foregroundStyle(.secondary).monospacedDigit()
                     }
                 }
                 Section {
@@ -141,11 +144,12 @@ struct DayScoreSheet: View {
                         VStack(alignment: .leading, spacing: 6) {
                             HStack { Text(p.label); Spacer(); Text("\(Int(p.pts.rounded()))/\(Int(p.max))").monospacedDigit().foregroundStyle(.secondary) }
                             ProgressView(value: p.pts, total: p.max)
-                            Text(p.note).font(.caption).foregroundStyle(.secondary)
+                            Text(p.note).font(.brand(.caption)).foregroundStyle(.secondary)
                         }
                     }
                 } footer: { Text("Closer to your calories and macros scores higher. It's a guide, not a grade on you.") }
             }
+            .brandList()
             .navigationTitle("Day score")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }

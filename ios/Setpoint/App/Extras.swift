@@ -53,7 +53,7 @@ struct LockCover: ViewModifier {
                         Rectangle().fill(.background).ignoresSafeArea()
                         VStack(spacing: 18) {
                             Image(systemName: "lock.fill").font(.system(size: 44)).foregroundStyle(.secondary)
-                            Text("Setpoint is locked").font(.title3.weight(.semibold))
+                            Text("Setpoint is locked").font(.brand(.title3, .semibold))
                             if locked { Button("Unlock", systemImage: "faceid") { unlock() }.buttonStyle(.glassProminent).controlSize(.large) }
                         }
                     }
@@ -104,12 +104,6 @@ struct DeviceSettingsView: View {
                                                             set: { store.setSetting("weekStart", .number(Double($0))) })) {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
                 }
-                Picker("Theme", selection: Binding(get: { store.root["settings"]?.object?["style"]?.string ?? "graphite" }, set: { store.setSetting("style", .string($0)) })) {
-                    ForEach(Theme.all, id: \.key) { t in
-                        Label { Text(t.name) } icon: { Image(systemName: "circle.fill").foregroundStyle(Theme.color(t.key)) }.tag(t.key)
-                    }
-                }
-                .pickerStyle(.navigationLink)
                 Button { ramadan = true } label: {
                     LabeledContent("Ramadan mode") { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) }
                 }.tint(.primary)
@@ -125,7 +119,7 @@ struct DeviceSettingsView: View {
                 Toggle("Food log reminder", isOn: $foodOn)
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
             } header: { Text("Reminders") } footer: {
-                if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(.orange) }
+                if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.amber) }
             }
             Section {
                 Toggle("Lock with Face ID", isOn: $lock)
@@ -141,6 +135,7 @@ struct DeviceSettingsView: View {
                 Link(destination: URL(string: UIApplication.openSettingsURLString)!) { Label("Language", systemImage: "globe") }
             } footer: { Text("Choose English or العربية for Setpoint in the Settings app.") }
         }
+        .brandList()
         .navigationTitle("Settings")
         .sheet(isPresented: $ramadan) { RamadanSheet() }
         .onChange(of: weigh) { _, on in changed(on) }
@@ -161,17 +156,3 @@ struct DeviceSettingsView: View {
     }
 }
 
-/// The web app's color themes (settings.style): the accent color in light and dark.
-enum Theme {
-    nonisolated(unsafe) static let all: [(key: String, name: LocalizedStringKey, light: UInt32, dark: UInt32)] = [
-        ("graphite", "Graphite", 0x1c1c1e, 0xf2f2f5), ("classic", "Emerald", 0x0f9a6c, 0x5fdcab), ("ocean", "Ocean", 0x1f6fe5, 0x6aa8ff),
-        ("rose", "Rose", 0xc2416b, 0xff8db0), ("violet", "Midnight", 0x6c4cf1, 0xa594ff), ("sand", "Terracotta", 0xc4602f, 0xf0955f), ("luxe", "Luxe", 0x0f5c45, 0xdcb86e)
-    ]
-    static func color(_ key: String?) -> Color {
-        let t = all.first { $0.key == key } ?? all[0]
-        return Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(t.dark) : rgb(t.light) })
-    }
-    private static func rgb(_ v: UInt32) -> UIColor {
-        UIColor(red: CGFloat((v >> 16) & 0xff) / 255, green: CGFloat((v >> 8) & 0xff) / 255, blue: CGFloat(v & 0xff) / 255, alpha: 1)
-    }
-}

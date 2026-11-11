@@ -19,6 +19,7 @@ struct AccountView: View {
         List {
             if let s = account.session { signedIn(s) } else { signedOut }
         }
+        .brandList()
         .navigationTitle("Account")
         .alert(note ?? "", isPresented: Binding(get: { note != nil }, set: { if !$0 { note = nil } })) { Button("OK", role: .cancel) {} }
         .task { if account.signedIn { await account.refreshAccount() } }
@@ -43,7 +44,7 @@ struct AccountView: View {
                     else if let d = account.lastSync { Text("Synced \(d, format: .relative(presentation: .named))") }
                     else { Text("Not synced yet") }
                 } icon: {
-                    Image(systemName: account.failed ? "exclamationmark.icloud" : "checkmark.icloud").foregroundStyle(account.failed ? Color.orange : Color.green)
+                    Image(systemName: account.failed ? "exclamationmark.icloud" : "checkmark.icloud").foregroundStyle(account.failed ? Brand.amber : Brand.green)
                 }
                 Spacer()
                 if account.busy { ProgressView() }
@@ -75,12 +76,12 @@ struct AccountView: View {
         } header: {
             Text("Use the same account as the web app")
         } footer: {
-            if let error { Text(error).foregroundStyle(.red) }
+            if let error { Text(error).foregroundStyle(Brand.over) }
         }
         Section {
             Toggle(isOn: $agreed) {
                 Text("I agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html)")
-                    .font(.subheadline)
+                    .font(.brand(.subheadline))
             }
         }
         Section {

@@ -42,7 +42,9 @@ struct RootView: View {
         .sensoryFeedback(trigger: store.changeCount) { _, _ in haptics ? .success : nil }
         .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
         .modifier(LockCover())
-        .tint(Theme.color(store.root["settings"]?.object?["style"]?.string))
+        .tint(Brand.green)
+        .font(.brand(.body))
+        .foregroundStyle(Brand.ink)
         .environment(store)
         .environment(account)
         .task { await store.start(); await account.pull(fresh: false) }

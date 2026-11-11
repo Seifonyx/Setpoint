@@ -33,6 +33,7 @@ struct PlanView: View {
                 ProgressView()
             }
         }
+        .brandList()
         .navigationTitle("Plan")
         .sheet(isPresented: $about) { AboutYouSheet() }
         .sheet(isPresented: $activity) { ActivitySheet() }
@@ -46,9 +47,9 @@ struct PlanView: View {
     @ViewBuilder private func targetSection(_ p: Overview.Plan, _ o: Overview) -> some View {
         Section {
             VStack(alignment: .leading, spacing: 10) {
-                Text("Daily target").font(.subheadline).foregroundStyle(.secondary)
+                Text("Daily target").font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(Fmt.kcal(round10(p.target))).font(.system(size: 44, weight: .bold, design: .rounded)).contentTransition(.numericText())
+                    Text(Fmt.kcal(round10(p.target))).font(Brand.display(44, .bold)).contentTransition(.numericText())
                     Text("kcal").foregroundStyle(.secondary)
                 }
                 if let e = o.energy {
@@ -58,13 +59,13 @@ struct PlanView: View {
                         else if d < 0 { Text("\(Fmt.kcal(-d)) kcal below your expenditure") }
                         else { Text("\(Fmt.kcal(d)) kcal above your expenditure") }
                     }
-                    .font(.subheadline).foregroundStyle(.secondary)
+                    .font(.brand(.subheadline)).foregroundStyle(.secondary)
                 }
-                if !p.warn.isEmpty { Label(LocalizedStringKey(p.warn), systemImage: "exclamationmark.triangle.fill").font(.subheadline).foregroundStyle(.orange) }
+                if !p.warn.isEmpty { Label(LocalizedStringKey(p.warn), systemImage: "exclamationmark.triangle.fill").font(.brand(.subheadline)).foregroundStyle(Brand.amber) }
                 HStack(spacing: 12) {
-                    macro("Protein", p.protein, 4, p, .green)
-                    macro("Carbs", p.carbs, 4, p, .blue)
-                    macro("Fat", p.fat, 9, p, .purple)
+                    macro("Protein", p.protein, 4, p, Brand.protein)
+                    macro("Carbs", p.carbs, 4, p, Brand.carbs)
+                    macro("Fat", p.fat, 9, p, Brand.fat)
                 }
                 .padding(.top, 4)
             }
@@ -91,7 +92,7 @@ struct PlanView: View {
                 LabeledContent("Goal weight") { Text(o.goalKg.map { "\(Fmt.weight($0, unit: o.unit)) \(o.unit)" } ?? String(localized: "Set")) }
             }
             .tint(.primary)
-            if !p.eta.isEmpty { Text(LocalizedStringKey(p.eta.prefix(1).uppercased() + p.eta.dropFirst())).font(.subheadline).foregroundStyle(.secondary) }
+            if !p.eta.isEmpty { Text(LocalizedStringKey(p.eta.prefix(1).uppercased() + p.eta.dropFirst())).font(.brand(.subheadline)).foregroundStyle(.secondary) }
         } header: { Text("Goal") }
     }
 
@@ -99,12 +100,12 @@ struct PlanView: View {
         Section {
             if let e = o.energy {
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Daily expenditure").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Daily expenditure").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(Fmt.kcal(round10(e.tdee))).font(.system(size: 34, weight: .bold, design: .rounded))
+                        Text(Fmt.kcal(round10(e.tdee))).font(Brand.display(34, .bold))
                         Text("kcal").foregroundStyle(.secondary)
                     }
-                    Text(sourceLabel(e) + (e.level.map { " · " + NSLocalizedString($0, comment: "") } ?? "")).font(.subheadline).foregroundStyle(.secondary)
+                    Text(sourceLabel(e) + (e.level.map { " · " + NSLocalizedString($0, comment: "") } ?? "")).font(.brand(.subheadline)).foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 4)
                 if let parts = e.parts {
@@ -129,8 +130,8 @@ struct PlanView: View {
             .tint(.primary)
             if let why = o.tuneWhy {
                 VStack(alignment: .leading, spacing: 3) {
-                    Text("Last weekly check").font(.subheadline.weight(.semibold))
-                    Text(LocalizedStringKey(why)).font(.subheadline).foregroundStyle(.secondary)
+                    Text("Last weekly check").font(.brand(.subheadline, .semibold))
+                    Text(LocalizedStringKey(why)).font(.brand(.subheadline)).foregroundStyle(.secondary)
                 }
                 .padding(.vertical, 2)
             }
@@ -148,14 +149,14 @@ struct PlanView: View {
     }
     private func macro(_ label: LocalizedStringKey, _ g: Double, _ kcalPerG: Double, _ p: Overview.Plan, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
-            HStack(spacing: 5) { Circle().fill(color).frame(width: 7, height: 7); Text(label).font(.caption).foregroundStyle(.secondary) }
-            Text("\(Fmt.grams(g)) g").font(.headline).fontDesign(.rounded)
-            Text("\(Int((g * kcalPerG / max(p.target, 1) * 100).rounded()))%").font(.caption2).foregroundStyle(.secondary)
+            HStack(spacing: 5) { Circle().fill(color).frame(width: 7, height: 7); Text(label).font(.brand(.caption)).foregroundStyle(.secondary) }
+            Text("\(Fmt.grams(g)) g").font(.brand(.headline))
+            Text("\(Int((g * kcalPerG / max(p.target, 1) * 100).rounded()))%").font(.brand(.caption2)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
     private func row(_ title: LocalizedStringKey, _ sub: String, _ icon: String) -> some View {
-        Label { VStack(alignment: .leading, spacing: 2) { Text(title); Text(sub).font(.subheadline).foregroundStyle(.secondary) } } icon: { Image(systemName: icon) }
+        Label { VStack(alignment: .leading, spacing: 2) { Text(title); Text(sub).font(.brand(.subheadline)).foregroundStyle(.secondary) } } icon: { Image(systemName: icon) }
     }
     private func activitySummary(_ o: Overview) -> String {
         let steps = (o.profile.steps ?? 0).formatted()

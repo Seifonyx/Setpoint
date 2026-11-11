@@ -39,13 +39,14 @@ struct RecipeEditor: View {
                     .onDelete { items.remove(atOffsets: $0) }
                     Button("Add ingredient", systemImage: "plus") { picking = true }
                 } header: { Text("Ingredients") } footer: {
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error { Text(error).foregroundStyle(Brand.over) }
                     else if !items.isEmpty {
                         let k = items.reduce(0) { $0 + ($1["kcal"]?.number ?? 0) }
                         Text("\(Fmt.kcal(k / Double(servings))) kcal a serving")
                     }
                 }
             }
+            .brandList()
             .navigationTitle(recipe == nil ? "New recipe" : "Edit recipe")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -104,7 +105,7 @@ struct IngredientPicker: View {
                 NavigationLink(value: h.id) {
                     VStack(alignment: .leading, spacing: 2) {
                         Text(h.name)
-                        if let s = h.sub { Text(s).font(.subheadline).foregroundStyle(.secondary) }
+                        if let s = h.sub { Text(s).font(.brand(.subheadline)).foregroundStyle(.secondary) }
                     }
                 }
             }
@@ -114,6 +115,7 @@ struct IngredientPicker: View {
                 try? await Task.sleep(for: .milliseconds(150))
                 hits = query.trimmingCharacters(in: .whitespaces).isEmpty ? await store.engineRef.list("myFoods", meal: "lunch") : await store.engineRef.search(query, meal: "lunch")
             }
+            .brandList()
             .navigationTitle("Add ingredient")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } } }

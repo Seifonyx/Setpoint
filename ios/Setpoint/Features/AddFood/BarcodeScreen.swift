@@ -17,6 +17,7 @@ struct BarcodeScreen: View {
                     ContentUnavailableView("Camera not available", systemImage: "camera", description: Text("Allow camera access in Settings, or type the number."))
                 }
             }
+            .brandList()
             .navigationTitle("Scan barcode")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

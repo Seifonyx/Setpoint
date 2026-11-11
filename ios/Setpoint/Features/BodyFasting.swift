@@ -22,12 +22,12 @@ struct FastingView: View {
                         ZStack {
                             Circle().stroke(.quaternary, lineWidth: 14)
                             Circle().trim(from: 0, to: min(1, elapsed / goalS))
-                                .stroke(elapsed >= goalS ? Color.green : Color.accentColor, style: StrokeStyle(lineWidth: 14, lineCap: .round))
+                                .stroke(elapsed >= goalS ? Brand.green : Brand.green, style: StrokeStyle(lineWidth: 14, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                             VStack(spacing: 4) {
-                                Text(duration(elapsed)).font(.system(size: 40, weight: .bold, design: .rounded)).monospacedDigit()
+                                Text(duration(elapsed)).font(Brand.display(40, .bold)).monospacedDigit()
                                 if start != nil {
-                                    if elapsed >= goalS { Text("Goal reached").foregroundStyle(.green) }
+                                    if elapsed >= goalS { Text("Goal reached").foregroundStyle(Brand.green) }
                                     else { Text("\(duration(goalS - elapsed)) to go").foregroundStyle(.secondary) }
                                 } else { Text("Not fasting").foregroundStyle(.secondary) }
                             }
@@ -62,7 +62,7 @@ struct FastingView: View {
                     ForEach(log.prefix(20).indices, id: \.self) { i in
                         let x = log[i], s = (x["s"]?.number ?? 0) / 1000, e = (x["e"]?.number ?? 0) / 1000, g = x["g"]?.number ?? 16
                         LabeledContent {
-                            Text(duration(e - s)).monospacedDigit().foregroundStyle(e - s >= g * 3600 ? Color.green : Color.secondary)
+                            Text(duration(e - s)).monospacedDigit().foregroundStyle(e - s >= g * 3600 ? Brand.green : Color.secondary)
                         } label: {
                             Text(Date(timeIntervalSince1970: s), format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
                             Text("Goal \(Int(g)) h")
@@ -71,6 +71,7 @@ struct FastingView: View {
                 }
             }
         }
+        .brandList()
         .navigationTitle("Fasting")
     }
     private func duration(_ t: Double) -> String {
@@ -116,7 +117,7 @@ struct BodySection: View {
                             Text("\(len(last.1)) \(inches ? "in" : "cm")").monospacedDigit().fontWeight(.semibold)
                             if vals.count > 1, let first = vals.first {
                                 let d = last.1 - first.1
-                                Text((d < 0 ? "−" : "+") + len(abs(d))).font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                                Text((d < 0 ? "−" : "+") + len(abs(d))).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(.secondary)
                             }
                         }
                     } label: {
@@ -164,8 +165,9 @@ struct MeasureSheet: View {
                             }
                         }
                     }
-                } footer: { if let error { Text(error).foregroundStyle(.red) } else { Text("Fill in any you measured.") } }
+                } footer: { if let error { Text(error).foregroundStyle(Brand.over) } else { Text("Fill in any you measured.") } }
             }
+            .brandList()
             .navigationTitle("Measurements")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -214,7 +216,7 @@ struct PhasesSection: View {
                         Text((d < 0 ? "−" : "+") + Fmt.weight(abs(d), unit: store.unit) + " " + store.unit).monospacedDigit()
                     }
                 } label: {
-                    HStack { Text(p["label"]?.string ?? String(localized: "Phase")); if i == 0 { Text("Now").font(.caption.weight(.semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(Capsule().fill(.tint.opacity(0.15))) } }
+                    HStack { Text(p["label"]?.string ?? String(localized: "Phase")); if i == 0 { Text("Now").font(.brand(.caption, .semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(Capsule().fill(.tint.opacity(0.15))) } }
                     Text("Since \(Day.date(start).formatted(.dateTime.month(.abbreviated).day().year()))")
                 }
                 .swipeActions {

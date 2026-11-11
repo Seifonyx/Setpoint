@@ -56,6 +56,7 @@ struct AddFoodSheet: View {
                     if store.foodsReady && hits.isEmpty { empty("No matches", "Try other words, or use Quick add.") }
                 }
             }
+            .brandList()
             .navigationTitle("Add food")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search foods")
@@ -65,7 +66,7 @@ struct AddFoodSheet: View {
                     Menu {
                         Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
                     } label: {
-                        HStack(spacing: 4) { Text(store.meals.first { $0.key == meal }?.name ?? "").font(.headline); Image(systemName: "chevron.down").font(.caption.weight(.bold)) }
+                        HStack(spacing: 4) { Text(store.meals.first { $0.key == meal }?.name ?? "").font(.brand(.headline)); Image(systemName: "chevron.down").font(.brand(.caption, .bold)) }
                     }
                     .tint(.primary)
                 }
@@ -95,7 +96,7 @@ struct AddFoodSheet: View {
         }
     }
     private func empty(_ t: LocalizedStringKey, _ s: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 4) { Text(t).font(.headline); Text(s).foregroundStyle(.secondary) }.padding(.vertical, 6)
+        VStack(alignment: .leading, spacing: 4) { Text(t).font(.brand(.headline)); Text(s).foregroundStyle(.secondary) }.padding(.vertical, 6)
     }
 
     private func loadList() async {
@@ -144,10 +145,10 @@ struct FoodHitRow: View {
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(hit.name).lineLimit(2)
-                    if hit.fav == true { Image(systemName: "star.fill").font(.caption2).foregroundStyle(.yellow) }
+                    if hit.fav == true { Image(systemName: "star.fill").font(.brand(.caption2)).foregroundStyle(Brand.amber) }
                 }
-                if let s = hit.via ?? hit.sub { Text(s).font(.subheadline).foregroundStyle(.secondary).lineLimit(1) }
-                else if hit.quick == true, let k = hit.kcal { Text("Quick add · \(Fmt.kcal(k)) kcal").font(.subheadline).foregroundStyle(.secondary) }
+                if let s = hit.via ?? hit.sub { Text(s).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }
+                else if hit.quick == true, let k = hit.kcal { Text("Quick add · \(Fmt.kcal(k)) kcal").font(.brand(.subheadline)).foregroundStyle(.secondary) }
             }
             Spacer(minLength: 0)
         }

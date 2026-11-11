@@ -15,7 +15,7 @@ struct NutrientsView: View {
                 if !d.low.isEmpty {
                     Section {
                         ForEach(d.low, id: \.key) { l in
-                            LabeledContent(l.label) { Text("\(Int(l.pct.rounded()))%").monospacedDigit().foregroundStyle(.orange) }
+                            LabeledContent(l.label) { Text("\(Int(l.pct.rounded()))%").monospacedDigit().foregroundStyle(Brand.amber) }
                         }
                     } header: { Text("Often low") } footer: { Text("Your average over the last 2 weeks, as a share of your target.") }
                 }
@@ -25,11 +25,12 @@ struct NutrientsView: View {
                         Section(g.label) { ForEach(rows, id: \.key) { row($0) } }
                     }
                 }
-                Section { Text("Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.").font(.footnote).foregroundStyle(.secondary) }
+                Section { Text("Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.").font(.brand(.footnote)).foregroundStyle(.secondary) }
             } else {
                 ProgressView()
             }
         }
+        .brandList()
         .navigationTitle("Vitamins & minerals")
         .navigationSubtitle(Day.date(day).formatted(.dateTime.weekday(.wide).month(.wide).day()))
         .task(id: "\(day)|\(store.version)|\(store.foodsReady)") { data = await store.engineRef.nutrients(day) }
@@ -47,11 +48,11 @@ struct NutrientsView: View {
             HStack {
                 Text(r.label)
                 Spacer()
-                Text(amount(r.v, r.unit) + (target.map { " / " + amount($0, r.unit) } ?? "")).font(.subheadline).monospacedDigit().foregroundStyle(.secondary)
+                Text(amount(r.v, r.unit) + (target.map { " / " + amount($0, r.unit) } ?? "")).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(.secondary)
             }
             if target != nil {
                 ProgressView(value: min(pct, 1))
-                    .tint(over ? Color.orange : (r.goal != nil && pct >= 1 ? Color.green : Color.accentColor))
+                    .tint(over ? Brand.amber : (r.goal != nil && pct >= 1 ? Brand.green : Brand.green))
             }
         }
         .opacity(r.cov < 0.5 && r.v > 0 ? 0.5 : 1)

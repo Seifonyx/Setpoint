@@ -1,0 +1,143 @@
+import SwiftUI
+import UIKit
+
+/// Setpoint's one look: warm and editorial. Warm paper and deep charcoal, a signature deep green with a warm amber,
+/// Bricolage Grotesque for headlines and numbers, Figtree for text (IBM Plex Sans Arabic in Arabic).
+enum Brand {
+    // MARK: Colours (light, dark)
+    static let bg = dyn(0xF5EFE4, 0x100F0D)          // the page: warm paper / warm near-black
+    static let card = dyn(0xFFFBF4, 0x1B1915)        // cards
+    static let card2 = dyn(0xEFE7DA, 0x26231E)       // inset wells, tracks
+    static let ink = dyn(0x1E1A14, 0xF4EEE3)
+    static let ink2 = dyn(0x766D60, 0xA69D8F)        // secondary text
+    static let line = dyn(0xE4DACB, 0x2E2A24)
+    static let green = dyn(0x0F5C45, 0x5CC49A)       // the signature
+    static let greenSoft = dyn(0xDCEBE2, 0x173329)
+    static let amber = dyn(0xC9801F, 0xF0B35A)       // highlights, carbs
+    static let protein = dyn(0xC4553A, 0xF08166)     // terracotta
+    static let carbs = amber
+    static let fat = dyn(0x4F6FA3, 0x8FAAE0)         // slate blue
+    static let water = dyn(0x2C88A8, 0x6CC3E0)
+    static let over = dyn(0xB8412E, 0xF27A62)
+
+    static func dyn(_ light: UInt32, _ dark: UInt32) -> Color {
+        Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
+    }
+    static func rgb(_ v: UInt32) -> UIColor {
+        UIColor(red: CGFloat((v >> 16) & 0xff) / 255, green: CGFloat((v >> 8) & 0xff) / 255, blue: CGFloat(v & 0xff) / 255, alpha: 1)
+    }
+
+    // MARK: Type
+    static var arabic: Bool { Bundle.main.preferredLocalizations.first?.hasPrefix("ar") == true }
+    /// Headlines and big numbers.
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold, relativeTo style: Font.TextStyle = .largeTitle) -> Font {
+        if arabic { return .custom(plex(weight), size: size, relativeTo: style) }
+        let name = weight == .heavy || weight == .black ? "BricolageGrotesque-ExtraBold" : weight == .semibold || weight == .medium ? "BricolageGrotesque-SemiBold" : "BricolageGrotesque-Bold"
+        return .custom(name, size: size, relativeTo: style)
+    }
+    /// Body text in a text style (scales with Dynamic Type).
+    static func text(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font {
+        let size: CGFloat = switch style {
+        case .largeTitle: 34; case .title: 28; case .title2: 22; case .title3: 20; case .headline: 17; case .body: 17
+        case .callout: 16; case .subheadline: 15; case .footnote: 13; case .caption: 12; case .caption2: 11; default: 17
+        }
+        let w = style == .headline && weight == .regular ? .semibold : weight
+        return .custom(arabic ? plex(w) : figtree(w), size: size, relativeTo: style)
+    }
+    private static func figtree(_ w: Font.Weight) -> String {
+        w == .bold || w == .heavy || w == .black ? "Figtree-Bold" : w == .semibold ? "Figtree-SemiBold" : w == .medium ? "Figtree-Medium" : "Figtree-Regular"
+    }
+    private static func plex(_ w: Font.Weight) -> String {
+        w == .bold || w == .heavy || w == .black ? "IBMPlexSansArabic-Bold" : w == .semibold ? "IBMPlexSansArabic-SemiBold" : w == .medium ? "IBMPlexSansArabic-Medium" : "IBMPlexSansArabic-Regular"
+    }
+
+    /// Navigation bar titles in Bricolage, set once at launch.
+    @MainActor static func applyAppearance() {
+        let large = UIFont(name: arabic ? "IBMPlexSansArabic-Bold" : "BricolageGrotesque-Bold", size: 34) ?? .systemFont(ofSize: 34, weight: .bold)
+        let small = UIFont(name: arabic ? "IBMPlexSansArabic-SemiBold" : "BricolageGrotesque-SemiBold", size: 17) ?? .systemFont(ofSize: 17, weight: .semibold)
+        let ink = UIColor(Brand.ink)
+        let nav = UINavigationBar.appearance()
+        nav.largeTitleTextAttributes = [.font: UIFontMetrics(forTextStyle: .largeTitle).scaledFont(for: large), .foregroundColor: ink]
+        nav.titleTextAttributes = [.font: UIFontMetrics(forTextStyle: .headline).scaledFont(for: small), .foregroundColor: ink]
+        UISegmentedControl.appearance().setTitleTextAttributes([.font: UIFont(name: arabic ? "IBMPlexSansArabic-Medium" : "Figtree-SemiBold", size: 13) ?? .systemFont(ofSize: 13)], for: .normal)
+    }
+}
+
+extension Font {
+    /// Figtree (IBM Plex Sans Arabic in Arabic) in a text style.
+    static func brand(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font { Brand.text(style, weight) }
+}
+
+extension View {
+    /// Lists and forms on the warm page with warm cards.
+    func brandList() -> some View {
+        self.scrollContentBackground(.hidden)
+            .background(Brand.bg.ignoresSafeArea())
+    }
+    /// A Setpoint card: warm surface, soft corners, a hairline in dark mode.
+    func brandCard(padding: CGFloat = 16) -> some View {
+        self.padding(padding)
+            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Brand.card))
+            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Brand.line.opacity(0.6), lineWidth: 0.5))
+    }
+}
+
+/// The signature: an arc that fills towards your target, with the three macros as thin arcs inside it.
+struct CalorieDial: View {
+    let eaten: Double
+    let target: Double?
+    let protein: (Double, Double)?
+    let carbs: (Double, Double)?
+    let fat: (Double, Double)?
+
+    private let start = 0.125, span = 0.75 // a 270° arc, open at the bottom
+
+    var body: some View {
+        let t = max(target ?? eaten, 1), p = min(eaten / t, 1), over = (target ?? .infinity) < eaten * 0.95
+        ZStack {
+            arc(1, width: 18, color: Brand.card2)
+            arc(p, width: 18, color: over ? Brand.over : Brand.green)
+            if let protein { ring(protein, inset: 26, color: Brand.protein) }
+            if let carbs { ring(carbs, inset: 36, color: Brand.carbs) }
+            if let fat { ring(fat, inset: 46, color: Brand.fat) }
+            // a dot where the arc ends: "today's point"
+            GeometryReader { g in
+                let r = min(g.size.width, g.size.height) / 2 - 9
+                let a = Angle.degrees(90 + 360 * (start + span * p))
+                Circle().fill(Brand.amber).frame(width: 10, height: 10)
+                    .shadow(color: Brand.amber.opacity(0.6), radius: 6)
+                    .position(x: g.size.width / 2 + r * cos(a.radians), y: g.size.height / 2 + r * sin(a.radians))
+                    .opacity(eaten > 0 ? 1 : 0)
+            }
+        }
+        .animation(.spring(response: 0.6, dampingFraction: 0.8), value: eaten)
+    }
+    private func arc(_ f: Double, width: CGFloat, color: Color, inset: CGFloat = 0) -> some View {
+        Circle().trim(from: 0, to: span * max(0, min(f, 1)))
+            .stroke(color, style: StrokeStyle(lineWidth: width, lineCap: .round))
+            .rotationEffect(.degrees(90 + 360 * start))
+            .padding(width / 2 + inset)
+    }
+    private func ring(_ v: (Double, Double), inset: CGFloat, color: Color) -> some View {
+        ZStack {
+            arc(1, width: 5, color: Brand.card2, inset: inset)
+            arc(v.0 / max(v.1, 1), width: 5, color: color, inset: inset)
+        }
+    }
+}
+
+/// The Setpoint mark: a line that settles onto a point.
+struct SetpointMark: View {
+    var color: Color = Brand.green
+    var body: some View {
+        Canvas { ctx, size in
+            let w = size.width, h = size.height
+            var p = Path()
+            p.move(to: CGPoint(x: w * 0.08, y: h * 0.2))
+            p.addCurve(to: CGPoint(x: w * 0.78, y: h * 0.66), control1: CGPoint(x: w * 0.35, y: h * 0.2), control2: CGPoint(x: w * 0.45, y: h * 0.66))
+            ctx.stroke(p, with: .color(color), style: StrokeStyle(lineWidth: max(2, w * 0.08), lineCap: .round))
+            let d = w * 0.18
+            ctx.fill(Path(ellipseIn: CGRect(x: w * 0.78 - d / 2, y: h * 0.66 - d / 2, width: d, height: d)), with: .color(Brand.amber))
+        }
+    }
+}

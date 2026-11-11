@@ -25,6 +25,7 @@ struct AboutYouSheet: View {
                     numberRow("Body fat (optional)", $bodyFat, "%", .decimalPad)
                 } footer: { Text("Body fat makes resting burn and protein more precise.") }
             }
+            .brandList()
             .navigationTitle("About you")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -88,6 +89,7 @@ struct ActivitySheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Activity")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -122,13 +124,14 @@ struct GoalWeightSheet: View {
         NavigationStack {
             Form {
                 HStack {
-                    TextField("Goal weight", text: $text).keyboardType(.decimalPad).font(.title2.weight(.semibold))
+                    TextField("Goal weight", text: $text).keyboardType(.decimalPad).font(.brand(.title2, .semibold))
                     Text(LocalizedStringKey(store.unit)).foregroundStyle(.secondary)
                 }
                 if store.overview?.goalKg != nil {
                     Button("Remove goal weight", role: .destructive) { store.setSetting("goalKg", nil); dismiss() }
                 }
             }
+            .brandList()
             .navigationTitle("Goal weight")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -158,13 +161,13 @@ struct MeasuredSheet: View {
                 if let m = store.overview?.measured {
                     if m.ready, let t = m.tdee {
                         Section {
-                            Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").font(.system(size: 40, weight: .bold, design: .rounded))
+                            Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").font(Brand.display(40, .bold))
                             if let i = m.intake { LabeledContent("Ate a day") { Text(Fmt.kcal(i)) } }
                             if let r = m.rateKgWk { LabeledContent("Weight change a week") { Text("\(Fmt.weight(r, unit: store.unit)) \(store.unit)") } }
                             LabeledContent("Days logged") { Text("\(m.calDays)/\(m.days ?? m.calDays)") }
                         } footer: { Text("What you ate vs how your weight moved, last 4 weeks.") }
                         if let c = m.coverage, c < 0.8 {
-                            Section { Text("Unlogged days hide what you ate, so this may read low. It counts less until you log more days.").foregroundStyle(.orange) }
+                            Section { Text("Unlogged days hide what you ate, so this may read low. It counts less until you log more days.").foregroundStyle(Brand.amber) }
                         }
                         if let p = m.partial, p > 0 { Section { Text("Left out \(p) days that looked half-logged.").foregroundStyle(.secondary) } }
                     } else {
@@ -175,6 +178,7 @@ struct MeasuredSheet: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Measured expenditure")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
@@ -224,9 +228,10 @@ struct BreakdownView: View {
                     default: Text("Protein and fat are set per kg of your weight (\(ref) kg). Carbs are the rest.")
                     }
                 }
-                Section { Text("Estimates, not medical advice. See a doctor first if you're pregnant, ill or have had an eating disorder.").font(.footnote).foregroundStyle(.secondary) }
+                Section { Text("Estimates, not medical advice. See a doctor first if you're pregnant, ill or have had an eating disorder.").font(.brand(.footnote)).foregroundStyle(.secondary) }
             }
         }
+        .brandList()
         .navigationTitle("Target breakdown")
     }
     private func setMacro(_ k: String, _ v: Double) {

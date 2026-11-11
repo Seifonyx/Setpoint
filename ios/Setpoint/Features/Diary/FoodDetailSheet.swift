@@ -22,7 +22,7 @@ struct FoodDetailSheet: View {
             Form {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(food.displayName).font(.title2.weight(.bold))
+                        Text(food.displayName).font(.brand(.title2, .bold))
                         if let q = food.qty, let u = food.unit, food.ref != nil {
                             Text(Fmt.amount(q, u)).foregroundStyle(.secondary)
                         }
@@ -36,7 +36,7 @@ struct FoodDetailSheet: View {
                 if !units.isEmpty {
                     Section("Amount") {
                         HStack {
-                            TextField("Amount", text: $qtyText).keyboardType(.decimalPad).frame(maxWidth: 110).font(.title3.weight(.semibold))
+                            TextField("Amount", text: $qtyText).keyboardType(.decimalPad).frame(maxWidth: 110).font(.brand(.title3, .semibold))
                             Picker("Unit", selection: $unit) { ForEach(units, id: \.label) { Text($0.display).tag($0.label) } }.labelsHidden()
                         }
                     }
@@ -62,6 +62,7 @@ struct FoodDetailSheet: View {
                     Button("Delete", role: .destructive) { confirmDelete = true }
                 }
             }
+            .brandList()
             .navigationTitle(food.isPlanned ? "Planned" : "Food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

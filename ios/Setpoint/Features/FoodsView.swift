@@ -74,7 +74,7 @@ struct FoodsView: View {
                 if !favorites.isEmpty {
                     Section("Favorites") {
                         ForEach(favorites) { f in
-                            LabeledContent { Text(f.sub ?? "").font(.subheadline).foregroundStyle(.secondary) } label: { Text(f.name) }
+                            LabeledContent { Text(f.sub ?? "").font(.brand(.subheadline)).foregroundStyle(.secondary) } label: { Text(f.name) }
                                 .swipeActions {
                                     Button("Remove", systemImage: "star.slash", role: .destructive) {
                                         store.setRoot("favs", .array((store.root["favs"]?.array ?? []).filter { $0.string != f.id }))
@@ -84,6 +84,7 @@ struct FoodsView: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Foods")
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
@@ -122,10 +123,11 @@ struct CustomFoodSheet: View {
                     row("Carbs", $c, "g")
                     row("Fat", $f, "g")
                 } header: { Text("Per serving") } footer: {
-                    if let error { Text(error).foregroundStyle(.red) }
+                    if let error { Text(error).foregroundStyle(Brand.over) }
                     else if let k = estimate { Text("About \(Fmt.kcal(k)) kcal from the macros") }
                 }
             }
+            .brandList()
             .navigationTitle(food == nil ? "New food" : "Edit food")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

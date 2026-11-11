@@ -23,16 +23,16 @@ struct FoodAmountView: View {
             if let info {
                 Section {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(info.name).font(.title3.weight(.semibold))
-                        if let c = info.cat { Text(LocalizedStringKey(c)).font(.subheadline).foregroundStyle(.secondary) }
-                        if info.est { Text("Estimate").font(.caption).foregroundStyle(.orange) }
+                        Text(info.name).font(.brand(.title3, .semibold))
+                        if let c = info.cat { Text(LocalizedStringKey(c)).font(.brand(.subheadline)).foregroundStyle(.secondary) }
+                        if info.est { Text("Estimate").font(.brand(.caption)).foregroundStyle(Brand.amber) }
                     }
                     .padding(.vertical, 2)
                 }
                 Section("Amount") {
                     HStack {
                         TextField("Amount", text: $qtyText).keyboardType(.decimalPad).focused($focused)
-                            .font(.title2.weight(.semibold)).frame(maxWidth: 110)
+                            .font(.brand(.title2, .semibold)).frame(maxWidth: 110)
                         Picker("Unit", selection: $unit) { ForEach(info.units, id: \.label) { Text($0.display).tag($0.label) } }
                             .labelsHidden()
                     }
@@ -56,6 +56,7 @@ struct FoodAmountView: View {
                 ProgressView()
             }
         }
+        .brandList()
         .navigationTitle("Food")
         .navigationBarTitleDisplayMode(.inline)
         .toolbar {
@@ -126,6 +127,7 @@ struct QuickAddView: View {
                     }
                 }
             }
+            .brandList()
             .navigationTitle("Quick add")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {

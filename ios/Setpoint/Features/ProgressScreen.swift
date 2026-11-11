@@ -36,6 +36,7 @@ struct ProgressScreen: View {
                     PhotosSection()
                 }
             }
+            .brandList()
             .navigationTitle("Progress")
             .task(id: "\(store.version)|\(range)|\(store.foodsReady)") { await load() }
             .sheet(item: $editing) { WeightSheet(day: $0.id) }
@@ -63,15 +64,15 @@ struct ProgressScreen: View {
         let pts = points
         Section {
             VStack(alignment: .leading, spacing: 6) {
-                Text("Trend weight").font(.subheadline).foregroundStyle(.secondary)
+                Text("Trend weight").font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(data?.now.map { Fmt.weight($0, unit: unit) } ?? "—").font(.system(size: 34, weight: .bold, design: .rounded))
+                    Text(data?.now.map { Fmt.weight($0, unit: unit) } ?? "—").font(Brand.display(44, .heavy)).monospacedDigit()
                     Text(LocalizedStringKey(unit)).foregroundStyle(.secondary)
                     Spacer()
                     if let c = change(pts) { deltaChip(c) }
                 }
                 if pts.count >= 2 { chart(pts) } else {
-                    Text("Log your weight a few times to see your trend.").font(.subheadline).foregroundStyle(.secondary).padding(.vertical, 30)
+                    Text("Log your weight a few times to see your trend.").font(.brand(.subheadline)).foregroundStyle(.secondary).padding(.vertical, 30)
                 }
             }
             .padding(.vertical, 4)
@@ -117,24 +118,35 @@ struct ProgressScreen: View {
         return Chart {
             ForEach(windows, id: \.from) { w in
                 RectangleMark(xStart: .value("From", Day.date(max(w.from, first))), xEnd: .value("To", Day.date(w.to)))
-                    .foregroundStyle(Color.pink.opacity(w.guess ? 0.06 : 0.1))
+                    .foregroundStyle(Brand.protein.opacity(w.guess ? 0.06 : 0.1))
             }
             ForEach(pts) { p in
                 PointMark(x: .value("Day", Day.date(p.date), unit: .day), y: .value("Weight", disp(p.kg)))
                     .symbolSize(pts.count > 60 ? 12 : 26)
-                    .foregroundStyle(p.x ? Color.secondary.opacity(0.4) : Color.accentColor.opacity(0.45))
+                    .foregroundStyle(p.x ? Brand.ink2.opacity(0.3) : Brand.ink2.opacity(0.55))
+            }
+            ForEach(pts) { p in
+                AreaMark(x: .value("Day", Day.date(p.date), unit: .day), yStart: .value("Base", yLo), yEnd: .value("Trend", disp(p.trend)))
+                    .interpolationMethod(.monotone)
+                    .foregroundStyle(LinearGradient(colors: [Brand.green.opacity(0.28), Brand.green.opacity(0)], startPoint: .top, endPoint: .bottom))
             }
             ForEach(pts) { p in
                 LineMark(x: .value("Day", Day.date(p.date), unit: .day), y: .value("Trend", disp(p.trend)))
                     .interpolationMethod(.monotone)
-                    .lineStyle(StrokeStyle(lineWidth: 3, lineCap: .round))
-                    .foregroundStyle(Color.accentColor)
+                    .lineStyle(StrokeStyle(lineWidth: 3.5, lineCap: .round))
+                    .foregroundStyle(Brand.green)
+            }
+            if let last = pts.last {
+                PointMark(x: .value("Day", Day.date(last.date), unit: .day), y: .value("Trend", disp(last.trend)))
+                    .symbolSize(110).foregroundStyle(Brand.amber)
+                PointMark(x: .value("Day", Day.date(last.date), unit: .day), y: .value("Trend", disp(last.trend)))
+                    .symbolSize(360).foregroundStyle(Brand.amber.opacity(0.22))
             }
             if let g = goal {
                 RuleMark(y: .value("Goal", disp(g)))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
-                    .foregroundStyle(.green)
-                    .annotation(position: .top, alignment: .leading) { Text("Goal").font(.caption2).foregroundStyle(.green) }
+                    .foregroundStyle(Brand.amber)
+                    .annotation(position: .top, alignment: .leading) { Text("Goal").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.amber) }
             }
         }
         .chartYScale(domain: yLo...yHi)
@@ -158,8 +170,8 @@ struct ProgressScreen: View {
     }
     private func stat(_ v: String, _ l: LocalizedStringKey) -> some View {
         VStack(spacing: 2) {
-            Text(v).font(.headline).fontDesign(.rounded).monospacedDigit()
-            Text(l).font(.caption).foregroundStyle(.secondary)
+            Text(v).font(.brand(.headline)).monospacedDigit()
+            Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
@@ -173,10 +185,10 @@ struct ProgressScreen: View {
     }
     private func deltaChip(_ d: Double) -> some View {
         Text(abs(disp(d)) < 0.05 ? String(localized: "Steady") : "\(deltaText(d)) \(NSLocalizedString(unit, comment: ""))")
-            .font(.subheadline.weight(.semibold)).monospacedDigit()
+            .font(.brand(.subheadline, .semibold)).monospacedDigit()
             .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(Capsule().fill((good(d) ? Color.green : Color.secondary).opacity(0.15)))
-            .foregroundStyle(good(d) ? Color.green : Color.secondary)
+            .background(Capsule().fill(good(d) ? Brand.greenSoft : Brand.card2))
+            .foregroundStyle(good(d) ? Brand.green : Brand.ink2)
     }
 
     private func weekRow(_ w: ProgressData.Week) -> some View {
@@ -186,11 +198,11 @@ struct ProgressScreen: View {
                 Group {
                     if let k = w.kcal { Text("\(w.n) days weighed · \(Fmt.kcal(k)) kcal") } else { Text("\(w.n) days weighed") }
                 }
-                .font(.subheadline).foregroundStyle(.secondary)
+                .font(.brand(.subheadline)).foregroundStyle(.secondary)
             }
             Spacer()
             Text(Fmt.weight(w.avg, unit: unit)).monospacedDigit().fontWeight(.semibold)
-            if let d = w.delta { Text(deltaText(d)).font(.subheadline).monospacedDigit().foregroundStyle(good(d) ? Color.green : Color.secondary).frame(minWidth: 44, alignment: .trailing) }
+            if let d = w.delta { Text(deltaText(d)).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(good(d) ? Brand.green : Brand.ink2).frame(minWidth: 44, alignment: .trailing) }
         }
     }
 
@@ -200,13 +212,13 @@ struct ProgressScreen: View {
                 VStack(alignment: .leading, spacing: 2) {
                     Text(Day.date(e.date), format: .dateTime.weekday(.abbreviated).month(.abbreviated).day())
                     let sub = [e.kcal.map { "\(Fmt.kcal($0)) " + String(localized: "kcal") }, e.x ? String(localized: "Excluded") : nil, e.note.isEmpty ? nil : e.note].compactMap { $0 }
-                    if !sub.isEmpty { Text(sub.joined(separator: " · ")).font(.subheadline).foregroundStyle(.secondary).lineLimit(1) }
+                    if !sub.isEmpty { Text(sub.joined(separator: " · ")).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }
                 }
                 Spacer()
                 Text(Fmt.weight(e.kg, unit: unit)).monospacedDigit().fontWeight(.semibold)
                 if let p = prev {
                     let d = e.kg - p.kg
-                    Text(deltaText(d)).font(.subheadline).monospacedDigit().foregroundStyle(towardGoal(e, p) ? Color.green : Color.secondary).frame(minWidth: 44, alignment: .trailing)
+                    Text(deltaText(d)).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(towardGoal(e, p) ? Brand.green : Brand.ink2).frame(minWidth: 44, alignment: .trailing)
                 }
             }
         }
@@ -230,21 +242,21 @@ struct ProgressScreen: View {
             let avgTarget = targets.isEmpty ? nil : targets.reduce(0, +) / Double(targets.count)
             Section {
                 VStack(alignment: .leading, spacing: 6) {
-                    Text("Average a day").font(.subheadline).foregroundStyle(.secondary)
+                    Text("Average a day").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(Fmt.kcal(avg.kcal)).font(.system(size: 34, weight: .bold, design: .rounded))
+                        Text(Fmt.kcal(avg.kcal)).font(Brand.display(34, .bold))
                         Text("kcal").foregroundStyle(.secondary)
                     }
                     if let t = avgTarget {
                         let d = avg.kcal - t
-                        if abs(d) < 25 { Text("On target").font(.subheadline).foregroundStyle(.green) }
-                        else if d < 0 { Text("\(Fmt.kcal(-d)) kcal under target").font(.subheadline).foregroundStyle(.secondary) }
-                        else { Text("\(Fmt.kcal(d)) kcal over target").font(.subheadline).foregroundStyle(.orange) }
+                        if abs(d) < 25 { Text("On target").font(.brand(.subheadline)).foregroundStyle(Brand.green) }
+                        else if d < 0 { Text("\(Fmt.kcal(-d)) kcal under target").font(.brand(.subheadline)).foregroundStyle(.secondary) }
+                        else { Text("\(Fmt.kcal(d)) kcal over target").font(.brand(.subheadline)).foregroundStyle(Brand.amber) }
                     }
                     Chart {
                         ForEach(nutrition) { d in
                             BarMark(x: .value("Day", Day.date(d.date), unit: .day), y: .value("kcal", d.kcal))
-                                .foregroundStyle(d.target.map { d.kcal > $0 * 1.05 } == true ? Color.orange.gradient : Color.accentColor.gradient)
+                                .foregroundStyle(d.target.map { d.kcal > $0 * 1.05 } == true ? Brand.amber.gradient : Brand.green.gradient)
                                 .cornerRadius(3)
                         }
                         if let t = avgTarget {
