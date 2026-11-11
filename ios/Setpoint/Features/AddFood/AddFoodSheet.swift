@@ -61,6 +61,7 @@ struct AddFoodSheet: View {
                 }
             }
             .listSectionSpacing(14)
+            .contentMargins(.top, 2, for: .scrollContent) // tabs sit right under the search bar
             .brandList()
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search foods")

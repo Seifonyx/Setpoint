@@ -218,9 +218,10 @@ struct OnboardingView: View {
     }
     private func primary(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Text(title).font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 52)
+            Text(title).font(.brand(.headline)).foregroundStyle(Brand.card).frame(maxWidth: .infinity, minHeight: 54)
+                .background(Brand.green, in: Capsule())
         }
-        .buttonStyle(.glassProminent)
+        .buttonStyle(.plain)
     }
     private func macro(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(spacing: 4) {
