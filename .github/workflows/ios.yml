@@ -4,13 +4,14 @@
 name: iOS
 on:
   push:
-    branches: [main]
+    branches: [main, release]
     paths: ['ios/**', '.github/workflows/ios.yml']
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
-  group: ios
+  # releases and previews queue separately, so a preview never cancels a release that's building
+  group: ios-${{ (github.event_name == 'workflow_dispatch' || contains(github.event.head_commit.message, '[release]')) && 'release' || 'preview' }}
   cancel-in-progress: true
 jobs:
   build:
