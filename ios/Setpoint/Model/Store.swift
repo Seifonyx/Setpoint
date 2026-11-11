@@ -13,7 +13,17 @@ final class Store {
     /// The last change, so it can be undone from the banner.
     private(set) var undoLabel: String?
     private var undoSnap: Snapshot?
+    private var undoAction: (() -> Void)?
     private let demo: Bool
+    @ObservationIgnored private let engine = Engine.shared
+    /// Goes up on every change (the engine and the screens use it to stay current).
+    private(set) var version = 0
+    /// The food list is loaded (search works).
+    private(set) var foodsReady = false
+    /// Each day's targets from the web app's maths (flexible week, training days, diet breaks included).
+    private(set) var plans: [String: DayPlan] = [:]
+    /// The Plan screens' numbers.
+    private(set) var overview: Overview?
 
     private struct Snapshot { var food: [String: [FoodItem]]; var entries: [WeighIn]; var water: [String: Double] }
 
@@ -48,8 +58,86 @@ final class Store {
         root["food"] = .object(food.filter { !$0.value.isEmpty }.mapValues { .array($0.map { .object($0.raw) }) })
         root["entries"] = .array(entries.map { .object($0.raw) })
         root["water"] = .object(water.mapValues { .number($0) })
-        guard !demo, let data = try? JSONEncoder().encode(JSONValue.object(root)) else { return }
-        try? data.write(to: Self.fileURL, options: .atomic)
+        version += 1
+        guard let data = try? JSONEncoder().encode(JSONValue.object(root)) else { return }
+        if !demo { try? data.write(to: Self.fileURL, options: .atomic) }
+        let v = version, text = String(decoding: data, as: UTF8.self)
+        Task { [engine] in
+            await engine.setState(text, version: v)
+            await MainActor.run { self.plans = [:] }
+            await self.refreshOverview()
+        }
+    }
+
+    // MARK: The engine
+
+    /// On launch (and coming back to the app): load the food list, then do what the web app does on every open.
+    func start() async {
+        save()
+        await engine.loadFoods()
+        foodsReady = await engine.foodsReady
+        await tick()
+    }
+    func tick() async {
+        guard let t = await engine.tick(), let label = Self.tuneLabel(t) else { await refreshOverview(); return }
+        await adoptEngineState()
+        undoSnap = nil
+        undoLabel = label
+        undoAction = { [weak self] in
+            guard let self else { return }
+            Task { await self.engine.undoTune(); await self.adoptEngineState() }
+        }
+    }
+    private static func tuneLabel(_ t: JSONValue) -> String? {
+        if t["goal"]?.bool == true { return String(localized: "Goal reached! Your target is now maintenance") }
+        if t["hold"]?.bool == true { return nil }
+        guard let c = t["change"]?.number, c != 0 else { return nil }
+        return c > 0 ? String(localized: "Target raised by \(Fmt.kcal(abs(c))) kcal") : String(localized: "Target lowered by \(Fmt.kcal(abs(c))) kcal")
+    }
+    /// The engine changed something itself (goals remembered, a weekly adjustment): take its copy.
+    func adoptEngineState() async {
+        guard let text = await engine.state(), let data = text.data(using: .utf8) else { return }
+        load(data)
+        save()
+    }
+    func refreshOverview() async { overview = await engine.overview() }
+    func refreshPlan(_ day: String) async {
+        if let p = await engine.dayPlan(day) { plans[day] = p }
+    }
+    /// Change part of your data (profile, settings, favorites…) and save.
+    func setRoot(_ key: String, _ value: JSONValue) { root[key] = value; save() }
+    func setProfile(_ change: (inout [String: JSONValue]) -> Void) {
+        var p = root["profile"]?.object ?? [:]; change(&p); root["profile"] = .object(p); save()
+    }
+    func setSetting(_ key: String, _ value: JSONValue?) {
+        var s = root["settings"]?.object ?? [:]; s[key] = value; root["settings"] = .object(s); save()
+    }
+    var engineRef: Engine { engine }
+
+    /// Foods for a day, as the web app adds them: today gets the time, days still to come are planned.
+    func add(_ items: [[String: JSONValue]], to day: String, label: String? = nil) {
+        guard !items.isEmpty else { return }
+        let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        let now = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
+        let ms = JSONValue.number((Date().timeIntervalSince1970 * 1000).rounded())
+        let new = items.map { raw -> FoodItem in
+            var r = raw
+            if r["id"]?.string == nil { r["id"] = .string(Ids.new()) }
+            if day > Day.today { r["plan"] = .bool(true); r.removeValue(forKey: "t") }
+            else if day == Day.today, r["t"] == nil { r["t"] = .string(now) }
+            r["u"] = ms
+            return FoodItem(raw: r)
+        }
+        remember(label ?? String(localized: "Added \(new.count) foods"))
+        food[day, default: []].append(contentsOf: new)
+        save()
+    }
+    func replace(_ item: FoodItem, with raw: [String: JSONValue], on day: String) {
+        remember(String(localized: "Amount changed"))
+        guard var list = food[day], let i = list.firstIndex(where: { $0.id == item.id }) else { return }
+        var r = raw; r["u"] = .number((Date().timeIntervalSince1970 * 1000).rounded())
+        list[i] = FoodItem(raw: r); food[day] = list
+        save()
     }
 
     var isEmpty: Bool { food.isEmpty && entries.isEmpty }
@@ -151,15 +239,17 @@ final class Store {
 
     private func remember(_ label: String) {
         undoSnap = Snapshot(food: food, entries: entries, water: water)
+        undoAction = nil
         undoLabel = label
     }
     func undo() {
+        if let a = undoAction { undoAction = nil; undoLabel = nil; a(); return }
         guard let s = undoSnap else { return }
         food = s.food; entries = s.entries; water = s.water
         undoSnap = nil; undoLabel = nil
         save()
     }
-    func clearUndo() { undoSnap = nil; undoLabel = nil }
+    func clearUndo() { undoSnap = nil; undoAction = nil; undoLabel = nil }
 
     private func stamp(_ item: inout FoodItem) { item.raw["u"] = .number((Date().timeIntervalSince1970 * 1000).rounded()) }
 

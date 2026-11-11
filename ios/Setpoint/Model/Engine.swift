@@ -1,0 +1,185 @@
+import Foundation
+import JavaScriptCore
+
+/// The web app's own food search and maths, run in JavaScriptCore (built by tools/ios-engine.js). The screens are
+/// native SwiftUI; this keeps search results, amounts, targets and expenditure identical to the web app.
+/// An actor, so it works off the main thread and one thing at a time.
+actor Engine {
+    static let shared = Engine()
+    private let ctx: JSContext
+    private let sp: JSValue
+    private var stateVersion = -1
+    private(set) var foodsReady = false
+
+    init() {
+        let c = JSContext()!
+        c.exceptionHandler = { _, e in print("Engine error:", e?.toString() ?? "?") }
+        if let u = Bundle.main.url(forResource: "engine", withExtension: "js"), let s = try? String(contentsOf: u, encoding: .utf8) {
+            c.evaluateScript(s)
+        }
+        ctx = c
+        sp = c.objectForKeyedSubscript("SP")
+        // Food names, units and plan messages come out in Arabic when the app runs in Arabic (the web app's ar.js).
+        sp.invokeMethod("setLang", withArguments: [Bundle.main.preferredLocalizations.first?.hasPrefix("ar") == true ? "ar" : "en"])
+    }
+
+    private func call(_ fn: String, _ args: [Any] = []) -> String? {
+        guard let r = sp.invokeMethod(fn, withArguments: args), !r.isUndefined, !r.isNull else { return nil }
+        let s = r.toString() ?? ""
+        return s == "null" ? nil : s
+    }
+    private func decode<T: Decodable>(_ type: T.Type, _ fn: String, _ args: [Any] = []) -> T? {
+        guard let s = call(fn, args), let d = s.data(using: .utf8) else { return nil }
+        return try? JSONDecoder().decode(T.self, from: d)
+    }
+
+    // MARK: Data
+
+    /// Hands the engine your data. Older versions arriving late are ignored.
+    func setState(_ json: String, version: Int) {
+        guard version > stateVersion else { return }
+        stateVersion = version
+        _ = call("setState", [json])
+    }
+    func state() -> String? { call("getState") }
+    func part(_ key: String) -> JSONValue? { decode(JSONValue.self, "part", [key]) }
+
+    func loadFoods() {
+        guard !foodsReady, let u = Bundle.main.url(forResource: "foods", withExtension: "json"), let s = try? String(contentsOf: u, encoding: .utf8) else { return }
+        _ = call("loadFoods", [s])
+        foodsReady = sp.forProperty("ready").toBool()
+    }
+
+    // MARK: Adding food
+
+    func search(_ q: String, meal: String) -> [FoodHit] { decode([FoodHit].self, "search", [q, meal]) ?? [] }
+    func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
+    func savedMeals() -> [SavedMeal] { decode([SavedMeal].self, "savedMeals") ?? [] }
+    func food(_ id: String, meal: String) -> FoodInfo? { decode(FoodInfo.self, "food", [id, meal]) }
+    func macros(_ id: String, qty: Double, unit: String) -> Macros? { decode(Macros.self, "macros", [id, qty, unit]) }
+    func item(_ id: String, qty: Double, unit: String, meal: String) -> [String: JSONValue]? { decode(JSONValue.self, "item", [id, qty, unit, meal])?.object }
+    func reamount(_ item: [String: JSONValue], qty: Double, unit: String) -> [String: JSONValue]? {
+        guard let d = try? JSONEncoder().encode(JSONValue.object(item)), let s = String(data: d, encoding: .utf8) else { return nil }
+        return decode(JSONValue.self, "reamount", [s, qty, unit])?.object
+    }
+    func amountText(_ qty: Double, _ unit: String) -> String { call("fmtAmt", [qty, unit]) ?? "" }
+    func logMeal(_ id: String, meal: String) -> [[String: JSONValue]] { (decode(JSONValue.self, "logMeal", [id, meal])?.array ?? []).compactMap { $0.object } }
+    func toggleFavorite(_ id: String) -> JSONValue? { decode(JSONValue.self, "toggleFav", [id]) }
+    func barcodeLocal(_ code: String) -> String? { decode(String.self, "barcodeLocal", [code]) }
+    func validBarcode(_ code: String) -> Bool { sp.invokeMethod("validBarcode", withArguments: [code])?.toBool() ?? false }
+    /// An Open Food Facts answer, read the way the web app reads it. Returns the food's id, or nil if it isn't usable.
+    func offProduct(_ json: String, code: String) -> String? {
+        guard let r = decode(JSONValue.self, "offProduct", [json, code]) else { return nil }
+        return r["id"]?.string
+    }
+
+    // MARK: Plan and maths
+
+    func dayPlan(_ day: String) -> DayPlan? { decode(DayPlan.self, "dayPlan", [day]) }
+    func trend(_ day: String) -> Double? { decode(Double.self, "trend", [day]) }
+    func overview() -> Overview? { decode(Overview.self, "overview") }
+    func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
+    /// What the web app does on every open: a due weekly adjustment, reaching your goal, today's targets remembered.
+    func tick() -> JSONValue? { decode(JSONValue.self, "tick") }
+    func undoTune() { _ = call("undoTune") }
+}
+
+// MARK: - What the engine sends back
+
+struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let sub: String?
+    let via: String?
+    let fav: Bool?
+    let est: Bool?
+    let recipe: Bool?
+    let custom: Bool?
+    let kind: String?
+    // quick adds from your recent foods
+    let quick: Bool?
+    let kcal: Double?
+    let protein: Double?
+    let carbs: Double?
+    let fat: Double?
+
+    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat }
+    init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: CodingKeys.self)
+        name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
+        quick = try c.decodeIfPresent(Bool.self, forKey: .quick)
+        kcal = try c.decodeIfPresent(Double.self, forKey: .kcal)
+        protein = try c.decodeIfPresent(Double.self, forKey: .protein)
+        carbs = try c.decodeIfPresent(Double.self, forKey: .carbs)
+        fat = try c.decodeIfPresent(Double.self, forKey: .fat)
+        id = try c.decodeIfPresent(String.self, forKey: .id) ?? "q|\(name)|\(Int(kcal ?? 0))"
+        sub = try c.decodeIfPresent(String.self, forKey: .sub)
+        via = try c.decodeIfPresent(String.self, forKey: .via)
+        fav = try c.decodeIfPresent(Bool.self, forKey: .fav)
+        est = try c.decodeIfPresent(Bool.self, forKey: .est)
+        recipe = try c.decodeIfPresent(Bool.self, forKey: .recipe)
+        custom = try c.decodeIfPresent(Bool.self, forKey: .custom)
+        kind = try c.decodeIfPresent(String.self, forKey: .kind)
+    }
+}
+
+struct SavedMeal: Decodable, Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let kcal: Double
+    let n: Int
+}
+
+struct FoodUnit: Decodable, Hashable, Sendable {
+    let label: String; let g: Double; let text: String?
+    var display: String { text ?? label }
+}
+
+struct FoodInfo: Decodable, Sendable {
+    struct Serving: Decodable, Sendable { let qty: Double; let unit: String }
+    struct Per100: Decodable, Sendable { let kcal: Double?; let p: Double?; let c: Double?; let f: Double?; let fib: Double?; let sug: Double?; let sat: Double?; let na: Double? }
+    let id: String
+    let name: String
+    let cat: String?
+    let units: [FoodUnit]
+    let def: Serving
+    let fav: Bool
+    let est: Bool
+    let recipe: Bool
+    let custom: Bool
+    let per100: Per100
+}
+
+struct Macros: Decodable, Equatable, Sendable { let kcal: Double; let protein: Double; let carbs: Double; let fat: Double; let g: Double }
+
+/// The Plan screens' numbers, straight from the web app's maths.
+struct Overview: Decodable, Sendable {
+    struct Energy: Decodable, Sendable {
+        struct Parts: Decodable, Sendable { let bmr: Double; let life: Double; let steps: Double; let train: Double }
+        let tdee: Double; let source: String; let w: Double?; let calc: Double?; let level: String?; let parts: Parts?
+    }
+    struct Measured: Decodable, Sendable {
+        let ready: Bool; let calDays: Int; let days: Int?; let coverage: Double?; let partial: Int?; let span: Int; let needCal: Int; let needSpan: Int
+        let intake: Double?; let rateKgWk: Double?; let tdee: Double?
+    }
+    struct Pace: Decodable, Sendable { let dir: String; let kg: Double; let i: Int }
+    struct Plan: Decodable, Sendable {
+        let target: Double; let protein: Double; let carbs: Double; let fat: Double; let pace: Pace; let warn: String; let eta: String
+        let ref: Double; let refWhy: String; let proteinPerKg: Double; let fatPerKg: Double; let kind: String; let custom: Bool
+    }
+    struct Training: Decodable, Sendable { let days: Int; let type: String; let minutes: Int; let intensity: String }
+    struct Profile: Decodable, Sendable { let sex: String?; let birthYear: Int?; let heightCm: Double?; let bodyFat: Double?; let steps: Int?; let training: Training? }
+    let ready: Bool
+    let kg: Double?
+    let unit: String
+    let adaptive: Bool
+    let adjustKcal: Double?
+    let tuneWhy: String?
+    let profile: Profile
+    let age: Int?
+    let goalKg: Double?
+    let rates: [String: [Double]]
+    let energy: Energy?
+    let measured: Measured
+    let plan: Plan?
+}

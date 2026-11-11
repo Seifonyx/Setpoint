@@ -3,3 +3,5 @@ node_modules/
 *.zip
 tests/out/
 .DS_Store
+ios/Setpoint/Resources/engine.js
+ios/Setpoint/Resources/foods.json

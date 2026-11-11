@@ -7,6 +7,7 @@ struct DiaryView: View {
     @State private var waterSheet = false
     @State private var pickDay = false
     @State private var copying: [FoodItem]?
+    @State private var adding: AddJob?
     @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
 
@@ -25,7 +26,7 @@ struct DiaryView: View {
                     }
                 }
                 Section {
-                    SummaryCard(totals: store.totals(day), plan: store.plan(day))
+                    SummaryCard(totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                         .contentShape(.rect)
                         .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded(swiped)) // swipe the card to change day
                 }
@@ -50,7 +51,7 @@ struct DiaryView: View {
                     }
                 }
                 ForEach(store.meals) { meal in
-                    MealSection(meal: meal, day: day, copying: $copying)
+                    MealSection(meal: meal, day: day, copying: $copying) { adding = AddJob(meal: meal.key) }
                 }
             }
             .listSectionSpacing(14)
@@ -62,8 +63,10 @@ struct DiaryView: View {
                     Button("Next day", systemImage: "chevron.forward") { step(1) }
                         .disabled(day >= Day.add(Day.today, 14))
                 }
-                ToolbarItem(placement: .topBarTrailing) {
+                ToolbarItemGroup(placement: .topBarTrailing) {
                     Button("Choose day", systemImage: "calendar") { pickDay = true }
+                    Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
+                        .buttonStyle(.glassProminent)
                 }
             }
             .safeAreaInset(edge: .bottom) { UndoBanner() }
@@ -74,7 +77,9 @@ struct DiaryView: View {
                 CopyDaySheet(items: job.items, from: day)
             }
             .sensoryFeedback(.selection, trigger: day)
-            .task { if UserDefaults.standard.string(forKey: "sheet") == "weight" { weightSheet = true } } // build-server screenshots
+            .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day) }
+            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day) }
+            .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
         }
     }
 
@@ -99,8 +104,16 @@ struct DiaryView: View {
         default: Day.date(day).formatted(.dateTime.weekday(.wide))
         }
     }
+    /// The meal for the time of day (your own categories: the first one).
+    private var mealNow: String {
+        let h = Calendar.current.component(.hour, from: Date()), keys = store.meals.map(\.key)
+        let guess = h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"
+        return keys.contains(guess) ? guess : (keys.first ?? "snacks")
+    }
     private var subtitle: String { Day.date(day).formatted(.dateTime.day().month(.wide).year()) }
 }
+
+struct AddJob: Identifiable { let meal: String; var id: String { meal } }
 
 /// Wraps the foods being copied so a sheet can be shown for them.
 struct CopyJob: Identifiable {

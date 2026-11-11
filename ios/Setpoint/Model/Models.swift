@@ -61,12 +61,23 @@ struct MealCategory: Identifiable, Hashable, Sendable {
 }
 
 /// What a day's targets were: the web app records them whenever they change.
-struct DayPlan: Equatable, Sendable {
+struct DayPlan: Equatable, Sendable, Decodable {
     var kcal: Double
     var protein: Double
     var carbs: Double
     var fat: Double
     var training: Bool?
+    var flex: Double = 0
+    var mode: String?
+    enum CodingKeys: String, CodingKey { case kcal, protein, carbs, fat, training = "train", flex, mode }
+    init(kcal: Double, protein: Double, carbs: Double, fat: Double, training: Bool? = nil) { self.kcal = kcal; self.protein = protein; self.carbs = carbs; self.fat = fat; self.training = training }
+    init(from d: Decoder) throws {
+        let c = try d.container(keyedBy: CodingKeys.self)
+        kcal = try c.decode(Double.self, forKey: .kcal); protein = try c.decode(Double.self, forKey: .protein)
+        carbs = try c.decode(Double.self, forKey: .carbs); fat = try c.decode(Double.self, forKey: .fat)
+        training = try c.decodeIfPresent(Bool.self, forKey: .training); flex = try c.decodeIfPresent(Double.self, forKey: .flex) ?? 0
+        mode = try c.decodeIfPresent(String.self, forKey: .mode)
+    }
 }
 
 struct Totals: Equatable, Sendable {

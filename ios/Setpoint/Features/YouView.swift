@@ -7,10 +7,18 @@ struct YouView: View {
     @Binding var importing: Bool
     @State private var shareURL: URL?
     @State private var error: String?
+    @State private var showPlan = UserDefaults.standard.string(forKey: "open") == "plan" // build-server screenshots
 
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink { PlanView() } label: {
+                        LabeledContent {
+                            if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
+                        } label: { Label("Plan", systemImage: "target") }
+                    }
+                }
                 Section {
                     Button { importing = true } label: { Label("Import from the web app", systemImage: "square.and.arrow.down") }
                     Button {
@@ -30,6 +38,7 @@ struct YouView: View {
                 }
             }
             .navigationTitle("You")
+            .navigationDestination(isPresented: $showPlan) { PlanView() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in
                 ShareSheet(url: f.url).presentationDetents([.medium, .large])
             }

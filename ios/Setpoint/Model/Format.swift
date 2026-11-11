@@ -15,6 +15,14 @@ enum Day {
         Day.iso(Calendar.current.date(byAdding: .day, value: days, to: Day.date(day)) ?? Date())
     }
     static var today: String { iso(Date()) }
+    /// Days since 1 January 1970 for a "2026-11-08" day, as the web app counts them.
+    static func number(_ day: String) -> Int {
+        let p = day.split(separator: "-").compactMap { Int($0) }
+        guard p.count == 3 else { return 0 }
+        var c = DateComponents(); c.year = p[0]; c.month = p[1]; c.day = p[2]
+        var cal = Calendar(identifier: .gregorian); cal.timeZone = TimeZone(identifier: "UTC")!
+        return Int(((cal.date(from: c) ?? Date()).timeIntervalSince1970 / 86400).rounded())
+    }
     /// 0 = Sunday … 6 = Saturday, as the web app counts weekdays.
     static func weekday(_ day: String) -> Int { Calendar.current.component(.weekday, from: Day.date(day)) - 1 }
 }

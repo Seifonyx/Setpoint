@@ -21,6 +21,8 @@ jobs:
       - uses: actions/checkout@v4
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
+      - name: Build the shared engine (web app search and maths) and food list
+        run: node tools/ios-engine.js
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate
       - name: Build for iPhone (unsigned, SideStore signs it)
@@ -60,6 +62,9 @@ jobs:
           done
           shot -tab diary -sheet weight; xcrun simctl io "$UDID" screenshot out/weight-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -sheet food; xcrun simctl io "$UDID" screenshot out/food-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -sheet add; xcrun simctl io "$UDID" screenshot out/add-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open plan; xcrun simctl io "$UDID" screenshot out/plan-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open plan -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/plan-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance light
           xcrun simctl launch "$UDID" app.setpoint.ios -tab diary; sleep 5; xcrun simctl io "$UDID" screenshot out/empty-light.png

@@ -43,3 +43,4 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
+        NSCameraUsageDescription: Setpoint uses the camera to scan food barcodes.

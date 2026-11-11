@@ -13,6 +13,7 @@ struct RootView: View {
     @State private var importing = false
     @State private var pending: Data?
     @State private var message: String?
+    @Environment(\.scenePhase) private var phase
 
     var body: some View {
         TabView(selection: $tab) {
@@ -32,6 +33,8 @@ struct RootView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(store)
+        .task { await store.start() }
+        .onChange(of: phase) { _, p in if p == .active { Task { await store.tick() } } }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
             guard case .success(let url) = result else { return }
             let ok = url.startAccessingSecurityScopedResource()

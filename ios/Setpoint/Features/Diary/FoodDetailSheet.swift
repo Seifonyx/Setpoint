@@ -11,6 +11,11 @@ struct FoodDetailSheet: View {
     @State private var meal = ""
     @State private var note = ""
     @State private var confirmDelete = false
+    @State private var units: [FoodUnit] = []
+    @State private var qtyText = ""
+    @State private var unit = ""
+    private var qty: Double? { Double(qtyText.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: "٫", with: ".")).flatMap { $0 > 0 ? $0 : nil } }
+    private var amountChanged: Bool { guard let q = qty, let q0 = food.qty else { return false } ; return abs(q - q0) > 0.0001 || unit != (food.unit ?? "") }
 
     var body: some View {
         NavigationStack {
@@ -27,6 +32,14 @@ struct FoodDetailSheet: View {
                     LabeledContent("Protein") { Text("\(Fmt.grams(food.protein)) g").monospacedDigit() }
                     LabeledContent("Carbs") { Text("\(Fmt.grams(food.carbs)) g").monospacedDigit() }
                     LabeledContent("Fat") { Text("\(Fmt.grams(food.fat)) g").monospacedDigit() }
+                }
+                if !units.isEmpty {
+                    Section("Amount") {
+                        HStack {
+                            TextField("Amount", text: $qtyText).keyboardType(.decimalPad).frame(maxWidth: 110).font(.title3.weight(.semibold))
+                            Picker("Unit", selection: $unit) { ForEach(units, id: \.label) { Text($0.display).tag($0.label) } }.labelsHidden()
+                        }
+                    }
                 }
                 if !food.mealContents.isEmpty {
                     Section("In this meal") {
@@ -63,6 +76,12 @@ struct FoodDetailSheet: View {
             .confirmationDialog("Delete \(food.displayName)?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) { store.delete(food, on: day); dismiss() }
             }
+            .task {
+                guard let ref = food.ref, let info = await store.engineRef.food(ref, meal: food.meal) else { return }
+                units = info.units
+                qtyText = (food.qty ?? 1).formatted(.number.precision(.fractionLength(0...3)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
+                unit = food.unit ?? info.units.first?.label ?? "g"
+            }
             .onAppear {
                 meal = store.mealKey(of: food)
                 note = food.note ?? ""
@@ -81,7 +100,11 @@ struct FoodDetailSheet: View {
             let c = Calendar.current.dateComponents([.hour, .minute], from: time)
             t = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
         }
-        store.updateDetails(food, on: day, time: t, meal: meal, note: note)
-        dismiss()
+        let details = { store.updateDetails(food, on: day, time: t, meal: meal, note: note); dismiss() }
+        guard amountChanged, let q = qty else { details(); return }
+        Task {
+            if let raw = await store.engineRef.reamount(food.raw, qty: q, unit: unit) { store.replace(food, with: raw, on: day) }
+            details()
+        }
     }
 }

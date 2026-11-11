@@ -6,6 +6,7 @@ struct MealSection: View {
     let meal: MealCategory
     let day: String
     @Binding var copying: [FoodItem]?
+    let addFood: () -> Void
     @State private var open: FoodItem?
 
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
@@ -37,9 +38,7 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
             }
-            if foods.isEmpty {
-                Text("Nothing logged").foregroundStyle(.tertiary)
-            }
+            Button("Add food", systemImage: "plus", action: addFood)
         } header: {
             HStack {
                 Text(meal.name)
@@ -48,6 +47,7 @@ struct MealSection: View {
                     Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").monospacedDigit()
                 }
                 Menu {
+                    Button("Add food", systemImage: "plus", action: addFood)
                     Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
                         withAnimation { _ = store.copyFromYesterday(meal: meal.key, to: day) }
                     }
