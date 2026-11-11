@@ -348,7 +348,7 @@ private struct Firestore {
 // MARK: Keychain (the sign-in stays on this iPhone only)
 
 private enum Keychain {
-    static let query: [String: Any] = [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "app.setpoint.account", kSecAttrAccount as String: "session"]
+    static var query: [String: Any] { [kSecClass as String: kSecClassGenericPassword, kSecAttrService as String: "app.setpoint.account", kSecAttrAccount as String: "session"] }
     static func load() -> Account.Session? {
         var q = query; q[kSecReturnData as String] = true; q[kSecMatchLimit as String] = kSecMatchLimitOne
         var out: CFTypeRef?
