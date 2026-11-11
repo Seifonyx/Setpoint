@@ -100,6 +100,8 @@ struct DeviceSettingsView: View {
     @State private var denied = false
     @State private var confirmErase = false
     @State private var ramadan = false
+    @State private var healthBusy = false
+    @State private var healthNote: String?
 
     var body: some View {
         Form {
@@ -129,6 +131,24 @@ struct DeviceSettingsView: View {
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
             } header: { Text("Reminders") } footer: {
                 if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.amber) }
+            }
+            Section {
+                Button {
+                    healthBusy = true
+                    Task {
+                        switch await Health.sync(store) {
+                        case .imported(let w, let st):
+                            healthNote = String(localized: "Imported \(w) weigh-ins.") + (st.map { " " + String(localized: "Average steps: \($0).") } ?? "")
+                        case .unavailable(let why): healthNote = why
+                        }
+                        healthBusy = false
+                    }
+                } label: {
+                    HStack { Label("Import from Apple Health", systemImage: "heart.text.square"); Spacer(); if healthBusy { ProgressView() } }
+                }
+                .disabled(healthBusy)
+            } footer: {
+                Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
             }
             Section {
                 Toggle("Lock with Face ID", isOn: $lock)

@@ -39,6 +39,10 @@ jobs:
           mkdir -p out/Payload
           cp -R build/Build/Products/Release-iphoneos/Setpoint.app out/Payload/
           (cd out && zip -qry Setpoint.ipa Payload && rm -rf Payload)
+          # A test copy carrying the Apple Health permission (ad-hoc signed so SideStore sees it). Installed by hand only.
+          mkdir -p health/Payload && cp -R build/Build/Products/Release-iphoneos/Setpoint.app health/Payload/
+          codesign --force --sign - --entitlements Setpoint/Setpoint-health.entitlements health/Payload/Setpoint.app
+          (cd health && zip -qry ../out/Setpoint-health.ipa Payload) && rm -rf health
       - name: Screenshots in the iPhone simulator
         run: |
           cd ios

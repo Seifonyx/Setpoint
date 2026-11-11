@@ -891,6 +891,16 @@
         }
       }
     },
+    "Apple Health isn't available on this device.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health مش متاح على الجهاز ده."
+          }
+        }
+      }
+    },
     "Arm": {
       "localizations": {
         "ar": {
@@ -937,6 +947,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متوسط البروتين"
+          }
+        }
+      }
+    },
+    "Average steps: %lld.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسط الخطوات: %lld."
           }
         }
       }
@@ -2481,6 +2501,16 @@
         }
       }
     },
+    "From Apple Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من Apple Health"
+          }
+        }
+      }
+    },
     "From your log": {
       "localizations": {
         "ar": {
@@ -2791,6 +2821,16 @@
         }
       }
     },
+    "Import from Apple Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استورد من Apple Health"
+          }
+        }
+      }
+    },
     "Import from the web app": {
       "localizations": {
         "ar": {
@@ -2807,6 +2847,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتستورد %lld يوم و%lld وزنة."
+          }
+        }
+      }
+    },
+    "Imported %lld weigh-ins.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتستورد %lld وزن."
           }
         }
       }
@@ -5261,6 +5311,16 @@
         }
       }
     },
+    "This install of Setpoint can't use Apple Health. It needs the Health test build (and an Apple ID that allows it).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة دي من Setpoint مش بتقدر تستخدم Apple Health. محتاجة نسخة اختبار Health (وحساب Apple يسمح بيها)."
+          }
+        }
+      }
+    },
     "This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.": {
       "localizations": {
         "ar": {
@@ -5757,6 +5817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوزنات"
+          }
+        }
+      }
+    },
+    "Weigh-ins from your smart scale and your average steps.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوزانك من الميزان الذكي ومتوسط خطواتك."
           }
         }
       }
