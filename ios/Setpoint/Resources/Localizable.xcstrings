@@ -321,6 +321,16 @@
         }
       }
     },
+    "%lld times": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مرات"
+          }
+        }
+      }
+    },
     "%lld%% of days logged": {
       "localizations": {
         "ar": {
@@ -451,6 +461,16 @@
         }
       }
     },
+    "7 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٧ أيام"
+          }
+        }
+      }
+    },
     "7-day streak": {
       "localizations": {
         "ar": {
@@ -467,6 +487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "88.7 كجم"
+          }
+        }
+      }
+    },
+    "A light week of logging. More days logged makes your plan sharper.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسبوع تسجيل خفيف. كل ما تسجل أيام أكتر خطتك بتبقى أدق."
           }
         }
       }
@@ -2071,6 +2101,26 @@
         }
       }
     },
+    "Expenditure now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحرق دلوقتي"
+          }
+        }
+      }
+    },
+    "Expenditure over time": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحرق مع الوقت"
+          }
+        }
+      }
+    },
     "Extra active": {
       "localizations": {
         "ar": {
@@ -2631,6 +2681,16 @@
         }
       }
     },
+    "How last week went, and what changed in your plan.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسبوع اللي فات مشي إزاي، وإيه اللي اتغير في خطتك."
+          }
+        }
+      }
+    },
     "I agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html)": {
       "localizations": {
         "ar": {
@@ -2931,12 +2991,32 @@
         }
       }
     },
+    "Log a few days this week to get your first check-in.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل كام يوم الأسبوع ده عشان توصلك أول مراجعة."
+          }
+        }
+      }
+    },
     "Log every day and weigh in to learn your real burn.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "سجّل كل يوم واوزن نفسك عشان نعرف حرقك الحقيقي."
+          }
+        }
+      }
+    },
+    "Log food and weigh in for a few weeks to see your expenditure take shape.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل أكلك واوزن نفسك كام أسبوع عشان تشوف حرقك بيتشكل."
           }
         }
       }
@@ -3481,6 +3561,16 @@
         }
       }
     },
+    "No change this week: your target still fits how your weight is moving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش تغيير الأسبوع ده: هدفك لسه مناسب لحركة وزنك."
+          }
+        }
+      }
+    },
     "No days picked: every day has the same target.": {
       "localizations": {
         "ar": {
@@ -3527,6 +3617,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا شيء"
+          }
+        }
+      }
+    },
+    "None of your logged foods have data for this.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش أكلة من اللي سجلتها عندها بيانات عن ده."
           }
         }
       }
@@ -4811,6 +4911,16 @@
         }
       }
     },
+    "Steady as planned. Nicely maintained.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثابت زي ما خططت. حافظت عليه كويس."
+          }
+        }
+      }
+    },
     "Step on the scale before you eat or drink, and log it in Setpoint.": {
       "localizations": {
         "ar": {
@@ -5081,6 +5191,16 @@
         }
       }
     },
+    "This day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اليوم ده"
+          }
+        }
+      }
+    },
     "This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.": {
       "localizations": {
         "ar": {
@@ -5221,6 +5341,16 @@
         }
       }
     },
+    "Top sources": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أهم المصادر"
+          }
+        }
+      }
+    },
     "Track calories": {
       "localizations": {
         "ar": {
@@ -5247,6 +5377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أيام التمرين"
+          }
+        }
+      }
+    },
+    "Trend change": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيّر الاتجاه"
           }
         }
       }
@@ -5497,6 +5637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بداية الأسبوع"
+          }
+        }
+      }
+    },
+    "Weekly check-in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المراجعة الأسبوعية"
           }
         }
       }
@@ -5821,12 +5971,32 @@
         }
       }
     },
+    "Your plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطتك"
+          }
+        }
+      }
+    },
     "Your streak allows one missed day a week.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "السلسلة بتسمح بيوم واحد فايت في الأسبوع."
+          }
+        }
+      }
+    },
+    "Your target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هدفك"
           }
         }
       }
@@ -5841,12 +6011,72 @@
         }
       }
     },
+    "Your trend held steady. Eating a bit more will move it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك ثابت. لو كلت أكتر شوية هيتحرك."
+          }
+        }
+      }
+    },
+    "Your trend held steady. Keep logging; one week is a short window.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك ثابت. كمّل تسجيل؛ أسبوع واحد فترة قصيرة."
+          }
+        }
+      }
+    },
+    "Your trend moved a little. Your target adjusts for you.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك اتحرك شوية. هدفك بيتظبط لوحده."
+          }
+        }
+      }
+    },
+    "Your trend went down. You're on your way.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك نزل. انت ماشي صح."
+          }
+        }
+      }
+    },
+    "Your trend went up, as planned.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك طلع، زي ما خططت."
+          }
+        }
+      }
+    },
     "Your week": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "أسبوعك"
+          }
+        }
+      }
+    },
+    "Your weekly check-in is ready": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مراجعتك الأسبوعية جاهزة"
           }
         }
       }

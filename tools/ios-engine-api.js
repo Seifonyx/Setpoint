@@ -1,5 +1,10 @@
   // ---- What the iPhone app calls (everything goes in and out as JSON text) ----
   var J = JSON.stringify;
+  // Lets the engine look back as if it were an earlier day (for history charts). The last declaration wins in JS,
+  // so every helper that asks for today uses this one.
+  var __today = null;
+  if (!Object.keys(NUT).length) NUTS.forEach(function (n) { NUT[n[0]] = { key: n[0], label: n[1], unit: n[2], group: n[3] }; });
+  function todayISO() { return __today || isoOf(new Date()); }
   // Arabic: the web app's own phrase list (ar.js), applied to text the engine hands out, when the iPhone is in Arabic.
   var lang = 'en';
   function L(s) { return lang === 'ar' && typeof s === 'string' && s ? (tr(s) || s) : s; }
@@ -179,6 +184,30 @@
       var o = {};
       (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = f ? ftKind(f) : (Array.isArray(it.mi) ? 'dish' : (ftGuess(it.name || '', '') || 'quick')); });
       return J(o);
+    },
+
+    // ---- Coaching ----
+    // Your measured expenditure week by week (each from the 4 weeks before it), with the target you had then.
+    expenditureHistory: function (weeks) {
+      var out = [], today = dayNum(isoOf(new Date()));
+      for (var k = weeks - 1; k >= 0; k--) {
+        var d = isoFromDay(today - 7 * k); __today = d; dataVer++;
+        var m = measuredEnergyNow(), goalKey = Object.keys(state.goals).filter(function (x) { return x <= d; }).sort().pop();
+        out.push({ date: d, tdee: m.ready ? m.tdee : null, intake: m.ready ? m.intake : null, target: goalKey ? state.goals[goalKey].k : null, trend: trendAt(dayNum(d)) });
+      }
+      __today = null; dataVer++;
+      return J(out);
+    },
+    // Which foods gave you the most of a nutrient over the last few days.
+    nutrientSources: function (key, d, days) {
+      var by = {}, end = dayNum(d);
+      for (var x = end - days + 1; x <= end; x++) eatenFor(isoFromDay(x)).forEach(function (it) {
+        var n = itemNutrients(it); if (!n || !n[key]) return;
+        var name = it.name || 'Food', o = by[name] || (by[name] = { name: L(name), v: 0, times: 0 });
+        o.v += n[key]; o.times++;
+      });
+      var list = Object.keys(by).map(function (k) { return by[k]; }).sort(function (a, b) { return b.v - a.v; }).slice(0, 12);
+      return J({ unit: NUT[key] ? NUT[key].unit : '', label: NUT[key] ? L(NUT[key].label) : key, list: list });
     },
 
     // ---- Progress ----

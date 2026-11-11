@@ -94,6 +94,8 @@ actor Engine {
     func applyRepeats() -> Int { Int(sp.invokeMethod("applyRepeats", withArguments: [])?.toInt32() ?? 0) }
     func dayScore(_ day: String) -> DayScore? { decode(DayScore.self, "dayScore", [day]) }
     func itemKinds(_ day: String) -> [String: String] { decode([String: String].self, "itemKinds", [day]) ?? [:] }
+    func expenditureHistory(weeks: Int) -> [ExpPoint] { decode([ExpPoint].self, "expenditureHistory", [weeks]) ?? [] }
+    func nutrientSources(_ key: String, day: String, days: Int) -> NutrientSources? { decode(NutrientSources.self, "nutrientSources", [key, day, days]) }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
@@ -268,4 +270,13 @@ struct Insights: Decodable, Sendable {
 struct DayScore: Decodable, Sendable {
     struct Part: Decodable, Sendable { let label: String; let pts: Double; let max: Double; let note: String }
     let score: Int; let grade: String; let parts: [Part]
+}
+
+struct ExpPoint: Decodable, Sendable, Identifiable {
+    let date: String; let tdee: Double?; let intake: Double?; let target: Double?; let trend: Double?
+    var id: String { date }
+}
+struct NutrientSources: Decodable, Sendable {
+    struct Item: Decodable, Sendable { let name: String; let v: Double; let times: Int }
+    let unit: String; let label: String; let list: [Item]
 }

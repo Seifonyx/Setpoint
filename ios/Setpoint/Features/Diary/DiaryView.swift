@@ -31,6 +31,9 @@ struct DiaryView: View {
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
                     Section { RamadanBanner() }
                 }
+                if day == Day.today && store.entries.count >= 3 && CheckInBanner.due {
+                    Section { CheckInBanner() }
+                }
                 Section {
                     SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                 }

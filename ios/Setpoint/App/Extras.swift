@@ -17,24 +17,31 @@ enum Reminders {
     static func requestPermission() async -> Bool {
         (try? await UNUserNotificationCenter.current().requestAuthorization(options: [.alert, .sound, .badge])) ?? false
     }
-    /// Schedules (or clears) the daily reminders from the saved settings.
-    static func update() {
+    /// Schedules the next week of reminders from the saved settings. Today's is skipped when it's already done
+    /// (food logged, or weighed in), so you're only reminded when you need it.
+    @MainActor static func update(_ store: Store? = nil) {
+        let store = store ?? Store.shared
         let c = UNUserNotificationCenter.current(), d = UserDefaults.standard
-        c.removePendingNotificationRequests(withIdentifiers: ["weigh", "food"])
-        if d.bool(forKey: DeviceSettings.weighReminder) {
-            add("weigh", minutes: d.object(forKey: DeviceSettings.weighTime) as? Int ?? 7 * 60 + 30,
-                title: String(localized: "Time to weigh in"), body: String(localized: "Step on the scale before you eat or drink, and log it in Setpoint."))
-        }
-        if d.bool(forKey: DeviceSettings.foodReminder) {
-            add("food", minutes: d.object(forKey: DeviceSettings.foodTime) as? Int ?? 20 * 60 + 30,
-                title: String(localized: "Log today's food"), body: String(localized: "A quick check that today's meals are in your diary."))
+        c.removeAllPendingNotificationRequests()
+        let weighOn = d.bool(forKey: DeviceSettings.weighReminder), foodOn = d.bool(forKey: DeviceSettings.foodReminder)
+        let wm = d.object(forKey: DeviceSettings.weighTime) as? Int ?? 7 * 60 + 30, fm = d.object(forKey: DeviceSettings.foodTime) as? Int ?? 20 * 60 + 30
+        for i in 0..<7 {
+            let day = Day.add(Day.today, i)
+            if weighOn && !(i == 0 && store.entry(day) != nil) {
+                add("weigh-\(day)", day: day, minutes: wm, title: String(localized: "Time to weigh in"), body: String(localized: "Step on the scale before you eat or drink, and log it in Setpoint."))
+            }
+            if foodOn && !(i == 0 && store.eaten(day).count >= 2) {
+                add("food-\(day)", day: day, minutes: fm, title: String(localized: "Log today's food"), body: String(localized: "A quick check that today's meals are in your diary."))
+            }
         }
     }
-    private static func add(_ id: String, minutes: Int, title: String, body: String) {
+    private static func add(_ id: String, day: String, minutes: Int, title: String, body: String) {
+        var comps = Calendar.current.dateComponents([.year, .month, .day], from: Day.date(day))
+        comps.hour = minutes / 60; comps.minute = minutes % 60
+        guard let when = Calendar.current.date(from: comps), when > Date() else { return }
         let content = UNMutableNotificationContent()
         content.title = title; content.body = body; content.sound = .default
-        let trigger = UNCalendarNotificationTrigger(dateMatching: DateComponents(hour: minutes / 60, minute: minutes % 60), repeats: true)
-        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: trigger))
+        UNUserNotificationCenter.current().add(UNNotificationRequest(identifier: id, content: content, trigger: UNCalendarNotificationTrigger(dateMatching: comps, repeats: false)))
     }
 }
 

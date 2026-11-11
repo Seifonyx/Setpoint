@@ -53,6 +53,7 @@ struct PlanView: View {
                     WeekPlanSection()
                 case .energy?:
                     expenditureSection(o)
+                    Section { ExpenditureChart() }
                 }
             } else {
                 ProgressView()

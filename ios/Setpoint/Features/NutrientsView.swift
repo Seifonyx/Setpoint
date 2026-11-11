@@ -15,14 +15,14 @@ struct NutrientsView: View {
                 if !d.low.isEmpty {
                     Section {
                         ForEach(d.low, id: \.key) { l in
-                            LabeledContent(l.label) { Text("\(Int(l.pct.rounded()))%").monospacedDigit().foregroundStyle(Brand.amber) }
+                            NavigationLink { NutrientSourcesView(key: l.key, day: day) } label: { LabeledContent(l.label) { Text("\(Int(l.pct.rounded()))%").monospacedDigit().foregroundStyle(Brand.amber) } }
                         }
                     } header: { Text("Often low") } footer: { Text("Your average over the last 2 weeks, as a share of your target.") }
                 }
                 ForEach(d.groups, id: \.key) { g in
                     let rows = d.rows.filter { $0.group == g.key && ($0.goal != nil || $0.hi != nil || $0.v > 0) }
                     if !rows.isEmpty {
-                        Section(g.label) { ForEach(rows, id: \.key) { row($0) } }
+                        Section(g.label) { ForEach(rows, id: \.key) { r in NavigationLink { NutrientSourcesView(key: r.key, day: day) } label: { row(r) } } }
                     }
                 }
                 Section { Text("Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.").font(.brand(.footnote)).foregroundStyle(.secondary) }

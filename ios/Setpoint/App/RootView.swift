@@ -55,7 +55,10 @@ struct RootView: View {
         .environment(store)
         .environment(account)
         .task { await store.start(); await account.pull(fresh: false) }
-        .onChange(of: phase) { _, p in if p == .active { Task { await store.tick(); await account.syncNow() } } }
+        .onChange(of: phase) { _, p in
+            if p == .active { Task { await store.tick(); await account.syncNow() } }
+            if p == .background { Reminders.update(store) } // only remind about what isn't done yet
+        }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
             guard case .success(let url) = result else { return }
             let ok = url.startAccessingSecurityScopedResource()

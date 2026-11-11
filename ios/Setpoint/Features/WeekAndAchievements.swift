@@ -17,11 +17,11 @@ struct YouHighlights: View {
                 .padding(.vertical, 4)
             }
             if let r = review {
-                NavigationLink { WeekReviewView(review: r) } label: {
+                NavigationLink { CheckInView() } label: {
                     LabeledContent {
                         Text("\(r.onTarget)/\(r.n) on target").monospacedDigit()
                     } label: {
-                        Label { Text("Last week"); Text(r.label) } icon: { Image(systemName: "calendar.badge.checkmark") }
+                        Label { Text("Weekly check-in"); Text(r.label) } icon: { Image(systemName: "calendar.badge.checkmark") }
                     }
                 }
             }
