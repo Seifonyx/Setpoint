@@ -71,12 +71,42 @@
         }
       }
     },
+    "%@ kcal left": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقي %@ سعرة"
+          }
+        }
+      }
+    },
+    "%@ kcal over": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة %@ سعرة"
+          }
+        }
+      }
+    },
     "%@ kcal over target": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "%@ سعرة فوق الهدف"
+          }
+        }
+      }
+    },
+    "%@ kcal over today's target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة فوق هدف النهارده"
           }
         }
       }
@@ -191,6 +221,16 @@
         }
       }
     },
+    "%lld foods added": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتضاف %lld أكلات"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "ar": {
@@ -237,6 +277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld دقيقة"
+          }
+        }
+      }
+    },
+    "%lld selected": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld مختارة"
           }
         }
       }
@@ -311,6 +361,16 @@
         }
       }
     },
+    "1 food added": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتضافت أكلة"
+          }
+        }
+      }
+    },
     "1 item": {
       "localizations": {
         "ar": {
@@ -337,6 +397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سنة"
+          }
+        }
+      }
+    },
+    "2 eggs, a slice of toast and a coffee with milk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٢ بيض، وشريحة توست، وقهوة بلبن"
           }
         }
       }
@@ -467,6 +537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة"
+          }
+        }
+      }
+    },
+    "Add %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف %lld"
           }
         }
       }
@@ -1081,6 +1161,16 @@
         }
       }
     },
+    "Collapse %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اقفل %@"
+          }
+        }
+      }
+    },
     "Coming in Phase 4": {
       "localizations": {
         "ar": {
@@ -1127,6 +1217,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوزن بعد الطبخ (اختياري)"
+          }
+        }
+      }
+    },
+    "Copied %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتنسخ %@"
           }
         }
       }
@@ -1211,6 +1311,16 @@
         }
       }
     },
+    "Couldn't find those foods. Try simpler words.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نلاقي الأكلات دي. جرب كلام أبسط."
+          }
+        }
+      }
+    },
     "Couldn't reach Open Food Facts. Check your connection.": {
       "localizations": {
         "ar": {
@@ -1227,6 +1337,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقدرناش نوصل للسيرفر. إنت مش متصل؟"
+          }
+        }
+      }
+    },
+    "Couldn't read that. Try again in simpler words.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نفهمها. جرب تاني بكلام أبسط."
           }
         }
       }
@@ -1267,6 +1387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إنشاء حساب"
+          }
+        }
+      }
+    },
+    "Create “%@”": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعمل «%@»"
           }
         }
       }
@@ -1481,6 +1611,16 @@
         }
       }
     },
+    "Describe what you ate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اوصف اللي كلته"
+          }
+        }
+      }
+    },
     "Diary": {
       "localizations": {
         "ar": {
@@ -1517,6 +1657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم"
+          }
+        }
+      }
+    },
+    "Done selecting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خلصت الاختيار"
           }
         }
       }
@@ -1761,6 +1911,16 @@
         }
       }
     },
+    "Expand %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح %@"
+          }
+        }
+      }
+    },
     "Expenditure": {
       "localizations": {
         "ar": {
@@ -1901,6 +2061,16 @@
         }
       }
     },
+    "Find these foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر على الأكلات دي"
+          }
+        }
+      }
+    },
     "First food logged": {
       "localizations": {
         "ar": {
@@ -2037,6 +2207,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المعادلة بس"
+          }
+        }
+      }
+    },
+    "Found": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لقينا"
           }
         }
       }
@@ -2411,6 +2591,16 @@
         }
       }
     },
+    "Leaves %@ kcal for today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يفضل %@ سعرة للنهارده"
+          }
+        }
+      }
+    },
     "Left": {
       "localizations": {
         "ar": {
@@ -2711,6 +2901,26 @@
         }
       }
     },
+    "Make it one of your foods, or scan its barcode.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعملها من أكلاتك، أو امسح الباركود بتاعها."
+          }
+        }
+      }
+    },
+    "Make recipes in Foods › Recipes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعمل الوصفات من الأطعمة › الوصفات."
+          }
+        }
+      }
+    },
     "Male": {
       "localizations": {
         "ar": {
@@ -2831,6 +3041,16 @@
         }
       }
     },
+    "Mine": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بتاعتي"
+          }
+        }
+      }
+    },
     "Moderate": {
       "localizations": {
         "ar": {
@@ -2857,6 +3077,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أكتر في أيام التمرين وأقل في أيام الراحة. نفس إجمالي الأسبوع."
+          }
+        }
+      }
+    },
+    "More ways to add": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طرق تانية للإضافة"
           }
         }
       }
@@ -3011,12 +3241,32 @@
         }
       }
     },
+    "No favorites yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش مفضلة لسه"
+          }
+        }
+      }
+    },
     "No matches": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "مفيش نتايج"
+          }
+        }
+      }
+    },
+    "No matches for “%@”": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش نتايج لـ «%@»"
           }
         }
       }
@@ -3461,6 +3711,16 @@
         }
       }
     },
+    "Quick add calories": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إضافة سريعة للسعرات"
+          }
+        }
+      }
+    },
     "Quick add saved": {
       "localizations": {
         "ar": {
@@ -3537,6 +3797,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر مرات صيام"
+          }
+        }
+      }
+    },
+    "Recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصفة"
           }
         }
       }
@@ -3731,6 +4001,16 @@
         }
       }
     },
+    "Save a meal from the Diary (a meal's ⋯ menu › Save as meal).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ وجبة من اليوميات (قائمة ⋯ بتاعة الوجبة › احفظ كوجبة)."
+          }
+        }
+      }
+    },
     "Save as meal": {
       "localizations": {
         "ar": {
@@ -3797,6 +4077,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خامل"
+          }
+        }
+      }
+    },
+    "Select": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختيار"
           }
         }
       }
@@ -4187,6 +4477,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بتتزامن…"
+          }
+        }
+      }
+    },
+    "Tap the star on a food to keep it here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط النجمة على أي أكلة عشان تفضل هنا."
           }
         }
       }
@@ -4891,6 +5191,16 @@
         }
       }
     },
+    "Works on this iPhone, offline. You check everything before it's added.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيشتغل على الآيفون ده من غير نت. بتراجع كل حاجة قبل ما تتضاف."
+          }
+        }
+      }
+    },
     "Wrong email or password.": {
       "localizations": {
         "ar": {
@@ -5111,6 +5421,16 @@
         }
       }
     },
+    "kcal and macros": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سعرات وماكروز"
+          }
+        }
+      }
+    },
     "kg": {
       "localizations": {
         "ar": {
@@ -5187,6 +5507,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سنة"
+          }
+        }
+      }
+    },
+    "your usual": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المعتاد بتاعك"
           }
         }
       }

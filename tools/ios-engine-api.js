@@ -5,7 +5,13 @@
   function L(s) { return lang === 'ar' && typeof s === 'string' && s ? (tr(s) || s) : s; }
   function setMeals() { MEALS = state.settings.meals && state.settings.meals.length ? state.settings.meals.map(function (x) { return [x.k, x.n]; }) : DEFAULT_MEALS; }
   function row(f, meal) {
-    return { id: f.id, name: L(f.name), sub: L(servingLine(f, meal)), via: f.via || null, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom, kind: ftKind(f) };
+    // Your usual amount (or a sensible serving), with its numbers, so the list can add it in one tap.
+    var us = unitsFor(f), lp = lastPortion(f.id, meal), u = lp && us.find(function (x) { return x.label === lp.unit; }), q, lbl, g;
+    if (u) { q = lp.qty; lbl = lp.unit; g = q * u.g; } else { var ds = defaultServing(f); q = ds.qty; lbl = ds.unit.label; g = q * ds.unit.g; }
+    var m = macrosFor(f, g);
+    return { id: f.id, name: L(f.name), sub: L(servingLine(f, meal)), via: f.via || null, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom,
+      off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
+      kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
   }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
@@ -166,6 +172,13 @@
       if (d > todayISO() || (d === todayISO() && tt.kcal < plan.target * 0.7)) return 'null';
       var sc = dayScore(d); if (!sc) return 'null';
       return J({ score: sc.score, grade: sc.grade, parts: sc.parts.map(function (x) { return { label: L(x.label), pts: x.pts, max: x.max, note: x.note }; }) });
+    },
+
+    // A kind for each food logged on a day (egg, grain, fruit…), for the Diary's food icons.
+    itemKinds: function (d) {
+      var o = {};
+      (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = f ? ftKind(f) : (Array.isArray(it.mi) ? 'dish' : (ftGuess(it.name || '', '') || 'quick')); });
+      return J(o);
     },
 
     // ---- Progress ----

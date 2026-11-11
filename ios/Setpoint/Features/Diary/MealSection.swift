@@ -6,8 +6,16 @@ struct MealSection: View {
     let meal: MealCategory
     let day: String
     @Binding var copying: [FoodItem]?
+    var kinds: [String: String] = [:]
     let addFood: () -> Void
     @State private var open: FoodItem?
+    @AppStorage("closedMeals") private var closedMeals = ""
+    private var expanded: Bool { !closedMeals.split(separator: ",").contains(Substring(meal.key)) }
+    private func toggleOpen() {
+        var set = Set(closedMeals.split(separator: ",").map(String.init))
+        if expanded { set.insert(meal.key) } else { set.remove(meal.key) }
+        withAnimation(.snappy) { closedMeals = set.sorted().joined(separator: ",") }
+    }
     @State private var naming = false
     @State private var mealName = ""
 
@@ -16,8 +24,9 @@ struct MealSection: View {
 
     var body: some View {
         Section {
+            if expanded {
             ForEach(foods) { food in
-                Button { open = food } label: { FoodRow(food: food, day: day) }
+                Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
                     .buttonStyle(.plain)
                     .swipeActions(edge: .trailing) {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
@@ -35,6 +44,11 @@ struct MealSection: View {
                                 Button(m.name) { withAnimation { store.move(food, to: m.key, on: day) } }
                             }
                         }
+                        Menu("Copy to", systemImage: "plus.square.on.square") {
+                            ForEach(store.meals.filter { $0.key != meal.key }) { m in
+                                Button(m.name) { withAnimation { store.copyToMeal(food, meal: m.key, on: day) } }
+                            }
+                        }
                         Button("Copy to another day", systemImage: "doc.on.doc") { copying = [food] }
                         Divider()
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
@@ -43,9 +57,23 @@ struct MealSection: View {
             Button(action: addFood) {
                 Label("Add food", systemImage: "plus.circle.fill").font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
             }
+            }
         } header: {
             HStack(alignment: .firstTextBaseline) {
-                Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil)
+                Button(action: toggleOpen) {
+                    HStack(spacing: 6) {
+                        Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil)
+                        Image(systemName: "chevron.down").font(.brand(.caption, .bold)).foregroundStyle(Brand.ink2)
+                            .rotationEffect(.degrees(expanded ? 0 : -90))
+                        if !expanded && !foods.isEmpty {
+                            Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                                .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
+                        }
+                    }
+                    .contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .accessibilityLabel(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
                 Spacer()
                 if !counted.isEmpty {
                     Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2).textCase(nil)
@@ -82,9 +110,11 @@ struct MealSection: View {
 struct FoodRow: View {
     let food: FoodItem
     let day: String
+    var kind: String? = nil
 
     var body: some View {
         HStack(spacing: 12) {
+            FoodIcon(kind: kind ?? (food.ref == nil ? "quick" : "food"), size: 36)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(food.displayName).lineLimit(1)

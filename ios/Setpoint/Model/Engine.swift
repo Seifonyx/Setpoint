@@ -93,6 +93,7 @@ actor Engine {
     func insights() -> Insights? { decode(Insights.self, "insights") }
     func applyRepeats() -> Int { Int(sp.invokeMethod("applyRepeats", withArguments: [])?.toInt32() ?? 0) }
     func dayScore(_ day: String) -> DayScore? { decode(DayScore.self, "dayScore", [day]) }
+    func itemKinds(_ day: String) -> [String: String] { decode([String: String].self, "itemKinds", [day]) ?? [:] }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
@@ -119,8 +120,14 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
     let protein: Double?
     let carbs: Double?
     let fat: Double?
+    // your usual (or a sensible) serving, for one-tap add
+    let off: Bool?
+    let q: Double?
+    let u: String?
+    let amt: String?
+    let usual: Bool?
 
-    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat }
+    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: CodingKeys.self)
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
@@ -137,6 +144,11 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
         recipe = try c.decodeIfPresent(Bool.self, forKey: .recipe)
         custom = try c.decodeIfPresent(Bool.self, forKey: .custom)
         kind = try c.decodeIfPresent(String.self, forKey: .kind)
+        off = try c.decodeIfPresent(Bool.self, forKey: .off)
+        q = try c.decodeIfPresent(Double.self, forKey: .q)
+        u = try c.decodeIfPresent(String.self, forKey: .u)
+        amt = try c.decodeIfPresent(String.self, forKey: .amt)
+        usual = try c.decodeIfPresent(Bool.self, forKey: .usual)
     }
 }
 

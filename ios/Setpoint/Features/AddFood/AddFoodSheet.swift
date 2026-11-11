@@ -1,125 +1,341 @@
 import SwiftUI
 
-/// Add food: search everything (the same results as the web app), or pick from your recent foods, favorites, own foods,
-/// saved meals and recipes. Quick add and barcode scanning sit in the bar.
+/// Add food. Three tabs: All (recent, or search everything), Favorites, and My foods (your own foods, recipes and
+/// saved meals, each collapsible). Rows add your usual amount in one tap (⊕) or open the food to pick an amount.
+/// The sheet stays open while you add, with a tray at the bottom showing what you've added.
 struct AddFoodSheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State var meal: String
     let day: String
     @State private var query = ""
-    @State private var scope = Scope.recent
+    @State private var tab = Tab.all
     @State private var hits: [FoodHit] = []
-    @State private var list: [FoodHit] = []
+    @State private var recents: [FoodHit] = []
+    @State private var favorites: [FoodHit] = []
+    @State private var mine: [FoodHit] = []
+    @State private var recipes: [FoodHit] = []
     @State private var meals: [SavedMeal] = []
     @State private var path = NavigationPath()
     @State private var quickAdd = false
     @State private var scanning = false
+    @State private var describing = false
+    @State private var creating: String?
     @State private var scanMessage: String?
+    @State private var selecting = false
+    @State private var selected: [String: FoodHit] = [:]
+    @State private var startIDs: Set<String> = []
+    @AppStorage("addFoodClosed") private var closedGroups = ""
 
-    enum Scope: String, CaseIterable, Identifiable {
-        case recent, favorites, mine, meals, recipes
+    enum Tab: String, CaseIterable, Identifiable {
+        case all, favorites, mine
         var id: String { rawValue }
-        var title: LocalizedStringKey {
-            switch self { case .recent: "Recent"; case .favorites: "Favorites"; case .mine: "My foods"; case .meals: "Meals"; case .recipes: "Recipes" }
-        }
+        var title: LocalizedStringKey { switch self { case .all: "All"; case .favorites: "Favorites"; case .mine: "My foods" } }
     }
+
+    /// Foods added since this sheet opened (for the tray).
+    private var added: [FoodItem] { store.items(day).filter { !startIDs.contains($0.id) } }
 
     var body: some View {
         NavigationStack(path: $path) {
             List {
-                if query.isEmpty {
-                    Section {
-                        Picker("Show", selection: $scope) { ForEach(Scope.allCases) { Text($0.title).tag($0) } }
-                            .pickerStyle(.segmented)
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets())
-                    }
-                    if scope == .meals {
-                        ForEach(meals) { m in
-                            Button { logSavedMeal(m) } label: {
-                                LabeledContent { Text("\(Fmt.kcal(m.kcal)) kcal").monospacedDigit() } label: {
-                                    Text(m.name)
-                                    Text("\(m.n) foods")
-                                }
-                            }
-                            .tint(.primary)
-                        }
-                        if meals.isEmpty { empty("No saved meals yet", "Save a meal from its ⋯ menu in the web app.") }
-                    } else {
-                        ForEach(list) { row($0) }
-                        if list.isEmpty { empty(scope == .recent ? "Nothing logged yet" : "Nothing here yet", scope == .recent ? "Search for a food to start." : "") }
-                    }
+                SwiftUI.Section {
+                    Picker("Show", selection: $tab) { ForEach(Tab.allCases) { Text($0.title).tag($0) } }
+                        .pickerStyle(.segmented)
+                }
+                .listRowBackground(Color.clear)
+                .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
+                .listSectionSpacing(6)
+
+                if !query.isEmpty {
+                    searchResults
                 } else {
-                    if !store.foodsReady { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(.secondary) } }
-                    ForEach(hits) { row($0) }
-                    if store.foodsReady && hits.isEmpty { empty("No matches", "Try other words, or use Quick add.") }
+                    switch tab {
+                    case .all: allTab
+                    case .favorites: rows(favorites, empty: ("No favorites yet", "Tap the star on a food to keep it here."))
+                    case .mine: mineTab
+                    }
                 }
             }
+            .listSectionSpacing(14)
             .brandList()
-            .navigationTitle("Add food")
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search foods")
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .principal) {
-                    Menu {
-                        Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
-                    } label: {
-                        HStack(spacing: 4) { Text(store.meals.first { $0.key == meal }?.name ?? "").font(.brand(.headline)); Image(systemName: "chevron.down").font(.brand(.caption, .bold)) }
-                    }
-                    .tint(.primary)
-                }
-                ToolbarItemGroup(placement: .primaryAction) {
-                    Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
-                    Button("Quick add", systemImage: "bolt") { quickAdd = true }
-                }
+            .toolbar { toolbar }
+            .safeAreaInset(edge: .bottom) { tray }
+            .navigationDestination(for: String.self) { id in
+                FoodAmountView(foodID: id, meal: meal, day: day) { path = NavigationPath() }
             }
-            .navigationDestination(for: String.self) { id in FoodAmountView(foodID: id, meal: meal, day: day) { dismiss() } }
-            .sheet(isPresented: $quickAdd) { QuickAddView(meal: meal, day: day) { dismiss() } }
+            .sheet(isPresented: $quickAdd) { QuickAddView(meal: meal, day: day) {} }
+            .sheet(isPresented: $describing) { DescribeMealSheet(meal: meal, day: day) }
+            .sheet(item: Binding(get: { creating.map(Prefill.init) }, set: { creating = $0?.name })) { p in CustomFoodSheet(food: nil, prefill: p.name) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
-            .task(id: "\(scope.rawValue)|\(meal)|\(store.version)|\(store.foodsReady)") { await loadList() }
+            .task(id: "\(meal)|\(store.version)|\(store.foodsReady)") { await loadLists() }
             .task(id: "\(query)|\(meal)|\(store.foodsReady)") {
                 guard !query.isEmpty else { hits = []; return }
                 try? await Task.sleep(for: .milliseconds(150)) // wait for typing to pause
                 hits = await store.engineRef.search(query, meal: meal)
             }
+            .onAppear { if startIDs.isEmpty { startIDs = Set(store.items(day).map(\.id)) } }
+            .sensoryFeedback(.success, trigger: added.count)
+        }
+    }
+
+    struct Prefill: Identifiable { let name: String; var id: String { name } }
+
+    // MARK: Tabs
+
+    @ViewBuilder private var allTab: some View {
+        if DescribeMealSheet.available {
+            SwiftUI.Section {
+                Button { describing = true } label: {
+                    Label { Text("Describe what you ate").font(.brand(.body, .semibold)) } icon: { Image(systemName: "sparkles").foregroundStyle(Brand.amber) }
+                }
+                .tint(.primary)
+                .listRowBackground(Brand.card)
+            }
+        }
+        rows(recents, header: "Recent", empty: ("Nothing logged yet", "Search for a food to start."))
+    }
+
+    @ViewBuilder private var mineTab: some View {
+        group("mine", "My foods", "carrot.fill", Brand.green, count: mine.count) {
+            ForEach(mine) { row($0) }
+            Button { creating = "" } label: { Label("New food", systemImage: "plus") }.tint(Brand.green)
+        }
+        group("recipes", "Recipes", "frying.pan.fill", Brand.protein, count: recipes.count) {
+            ForEach(recipes) { row($0) }
+            if recipes.isEmpty { Text("Make recipes in Foods › Recipes.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+        }
+        group("meals", "Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
+            ForEach(meals) { m in
+                HStack(spacing: 12) {
+                    FoodIcon(kind: "dish")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(m.name).lineLimit(1)
+                        Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                    }
+                    Spacer()
+                    Text(Fmt.kcal(m.kcal)).font(.brand(.body, .semibold)).monospacedDigit()
+                    addButton { logSavedMeal(m) }
+                }
+            }
+            if meals.isEmpty { Text("Save a meal from the Diary (a meal's ⋯ menu › Save as meal).").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+        }
+    }
+
+    @ViewBuilder private var searchResults: some View {
+        if !store.foodsReady {
+            SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
+        }
+        rows(hits, empty: nil)
+        if store.foodsReady && hits.isEmpty {
+            SwiftUI.Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No matches for “\(query)”").font(.brand(.headline))
+                    Text("Make it one of your foods, or scan its barcode.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.vertical, 4)
+                Button { creating = query } label: { Label("Create “\(query)”", systemImage: "plus.circle.fill") }.tint(Brand.green)
+                Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }.tint(Brand.green)
+                Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }.tint(Brand.green)
+            }
+            .listRowBackground(Brand.card)
+        }
+    }
+
+    // MARK: Rows
+
+    @ViewBuilder private func rows(_ list: [FoodHit], header: LocalizedStringKey? = nil, empty: (LocalizedStringKey, LocalizedStringKey)?) -> some View {
+        if list.isEmpty {
+            if let empty {
+                SwiftUI.Section {
+                    VStack(alignment: .leading, spacing: 4) { Text(empty.0).font(.brand(.headline)); Text(empty.1).font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+                        .padding(.vertical, 6)
+                }
+                .listRowBackground(Brand.card)
+            }
+        } else if let header {
+            Section { ForEach(list) { row($0) } } header: { Text(header) }
+        } else {
+            Section { ForEach(list) { row($0) } }
         }
     }
 
     @ViewBuilder private func row(_ h: FoodHit) -> some View {
-        if h.quick == true {
-            Button { relogQuick(h) } label: { FoodHitRow(hit: h) }.tint(.primary)
-        } else {
-            NavigationLink(value: h.id) { FoodHitRow(hit: h) }
+        let picked = selected[h.id] != nil
+        HStack(spacing: 12) {
+            if selecting {
+                Image(systemName: picked ? "checkmark.circle.fill" : "circle").font(.title3)
+                    .foregroundStyle(picked ? Brand.green : Brand.ink2)
+            }
+            Button {
+                if selecting { toggle(h) } else if h.quick == true { relogQuick(h) } else { path.append(h.id) }
+            } label: { FoodHitRow(hit: h) }
+            .buttonStyle(.plain)
+            if !selecting { addButton { oneTap(h) } }
         }
-    }
-    private func empty(_ t: LocalizedStringKey, _ s: LocalizedStringKey) -> some View {
-        VStack(alignment: .leading, spacing: 4) { Text(t).font(.brand(.headline)); Text(s).foregroundStyle(.secondary) }.padding(.vertical, 6)
+        .swipeActions(edge: .leading) {
+            if h.quick != true {
+                Button(h.fav == true ? "Remove from favorites" : "Add to favorites", systemImage: h.fav == true ? "star.slash" : "star") { toggleFav(h) }.tint(Brand.amber)
+            }
+        }
     }
 
-    private func loadList() async {
-        let e = store.engineRef
-        switch scope {
-        case .recent: list = await e.list("recents", meal: meal)
-        case .favorites: list = await e.list("favorites", meal: meal)
-        case .mine: list = await e.list("myFoods", meal: meal)
-        case .recipes: list = await e.list("recipes", meal: meal)
-        case .meals: meals = await e.savedMeals()
+    private func addButton(_ action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
+                .frame(width: 34, height: 34).background(Brand.greenSoft, in: Circle())
         }
+        .buttonStyle(.plain)
+        .accessibilityLabel(Text("Add"))
+    }
+
+    /// A collapsible group in My foods (remembered between visits).
+    @ViewBuilder private func group<C: View>(_ key: String, _ title: LocalizedStringKey, _ icon: String, _ color: Color, count: Int, @ViewBuilder content: () -> C) -> some View {
+        let open = !closedGroups.split(separator: ",").contains(Substring(key))
+        Section {
+            if open { content() }
+        } header: {
+            Button {
+                var set = Set(closedGroups.split(separator: ",").map(String.init))
+                if open { set.insert(key) } else { set.remove(key) }
+                withAnimation(.snappy) { closedGroups = set.sorted().joined(separator: ",") }
+            } label: {
+                HStack(spacing: 10) {
+                    Image(systemName: icon).font(.subheadline).foregroundStyle(color)
+                    Text(title)
+                    Text("\(count)").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
+                    Spacer()
+                    Image(systemName: "chevron.down").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
+                        .rotationEffect(.degrees(open ? 0 : -90))
+                }
+                .contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+        }
+    }
+
+    // MARK: Toolbar and tray
+
+    @ToolbarContentBuilder private var toolbar: some ToolbarContent {
+        ToolbarItem(placement: .cancellationAction) {
+            Button(added.isEmpty ? "Cancel" : "Done", role: added.isEmpty ? .cancel : nil) { dismiss() }
+        }
+        ToolbarItem(placement: .principal) {
+            Menu {
+                Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
+            } label: {
+                VStack(spacing: 0) {
+                    HStack(spacing: 4) { Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold)); Image(systemName: "chevron.down").font(.brand(.caption, .bold)) }
+                    if let left = kcalLeft {
+                        Text(left >= 0 ? "\(Fmt.kcal(left)) kcal left" : "\(Fmt.kcal(-left)) kcal over").font(.brand(.caption)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over)
+                            .contentTransition(.numericText()).monospacedDigit()
+                    }
+                }
+            }
+            .tint(.primary)
+        }
+        ToolbarItemGroup(placement: .primaryAction) {
+            Button(selecting ? "Done selecting" : "Select", systemImage: selecting ? "checkmark.circle.fill" : "checkmark.circle") {
+                withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } }
+            }
+            Menu {
+                Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
+                Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
+                Button("New food", systemImage: "carrot") { creating = "" }
+                if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "sparkles") { describing = true } }
+            } label: { Image(systemName: "plus.viewfinder") }
+            .accessibilityLabel(Text("More ways to add"))
+        }
+    }
+
+    private var kcalLeft: Double? {
+        guard let p = store.plans[day] ?? store.plan(day) else { return nil }
+        return p.kcal - store.totals(day).kcal
+    }
+
+    @ViewBuilder private var tray: some View {
+        if selecting && !selected.isEmpty {
+            let k = selected.values.reduce(0) { $0 + ($1.kcal ?? 0) }
+            HStack {
+                VStack(alignment: .leading, spacing: 1) {
+                    Text("\(selected.count) selected").font(.brand(.subheadline, .semibold))
+                    Text("\(Fmt.kcal(k)) kcal").font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit()
+                }
+                Spacer()
+                Button("Add \(selected.count)") { addSelected() }.buttonStyle(.glassProminent).fontWeight(.semibold)
+            }
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .glassEffect(.regular, in: .capsule)
+            .padding(.horizontal, 16).padding(.bottom, 6)
+        } else if !added.isEmpty {
+            let k = added.reduce(0) { $0 + $1.kcal }
+            HStack(spacing: 12) {
+                Image(systemName: "checkmark.circle.fill").foregroundStyle(Brand.green).font(.title3)
+                VStack(alignment: .leading, spacing: 1) {
+                    Text(added.count == 1 ? String(localized: "1 food added") : String(localized: "\(added.count) foods added")).font(.brand(.subheadline, .semibold))
+                    Text(added.suffix(3).map(\.displayName).joined(separator: ", ")).font(.brand(.caption)).foregroundStyle(Brand.ink2).lineLimit(1)
+                }
+                Spacer()
+                Text("\(Fmt.kcal(k)) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().contentTransition(.numericText())
+                Button("Undo") { withAnimation { store.undo() } }.font(.brand(.subheadline, .semibold)).disabled(store.undoLabel == nil)
+            }
+            .padding(.horizontal, 18).padding(.vertical, 10)
+            .glassEffect(.regular, in: .capsule)
+            .padding(.horizontal, 16).padding(.bottom, 6)
+            .transition(.move(edge: .bottom).combined(with: .opacity))
+        }
+    }
+
+    // MARK: Actions
+
+    private func loadLists() async {
+        let e = store.engineRef
+        recents = await e.list("recents", meal: meal)
+        favorites = await e.list("favorites", meal: meal)
+        mine = await e.list("myFoods", meal: meal)
+        recipes = await e.list("recipes", meal: meal)
+        meals = await e.savedMeals()
+    }
+    private func toggle(_ h: FoodHit) {
+        if selected[h.id] != nil { selected[h.id] = nil } else { selected[h.id] = h }
+    }
+    /// Your usual amount, added without opening the food.
+    private func oneTap(_ h: FoodHit) {
+        if h.quick == true { relogQuick(h); return }
+        Task {
+            guard let item = await store.engineRef.item(h.id, qty: h.q ?? 1, unit: h.u ?? "g", meal: meal) else { path.append(h.id); return }
+            withAnimation { store.add([item], to: day, label: String(localized: "Added \(h.name)")) }
+        }
+    }
+    private func addSelected() {
+        let list = Array(selected.values)
+        Task {
+            var items: [[String: JSONValue]] = []
+            for h in list {
+                if h.quick == true { items.append(quickRaw(h)) }
+                else if let it = await store.engineRef.item(h.id, qty: h.q ?? 1, unit: h.u ?? "g", meal: meal) { items.append(it) }
+            }
+            withAnimation { store.add(items, to: day) }
+            selected = [:]; selecting = false
+        }
+    }
+    private func toggleFav(_ h: FoodHit) {
+        Task { if let favs = await store.engineRef.toggleFavorite(h.id) { store.setRoot("favs", favs) } }
     }
     private func logSavedMeal(_ m: SavedMeal) {
         Task {
             let items = await store.engineRef.logMeal(m.id, meal: meal)
-            store.add(items, to: day, label: String(localized: "Added \(m.name)"))
-            dismiss()
+            withAnimation { store.add(items, to: day, label: String(localized: "Added \(m.name)")) }
         }
     }
+    private func quickRaw(_ h: FoodHit) -> [String: JSONValue] {
+        ["name": .string(h.name), "kcal": .number(h.kcal ?? 0), "protein": .number(h.protein ?? 0), "carbs": .number(h.carbs ?? 0), "fat": .number(h.fat ?? 0), "meal": .string(meal)]
+    }
     private func relogQuick(_ h: FoodHit) {
-        let raw: [String: JSONValue] = ["name": .string(h.name), "kcal": .number(h.kcal ?? 0), "protein": .number(h.protein ?? 0), "carbs": .number(h.carbs ?? 0), "fat": .number(h.fat ?? 0), "meal": .string(meal)]
-        store.add([raw], to: day, label: String(localized: "Added \(h.name)"))
-        dismiss()
+        withAnimation { store.add([quickRaw(h)], to: day, label: String(localized: "Added \(h.name)")) }
     }
     /// A scanned barcode: your foods and the built-in packaged list first (works offline), then Open Food Facts.
     private func lookUp(_ code: String) async {
@@ -138,20 +354,61 @@ struct AddFoodSheet: View {
     }
 }
 
+/// A food in a list: its icon, name, your usual amount, calories and how they split into protein, carbs and fat.
 struct FoodHitRow: View {
     let hit: FoodHit
     var body: some View {
-        HStack(spacing: 10) {
-            VStack(alignment: .leading, spacing: 2) {
+        HStack(spacing: 12) {
+            FoodIcon(kind: hit.quick == true ? "quick" : hit.kind ?? "food")
+            VStack(alignment: .leading, spacing: 3) {
                 HStack(spacing: 5) {
-                    Text(hit.name).lineLimit(2)
-                    if hit.fav == true { Image(systemName: "star.fill").font(.brand(.caption2)).foregroundStyle(Brand.amber) }
+                    Text(hit.name).lineLimit(2).font(.brand(.body))
+                    if hit.fav == true { Image(systemName: "star.fill").font(.caption2).foregroundStyle(Brand.amber) }
                 }
-                if let s = hit.via ?? hit.sub { Text(s).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }
-                else if hit.quick == true, let k = hit.kcal { Text("Quick add · \(Fmt.kcal(k)) kcal").font(.brand(.subheadline)).foregroundStyle(.secondary) }
+                HStack(spacing: 6) {
+                    if let badge { Text(badge).font(.brand(.caption2, .semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(Brand.card2, in: Capsule()).foregroundStyle(Brand.ink2) }
+                    Text(detail).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
+                }
             }
-            Spacer(minLength: 0)
+            Spacer(minLength: 6)
+            if let k = hit.kcal {
+                VStack(alignment: .trailing, spacing: 5) {
+                    Text(Fmt.kcal(k)).font(.brand(.body, .semibold)).monospacedDigit()
+                    MacroSplit(p: hit.protein ?? 0, c: hit.carbs ?? 0, f: hit.fat ?? 0).frame(width: 40, height: 4)
+                }
+            }
         }
         .contentShape(.rect)
     }
+    private var badge: LocalizedStringKey? {
+        if hit.quick == true { return "Quick add" }
+        if hit.recipe == true { return "Recipe" }
+        if hit.custom == true { return "Mine" }
+        if hit.off == true { return "Barcode" }
+        if hit.est == true { return "Estimate" }
+        return nil
+    }
+    private var detail: String {
+        if hit.quick == true { return String(localized: "kcal and macros") }
+        var s = hit.amt ?? hit.sub ?? ""
+        if hit.usual == true { s += " · " + String(localized: "your usual") }
+        return s
+    }
+}
+
+/// A food's kind as a small emoji tile (egg, grain, fruit…), so lists read at a glance.
+struct FoodIcon: View {
+    let kind: String
+    var size: CGFloat = 38
+    var body: some View {
+        Text(Self.emoji[kind] ?? "🍽️").font(.system(size: size * 0.5))
+            .frame(width: size, height: size)
+            .background(Brand.card2, in: .rect(cornerRadius: size * 0.3))
+            .accessibilityHidden(true)
+    }
+    static let emoji: [String: String] = [
+        "drink": "☕️", "egg": "🥚", "soup": "🍲", "dish": "🍛", "fish": "🐟", "poultry": "🍗", "meat": "🥩", "dairy": "🥛",
+        "sweet": "🍫", "snack": "🥨", "oil": "🫒", "nut": "🥜", "legume": "🫘", "grain": "🍞", "fruit": "🍎", "veg": "🥦",
+        "spice": "🧂", "recipe": "🍳", "mine": "🥣", "pack": "📦", "rest": "🍽️", "food": "🍽️", "quick": "⚡️"
+    ]
 }

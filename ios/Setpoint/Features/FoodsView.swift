@@ -112,6 +112,7 @@ struct CustomFoodSheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let food: [String: JSONValue]?
+    var prefill: String = ""
     @State private var name = ""
     @State private var unit = ""
     @State private var grams = ""
@@ -149,7 +150,7 @@ struct CustomFoodSheet: View {
                 ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
             }
             .onAppear {
-                guard let x = food else { return }
+                guard let x = food else { if name.isEmpty { name = prefill }; return }
                 name = x["name"]?.string ?? ""; unit = x["unit"]?.string ?? ""
                 grams = x["g"]?.number.map { $0.formatted(.number.grouping(.never)) } ?? ""
                 kcal = x["kcal"]?.number.map { String(Int($0)) } ?? ""

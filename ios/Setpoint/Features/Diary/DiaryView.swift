@@ -9,6 +9,7 @@ struct DiaryView: View {
     @State private var copying: [FoodItem]?
     @State private var adding: AddJob?
     @State private var score: DayScore?
+    @State private var kinds: [String: String] = [:]
     @State private var showScore = false
     @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
@@ -54,7 +55,7 @@ struct DiaryView: View {
                     }
                 }
                 ForEach(store.meals) { meal in
-                    MealSection(meal: meal, day: day, copying: $copying) { adding = AddJob(meal: meal.key) }
+                    MealSection(meal: meal, day: day, copying: $copying, kinds: kinds) { adding = AddJob(meal: meal.key) }
                 }
             }
             .listSectionSpacing(14)
@@ -87,7 +88,7 @@ struct DiaryView: View {
                 if r == .addFood { day = Day.today; adding = AddJob(meal: mealNow); store.request = nil }
             }
             .task { if store.request == .addFood { adding = AddJob(meal: mealNow); store.request = nil } }
-            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day) }
+            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day); kinds = await store.engineRef.itemKinds(day) }
             .sheet(isPresented: $showScore) { if let sc = score { DayScoreSheet(score: sc) } }
             .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
         }

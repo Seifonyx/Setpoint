@@ -413,6 +413,13 @@ final class Store {
             }
         }
     }
+    /// The same food again in another meal on the same day.
+    func copyToMeal(_ item: FoodItem, meal: String, on day: String) {
+        var r = item.raw
+        for k in ["id", "t", "u", "plan"] { r.removeValue(forKey: k) }
+        r["meal"] = .string(meal)
+        add([r], to: day, label: String(localized: "Copied \(item.displayName)"))
+    }
     func copy(_ items: [FoodItem], to day: String) {
         let copies = items.filter { !$0.isDailyTotal }.map { f -> FoodItem in var c = f.copy(); stamp(&c); return c }
         guard !copies.isEmpty else { return }
