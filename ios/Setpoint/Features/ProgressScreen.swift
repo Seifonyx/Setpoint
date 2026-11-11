@@ -82,6 +82,9 @@ struct ProgressScreen: View {
                 weekRow(w)
             }
         }
+        if (data?.points.count ?? 0) >= 5 {
+            Section { NavigationLink { InsightsView() } label: { Label("Weight factors", systemImage: "sparkles") } }
+        }
         if (data?.points.count ?? 0) >= 2 || !(store.root["phases"]?.array ?? []).isEmpty { PhasesSection() }
         if let d = data, !d.points.isEmpty {
             Section {

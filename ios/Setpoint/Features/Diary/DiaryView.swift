@@ -8,6 +8,8 @@ struct DiaryView: View {
     @State private var pickDay = false
     @State private var copying: [FoodItem]?
     @State private var adding: AddJob?
+    @State private var score: DayScore?
+    @State private var showScore = false
     @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
 
@@ -32,6 +34,18 @@ struct DiaryView: View {
                     SummaryCard(totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                         .contentShape(.rect)
                         .simultaneousGesture(DragGesture(minimumDistance: 24).onEnded(swiped)) // swipe the card to change day
+                    if let sc = score {
+                        Button { showScore = true } label: {
+                            LabeledContent {
+                                Text("\(sc.score)/100").monospacedDigit().foregroundStyle(.secondary)
+                            } label: {
+                                Label { Text("Day score") } icon: {
+                                    Text(sc.grade).font(.headline.weight(.bold)).foregroundStyle(gradeColor(sc.grade))
+                                }
+                            }
+                        }
+                        .tint(.primary)
+                    }
                 }
                 Section {
                     HStack(spacing: 12) {
@@ -91,10 +105,13 @@ struct DiaryView: View {
                 if r == .addFood { day = Day.today; adding = AddJob(meal: mealNow); store.request = nil }
             }
             .task { if store.request == .addFood { adding = AddJob(meal: mealNow); store.request = nil } }
-            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day) }
+            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day) }
+            .sheet(isPresented: $showScore) { if let sc = score { DayScoreSheet(score: sc) } }
             .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
         }
     }
+
+    private func gradeColor(_ g: String) -> Color { g == "A" ? .green : g == "B" ? .blue : g == "C" ? .orange : .red }
 
     /// The day as plain text, for Messages, Notes or a coach.
     private var shareText: String {

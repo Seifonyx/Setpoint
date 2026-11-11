@@ -8,8 +8,9 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Weight and water on the day, undo banner
 - ✅ Food details: amount, time, meal, note, delete
 - ✅ Share a day as text
-- ⬜ Day score, day menu extras (log day as total, planned days)
-- ⬜ Repeats (foods that log themselves every day)
+- ✅ Day score
+- ✅ Repeating foods are added to today (set them up in the web app for now)
+- ⬜ Making repeats on the iPhone, log a day as a total
 
 ## Adding food
 - ✅ Search (the web app's own search), recents, favorites, my foods, meals, recipes
@@ -34,7 +35,7 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Body fat estimate from measurements (and use it in your plan)
 - ⬜ Photo sync between devices
 - ✅ Week review, achievements, streak (You)
-- ⬜ Insights (heaviest weekday, trend lines)
+- ✅ Weight factors (salt, carbs, fiber, big days, training vs next-morning weight)
 
 ## Foods
 - ✅ My foods and recipes (make, edit, delete), saved meals (delete), favorites (remove)

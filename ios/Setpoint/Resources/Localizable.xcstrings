@@ -1021,6 +1021,16 @@
         }
       }
     },
+    "Closer to your calories and macros scores higher. It's a guide, not a grade on you.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل ما تقرب من سعراتك والماكروز التقييم بيعلى. ده دليل، مش حكم عليك."
+          }
+        }
+      }
+    },
     "Closest to target": {
       "localizations": {
         "ar": {
@@ -1297,6 +1307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        }
+      }
+    },
+    "Day score": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقييم اليوم"
           }
         }
       }
@@ -2841,6 +2861,16 @@
         }
       }
     },
+    "Needs 14 days with food logged and a weigh-in the next morning.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محتاج 14 يوم فيهم أكل متسجل ووزن الصبح اللي بعده."
+          }
+        }
+      }
+    },
     "New food": {
       "localizations": {
         "ar": {
@@ -2877,6 +2907,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم التالي"
+          }
+        }
+      }
+    },
+    "Next-morning weight: your highest third of days vs your lowest.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزن الصبح اللي بعده: أعلى تلت من الأيام مقابل أقل تلت."
           }
         }
       }
@@ -4637,6 +4677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوزن اتحذف"
+          }
+        }
+      }
+    },
+    "Weight factors": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عوامل الوزن"
           }
         }
       }

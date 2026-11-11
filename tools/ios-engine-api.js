@@ -152,6 +152,22 @@
     },
     cities: function () { return J(RAM_CITIES.map(function (c) { return { name: c[0], lat: c[1], lon: c[2], fa: c[3] }; })); },
 
+    // Weight factors: what moves your next-morning weight (salt, carbs, fiber, big days, training), from your own log.
+    insights: function () {
+      var r = weightInsights();
+      return J({ n: r.n, items: r.items.map(function (x) { return { t: L(x.t), d: x.d, s: L(x.s), note: L(x.note) }; }) });
+    },
+
+    // Foods set to repeat (state.repeats) are added to today, as the web app does on every open. Returns how many.
+    applyRepeats: function () { return applyRepeats(); },
+    // How well a day matched its targets: 0–100 and a grade, with the parts.
+    dayScore: function (d) {
+      var tt = dayTotals(d), plan = dayPlan(d); if (!plan) return 'null';
+      if (d > todayISO() || (d === todayISO() && tt.kcal < plan.target * 0.7)) return 'null';
+      var sc = dayScore(d); if (!sc) return 'null';
+      return J({ score: sc.score, grade: sc.grade, parts: sc.parts.map(function (x) { return { label: L(x.label), pts: x.pts, max: x.max, note: x.note }; }) });
+    },
+
     // ---- Progress ----
     // Every weigh-in with its trend, the weeks (average, days weighed, calories), and which way counts as progress.
     progress: function () {

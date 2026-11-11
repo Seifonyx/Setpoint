@@ -86,3 +86,70 @@ struct AchievementsView: View {
         .navigationTitle("Achievements")
     }
 }
+
+/// Weight factors: what tends to move your next-morning weight, from your own log (the web app's weightInsights).
+struct InsightsView: View {
+    @Environment(Store.self) private var store
+    @State private var data: Insights?
+
+    var body: some View {
+        List {
+            if let d = data {
+                if d.n < 14 {
+                    Section { Text("Needs 14 days with food logged and a weigh-in the next morning.").foregroundStyle(.secondary) }
+                } else {
+                    Section {
+                        ForEach(d.items.indices, id: \.self) { i in
+                            let x = d.items[i]
+                            VStack(alignment: .leading, spacing: 4) {
+                                HStack {
+                                    Text(x.t).font(.headline)
+                                    Spacer()
+                                    Text((x.d > 0 ? "+" : x.d < 0 ? "−" : "") + Fmt.weight(abs(x.d), unit: store.unit) + " " + store.unit)
+                                        .monospacedDigit().foregroundStyle(abs(x.d) >= 0.15 ? (x.d > 0 ? Color.orange : Color.green) : Color.secondary)
+                                }
+                                Text(x.s).font(.subheadline).foregroundStyle(.secondary)
+                                Text(x.note).font(.subheadline)
+                            }
+                            .padding(.vertical, 2)
+                        }
+                    } footer: { Text("Next-morning weight: your highest third of days vs your lowest.") }
+                }
+            } else { ProgressView() }
+        }
+        .navigationTitle("Weight factors")
+        .task(id: "\(store.version)|\(store.foodsReady)") { data = await store.engineRef.insights() }
+    }
+}
+
+/// How the day score is made up (calories, protein, fiber, carbs and fat).
+struct DayScoreSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let score: DayScore
+    var body: some View {
+        NavigationStack {
+            List {
+                Section {
+                    HStack(alignment: .firstTextBaseline) {
+                        Text(score.grade).font(.system(size: 48, weight: .bold, design: .rounded))
+                        Text("\(score.score)/100").font(.title3).foregroundStyle(.secondary).monospacedDigit()
+                    }
+                }
+                Section {
+                    ForEach(score.parts.indices, id: \.self) { i in
+                        let p = score.parts[i]
+                        VStack(alignment: .leading, spacing: 6) {
+                            HStack { Text(p.label); Spacer(); Text("\(Int(p.pts.rounded()))/\(Int(p.max))").monospacedDigit().foregroundStyle(.secondary) }
+                            ProgressView(value: p.pts, total: p.max)
+                            Text(p.note).font(.caption).foregroundStyle(.secondary)
+                        }
+                    }
+                } footer: { Text("Closer to your calories and macros scores higher. It's a guide, not a grade on you.") }
+            }
+            .navigationTitle("Day score")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+        }
+        .presentationDetents([.medium, .large])
+    }
+}

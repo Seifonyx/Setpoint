@@ -163,6 +163,8 @@ final class Store {
         await tick()
     }
     func tick() async {
+        // Foods set to repeat every day are added to today (as the web app does on every open).
+        if await engine.applyRepeats() > 0 { await adoptEngineState() }
         guard let t = await engine.tick(), let label = Self.tuneLabel(t) else { await refreshOverview(); return }
         await adoptEngineState()
         undoSnap = nil

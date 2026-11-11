@@ -90,6 +90,9 @@ actor Engine {
     func achievements() -> Achievements? { decode(Achievements.self, "achievements", [false]) }
     func prayer(lat: Double, lon: Double, fa: Double) -> PrayerTimes? { decode(PrayerTimes.self, "prayer", [lat, lon, fa]) }
     func cities() -> [City] { decode([City].self, "cities") ?? [] }
+    func insights() -> Insights? { decode(Insights.self, "insights") }
+    func applyRepeats() -> Int { Int(sp.invokeMethod("applyRepeats", withArguments: [])?.toInt32() ?? 0) }
+    func dayScore(_ day: String) -> DayScore? { decode(DayScore.self, "dayScore", [day]) }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
@@ -243,3 +246,14 @@ struct PrayerTimes: Decodable, Sendable {
     let fajr: Double; let maghrib: Double; let fajrNext: Double
 }
 struct City: Decodable, Sendable, Hashable { let name: String; let lat: Double; let lon: Double; let fa: Double }
+
+struct Insights: Decodable, Sendable {
+    struct Item: Decodable, Sendable { let t: String; let d: Double; let s: String; let note: String }
+    let n: Int
+    let items: [Item]
+}
+
+struct DayScore: Decodable, Sendable {
+    struct Part: Decodable, Sendable { let label: String; let pts: Double; let max: Double; let note: String }
+    let score: Int; let grade: String; let parts: [Part]
+}
