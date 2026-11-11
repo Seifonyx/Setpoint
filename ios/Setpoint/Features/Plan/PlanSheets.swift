@@ -42,6 +42,15 @@ struct AboutYouSheet: View {
         .presentationDetents([.medium, .large])
     }
 
+    private func numberRow(_ title: LocalizedStringKey, _ text: Binding<String>, _ unit: LocalizedStringKey, _ keyboard: UIKeyboardType) -> some View {
+        LabeledContent(title) {
+            HStack(spacing: 4) {
+                TextField("", text: text).keyboardType(keyboard).multilineTextAlignment(.trailing).frame(maxWidth: 90)
+                Text(unit).foregroundStyle(.secondary)
+            }
+        }
+    }
+
     private func save() {
         guard let a = num(age), let h = num(height) else { return }
         let year = Calendar.current.component(.year, from: Date()) - Int(a)
@@ -194,11 +203,11 @@ struct BreakdownView: View {
                     }
                     LabeledContent("Your daily target") { Text("\(Fmt.kcal((p.target / 10).rounded() * 10)) kcal").bold() }
                 }
-                Section("Macros") {
+                Section {
                     LabeledContent("Protein") { Text("\(Fmt.grams(p.protein)) g · \(perKg(p.proteinPerKg)) g/kg") }
                     LabeledContent("Fat") { Text("\(Fmt.grams(p.fat)) g · \(perKg(p.fatPerKg)) g/kg") }
                     LabeledContent("Carbs") { Text("\(Fmt.grams(p.carbs)) g") }
-                } footer: {
+                } header: { Text("Macros") } footer: {
                     let ref = Int(p.ref.rounded())
                     switch p.refWhy {
                     case "your lean mass": Text("Protein and fat are set per kg of your lean mass (\(ref) kg). Carbs are the rest.")
