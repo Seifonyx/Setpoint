@@ -371,6 +371,16 @@
         }
       }
     },
+    "%lld%% of your calories for the day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld%% من سعرات يومك"
+          }
+        }
+      }
+    },
     "%lld/%lld on target": {
       "localizations": {
         "ar": {
@@ -1311,6 +1321,36 @@
         }
       }
     },
+    "Clear": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح"
+          }
+        }
+      }
+    },
+    "Clear %@?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمسح %@؟"
+          }
+        }
+      }
+    },
+    "Clear this meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح الوجبة دي"
+          }
+        }
+      }
+    },
     "Closer to your calories and macros scores higher. It's a guide, not a grade on you.": {
       "localizations": {
         "ar": {
@@ -1827,6 +1867,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اوصف اللي كلته"
+          }
+        }
+      }
+    },
+    "Details": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التفاصيل"
           }
         }
       }
@@ -3481,6 +3531,16 @@
         }
       }
     },
+    "More nutrients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عناصر غذائية أكتر"
+          }
+        }
+      }
+    },
     "More on training days, less on rest days. Same weekly total.": {
       "localizations": {
         "ar": {
@@ -3861,6 +3921,16 @@
         }
       }
     },
+    "Of your day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من يومك"
+          }
+        }
+      }
+    },
     "Off": {
       "localizations": {
         "ar": {
@@ -4067,6 +4137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متخططة"
+          }
+        }
+      }
+    },
+    "Portion": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحصة"
           }
         }
       }
@@ -4931,6 +5011,26 @@
         }
       }
     },
+    "Split into %lld foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتفصلت لـ %lld أكلات"
+          }
+        }
+      }
+    },
+    "Split into separate foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افصلها لأكلات منفصلة"
+          }
+        }
+      }
+    },
     "Sports": {
       "localizations": {
         "ar": {
@@ -5097,6 +5197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "السحور"
+          }
+        }
+      }
+    },
+    "Swipe a food to take it out of this meal. ⋯ › Split turns it into separate foods.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسحب أكلة عشان تشيلها من الوجبة. ⋯ › فصل بيحولها لأكلات منفصلة."
           }
         }
       }
@@ -6427,6 +6537,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "من %@"
+          }
+        }
+      }
+    },
+    "of %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من %@ %@"
+          }
+        }
+      }
+    },
+    "of the logged amount": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من الكمية المسجلة"
+          }
+        }
+      }
+    },
+    "of this meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من الوجبة دي"
           }
         }
       }

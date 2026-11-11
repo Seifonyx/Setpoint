@@ -17,6 +17,7 @@ struct MealSection: View {
         withAnimation(.snappy) { closedMeals = set.sorted().joined(separator: ",") }
     }
     @State private var naming = false
+    @State private var summary = false
     @State private var mealName = ""
 
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
@@ -60,9 +61,13 @@ struct MealSection: View {
             }
         } header: {
             HStack(alignment: .firstTextBaseline) {
+                // the name opens the meal; the chevron folds it
+                Button { summary = true } label: {
+                    Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
                 Button(action: toggleOpen) {
                     HStack(spacing: 6) {
-                        Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).textCase(nil)
                         Image(systemName: "chevron.down").font(.brand(.caption, .bold)).foregroundStyle(Brand.ink2)
                             .rotationEffect(.degrees(expanded ? 0 : -90))
                         if !expanded && !foods.isEmpty {
@@ -70,7 +75,7 @@ struct MealSection: View {
                                 .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
                         }
                     }
-                    .contentShape(.rect)
+                    .frame(minWidth: 28, minHeight: 28).contentShape(.rect)
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
@@ -94,7 +99,11 @@ struct MealSection: View {
                 .accessibilityLabel(Text("\(meal.name) options"))
             }
         }
-        .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day) }
+        .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
+        .sheet(isPresented: $summary) {
+            MealSummarySheet(meal: meal, day: day, kinds: kinds, addFood: { summary = false; addFood() },
+                             saveAs: { summary = false; mealName = meal.name; naming = true }, copy: { summary = false; copying = foods })
+        }
         .alert("Save as meal", isPresented: $naming) {
             TextField("Name", text: $mealName)
             Button("Cancel", role: .cancel) {}
@@ -103,7 +112,11 @@ struct MealSection: View {
                 if !n.isEmpty { store.saveMeal(n, items: foods) }
             }
         } message: { Text("Log these foods again in one tap from Add food › Meals.") }
-        .task { if UserDefaults.standard.string(forKey: "sheet") == "food", meal.key == store.meals.first?.key { open = foods.first } } // build-server screenshots
+        .task {
+            let f = UserDefaults.standard.string(forKey: "sheet")
+            guard meal.key == store.meals.first?.key else { return }
+            if f == "food" { open = foods.first } else if f == "meal" { summary = true }
+        } // build-server screenshots
     }
 }
 
@@ -163,5 +176,77 @@ struct MacroSplit: View {
                 }
             }
         }
+    }
+}
+
+/// A meal at a glance: its totals and macro split, its share of your day, and every food with its portion.
+struct MealSummarySheet: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let meal: MealCategory
+    let day: String
+    let kinds: [String: String]
+    let addFood: () -> Void
+    let saveAs: () -> Void
+    let copy: () -> Void
+    @State private var open: FoodItem?
+    @State private var confirmClear = false
+
+    private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
+
+    var body: some View {
+        let t = foods.filter { !$0.isPlanned || day > Day.today }.reduce(into: Totals()) { t, f in t.kcal += f.kcal; t.protein += f.protein; t.carbs += f.carbs; t.fat += f.fat }
+        NavigationStack {
+            List {
+                Section {
+                    HStack(alignment: .center) {
+                        VStack(alignment: .leading, spacing: 0) {
+                            Text(Fmt.kcal(t.kcal)).font(Brand.display(46, .heavy)).monospacedDigit().contentTransition(.numericText())
+                            Text("kcal").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                        }
+                        Spacer()
+                        MacroDonut(p: t.protein, c: t.carbs, f: t.fat).frame(width: 74, height: 74)
+                    }
+                    HStack(spacing: 10) {
+                        cell("Protein", t.protein, Brand.protein); cell("Carbs", t.carbs, Brand.carbs); cell("Fat", t.fat, Brand.fat)
+                    }
+                    if let plan = store.plans[day] ?? store.plan(day), plan.kcal > 0 {
+                        Text("\(Int((t.kcal / plan.kcal * 100).rounded()))% of your calories for the day").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                    }
+                }
+                Section {
+                    ForEach(foods) { f in
+                        Button { open = f } label: { FoodRow(food: f, day: day, kind: kinds[f.id]) }.buttonStyle(.plain)
+                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } } }
+                    }
+                    Button(action: addFood) { Label("Add food", systemImage: "plus.circle.fill").font(.brand(.body, .semibold)).foregroundStyle(Brand.green) }
+                } header: { Text("\(foods.count) foods") }
+                if !foods.isEmpty {
+                    Section {
+                        Button("Save as meal", systemImage: "square.and.arrow.down.on.square", action: saveAs)
+                        Button("Copy to another day", systemImage: "doc.on.doc", action: copy)
+                        Button("Clear this meal", systemImage: "trash", role: .destructive) { confirmClear = true }
+                    }
+                    .tint(Brand.ink)
+                }
+            }
+            .listSectionSpacing(14)
+            .brandList()
+            .navigationTitle(meal.name)
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
+            .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
+            .confirmationDialog("Clear \(meal.name)?", isPresented: $confirmClear, titleVisibility: .visible) {
+                Button("Clear", role: .destructive) { store.removeMeal(meal.key, on: day); dismiss() }
+            }
+        }
+        .presentationDetents([.large])
+    }
+    private func cell(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
+            Text("\(Fmt.grams(g)) g").font(Brand.display(19, .bold)).monospacedDigit()
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 }
