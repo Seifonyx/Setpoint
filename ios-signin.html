@@ -1,0 +1,46 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex">
+<title>Setpoint sign-in</title>
+<style>
+  :root { color-scheme: light dark; }
+  body { margin: 0; min-height: 90vh; display: grid; place-items: center; font: 17px -apple-system, system-ui, sans-serif; background: #fff; color: #333; text-align: center; padding: 0 24px; }
+  @media (prefers-color-scheme: dark) { body { background: #000; color: #ddd; } }
+</style>
+</head>
+<body>
+<p id="m">Signing in with Google…</p>
+<script type="module">
+  // Google sign-in for the Setpoint iPhone app: it opens this page, and gets back a sign-in token through setpoint://.
+  // The page signs itself out afterwards, so nothing stays signed in in Safari.
+  import * as f from './firebase.js';
+  const app = f.initializeApp({ apiKey: 'AIzaSyAYXoxTt8Bhb2A-oCrQzpKO71GL1D892_o', authDomain: 'setpoint-tracker.web.app', projectId: 'setpoint-tracker', appId: '1:813690688684:web:579ef69ad6c51f92093b09' });
+  const auth = f.initializeAuth(app, { persistence: [f.indexedDBLocalPersistence, f.browserLocalPersistence], popupRedirectResolver: f.browserPopupRedirectResolver });
+  const back = function (q) { location.href = 'setpoint://signed-in#' + q; };
+  const msg = document.getElementById('m');
+  try {
+    const r = await f.getRedirectResult(auth);
+    if (r && r.user) {
+      const t = r.user.refreshToken;
+      await f.signOut(auth);
+      sessionStorage.removeItem('sp-ios');
+      msg.textContent = 'Signed in. Going back to Setpoint…';
+      back('token=' + encodeURIComponent(t));
+    } else if (sessionStorage.getItem('sp-ios')) {
+      sessionStorage.removeItem('sp-ios');
+      back('error=cancelled');
+    } else {
+      sessionStorage.setItem('sp-ios', '1');
+      await f.signInWithRedirect(auth, new f.GoogleAuthProvider());
+    }
+  } catch (e) {
+    sessionStorage.removeItem('sp-ios');
+    msg.textContent = "Couldn't sign in. Close this and try again.";
+    back('error=' + encodeURIComponent((e && e.code) || 'failed'));
+  }
+</script>
+</body>
+</html>

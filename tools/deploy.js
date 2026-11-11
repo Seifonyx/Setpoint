@@ -2,7 +2,7 @@ const fs = require('fs'), zlib = require('zlib'), crypto = require('crypto'), pa
 const { execFileSync } = require('child_process');
 const SITE = 'setpoint-tracker', API = 'https://firebasehosting.googleapis.com/v1beta1';
 const DIR = require('path').join(__dirname, '..'), TMP = require('os').tmpdir() + '/setpoint-gz';
-const FILES = ['index.html', 'manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.png', 'firebase.js', 'app.css', 'app.js', 'foods.json', 'foods-core.json', 'barcode.js', 'ar.js', 'robots.txt', 'sitemap.xml', 'og-image.png'].concat(fs.readdirSync(DIR + '/fonts').map(function (f) { return 'fonts/' + f; })).concat(fs.readdirSync(DIR + '/splash').map(function (f) { return 'splash/' + f; })).concat(fs.readdirSync(DIR).filter(function (f) { return /^((privacy|terms|cookies|refunds|legal)|google[0-9a-f]+)\.html$/.test(f); }));
+const FILES = ['index.html', 'manifest.json', 'sw.js', 'icon-192.png', 'icon-512.png', 'apple-touch-icon.png', 'favicon.png', 'firebase.js', 'app.css', 'app.js', 'foods.json', 'foods-core.json', 'barcode.js', 'ar.js', 'robots.txt', 'sitemap.xml', 'og-image.png'].concat(fs.readdirSync(DIR + '/fonts').map(function (f) { return 'fonts/' + f; })).concat(fs.readdirSync(DIR + '/splash').map(function (f) { return 'splash/' + f; })).concat(fs.readdirSync(DIR).filter(function (f) { return /^((privacy|terms|cookies|refunds|legal|ios-signin)|google[0-9a-f]+)\.html$/.test(f); }));
 fs.mkdirSync(TMP, { recursive: true });
 function call(url, method, body) {
   const args = ['-sS', '-X', method, url, '-H', 'Content-Type: application/json', '-w', '\n%{http_code}'];

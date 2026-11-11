@@ -112,6 +112,44 @@
       });
     },
     paceValue: function (dir, i) { return paceValue(dir, i); },
+    // ---- Account sync (the web app's own merge; the iPhone app does the network part) ----
+    // Two saves joined: weigh-ins and foods by date/id, the most recently changed copy winning, deletions kept.
+    syncMerge: function (localTxt, cloudTxt, cloudNewer) { return J(migrate(mergeData(migrate(JSON.parse(localTxt)), migrate(JSON.parse(cloudTxt)), !!cloudNewer))); },
+    syncHasData: function (txt) { return hasData(migrate(JSON.parse(txt))); },
+    // The cloud save put back together: the main document's data plus each food month (and food an old version left in the main document).
+    syncJoin: function (mainTxt, monthsTxt) {
+      var data = JSON.parse(mainTxt || '{}'), food = {};
+      JSON.parse(monthsTxt || '[]').forEach(function (t) { var part = {}; try { part = JSON.parse(t || '{}'); } catch (e) {} Object.keys(part).forEach(function (k) { food[k] = part[k]; }); });
+      Object.keys(data.food || {}).forEach(function (dt) { var byId = {}; (food[dt] || []).concat(data.food[dt] || []).forEach(function (f) { if (f && f.id) byId[f.id] = f; }); food[dt] = Object.keys(byId).map(function (k) { return byId[k]; }); });
+      data.food = food;
+      return J(data);
+    },
+
+    // ---- Progress ----
+    // Every weigh-in with its trend, the weeks (average, days weighed, calories), and which way counts as progress.
+    progress: function () {
+      var all = withTrend(), weeks = [];
+      if (all.length) {
+        var first = weekStart(dayNum(all[0].date));
+        for (var st = weekStart(dayNum(all[all.length - 1].date)); st >= first; st -= 7) {
+          var w = weekStats(st); if (!w) continue;
+          var pv = weekStats(st - 7);
+          weeks.push({ start: isoFromDay(st), label: L(weekRange(st)), n: w.n, avg: w.avg, lo: w.lo, hi: w.hi, kcal: w.kcal, delta: pv ? w.avg - pv.avg : null });
+        }
+      }
+      return J({ points: all.map(function (e) { return { date: e.date, kg: e.kg, trend: e.trend == null ? e.kg : e.trend, x: e.x, note: e.note || '', kcal: dayKcal(e.date) }; }),
+        weeks: weeks, down: goodWhenDown(), goalKg: state.settings.goalKg || null, now: currentKg(), unit: unit() });
+    },
+    // Food eaten each day for the last n days, with that day's targets (days with nothing logged are left out).
+    nutrition: function (n) {
+      var out = [], today = dayNum(todayISO());
+      for (var d = today - n + 1; d <= today; d++) {
+        var iso = isoFromDay(d), t = dayTotals(iso); if (!t || !t.kcal) continue;
+        var p = dayPlan(iso);
+        out.push({ date: iso, kcal: t.kcal, protein: t.protein, carbs: t.carbs, fat: t.fat, target: p ? roundKcal(p.target) : null, proteinTarget: p ? p.protein : null });
+      }
+      return J(out);
+    },
     // Run on every open, like the web app: a due weekly adjustment, reaching your goal, and today's targets remembered.
     tick: function () { var t = autoTune(); recordGoal(); return J(t || null); },
     undoTune: function () { var t = state.ui.tune; if (t) undoTune(t); return 'ok'; }

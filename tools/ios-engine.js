@@ -48,6 +48,7 @@ ${read('10-food-database.js')}
   var AR = (function () { var window = {}; ${fs.readFileSync(path.join(ROOT, 'ar.js'), 'utf8')}
   return window.SETPOINT_AR; })();
 ${extract(read('06-appearance.js'), ['trWord', 'tr'])}
+${extract(read('25-account-sync.js'), ['mergeData', 'hasData'])}
 ${fs.readFileSync(path.join(__dirname, 'ios-engine-api.js'), 'utf8')}
 })();
 `;

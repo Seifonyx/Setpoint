@@ -7,13 +7,20 @@ enum AppTab: String, Hashable, CaseIterable {
 }
 
 struct RootView: View {
-    @State private var store = Store()
+    @State private var store: Store
+    @State private var account: Account
     // Screenshots on the build server open a given tab with the launch argument `-tab progress`.
     @State private var tab: AppTab = AppTab(rawValue: UserDefaults.standard.string(forKey: "tab") ?? "") ?? .diary
     @State private var importing = false
     @State private var pending: Data?
     @State private var message: String?
     @Environment(\.scenePhase) private var phase
+
+    init() {
+        let s = Store()
+        _store = State(initialValue: s)
+        _account = State(initialValue: Account(store: s))
+    }
 
     var body: some View {
         TabView(selection: $tab) {
@@ -33,8 +40,9 @@ struct RootView: View {
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         .environment(store)
-        .task { await store.start() }
-        .onChange(of: phase) { _, p in if p == .active { Task { await store.tick() } } }
+        .environment(account)
+        .task { await store.start(); await account.pull(fresh: false) }
+        .onChange(of: phase) { _, p in if p == .active { Task { await store.tick(); await account.syncNow() } } }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
             guard case .success(let url) = result else { return }
             let ok = url.startAccessingSecurityScopedResource()

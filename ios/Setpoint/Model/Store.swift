@@ -54,10 +54,22 @@ final class Store {
         water = (o["water"]?.object ?? [:]).compactMapValues { $0.number }
     }
 
-    private func save() {
+    private func save(quiet: Bool = false) {
+        if signedIn { stampItems(quiet: quiet || lastSig == nil) }
         root["food"] = .object(food.filter { !$0.value.isEmpty }.mapValues { .array($0.map { .object($0.raw) }) })
         root["entries"] = .array(entries.map { .object($0.raw) })
         root["water"] = .object(water.mapValues { .number($0) })
+        if signedIn {
+            // Something you changed (not just sync bookkeeping): mark it for upload, like the web app.
+            let sig = Account.sig(cloudDataText())
+            if let last = lastSig, sig != last, !quiet {
+                var sy = root["sync"]?.object ?? [:]
+                sy["updatedAt"] = .number(Self.nowMs); sy["dirty"] = .bool(true)
+                root["sync"] = .object(sy)
+                onDirty?()
+            }
+            lastSig = sig
+        }
         version += 1
         guard let data = try? JSONEncoder().encode(JSONValue.object(root)) else { return }
         if !demo { try? data.write(to: Self.fileURL, options: .atomic) }
@@ -67,6 +79,70 @@ final class Store {
             await MainActor.run { self.plans = [:] }
             await self.refreshOverview()
         }
+    }
+
+    // MARK: Account sync (see Account.swift)
+
+    /// Signed in to a Setpoint account: changes are stamped and uploaded.
+    var signedIn = false { didSet { if signedIn != oldValue { lastSig = nil; itemSigs = nil } } }
+    @ObservationIgnored var onDirty: (() -> Void)?
+    @ObservationIgnored private var lastSig: String?
+    @ObservationIgnored private var itemSigs: [String: String]?
+    static var nowMs: Double { (Date().timeIntervalSince1970 * 1000).rounded() }
+    static let cloudKeys = ["v", "entries", "phases", "food", "measures", "myFoods", "favs", "offFoods", "recipes", "meals", "repeats", "water",
+                            "portions", "del", "goals", "dayType", "dayMode", "fast", "settings", "profile", "guest"]
+    var schema: Int { Int(root["v"]?.number ?? 1) }
+
+    private static func text(_ v: JSONValue) -> String {
+        let e = JSONEncoder(); e.outputFormatting = [.sortedKeys, .withoutEscapingSlashes]
+        return (try? e.encode(v)).map { String(decoding: $0, as: UTF8.self) } ?? "{}"
+    }
+    /// Notes which foods are new or changed (a fresh "u" time) and which were deleted (kept in "del"), so two phones merge right.
+    private func stampItems(quiet: Bool) {
+        var del = root["del"]?.object ?? [:]
+        let now = Self.nowMs, prev = itemSigs
+        var next: [String: String] = [:], seen = Set<String>()
+        for (day, list) in food {
+            for i in list.indices {
+                var raw = list[i].raw; raw.removeValue(forKey: "u")
+                let id = list[i].id, sig = day + "|" + Self.text(.object(raw))
+                next[id] = sig; seen.insert(id)
+                if let prev, !quiet, prev[id] != sig { food[day]?[i].raw["u"] = .number(now) }
+                del.removeValue(forKey: id) // it's back (undo)
+            }
+        }
+        if let prev, !quiet { for id in prev.keys where !seen.contains(id) { del[id] = .number(now) } }
+        itemSigs = next
+        root["del"] = .object(del)
+    }
+    func syncValue(_ key: String) -> JSONValue? { root["sync"]?.object?[key] }
+    /// Sync bookkeeping (who's signed in, when it last synced): saved quietly, so it never counts as a change to upload.
+    func setSync(_ change: (inout [String: JSONValue]) -> Void) {
+        var sy = root["sync"]?.object ?? [:]; change(&sy); root["sync"] = .object(sy); save(quiet: true)
+    }
+    /// The parts of your data that sync (not this phone's screen state), as the web app's cloudData().
+    func cloudDataText() -> String {
+        Self.text(.object(root.filter { Self.cloudKeys.contains($0.key) }))
+    }
+    /// What gets uploaded: the main document (everything but food) and the food log by month.
+    func cloudParts() -> (main: String, months: [String: String]) {
+        var main = root.filter { Self.cloudKeys.contains($0.key) }
+        main.removeValue(forKey: "food")
+        var months: [String: [String: JSONValue]] = [:]
+        for (day, list) in food where !list.isEmpty { months[String(day.prefix(7)), default: [:]][day] = .array(list.map { .object($0.raw) }) }
+        return (Self.text(.object(main)), months.mapValues { Self.text(.object($0)) })
+    }
+    func monthSigs() -> [String: String] { cloudParts().months.mapValues(Account.sig) }
+    /// Takes the cloud's copy (or the merge of both) for everything that syncs; keeps this phone's screen state.
+    func applyCloud(_ text: String, updatedAt: Double) {
+        guard let d = text.data(using: .utf8), let v = try? JSONDecoder().decode(JSONValue.self, from: d), let o = v.object else { return }
+        var next = root
+        for k in Self.cloudKeys { if let x = o[k] { next[k] = x } }
+        var sy = next["sync"]?.object ?? [:]; sy["updatedAt"] = .number(updatedAt); next["sync"] = .object(sy)
+        guard let enc = try? JSONEncoder().encode(JSONValue.object(next)) else { return }
+        load(enc)
+        clearUndo()
+        save(quiet: true)
     }
 
     // MARK: The engine

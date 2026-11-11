@@ -78,6 +78,15 @@ actor Engine {
     func dayPlan(_ day: String) -> DayPlan? { decode(DayPlan.self, "dayPlan", [day]) }
     func trend(_ day: String) -> Double? { decode(Double.self, "trend", [day]) }
     func overview() -> Overview? { decode(Overview.self, "overview") }
+    // Account sync: the web app's merge.
+    func syncJoin(_ main: String, months: [String]) -> String {
+        let m = (try? JSONSerialization.data(withJSONObject: months)).map { String(decoding: $0, as: UTF8.self) } ?? "[]"
+        return call("syncJoin", [main, m]) ?? "{}"
+    }
+    func syncHasData(_ text: String) -> Bool { sp.invokeMethod("syncHasData", withArguments: [text])?.toBool() ?? false }
+    func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
+    func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
+    func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
     /// What the web app does on every open: a due weekly adjustment, reaching your goal, today's targets remembered.
     func tick() -> JSONValue? { decode(JSONValue.self, "tick") }
@@ -182,4 +191,20 @@ struct Overview: Decodable, Sendable {
     let energy: Energy?
     let measured: Measured
     let plan: Plan?
+}
+
+struct ProgressData: Decodable, Sendable {
+    struct Point: Decodable, Sendable, Identifiable { let date: String; let kg: Double; let trend: Double; let x: Bool; let note: String; let kcal: Double?; var id: String { date } }
+    struct Week: Decodable, Sendable, Identifiable { let start: String; let label: String; let n: Int; let avg: Double; let lo: Double; let hi: Double; let kcal: Double?; let delta: Double?; var id: String { start } }
+    let points: [Point]
+    let weeks: [Week]
+    let down: Bool?
+    let goalKg: Double?
+    let now: Double?
+    let unit: String
+}
+
+struct NutritionDay: Decodable, Sendable, Identifiable {
+    let date: String; let kcal: Double; let protein: Double; let carbs: Double; let fat: Double; let target: Double?; let proteinTarget: Double?
+    var id: String { date }
 }

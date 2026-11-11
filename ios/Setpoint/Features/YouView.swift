@@ -1,9 +1,10 @@
 import SwiftUI
 import UIKit
 
-/// You: data in and out for now (settings and plan arrive in later phases).
+/// You: account and sync, your plan, and data in and out.
 struct YouView: View {
     @Environment(Store.self) private var store
+    @Environment(Account.self) private var account
     @Binding var importing: Bool
     @State private var shareURL: URL?
     @State private var error: String?
@@ -12,6 +13,13 @@ struct YouView: View {
     var body: some View {
         NavigationStack {
             List {
+                Section {
+                    NavigationLink { AccountView() } label: {
+                        LabeledContent {
+                            if account.busy { ProgressView() } else if let s = account.session { Text(s.email).lineLimit(1) } else { Text("Not signed in") }
+                        } label: { Label("Account", systemImage: account.signedIn ? "checkmark.icloud" : "person.crop.circle.badge.plus") }
+                    }
+                }
                 Section {
                     NavigationLink { PlanView() } label: {
                         LabeledContent {

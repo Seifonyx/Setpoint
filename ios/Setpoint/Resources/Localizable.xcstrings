@@ -51,6 +51,26 @@
         }
       }
     },
+    "%@ kcal over target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة فوق الهدف"
+          }
+        }
+      }
+    },
+    "%@ kcal under target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة تحت الهدف"
+          }
+        }
+      }
+    },
     "%@ options": {
       "localizations": {
         "ar": {
@@ -77,6 +97,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ خطوة · من غير تمارين"
+          }
+        }
+      }
+    },
+    "%lld days weighed": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أيام وزن"
+          }
+        }
+      }
+    },
+    "%lld days weighed · %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أيام وزن · %@ سعرة"
           }
         }
       }
@@ -241,6 +281,16 @@
         }
       }
     },
+    "Account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحساب"
+          }
+        }
+      }
+    },
     "Activity": {
       "localizations": {
         "ar": {
@@ -371,6 +421,16 @@
         }
       }
     },
+    "All": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكل"
+          }
+        }
+      }
+    },
     "Allow camera access in Settings, or type the number.": {
       "localizations": {
         "ar": {
@@ -407,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أكلت في اليوم"
+          }
+        }
+      }
+    },
+    "Average a day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتوسط في اليوم"
           }
         }
       }
@@ -611,6 +681,16 @@
         }
       }
     },
+    "Continue with Google": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المتابعة بجوجل"
+          }
+        }
+      }
+    },
     "Copied %lld foods": {
       "localizations": {
         "ar": {
@@ -701,6 +781,56 @@
         }
       }
     },
+    "Couldn't reach the server. Are you offline?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نوصل للسيرفر. إنت مش متصل؟"
+          }
+        }
+      }
+    },
+    "Couldn't sign in with Google. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش ندخل بجوجل. جرب تاني."
+          }
+        }
+      }
+    },
+    "Couldn't sign in. Try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش ندخل. جرب تاني."
+          }
+        }
+      }
+    },
+    "Couldn't sync. Are you offline?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نزامن. إنت مش متصل؟"
+          }
+        }
+      }
+    },
+    "Create account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إنشاء حساب"
+          }
+        }
+      }
+    },
     "Custom foods": {
       "localizations": {
         "ar": {
@@ -761,6 +891,16 @@
         }
       }
     },
+    "Days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام"
+          }
+        }
+      }
+    },
     "Days logged": {
       "localizations": {
         "ar": {
@@ -777,6 +917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أيام الوزن"
+          }
+        }
+      }
+    },
+    "Days you ate at least 90% of your protein target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأيام اللي كلت فيها ٩٠٪ على الأقل من هدف البروتين."
           }
         }
       }
@@ -891,12 +1041,42 @@
         }
       }
     },
+    "Email": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيميل"
+          }
+        }
+      }
+    },
     "Energy expenditure": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "صرف الطاقة"
+          }
+        }
+      }
+    },
+    "Enter your email": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب إيميلك"
+          }
+        }
+      }
+    },
+    "Enter your password": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتب كلمة السر"
           }
         }
       }
@@ -1061,6 +1241,16 @@
         }
       }
     },
+    "Forgot password?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسيت كلمة السر؟"
+          }
+        }
+      }
+    },
     "Formula": {
       "localizations": {
         "ar": {
@@ -1187,6 +1377,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "الطول"
+          }
+        }
+      }
+    },
+    "Highest": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأعلى"
+          }
+        }
+      }
+    },
+    "History": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السجل"
+          }
+        }
+      }
+    },
+    "I agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوافق على [الشروط](https://setpoint-tracker.web.app/terms.html) و[سياسة الخصوصية](https://setpoint-tracker.web.app/privacy.html)"
           }
         }
       }
@@ -1401,12 +1621,32 @@
         }
       }
     },
+    "Log some food to see your averages here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل شوية أكل عشان تشوف متوسطاتك هنا."
+          }
+        }
+      }
+    },
     "Log weight": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "سجّل الوزن"
+          }
+        }
+      }
+    },
+    "Log your weight a few times to see your trend.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل وزنك كام مرة عشان تشوف الاتجاه."
           }
         }
       }
@@ -1437,6 +1677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خسارة"
+          }
+        }
+      }
+    },
+    "Lowest": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقل"
           }
         }
       }
@@ -1631,6 +1881,26 @@
         }
       }
     },
+    "Not signed in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مش مسجل دخول"
+          }
+        }
+      }
+    },
+    "Not synced yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لسه متزامنش"
+          }
+        }
+      }
+    },
     "Note": {
       "localizations": {
         "ar": {
@@ -1647,6 +1917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش حاجة متسجلة"
+          }
+        }
+      }
+    },
+    "Nutrition": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التغذية"
           }
         }
       }
@@ -1681,6 +1961,16 @@
         }
       }
     },
+    "On target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضمن الهدف"
+          }
+        }
+      }
+    },
     "Other": {
       "localizations": {
         "ar": {
@@ -1711,12 +2001,32 @@
         }
       }
     },
+    "Password": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كلمة السر"
+          }
+        }
+      }
+    },
     "Per 100 g": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "لكل 100 جم"
+          }
+        }
+      }
+    },
+    "Per week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في الأسبوع"
           }
         }
       }
@@ -1797,6 +2107,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "البروتين والدهون محسوبين لكل كيلو من وزنك (%lld كجم). الكربوهيدرات هي الباقي."
+          }
+        }
+      }
+    },
+    "Protein target hit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصلت لهدف البروتين"
           }
         }
       }
@@ -1941,6 +2261,16 @@
         }
       }
     },
+    "Reset link sent to %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رابط إعادة التعيين اتبعت لـ %@"
+          }
+        }
+      }
+    },
     "Resting": {
       "localizations": {
         "ar": {
@@ -2011,6 +2341,26 @@
         }
       }
     },
+    "Send verification email": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابعت إيميل التأكيد"
+          }
+        }
+      }
+    },
+    "Sent. Check your inbox.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتبعت. شوف الإيميل."
+          }
+        }
+      }
+    },
     "Set": {
       "localizations": {
         "ar": {
@@ -2051,6 +2401,86 @@
         }
       }
     },
+    "Show all %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرض الكل (%lld)"
+          }
+        }
+      }
+    },
+    "Show all %lld weeks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعرض الـ %lld أسبوع"
+          }
+        }
+      }
+    },
+    "Sign in": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Sign out": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الخروج"
+          }
+        }
+      }
+    },
+    "Sign out?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الخروج؟"
+          }
+        }
+      }
+    },
+    "Sign-in was cancelled.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول اتلغى."
+          }
+        }
+      }
+    },
+    "Signed in as": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مسجل دخول باسم"
+          }
+        }
+      }
+    },
+    "Signing in merges what's on this iPhone with your account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تسجيل الدخول بيدمج اللي على الآيفون ده مع حسابك."
+          }
+        }
+      }
+    },
     "Snacks": {
       "localizations": {
         "ar": {
@@ -2081,6 +2511,16 @@
         }
       }
     },
+    "Steady": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثابت"
+          }
+        }
+      }
+    },
     "Steps": {
       "localizations": {
         "ar": {
@@ -2097,6 +2537,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "سكريات"
+          }
+        }
+      }
+    },
+    "Sync now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زامن الآن"
+          }
+        }
+      }
+    },
+    "Synced %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتزامن %@"
+          }
+        }
+      }
+    },
+    "Syncing…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بتتزامن…"
           }
         }
       }
@@ -2131,6 +2601,16 @@
         }
       }
     },
+    "That email doesn't look right.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيميل ده شكله مش مظبوط."
+          }
+        }
+      }
+    },
     "That isn't a Setpoint backup.": {
       "localizations": {
         "ar": {
@@ -2141,12 +2621,52 @@
         }
       }
     },
+    "There's already an account with this email. Sign in instead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيه حساب بالإيميل ده بالفعل. سجّل دخول بدل كده."
+          }
+        }
+      }
+    },
+    "This account has been turned off.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحساب ده متوقف."
+          }
+        }
+      }
+    },
     "This product isn't in Open Food Facts yet. Use Quick add with the numbers from the label.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "المنتج ده لسه مش في Open Food Facts. استخدم الإضافة السريعة بالأرقام اللي على العلبة."
+          }
+        }
+      }
+    },
+    "This week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الأسبوع"
+          }
+        }
+      }
+    },
+    "Tick the box above to continue": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علّم على المربع اللي فوق عشان تكمل"
           }
         }
       }
@@ -2167,6 +2687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وقت الأكل"
+          }
+        }
+      }
+    },
+    "To delete your account, sign in on the web app and use Settings › Account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عشان تمسح حسابك، ادخل على تطبيق الويب واستخدم الإعدادات › الحساب."
           }
         }
       }
@@ -2211,12 +2741,32 @@
         }
       }
     },
+    "Too many tries. Wait a bit.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "محاولات كتير. استنى شوية."
+          }
+        }
+      }
+    },
     "Training": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "التمرين"
+          }
+        }
+      }
+    },
+    "Trend weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن الاتجاهي"
           }
         }
       }
@@ -2271,6 +2821,36 @@
         }
       }
     },
+    "Use at least 6 characters for the password.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم ٦ حروف على الأقل في كلمة السر."
+          }
+        }
+      }
+    },
+    "Use the same account as the web app": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم نفس حساب تطبيق الويب"
+          }
+        }
+      }
+    },
+    "Verify your email so you can always get back into your account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكّد إيميلك عشان تقدر ترجع لحسابك دايمًا."
+          }
+        }
+      }
+    },
     "Version": {
       "localizations": {
         "ar": {
@@ -2307,6 +2887,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المية اتضافت"
+          }
+        }
+      }
+    },
+    "Weeks": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسابيع"
           }
         }
       }
@@ -2401,6 +2991,16 @@
         }
       }
     },
+    "Wrong email or password.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإيميل أو كلمة السر غلط."
+          }
+        }
+      }
+    },
     "Yesterday": {
       "localizations": {
         "ar": {
@@ -2417,6 +3017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أنت"
+          }
+        }
+      }
+    },
+    "You were signed out. Sign in again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتسجل خروجك. ادخل تاني."
           }
         }
       }
@@ -2441,6 +3051,16 @@
         }
       }
     },
+    "Your data stays on this iPhone. Sign in again to sync.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بياناتك بتفضل على الآيفون ده. سجّل دخول تاني عشان تزامن."
+          }
+        }
+      }
+    },
     "Your foods": {
       "localizations": {
         "ar": {
@@ -2457,6 +3077,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أهدافك هتظهر هنا لما تتحدد في تطبيق الويب."
+          }
+        }
+      }
+    },
+    "Your weigh-ins, food log, foods, recipes, plan and settings sync with the web app. Photos stay on this iPhone for now.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوزانك وسجل الأكل والأكلات والوصفات والخطة والإعدادات بتتزامن مع تطبيق الويب. الصور بتفضل على الآيفون ده دلوقتي."
           }
         }
       }
