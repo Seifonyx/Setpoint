@@ -31,7 +31,9 @@ struct ProgressScreen: View {
                 switch page {
                 case "weight": weightPage
                 case "nutrition": nutritionPage
-                default: BodySection()
+                default:
+                    BodySection()
+                    PhotosSection()
                 }
             }
             .navigationTitle("Progress")

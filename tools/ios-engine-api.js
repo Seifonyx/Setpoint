@@ -133,6 +133,25 @@
         low: oftenLow().low.map(function (x) { return { key: x.key, label: L(NUT[x.key].label), pct: x.pct }; }) });
     },
 
+    // Last week (or any week starting on a given day): averages, days on target, weight change.
+    weekReview: function (startIso) {
+      var st = startIso ? dayNum(startIso) : weekStart(dayNum(todayISO())) - 7, r = weekReview(st);
+      if (!r) return 'null';
+      return J({ start: isoFromDay(r.start), label: L(weekRange(r.start)), n: r.n, kcal: r.kcal, protein: r.protein, tg: r.tg, pg: r.pg, best: r.best ? r.best.iso : null, onTarget: r.onTarget, train: r.train, trainOn: trainOn(), dw: r.dw == null ? null : r.dw });
+    },
+    // Achievements and your logging streak.
+    achievements: function (hasPhotos) {
+      photos = hasPhotos ? [1] : [];
+      return J({ streak: foodStreak(), list: achievements().map(function (a) { return { t: L(a.t), got: !!a.got, p: a.p || '' }; }) });
+    },
+
+    // Ramadan: Fajr and Maghrib today and tomorrow for a place, and the city list.
+    prayer: function (lat, lon, fa) {
+      var now = new Date(), t = prayerTimes(now, lat, lon, fa), tm = prayerTimes(new Date(now.getTime() + 864e5), lat, lon, fa);
+      return J({ fajr: t.fajr.getTime(), maghrib: t.maghrib.getTime(), fajrNext: tm.fajr.getTime() });
+    },
+    cities: function () { return J(RAM_CITIES.map(function (c) { return { name: c[0], lat: c[1], lon: c[2], fa: c[3] }; })); },
+
     // ---- Progress ----
     // Every weigh-in with its trend, the weeks (average, days weighed, calories), and which way counts as progress.
     progress: function () {

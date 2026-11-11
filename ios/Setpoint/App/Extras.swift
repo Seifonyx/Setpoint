@@ -92,6 +92,7 @@ struct DeviceSettingsView: View {
     @AppStorage(DeviceSettings.foodTime) private var foodTime = 20 * 60 + 30
     @State private var denied = false
     @State private var confirmErase = false
+    @State private var ramadan = false
 
     var body: some View {
         Form {
@@ -109,6 +110,9 @@ struct DeviceSettingsView: View {
                     }
                 }
                 .pickerStyle(.navigationLink)
+                Button { ramadan = true } label: {
+                    LabeledContent("Ramadan mode") { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) }
+                }.tint(.primary)
                 Toggle("Log meals as separate foods", isOn: Binding(get: { store.root["settings"]?.object?["explode"]?.bool ?? false },
                                                                     set: { store.setSetting("explode", .bool($0)) }))
                 Toggle("Track calories", isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
@@ -138,6 +142,7 @@ struct DeviceSettingsView: View {
             } footer: { Text("Choose English or العربية for Setpoint in the Settings app.") }
         }
         .navigationTitle("Settings")
+        .sheet(isPresented: $ramadan) { RamadanSheet() }
         .onChange(of: weigh) { _, on in changed(on) }
         .onChange(of: foodOn) { _, on in changed(on) }
         .onChange(of: weighTime) { Reminders.update() }

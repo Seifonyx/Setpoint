@@ -52,7 +52,7 @@ final class Store {
         return u
     }
     private static var fileURL: URL { folder.appendingPathComponent("setpoint.json") }
-    private static var photosURL: URL { folder.appendingPathComponent("photos.json") }
+    static var photosURL: URL { folder.appendingPathComponent("photos.json") }
 
     private func load(_ data: Data) {
         guard let v = try? JSONDecoder().decode(JSONValue.self, from: data), let o = v.object else { return }
@@ -241,6 +241,7 @@ final class Store {
         for k in ["foodPhotos", "bodyPhotos"] { if let p = o.removeValue(forKey: k) { photos[k] = p } }
         for k in ["app", "exported", "version"] { o.removeValue(forKey: k) }
         if !photos.isEmpty, let pd = try? JSONEncoder().encode(JSONValue.object(photos)) { try? pd.write(to: Self.photosURL, options: .atomic) }
+        if !photos.isEmpty { PhotoLibrary.shared.reload() }
         let enc = try JSONEncoder().encode(JSONValue.object(o))
         load(enc)
         undoSnap = nil; undoLabel = nil
@@ -264,6 +265,7 @@ final class Store {
         load(Data("{}".utf8))
         clearUndo()
         try? FileManager.default.removeItem(at: Self.photosURL)
+        PhotoLibrary.shared.reload()
         save()
     }
 
@@ -291,10 +293,15 @@ final class Store {
             guard let k = v["k"]?.string, let n = v["n"]?.string else { return nil }
             return MealCategory(key: k, name: n)
         }
-        if !custom.isEmpty { return custom }
-        return [MealCategory(key: "breakfast", name: String(localized: "Breakfast")), MealCategory(key: "lunch", name: String(localized: "Lunch")),
+        let base = !custom.isEmpty ? custom : [MealCategory(key: "breakfast", name: String(localized: "Breakfast")), MealCategory(key: "lunch", name: String(localized: "Lunch")),
                 MealCategory(key: "dinner", name: String(localized: "Dinner")), MealCategory(key: "snacks", name: String(localized: "Snacks"))]
+        // Ramadan mode: breakfast becomes Suhoor and dinner becomes Iftar.
+        guard ramadanOn else { return base }
+        return base.map { m in
+            m.key == "breakfast" ? MealCategory(key: m.key, name: String(localized: "Suhoor")) : m.key == "dinner" ? MealCategory(key: m.key, name: String(localized: "Iftar")) : m
+        }
     }
+    var ramadanOn: Bool { settings["ramadan"]?["on"]?.bool == true }
     func mealKey(of item: FoodItem) -> String {
         let keys = meals.map(\.key)
         return keys.contains(item.meal) ? item.meal : (keys.last ?? "snacks")

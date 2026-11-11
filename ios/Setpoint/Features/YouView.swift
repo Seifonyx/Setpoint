@@ -20,6 +20,7 @@ struct YouView: View {
                         } label: { Label("Account", systemImage: account.signedIn ? "checkmark.icloud" : "person.crop.circle.badge.plus") }
                     }
                 }
+                YouHighlights()
                 Section {
                     NavigationLink { PlanView() } label: {
                         LabeledContent {

@@ -49,8 +49,13 @@ ${read('10-food-database.js')}
   return window.SETPOINT_AR; })();
 ${extract(read('06-appearance.js'), ['trWord', 'tr'])}
 ${extract(read('25-account-sync.js'), ['mergeData', 'hasData'])}
-${extract(read('24-sheets.js'), ['cycleWindows', 'inCycleWindow'])}
-${extract(read('14-nutrients.js'), ['NUTS', 'NUT', 'NUT_GROUPS', 'MICROS', 'DRI', 'DRI_TEEN', 'UL', 'nutRec', 'nutTargets', 'itemNutrients', 'dayNutrients', 'oftenLow', 'oftenLowNow'])}
+${extract(read('24-sheets.js'), ['cycleWindows', 'inCycleWindow', 'prayerTimes', 'RAM_CITIES'])}
+${extract(read('14-nutrients.js'), ['NUTS', 'NUT', 'NUT_GROUPS', 'MICROS', 'DRI', 'DRI_TEEN', 'UL', 'nutRec', 'nutTargets', 'itemNutrients', 'dayNutrients', 'dayNeedsDB', 'microsMet', 'oftenLow', 'oftenLowNow'])}
+${extract(read('15-water.js'), ['DRINK_RE', 'waterGoal', 'waterOn', 'isDrink', 'drinksList', 'drinksWater', 'waterTotal'])}
+${extract(read('09-diary.js'), ['foodStreak'])}
+${extract(read('17-smart-touches.js'), ['weekReview', 'weekReviewNow'])}
+  var photos = []; // progress photos stay in the app's own file
+${extract(read('18-body-measurements-photos.js'), ['achievements', 'achievementsNow'])}
 ${fs.readFileSync(path.join(__dirname, 'ios-engine-api.js'), 'utf8')}
 })();
 `;

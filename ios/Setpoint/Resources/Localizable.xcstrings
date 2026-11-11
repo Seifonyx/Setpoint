@@ -81,6 +81,26 @@
         }
       }
     },
+    "%@ left · drink %@ more before Fajr": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاضل %@ · اشرب %@ كمان قبل الفجر"
+          }
+        }
+      }
+    },
+    "%@ left · water goal done": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فاضل %@ · خلصت هدف المية"
+          }
+        }
+      }
+    },
     "%@ options": {
       "localizations": {
         "ar": {
@@ -211,6 +231,16 @@
         }
       }
     },
+    "%lld/%lld on target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld/%lld على الهدف"
+          }
+        }
+      }
+    },
     "+%lld": {
       "localizations": {
         "ar": {
@@ -291,6 +321,16 @@
         }
       }
     },
+    "7-day streak": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سلسلة ٧ أيام"
+          }
+        }
+      }
+    },
     "88.7 kg": {
       "localizations": {
         "ar": {
@@ -347,6 +387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحساب"
+          }
+        }
+      }
+    },
+    "Achievements": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإنجازات"
           }
         }
       }
@@ -447,6 +497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف قياسات"
+          }
+        }
+      }
+    },
+    "Add photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف صور"
           }
         }
       }
@@ -621,6 +681,36 @@
         }
       }
     },
+    "Average calories": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسط السعرات"
+          }
+        }
+      }
+    },
+    "Average protein": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متوسط البروتين"
+          }
+        }
+      }
+    },
+    "Back": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجوع"
+          }
+        }
+      }
+    },
     "Back up": {
       "localizations": {
         "ar": {
@@ -681,6 +771,16 @@
         }
       }
     },
+    "Body fat (estimate)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسبة الدهون (تقدير)"
+          }
+        }
+      }
+    },
     "Body fat (optional)": {
       "localizations": {
         "ar": {
@@ -731,12 +831,32 @@
         }
       }
     },
+    "Breakfast becomes Suhoor, dinner becomes Iftar, and the Diary shows Iftar time and water left before Fajr.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفطار بيبقى سحور والعشا إفطار، واليوميات بتوري ميعاد الإفطار والمية الباقية قبل الفجر."
+          }
+        }
+      }
+    },
     "Bring your diary over": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "انقل يومياتك"
+          }
+        }
+      }
+    },
+    "Calculated times can differ from your local mosque by a few minutes.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المواعيد المحسوبة قد تختلف عن مسجدك ببضع دقائق."
           }
         }
       }
@@ -891,12 +1011,52 @@
         }
       }
     },
+    "City": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المدينة"
+          }
+        }
+      }
+    },
+    "Closest to target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقرب للهدف"
+          }
+        }
+      }
+    },
     "Coming in Phase 4": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "قريبًا في المرحلة 4"
+          }
+        }
+      }
+    },
+    "Compare": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقارنة"
+          }
+        }
+      }
+    },
+    "Compare first and latest": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قارن الأولى بالأخيرة"
           }
         }
       }
@@ -1141,6 +1301,16 @@
         }
       }
     },
+    "Day streak": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام متتالية"
+          }
+        }
+      }
+    },
     "Days": {
       "localizations": {
         "ar": {
@@ -1171,6 +1341,16 @@
         }
       }
     },
+    "Days on target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام على الهدف"
+          }
+        }
+      }
+    },
     "Days you ate at least 90% of your protein target.": {
       "localizations": {
         "ar": {
@@ -1197,6 +1377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تحذف %@؟"
+          }
+        }
+      }
+    },
+    "Delete this photo?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تمسح الصورة دي؟"
           }
         }
       }
@@ -1277,6 +1467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سهل"
+          }
+        }
+      }
+    },
+    "Eating window · Suhoor until %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقت الأكل · السحور لحد %@"
           }
         }
       }
@@ -1511,6 +1711,16 @@
         }
       }
     },
+    "Fajr (Suhoor ends)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفجر (نهاية السحور)"
+          }
+        }
+      }
+    },
     "Fasting": {
       "localizations": {
         "ar": {
@@ -1527,6 +1737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مؤقت الصيام"
+          }
+        }
+      }
+    },
+    "Fasting · Iftar at %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صايم · الإفطار %@"
           }
         }
       }
@@ -1597,6 +1817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "املا واحد على الأقل"
+          }
+        }
+      }
+    },
+    "First food logged": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أول أكلة مسجلة"
           }
         }
       }
@@ -1737,6 +1967,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من سجلك"
+          }
+        }
+      }
+    },
+    "Front": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أمام"
           }
         }
       }
@@ -1921,6 +2161,16 @@
         }
       }
     },
+    "Iftar": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإفطار"
+          }
+        }
+      }
+    },
     "Import a backup made in the web app (Settings › Back up). Backups made here can be restored in the web app too.": {
       "localizations": {
         "ar": {
@@ -2027,6 +2277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اللغة"
+          }
+        }
+      }
+    },
+    "Last week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسبوع الماضي"
           }
         }
       }
@@ -2317,6 +2577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الماكروز"
+          }
+        }
+      }
+    },
+    "Maghrib (Iftar)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المغرب (الإفطار)"
           }
         }
       }
@@ -2811,6 +3081,16 @@
         }
       }
     },
+    "On target means within 10% of that day's calories.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الهدف يعني في حدود ١٠٪ من سعرات اليوم ده."
+          }
+        }
+      }
+    },
     "Opens Setpoint ready to search for a food.": {
       "localizations": {
         "ar": {
@@ -2911,6 +3191,26 @@
         }
       }
     },
+    "Photo": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صورة"
+          }
+        }
+      }
+    },
+    "Photos show changes the scale misses. They stay on this iPhone and go into your backups.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصور بتبيّن تغييرات الميزان مش بيشوفها. بتفضل على الآيفون ده وبتدخل في النسخ الاحتياطية."
+          }
+        }
+      }
+    },
     "Plan": {
       "localizations": {
         "ar": {
@@ -2931,6 +3231,16 @@
         }
       }
     },
+    "Pose": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوضعية"
+          }
+        }
+      }
+    },
     "Previous day": {
       "localizations": {
         "ar": {
@@ -2947,6 +3257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "التقدّم"
+          }
+        }
+      }
+    },
+    "Progress photos": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صور التقدم"
           }
         }
       }
@@ -3037,6 +3357,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "إضافة سريعة · %@ سعرة"
+          }
+        }
+      }
+    },
+    "Ramadan Mubarak": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رمضان كريم"
+          }
+        }
+      }
+    },
+    "Ramadan mode": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وضع رمضان"
+          }
+        }
+      }
+    },
+    "Ramadan settings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إعدادات رمضان"
           }
         }
       }
@@ -3451,6 +3801,16 @@
         }
       }
     },
+    "Side": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جنب"
+          }
+        }
+      }
+    },
     "Sign in": {
       "localizations": {
         "ar": {
@@ -3637,6 +3997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سكريات"
+          }
+        }
+      }
+    },
+    "Suhoor": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السحور"
           }
         }
       }
@@ -3961,6 +4331,26 @@
         }
       }
     },
+    "Turn on": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تشغيل"
+          }
+        }
+      }
+    },
+    "Turn on Ramadan mode: Suhoor and Iftar meals, with fasting times for your city.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شغّل وضع رمضان: وجبات السحور والفطار مع مواعيد الصيام لمدينتك."
+          }
+        }
+      }
+    },
     "Type": {
       "localizations": {
         "ar": {
@@ -3977,6 +4367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اكتب الرقم"
+          }
+        }
+      }
+    },
+    "US Navy method, from your waist, neck%@ and height": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طريقة البحرية الأمريكية، من وسطك ورقبتك%@ وطولك"
           }
         }
       }
@@ -4027,6 +4427,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأيام اللي مش متسجلة بتخبّي اللي كلته، فممكن الرقم يطلع أقل. بيتحسب بوزن أقل لحد ما تسجل أيام أكتر."
+          }
+        }
+      }
+    },
+    "Use %@%% in your plan": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استخدم %@%% في خطتك"
           }
         }
       }
@@ -4187,6 +4597,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوزن"
+          }
+        }
+      }
+    },
+    "Weight (weekly average)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن (متوسط أسبوعي)"
           }
         }
       }
@@ -4381,6 +4801,16 @@
         }
       }
     },
+    "Your streak allows one missed day a week.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السلسلة بتسمح بيوم واحد فايت في الأسبوع."
+          }
+        }
+      }
+    },
     "Your targets appear here once they're set in the web app.": {
       "localizations": {
         "ar": {
@@ -4427,6 +4857,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أوزانك وسجل الأكل والأكلات والوصفات والخطة والإعدادات بتتزامن مع تطبيق الويب. الصور بتفضل على الآيفون ده دلوقتي."
+          }
+        }
+      }
+    },
+    "and hips": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "والأرداف"
           }
         }
       }

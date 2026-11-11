@@ -87,6 +87,21 @@ struct BodySection: View {
 
     private var rows: [[String: JSONValue]] { (store.root["measures"]?.array ?? []).compactMap { $0.object }.sorted { ($0["date"]?.string ?? "") < ($1["date"]?.string ?? "") } }
     private var inches: Bool { store.unit == "lb" }
+    /// US Navy body fat estimate (the web app's navyFat): waist, neck, hips for women, and height, in cm.
+    private func navyFat(_ ms: [[String: JSONValue]]) -> Double? {
+        guard let p = store.overview?.profile, let h = p.heightCm, p.sex == "male" || p.sex == "female" else { return nil }
+        func last(_ k: String) -> Double? { ms.last(where: { $0[k]?.number != nil })?[k]?.number }
+        guard let w = last("waist"), let n = last("neck") else { return nil }
+        let bf: Double
+        if p.sex == "male" {
+            guard w - n > 0 else { return nil }
+            bf = 495 / (1.0324 - 0.19077 * log10(w - n) + 0.15456 * log10(h)) - 450
+        } else {
+            guard let hp = last("hips"), w + hp - n > 0 else { return nil }
+            bf = 495 / (1.29579 - 0.35004 * log10(w + hp - n) + 0.22100 * log10(h)) - 450
+        }
+        return (3...60).contains(bf) ? (bf * 10).rounded() / 10 : nil
+    }
     private func len(_ cm: Double) -> String { (inches ? cm / 2.54 : cm).formatted(.number.precision(.fractionLength(0...1))) }
 
     var body: some View {
@@ -108,6 +123,17 @@ struct BodySection: View {
                         Text(name)
                         Text(Day.date(last.0), format: .dateTime.month(.abbreviated).day())
                     }
+                }
+            }
+            if let bf = navyFat(ms) {
+                LabeledContent {
+                    Text("\(bf.formatted(.number.precision(.fractionLength(1))))%").monospacedDigit().fontWeight(.semibold)
+                } label: {
+                    Text("Body fat (estimate)")
+                    Text("US Navy method, from your waist, neck\(store.overview?.profile.sex == "female" ? " " + String(localized: "and hips") : "") and height")
+                }
+                if store.overview?.profile.bodyFat != bf {
+                    Button("Use \(bf.formatted(.number.precision(.fractionLength(1))))% in your plan") { store.setProfile { $0["bodyFat"] = .number(bf) } }
                 }
             }
             Button("Add measurements", systemImage: "ruler") { adding = true }

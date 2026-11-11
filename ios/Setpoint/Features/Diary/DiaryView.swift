@@ -25,6 +25,9 @@ struct DiaryView: View {
                         }
                     }
                 }
+                if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
+                    Section { RamadanBanner() }
+                }
                 Section {
                     SummaryCard(totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                         .contentShape(.rect)

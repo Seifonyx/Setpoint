@@ -21,16 +21,20 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Target, macros, goal and pace, goal weight, expenditure, adaptive tuning, measured expenditure, activity, about you, breakdown
 - ✅ Custom protein and fat per kg (Target breakdown)
 - ✅ Your week (next 7 days' targets), training days, flexible week, cycle and weight (shaded on the chart)
-- ⬜ Ramadan mode, plan for someone else
-- ⬜ Vitamins and minerals
+- ✅ Ramadan mode (Settings): Suhoor/Iftar, prayer times by city, Diary banner, offer during Ramadan
+- ⬜ Plan for someone else
+- ✅ Vitamins and minerals (Diary), often low
 
 ## Progress
 - ✅ Weight chart with trend and goal, ranges, stats, this week, day/week history, edit weigh-ins
 - ✅ Nutrition averages and daily calories
 - ✅ Phases
 - ✅ Body measurements
-- ⬜ Progress photos (compare, play), body fat estimate
-- ⬜ Insights, week review, achievements
+- ✅ Progress photos (add, view, compare, delete; in backups)
+- ✅ Body fat estimate from measurements (and use it in your plan)
+- ⬜ Photo sync between devices
+- ✅ Week review, achievements, streak (You)
+- ⬜ Insights (heaviest weekday, trend lines)
 
 ## Foods
 - ✅ My foods and recipes (make, edit, delete), saved meals (delete), favorites (remove)
@@ -42,7 +46,8 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Reminders, Face ID lock, haptics (this iPhone only)
 - ✅ Fasting timer
 - ✅ Import web backup, back up, erase data
-- ⬜ Pure black, tab bar position, number pad, log meals as separate foods
+- ✅ Log meals as separate foods
+- (Pure black, tab bar position and number pad are web-only: iOS handles these natively)
 - ⬜ Delete account (use the web app)
 
 ## iPhone only

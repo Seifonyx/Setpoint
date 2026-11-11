@@ -86,6 +86,10 @@ actor Engine {
     func syncHasData(_ text: String) -> Bool { sp.invokeMethod("syncHasData", withArguments: [text])?.toBool() ?? false }
     func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
     func nutrients(_ day: String) -> NutrientData? { decode(NutrientData.self, "nutrients", [day]) }
+    func weekReview(_ start: String = "") -> WeekReview? { decode(WeekReview.self, "weekReview", [start]) }
+    func achievements() -> Achievements? { decode(Achievements.self, "achievements", [false]) }
+    func prayer(lat: Double, lon: Double, fa: Double) -> PrayerTimes? { decode(PrayerTimes.self, "prayer", [lat, lon, fa]) }
+    func cities() -> [City] { decode([City].self, "cities") ?? [] }
     func progress() -> ProgressData? { decode(ProgressData.self, "progress") }
     func nutrition(days: Int) -> [NutritionDay] { decode([NutritionDay].self, "nutrition", [days]) ?? [] }
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
@@ -223,3 +227,19 @@ struct NutrientData: Decodable, Sendable {
     let rows: [Row]
     let low: [Low]
 }
+
+struct WeekReview: Decodable, Sendable {
+    let start: String; let label: String; let n: Int; let kcal: Double; let protein: Double; let tg: Double?; let pg: Double?
+    let best: String?; let onTarget: Int; let train: Int; let trainOn: Bool; let dw: Double?
+}
+
+struct Achievements: Decodable, Sendable {
+    struct Item: Decodable, Sendable { let t: String; let got: Bool; let p: String }
+    let streak: Int
+    let list: [Item]
+}
+
+struct PrayerTimes: Decodable, Sendable {
+    let fajr: Double; let maghrib: Double; let fajrNext: Double
+}
+struct City: Decodable, Sendable, Hashable { let name: String; let lat: Double; let lon: Double; let fa: Double }
