@@ -56,3 +56,5 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Siri and Shortcuts: log water, log weight, add food
 - ✅ Arabic (follows the iPhone's language setting for Setpoint)
 - ⬜ Apple Health, widgets, Live Activity (need a paid Apple developer account; skipped for now)
+
+_Design: warm & editorial, approved 2026-11-11._
