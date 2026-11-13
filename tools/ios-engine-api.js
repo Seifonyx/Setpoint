@@ -152,12 +152,18 @@
     setLang: function (l) { lang = l === 'ar' ? 'ar' : 'en'; return 'ok'; },
     tr: function (s) { return L(s); },
     // A saved meal for the diary: one entry with its foods (or each food on its own with "Log meals as separate foods").
-    logMeal: function (mid, meal) {
+    // A meal goes into the diary as its foods, each on its own (scaled by how many servings you're having).
+    logMeal: function (mid, meal, factor) {
       var mm = state.meals.find(function (m) { return m.id === mid; }); if (!mm) return '[]';
-      var copy = function (it) { var c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan; return c; };
-      if (state.settings.explode) return J(mm.items.map(function (it) { return Object.assign(copy(it), { id: newId(), meal: meal }); }));
-      var t = mm.items.reduce(function (a, x) { return { kcal: a.kcal + x.kcal, protein: a.protein + x.protein, carbs: a.carbs + x.carbs, fat: a.fat + x.fat }; }, { kcal: 0, protein: 0, carbs: 0, fat: 0 });
-      return J([{ id: newId(), name: mm.name, meal: meal, mid: mm.id, mi: mm.items.map(copy), kcal: Math.min(10000, Math.round(t.kcal)), protein: Math.round(t.protein), carbs: Math.round(t.carbs), fat: Math.round(t.fat) }]);
+      var k = factor > 0 ? factor : 1;
+      return J(mm.items.map(function (it) {
+        var c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan;
+        if (k !== 1) {
+          ['kcal', 'protein', 'carbs', 'fat'].forEach(function (x) { if (typeof c[x] === 'number') c[x] = Math.round(c[x] * k); });
+          ['g', 'qty'].forEach(function (x) { if (typeof c[x] === 'number') c[x] = Math.round(c[x] * k * 1000) / 1000; });
+        }
+        return Object.assign(c, { id: newId(), meal: meal });
+      }));
     },
     toggleFav: function (id) { if (isFav(id)) state.favs = state.favs.filter(function (x) { return x !== id; }); else state.favs.unshift(id); return J(state.favs); },
     // Barcodes: your foods and the built-in packaged list first (offline), else the app asks Open Food Facts and hands the answer here.

@@ -250,6 +250,7 @@ struct ChipLayout: Layout {
 
 /// Pick a food to repeat: what you've eaten lately, or search.
 struct RepeatPicker: View {
+    var title: LocalizedStringKey = "Repeat a food"
     let picked: ([String: JSONValue]) -> Void
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -268,7 +269,7 @@ struct RepeatPicker: View {
                 } header: { Text(query.isEmpty ? LocalizedStringKey("Recent") : LocalizedStringKey("Results")) }
             }
             .brandList()
-            .navigationTitle("Repeat a food")
+            .navigationTitle(title)
             .navigationBarTitleDisplayMode(.inline)
             .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search foods")
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }

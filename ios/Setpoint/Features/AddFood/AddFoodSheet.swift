@@ -33,6 +33,7 @@ struct AddFoodSheet: View {
     @AppStorage("searchSort") private var sort = "best"
     @AppStorage("verifiedOnly") private var verifiedOnly = false
     @State private var plateCam = false
+    @State private var logging: SavedMeal?
     @State private var plate: PlateBox?
     @AppStorage("favSort") private var favSort = "recent"
     @AppStorage("favVerified") private var favVerified = false
@@ -97,6 +98,7 @@ struct AddFoodSheet: View {
                 LabelCamera { img in plateCam = false; if let img { plate = PlateBox(image: img) } }
                     .ignoresSafeArea()
             }
+            .sheet(item: $logging) { m in MealLogSheet(mealID: m.id, mealKey: meal, day: day) }
             .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: DescribeMealSheet.available ? { describing = true } : nil) }
             .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
@@ -161,20 +163,27 @@ struct AddFoodSheet: View {
             ForEach(recipes) { row($0) }
             if recipes.isEmpty { Text("Make recipes in Foods › Recipes.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
         }
-        group("meals", "Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
+        group("meals", "Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
             ForEach(sortedMeals) { m in
                 HStack(spacing: 12) {
-                    FoodIcon(kind: "meal")
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(m.name).lineLimit(1)
-                        Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                    // tap a meal to see what's in it and choose servings; + adds it as it is
+                    Button { logging = m } label: {
+                        HStack(spacing: 12) {
+                            FoodIcon(kind: "meal")
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text(m.name).lineLimit(1)
+                                Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                            }
+                            Spacer()
+                        }
+                        .contentShape(.rect)
                     }
-                    Spacer()
+                    .buttonStyle(.plain)
                     Text(Fmt.kcal(m.kcal)).font(.brand(.body, .semibold)).monospacedDigit()
                     addButton { logSavedMeal(m) }
                 }
             }
-            if meals.isEmpty { Text("Save a meal from the Diary (a meal's ⋯ menu › Save as meal).").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+            if meals.isEmpty { Text("Make meals in Foods › Meals, or save one from the Diary (a meal's ⋯ › Save as meal).").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
         }
     }
 

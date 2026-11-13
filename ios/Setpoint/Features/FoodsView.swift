@@ -1,16 +1,18 @@
 import SwiftUI
 
-/// One food category: your own foods, recipes, saved meals or favorites (same data as the web app's My foods page).
+/// One food category: your own foods, recipes, meals or favorites (same data as the web app's My foods page).
 struct FoodLists: View {
     enum Kind: Hashable { case mine, recipes, meals, favorites }
     let kind: Kind
     @Environment(Store.self) private var store
     @State private var editing: EditFood?
     @State private var recipeEdit: EditFood?
+    @State private var mealEdit: MealJob?
+    struct MealJob: Identifiable { let id = UUID(); let meal: [String: JSONValue]? }
     @State private var favorites: [FoodHit] = []
 
     private var title: LocalizedStringKey {
-        switch kind { case .mine: "My foods"; case .recipes: "Recipes"; case .meals: "Saved meals"; case .favorites: "Favorites" }
+        switch kind { case .mine: "My foods"; case .recipes: "Recipes"; case .meals: "Meals"; case .favorites: "Favorites" }
     }
 
     struct EditFood: Identifiable { let id: String; let food: [String: JSONValue]? }
@@ -64,17 +66,29 @@ struct FoodLists: View {
 
                 case .meals:
                 let meals = list("meals")
-                if meals.isEmpty { Text("Save a meal from the Diary (a meal's ⋯ menu › Save as meal) to log it again in one tap.").foregroundStyle(.secondary) }
+                if meals.isEmpty {
+                    Section {
+                        EmptyState(art: .plate, title: "No meals yet",
+                                   message: "Build a meal from the foods you usually have together, then log it in one tap. Tap + to make one, or save one from the Diary (a meal's ⋯ › Save as meal).")
+                    }
+                }
                 if !meals.isEmpty {
-                    Section("Saved meals") {
+                    Section {
                         ForEach(meals.indices, id: \.self) { i in
                             let m = meals[i], items = (m["items"]?.array ?? []).compactMap { $0.object }
-                            LabeledContent {
-                                Text("\(Fmt.kcal(items.reduce(0) { $0 + ($1["kcal"]?.number ?? 0) })) kcal").monospacedDigit()
-                            } label: {
-                                Text(m["name"]?.string ?? "")
-                                Text(items.compactMap { $0["name"]?.string }.joined(separator: ", ")).lineLimit(1)
+                            Button { mealEdit = MealJob(meal: m) } label: {
+                                HStack(spacing: 12) {
+                                    FoodIcon(kind: "meal")
+                                    VStack(alignment: .leading, spacing: 2) {
+                                        Text(m["name"]?.string ?? "").lineLimit(1)
+                                        Text(items.compactMap { $0["name"]?.string }.joined(separator: ", ")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
+                                    }
+                                    Spacer()
+                                    Text(Fmt.kcal(items.reduce(0) { $0 + ($1["kcal"]?.number ?? 0) })).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
+                                }
+                                .contentShape(.rect)
                             }
+                            .buttonStyle(.plain)
                             .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("meals", id: m["id"]?.string ?? "") } }
                         }
                     }
@@ -99,11 +113,15 @@ struct FoodLists: View {
             .brandList()
             .navigationTitle(title)
             .toolbar {
-                // a + up top for making a new one (saved meals are made from the Diary)
-                if kind == .mine || kind == .recipes {
+                // a + up top for making a new one
+                if kind != .favorites {
                     ToolbarItem(placement: .topBarTrailing) {
-                        Button(kind == .mine ? "New food" : "New recipe", systemImage: "plus") {
-                            if kind == .mine { editing = EditFood(id: "new", food: nil) } else { recipeEdit = EditFood(id: "new", food: nil) }
+                        Button(kind == .mine ? "New food" : kind == .recipes ? "New recipe" : "New meal", systemImage: "plus") {
+                            switch kind {
+                            case .mine: editing = EditFood(id: "new", food: nil)
+                            case .recipes: recipeEdit = EditFood(id: "new", food: nil)
+                            default: mealEdit = MealJob(meal: nil)
+                            }
                         }
                     }
                 }
@@ -112,6 +130,7 @@ struct FoodLists: View {
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
             .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }
+            .sheet(item: $mealEdit) { j in MealEditor(meal: j.meal) }
         }
     }
 }
@@ -260,7 +279,7 @@ struct FoodsView: View {
                     LazyVGrid(columns: cols, spacing: 12) {
                         tile("My foods", "carrot.fill", Brand.ink2, count("myFoods")) { FoodLists(kind: .mine) }
                         tile("Recipes", "frying.pan.fill", Brand.ink2, count("recipes")) { FoodLists(kind: .recipes) }
-                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.ink2, count("meals")) { FoodLists(kind: .meals) }
+                        tile("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.ink2, count("meals")) { FoodLists(kind: .meals) }
                         tile("Repeating", "repeat", Brand.ink2, count("repeats")) { RepeatingView() }
                         tile("Saved days", "calendar.badge.checkmark", Brand.ink2, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }

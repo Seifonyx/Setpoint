@@ -72,7 +72,7 @@ actor Engine {
         return decode(JSONValue.self, "reamount", [s, qty, unit])?.object
     }
     func amountText(_ qty: Double, _ unit: String) -> String { call("fmtAmt", [qty, unit]) ?? "" }
-    func logMeal(_ id: String, meal: String) -> [[String: JSONValue]] { (decode(JSONValue.self, "logMeal", [id, meal])?.array ?? []).compactMap { $0.object } }
+    func logMeal(_ id: String, meal: String, factor: Double = 1) -> [[String: JSONValue]] { (decode(JSONValue.self, "logMeal", [id, meal, factor])?.array ?? []).compactMap { $0.object } }
     func toggleFavorite(_ id: String) -> JSONValue? { decode(JSONValue.self, "toggleFav", [id]) }
     func barcodeLocal(_ code: String) -> String? { decode(String.self, "barcodeLocal", [code]) }
     func validBarcode(_ code: String) -> Bool { sp.invokeMethod("validBarcode", withArguments: [code])?.toBool() ?? false }

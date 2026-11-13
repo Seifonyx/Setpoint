@@ -961,6 +961,16 @@
         }
       }
     },
+    "Add a food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف طعامًا"
+          }
+        }
+      }
+    },
     "Add a glass of water": {
       "localizations": {
         "ar": {
@@ -1107,6 +1117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف للمفضلة"
+          }
+        }
+      }
+    },
+    "Add to meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف إلى الوجبة"
           }
         }
       }
@@ -1547,6 +1567,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سريع"
+          }
+        }
+      }
+    },
+    "Build a meal from the foods you usually have together, then log it in one tap. Tap + to make one, or save one from the Diary (a meal's ⋯ › Save as meal).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابنِ وجبة من الأطعمة التي تأكلها معًا عادةً، ثم سجّلها بضغطة واحدة. اضغط + لإنشاء واحدة، أو احفظها من اليوميات (⋯ في الوجبة › حفظ كوجبة)."
           }
         }
       }
@@ -2391,6 +2421,26 @@
         }
       }
     },
+    "Delete meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف الوجبة"
+          }
+        }
+      }
+    },
+    "Delete this meal?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حذف هذه الوجبة؟"
+          }
+        }
+      }
+    },
     "Delete this photo?": {
       "localizations": {
         "ar": {
@@ -2607,6 +2657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعديل الأكل"
+          }
+        }
+      }
+    },
+    "Edit meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعديل الوجبة"
           }
         }
       }
@@ -4211,6 +4271,16 @@
         }
       }
     },
+    "Make meals in Foods › Meals, or save one from the Diary (a meal's ⋯ › Save as meal).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنشئ الوجبات من الأطعمة › الوجبات، أو احفظ واحدة من اليوميات (⋯ في الوجبة › حفظ كوجبة)."
+          }
+        }
+      }
+    },
     "Make recipes in Foods › Recipes.": {
       "localizations": {
         "ar": {
@@ -4287,6 +4357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوجبة اتمسحت"
+          }
+        }
+      }
+    },
+    "Meal name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم الوجبة"
           }
         }
       }
@@ -4767,6 +4847,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش نتايج لـ «%@»"
+          }
+        }
+      }
+    },
+    "No meals yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد وجبات بعد"
           }
         }
       }
@@ -6927,6 +7017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اضغط على طعام لتغييره، واسحب لإزالته. لهذا اليوم فقط."
+          }
+        }
+      }
+    },
+    "Tap a food to change its amount, swipe to remove it. Logging the meal adds each food to your diary.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على طعام لتغيير كميته، واسحب لإزالته. تسجيل الوجبة يضيف كل طعام إلى يومياتك."
           }
         }
       }
