@@ -30,12 +30,6 @@ struct DiaryView: View {
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
                     Section { RamadanBanner() }
                 }
-                if day == Day.today && !store.isEmpty && WrapUpCard.shows(store) {
-                    Section { WrapUpCard() }
-                }
-                if day == Day.today && store.entries.count >= 3 && CheckInBanner.due {
-                    Section { CheckInBanner() }
-                }
                 Section {
                     SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                 }
@@ -63,7 +57,7 @@ struct DiaryView: View {
                     MealSection(meal: meal, day: day, copying: $copying, kinds: kinds) { adding = AddJob(meal: meal.key) }
                 }
             }
-            .listSectionSpacing(14)
+            .listSectionSpacing(10)
             .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
             .brandList()
             .navigationTitle(title)
@@ -164,7 +158,7 @@ struct SummaryPager: View {
     let totals: Totals
     let plan: DayPlan?
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
-    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 346 // grows with the iPhone's text size
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 300 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -191,30 +185,12 @@ struct SummaryCard: View {
     let totals: Totals
     let plan: DayPlan?
 
-    /// The day in one sentence, above the numbers: what matters, in plain words.
-    private var sentence: LocalizedStringKey? {
-        guard let plan, plan.kcal > 0 else { return nil }
-        let left = plan.kcal - totals.kcal
-        if totals.kcal < 1 { return "A fresh day. \(Fmt.kcal(plan.kcal)) kcal to work with." }
-        if abs(left) <= plan.kcal * 0.05 { return "Right on target. Nicely done." }
-        if left < 0 { return "\(Fmt.kcal(-left)) kcal over. One day doesn't change your trend." }
-        // what most of what's left should be
-        let gaps = [(plan.protein - totals.protein) * 4 / max(plan.protein * 4, 1), (plan.carbs - totals.carbs) * 4 / max(plan.carbs * 4, 1), (plan.fat - totals.fat) * 9 / max(plan.fat * 9, 1)]
-        let i = gaps.indices.max { gaps[$0] < gaps[$1] } ?? 0
-        if gaps[i] < 0.15 { return "On track. \(Fmt.kcal(left)) kcal left, nicely balanced." }
-        return i == 0 ? "On track. \(Fmt.kcal(left)) kcal left, mostly protein." : i == 1 ? "On track. \(Fmt.kcal(left)) kcal left, mostly carbs." : "On track. \(Fmt.kcal(left)) kcal left, mostly fat."
-    }
-
     var body: some View {
         VStack(spacing: 14) {
-            if let sentence {
-                Text(sentence).font(.brand(.headline)).foregroundStyle(Brand.ink).multilineTextAlignment(.center)
-                    .frame(maxWidth: .infinity).contentTransition(.opacity).animation(Motion.snappy, value: totals)
-            }
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
-                    .frame(width: 214, height: 214)
+                    .frame(width: 196, height: 196)
                 // inside the rings: what's left
                 VStack(spacing: 0) {
                     if let plan {
@@ -233,7 +209,7 @@ struct SummaryCard: View {
                 Text(plan.map { "\(Fmt.kcal(totals.kcal)) / \(Fmt.kcal($0.kcal)) kcal" } ?? String(localized: "kcal"))
                     .font(.brand(.footnote, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 140)
-                    .offset(y: 92)
+                    .offset(y: 84)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())
@@ -408,21 +384,21 @@ struct WeightTile: View {
     var body: some View {
         Button(action: open) {
             VStack(alignment: .leading, spacing: 6) {
-                Label("Weight", systemImage: "scalemass.fill").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
+                Label("Weight", systemImage: "scalemass.fill").font(.brand(.footnote, .semibold)).foregroundStyle(Brand.green)
                 if let entry {
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.num(36, .semibold)).monospacedDigit()
+                        Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.num(28, .semibold)).monospacedDigit()
                         Text(LocalizedStringKey(unit)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
                     if entry.excluded { Text("Excluded").font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                 } else {
-                    Text("Log").font(Brand.display(30, .bold)).foregroundStyle(Brand.green)
+                    Text("Log").font(Brand.display(22, .bold)).foregroundStyle(Brand.green)
                 }
                 Spacer(minLength: 0)
-                Sparkline(values: recent).frame(height: 18)
+                Sparkline(values: recent).frame(height: 14)
             }
-            .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
+            .padding(12)
             .background(Brand.card, in: .rect(cornerRadius: 22))
         }
         .buttonStyle(.plain)
@@ -454,13 +430,13 @@ struct WaterTile: View {
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
                 HStack {
-                    Label("Water", systemImage: "drop.fill").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.water)
+                    Label("Water", systemImage: "drop.fill").font(.brand(.footnote, .semibold)).foregroundStyle(Brand.water)
                     Spacer()
                     Button("Add a glass of water", systemImage: "plus", action: add)
                         .labelStyle(.iconOnly).symbolEffect(.bounce, value: ml).buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(Fmt.ml(ml)).font(Brand.num(36, .semibold)).contentTransition(.numericText()).monospacedDigit()
+                    Text(Fmt.ml(ml)).font(Brand.num(28, .semibold)).contentTransition(.numericText()).monospacedDigit()
                     Text("of \(Fmt.ml(goal))").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
                 .lineLimit(1).minimumScaleFactor(0.7)
@@ -474,8 +450,8 @@ struct WaterTile: View {
                 .frame(height: 6)
                 .animation(.spring(response: 0.5, dampingFraction: 0.75), value: ml)
         }
-        .frame(maxWidth: .infinity, minHeight: 96, alignment: .topLeading)
-        .padding(14)
+        .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
+        .padding(12)
         .background(Brand.card, in: .rect(cornerRadius: 22))
         .contentShape(.rect(cornerRadius: 22))
         .onTapGesture(perform: open) // the tile opens Water; its + adds a glass (a button inside a button would swallow taps)

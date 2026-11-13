@@ -49,7 +49,14 @@ struct YouView: View {
                         } label: { Label("Plan", systemImage: "target") }
                     }
                     Button { explain = true } label: { Label("How your target works", systemImage: "info.circle") }.tint(.primary)
-                    NavigationLink { CheckInView() } label: { Label("Weekly check-in", systemImage: "chart.line.uptrend.xyaxis") }
+                    NavigationLink { CheckInView() } label: {
+                        LabeledContent {
+                            if CheckInBanner.due && store.entries.count >= 3 {
+                                Text("New").font(.brand(.caption, .bold)).foregroundStyle(Brand.onGreen)
+                                    .padding(.horizontal, 8).padding(.vertical, 2).background(Brand.green, in: Capsule())
+                            }
+                        } label: { Label("Weekly check-in", systemImage: "chart.line.uptrend.xyaxis") }
+                    }
                 } header: { Text("Your plan") }
                 Section {
                     NavigationLink { FastingView() } label: {

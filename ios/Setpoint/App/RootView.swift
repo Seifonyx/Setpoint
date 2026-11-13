@@ -18,6 +18,8 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @AppStorage(DeviceSettings.haptics) private var haptics = true
     @State private var onboarding = false
+    @AppStorage("checkInSeen") private var checkInSeen = ""
+    private var weekReady: Bool { checkInSeen != CheckInView.weekKey && store.entries.count >= 3 && CheckInBanner.due }
     @State private var launching = !UIAccessibility.isReduceMotionEnabled // the dial draws itself on launch
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
@@ -42,6 +44,7 @@ struct RootView: View {
             Tab("You", systemImage: "person.crop.circle", value: AppTab.you) {
                 YouView(importing: $importing)
             }
+            .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
         }
         .tabBarMinimizeBehavior(.onScrollDown)
         // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one

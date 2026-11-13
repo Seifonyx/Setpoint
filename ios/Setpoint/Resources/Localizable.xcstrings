@@ -4441,6 +4441,16 @@
         }
       }
     },
+    "New": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جديد"
+          }
+        }
+      }
+    },
     "New food": {
       "localizations": {
         "ar": {
@@ -5937,6 +5947,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خامل"
+          }
+        }
+      }
+    },
+    "See how last week went, and what changed in your plan.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شاهد كيف مرّ الأسبوع الماضي وما تغيّر في خطتك."
           }
         }
       }
