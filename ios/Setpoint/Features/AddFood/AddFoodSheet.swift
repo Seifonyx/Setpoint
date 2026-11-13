@@ -556,7 +556,7 @@ struct FoodIcon: View {
         .accessibilityHidden(true)
     }
     static let colors: [String: Color] = [
-        "fruit": Brand.protein, "veg": Brand.green, "meat": Brand.over, "poultry": Brand.amber, "fish": Brand.water, "dairy": Brand.fat,
+        "fruit": Brand.protein, "veg": Brand.green, "meat": Brand.over, "poultry": Brand.amber, "fish": Brand.water, "dairy": Brand.blue,
         "egg": Brand.amber, "grain": Brand.dyn(0xA8722F, 0xD6A15E), "rice": Brand.dyn(0xA8722F, 0xD6A15E), "drink": Brand.water,
         "sweet": Brand.dyn(0xB9507F, 0xDC86AB), "nut": Brand.dyn(0x8C6239, 0xC4986A), "legume": Brand.dyn(0x6E7F2E, 0xA9BA62),
         "oil": Brand.dyn(0x7D7A26, 0xBDB85E), "dish": Brand.green, "soup": Brand.protein, "snack": Brand.amber, "spice": Brand.over,

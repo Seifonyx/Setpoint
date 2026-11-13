@@ -14,10 +14,11 @@ enum Brand {
     static let green = dyn(0x0F5C45, 0x4C9C7E)       // the signature (kept for the ring and the main action)
     static let greenSoft = dyn(0xDCEBE2, 0x14261F)
     static let onGreen = dyn(0xFFFBF4, 0x0A0A09)     // text on the signature green
-    static let amber = dyn(0xC9801F, 0xE2A758)       // highlights, carbs
+    static let amber = dyn(0xC9801F, 0xE2A758)       // highlights
     static let protein = dyn(0xC4553A, 0xDD7860)     // terracotta
-    static let carbs = amber
-    static let fat = dyn(0x4F6FA3, 0x87A0D2)         // slate blue
+    static let blue = dyn(0x3F6FB0, 0x7FA3DE)        // a calm blue
+    static let carbs = blue
+    static let fat = dyn(0x7E52A8, 0xB18ADB)         // purple
     static let water = dyn(0x2C88A8, 0x60B2CC)
     static let danger = dyn(0xC0392B, 0xEF6B5E)     // deleting, erasing, errors and warnings: a clear red
     static let over = dyn(0xB8691C, 0xE69A4E)       // going over is a calm amber, not an alarm
@@ -26,9 +27,9 @@ enum Brand {
         switch key {
         case "breakfast": amber
         case "lunch": green
-        case "dinner": fat
+        case "dinner": blue
         case "snacks": protein
-        default: [water, amber, green, fat, protein][key.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 5]
+        default: [water, amber, green, blue, protein][key.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 5]
         }
     }
 

@@ -43,7 +43,7 @@ struct PlanView: View {
                     }
                     Section("Inputs") {
                         Button { activity = true } label: { row("Activity", activitySummary(o), "figure.walk", Brand.green) }
-                        Button { about = true } label: { row("About you", aboutSummary(o), "person.text.rectangle", Brand.fat) }
+                        Button { about = true } label: { row("About you", aboutSummary(o), "person.text.rectangle", Brand.blue) }
                     }
                     .tint(.primary)
                 case .goal?:

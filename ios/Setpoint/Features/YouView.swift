@@ -49,7 +49,7 @@ struct YouView: View {
                             if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
                         } label: { TileLabel("Plan", "target", Brand.green) }
                     }
-                    Button { explain = true } label: { TileLabel("How your target works", "info", Brand.fat) }.tint(.primary)
+                    Button { explain = true } label: { TileLabel("How your target works", "info", Brand.blue) }.tint(.primary)
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
                             if CheckInBanner.due && store.entries.count >= 3 {

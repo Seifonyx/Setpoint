@@ -120,7 +120,7 @@ struct DeviceSettingsView: View {
             Section {
                 Picker(selection: Binding(get: { store.unit }, set: { store.setSetting("unit", .string($0)) })) {
                     Text("kg").tag("kg"); Text("lb").tag("lb")
-                } label: { TileLabel("Weight unit", "scalemass.fill", Brand.fat) }
+                } label: { TileLabel("Weight unit", "scalemass.fill", Brand.blue) }
                 Picker(selection: Binding(get: { Int(store.root["settings"]?.object?["weekStart"]?.number ?? 5) },
                                           set: { store.setSetting("weekStart", .number(Double($0))) })) {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
@@ -135,7 +135,7 @@ struct DeviceSettingsView: View {
             } header: { Text("Your diary") } footer: { Text("These sync with your account.") }
 
             Section {
-                Toggle(isOn: $weigh) { TileLabel("Weigh-in reminder", "scalemass.fill", Brand.fat) }
+                Toggle(isOn: $weigh) { TileLabel("Weigh-in reminder", "scalemass.fill", Brand.blue) }
                 if weigh { DatePicker("Time", selection: time($weighTime), displayedComponents: .hourAndMinute) }
                 Toggle(isOn: $foodOn) { TileLabel("Food log reminder", "fork.knife", Brand.amber) }
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
@@ -166,7 +166,7 @@ struct DeviceSettingsView: View {
             } header: { Text("Lock Screen") } footer: { Text("Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.") }
             Section {
                 Toggle(isOn: $lock) { TileLabel("Lock with Face ID", "faceid", Brand.green) }
-                Toggle(isOn: $haptics) { TileLabel("Haptics", "iphone.radiowaves.left.and.right", Brand.fat) }
+                Toggle(isOn: $haptics) { TileLabel("Haptics", "iphone.radiowaves.left.and.right", Brand.blue) }
                 Toggle(isOn: $sounds) { TileLabel("Sounds", "speaker.wave.2.fill", Brand.protein) }
             } header: { Text("This iPhone") } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
             Section {
