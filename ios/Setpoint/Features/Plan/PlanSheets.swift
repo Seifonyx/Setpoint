@@ -161,7 +161,7 @@ struct MeasuredSheet: View {
                 if let m = store.overview?.measured {
                     if m.ready, let t = m.tdee {
                         Section {
-                            Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").font(Brand.display(40, .bold))
+                            Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").font(Brand.num(48, .semibold))
                             if let i = m.intake { LabeledContent("Ate a day") { Text(Fmt.kcal(i)) } }
                             if let r = m.rateKgWk { LabeledContent("Weight change a week") { Text("\(Fmt.weight(r, unit: store.unit)) \(store.unit)") } }
                             LabeledContent("Days logged") { Text("\(m.calDays)/\(m.days ?? m.calDays)") }

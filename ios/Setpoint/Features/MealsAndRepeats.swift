@@ -74,15 +74,10 @@ struct RepeatingView: View {
             VStack(spacing: 14) {
                 week
                 if repeats.isEmpty {
-                    VStack(spacing: 10) {
-                        Image(systemName: "repeat.circle.fill").font(.system(size: 44)).foregroundStyle(Brand.water)
-                        Text("Nothing repeats yet").font(Brand.display(20, .bold))
-                        Text("Add the foods you have most days, like your morning coffee or the same lunch. They go into your diary by themselves on the days you choose.")
-                            .font(.brand(.subheadline)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
-                        Button("Add a repeating food", systemImage: "plus") { picking = true }.buttonStyle(.glassProminent).padding(.top, 4)
-                    }
-                    .frame(maxWidth: .infinity).padding(.vertical, 12)
-                    .brandCard()
+                    EmptyState(art: .repeating, title: "Nothing repeats yet",
+                               message: "Add the foods you have most days, like your morning coffee or the same lunch. They go into your diary by themselves on the days you choose.",
+                               action: (title: "Add a repeating food", run: { picking = true }))
+                        .brandCard()
                 }
                 ForEach(store.meals) { m in
                     let list = repeats.filter { ($0["meal"]?.string ?? "") == m.key }
@@ -91,7 +86,7 @@ struct RepeatingView: View {
             }
             .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
         }
-        .background(Brand.bg.ignoresSafeArea())
+        .paperPage()
         .navigationTitle("Repeating")
         .toolbar(.hidden, for: .tabBar)
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Add a repeating food", systemImage: "plus") { picking = true } } }

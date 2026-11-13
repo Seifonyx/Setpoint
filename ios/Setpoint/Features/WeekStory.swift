@@ -84,7 +84,10 @@ struct WeekStory: View {
                 eyebrow(String(localized: "Calories"))
                 big(Fmt.kcal(r.kcal))
                 line(r.tg.map { String(localized: "a day on average, against a target of \(Fmt.kcal($0)).") } ?? String(localized: "a day on average."))
-                if r.n > 0 { pill("On target \(r.onTarget) of \(r.n) days", "target") }
+                if r.n >= 5 && r.onTarget == r.n {
+                    pill("Every day on target", "sparkles")
+                        .phaseAnimator([false, true]) { v, on in v.scaleEffect(on ? 1.06 : 1).shadow(color: .white.opacity(on ? 0.5 : 0), radius: on ? 12 : 0) } animation: { _ in .easeInOut(duration: 1.1) }
+                } else if r.n > 0 { pill("On target \(r.onTarget) of \(r.n) days", "target") }
             case 2:
                 eyebrow(String(localized: "Protein"))
                 big("\(Fmt.grams(r.protein)) g")

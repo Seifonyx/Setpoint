@@ -215,17 +215,17 @@ struct FoodsView: View {
                 VStack(spacing: 12) {
                     LazyVGrid(columns: cols, spacing: 12) {
                         tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
-                        tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
-                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
-                        tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
-                        tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
+                        tile("Recipes", "frying.pan.fill", Brand.green, count("recipes")) { FoodLists(kind: .recipes) }
+                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.green, count("meals")) { FoodLists(kind: .meals) }
+                        tile("Favorites", "star.fill", Brand.green, count("favs")) { FoodLists(kind: .favorites) }
+                        tile("Repeating", "repeat", Brand.green, count("repeats")) { RepeatingView() }
                         tile("Saved days", "calendar.badge.checkmark", Brand.green, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }
                     planCard
                 }
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
             }
-            .background(Brand.bg.ignoresSafeArea())
+            .paperPage()
             .navigationTitle("Foods")
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }

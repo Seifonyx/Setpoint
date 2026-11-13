@@ -87,7 +87,7 @@ struct WaterSheet: View {
             List {
                 Section {
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(Fmt.ml(store.waterOn(day))).font(Brand.display(40, .bold)).contentTransition(.numericText())
+                        Text(Fmt.ml(store.waterOn(day))).font(Brand.num(48, .semibold)).contentTransition(.numericText())
                         ProgressView(value: min(store.waterOn(day), store.waterGoal), total: store.waterGoal).tint(Brand.water)
                         Text("Goal \(Fmt.ml(store.waterGoal))").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     }

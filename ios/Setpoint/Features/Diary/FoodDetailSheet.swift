@@ -104,7 +104,7 @@ struct FoodDetailSheet: View {
             }
             HStack(alignment: .center, spacing: 18) {
                 VStack(alignment: .leading, spacing: 0) {
-                    Text(Fmt.kcal(shown.kcal)).font(Brand.display(46, .heavy)).monospacedDigit().contentTransition(.numericText())
+                    Text(Fmt.kcal(shown.kcal)).font(Brand.num(55, .bold)).monospacedDigit().contentTransition(.numericText())
                     Text("kcal").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
                 Spacer()
@@ -127,7 +127,7 @@ struct FoodDetailSheet: View {
                 VStack(spacing: 2) {
                     if byFood {
                         TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.center)
-                            .font(Brand.display(30, .bold)).monospacedDigit()
+                            .font(Brand.num(36, .semibold)).monospacedDigit()
                         Menu {
                             Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
                         } label: {
@@ -135,7 +135,7 @@ struct FoodDetailSheet: View {
                                 .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                         }
                     } else {
-                        Text(factor.formatted(.number.precision(.fractionLength(0...2))) + "×").font(Brand.display(30, .bold)).monospacedDigit()
+                        Text(factor.formatted(.number.precision(.fractionLength(0...2))) + "×").font(Brand.num(36, .semibold)).monospacedDigit()
                         Text(isMeal ? "of this meal" : "of the logged amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
                 }
@@ -261,7 +261,7 @@ struct FoodDetailSheet: View {
     private func macro(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
-            Text("\(Fmt.grams(g)) g").font(Brand.display(19, .bold)).monospacedDigit().contentTransition(.numericText())
+            Text("\(Fmt.grams(g)) g").font(Brand.num(23, .semibold)).monospacedDigit().contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

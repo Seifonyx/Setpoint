@@ -44,7 +44,7 @@ struct DayPlannerView: View {
                     Text("A starting point from your targets. Everything goes in as planned, so you can swap foods and tick them off as you eat.")
                         .font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center).padding(.horizontal, 12)
                 } else if target == nil {
-                    EmptyState(icon: "target", title: "Set your targets first",
+                    EmptyState(art: .target, title: "Set your targets first",
                                message: "Setpoint plans a day around your calories, protein, carbs and fat. Set them in You › Plan.").brandCard()
                 } else if loading || !store.foodsReady {
                     SkeletonRows(count: 6).brandCard()
@@ -53,7 +53,7 @@ struct DayPlannerView: View {
             .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 110)
             .animation(.snappy, value: shown)
         }
-        .background(Brand.bg.ignoresSafeArea())
+        .paperPage()
         .navigationTitle(savedDay?.name ?? String(localized: "Plan my day"))
         .navigationBarTitleDisplayMode(.large)
         .toolbar {
@@ -81,9 +81,9 @@ struct DayPlannerView: View {
         VStack(alignment: .leading, spacing: 14) {
             HStack(alignment: .center, spacing: 16) {
                 ZStack {
-                    CalorieDial(eaten: p.total.kcal, target: p.target.kcal, protein: nil, carbs: nil, fat: nil)
+                    CalorieDial(eaten: p.total.kcal, target: p.target.kcal, protein: nil, carbs: nil, fat: nil, lineWidth: 12)
                     VStack(spacing: 0) {
-                        Text(Fmt.kcal(p.total.kcal)).font(Brand.display(24)).monospacedDigit()
+                        Text(Fmt.kcal(p.total.kcal)).font(Brand.num(29, .semibold)).monospacedDigit()
                         Text("of \(Fmt.kcal(p.target.kcal))").font(.brand(.caption)).foregroundStyle(Brand.ink2)
                     }
                 }

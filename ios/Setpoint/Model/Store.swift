@@ -14,6 +14,8 @@ final class Store {
     /// What the last change was, so the haptic matches it: adding, removing, or changing something.
     enum ChangeKind { case add, remove, edit }
     private(set) var changeKind = ChangeKind.edit
+    /// Foods added a moment ago (the Diary lights them up).
+    private(set) var justAdded: Set<String> = []
     /// Something Siri or a shortcut asked the app to open.
     var request: AppRequest?
     private(set) var food: [String: [FoodItem]] = [:]
@@ -242,6 +244,9 @@ final class Store {
         remember(label ?? String(localized: "Added \(new.count) foods"), .add)
         food[day, default: []].append(contentsOf: new)
         save()
+        // the rows you just added glow for a moment in the Diary
+        justAdded = Set(new.map(\.id))
+        Task { try? await Task.sleep(for: .seconds(1.6)); justAdded = [] }
     }
     func replace(_ item: FoodItem, with raw: [String: JSONValue], on day: String) {
         remember(String(localized: "Amount changed"))

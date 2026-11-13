@@ -10,6 +10,7 @@ enum DeviceSettings {
     static let weighTime = "remindWeighTime"   // minutes after midnight
     static let foodReminder = "remindFood"
     static let foodTime = "remindFoodTime"
+    static let weekReady = "remindWeek"        // "Your week is ready" at the start of each week (on unless turned off)
 }
 
 /// Local reminders (they work with a free Apple ID; nothing goes through a server).
@@ -33,6 +34,14 @@ enum Reminders {
             if foodOn && !(i == 0 && store.eaten(day).count >= 2) {
                 add("food-\(day)", day: day, minutes: fm, title: String(localized: "Log today's food"), body: String(localized: "A quick check that today's meals are in your diary."))
             }
+        }
+        // the start of next week: your weekly check-in is ready
+        if d.object(forKey: DeviceSettings.weekReady) as? Bool ?? true, store.entries.count >= 3 {
+            let ws = Int(store.root["settings"]?["weekStart"]?.number ?? 5)
+            let wd = Calendar.current.component(.weekday, from: Date()) - 1
+            let next = Day.add(Day.today, (ws - wd + 7) % 7 == 0 ? 7 : (ws - wd + 7) % 7)
+            add("week-\(next)", day: next, minutes: 9 * 60, title: String(localized: "Your week is ready"),
+                body: String(localized: "See how last week went, and what changed in your plan."))
         }
     }
     private static func add(_ id: String, day: String, minutes: Int, title: String, body: String) {
@@ -92,11 +101,13 @@ struct LockCover: ViewModifier {
 struct DeviceSettingsView: View {
     @Environment(Store.self) private var store
     @AppStorage(DeviceSettings.haptics) private var haptics = true
+    @AppStorage(Sounds.key) private var sounds = false
     @AppStorage(DeviceSettings.lock) private var lock = false
     @AppStorage(DeviceSettings.weighReminder) private var weigh = false
     @AppStorage(DeviceSettings.weighTime) private var weighTime = 7 * 60 + 30
     @AppStorage(DeviceSettings.foodReminder) private var foodOn = false
     @AppStorage(DeviceSettings.foodTime) private var foodTime = 20 * 60 + 30
+    @AppStorage(DeviceSettings.weekReady) private var weekReady = true
     @AppStorage(WidgetBridge.liveKey) private var live = false
     @State private var denied = false
     @State private var confirmErase = false
@@ -130,6 +141,7 @@ struct DeviceSettingsView: View {
                 if weigh { DatePicker("Time", selection: time($weighTime), displayedComponents: .hourAndMinute) }
                 Toggle("Food log reminder", isOn: $foodOn)
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
+                Toggle("Your week is ready", isOn: $weekReady)
             } header: { Text("Reminders") } footer: {
                 if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.amber) }
             }
@@ -157,7 +169,8 @@ struct DeviceSettingsView: View {
             Section {
                 Toggle("Lock with Face ID", isOn: $lock)
                 Toggle("Haptics", isOn: $haptics)
-            } footer: { Text("These are for this iPhone only.") }
+                Toggle("Sounds", isOn: $sounds)
+            } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
             Section {
                 Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }
                     .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {
@@ -173,6 +186,7 @@ struct DeviceSettingsView: View {
         .sheet(isPresented: $ramadan) { RamadanSheet() }
         .onChange(of: weigh) { _, on in changed(on) }
         .onChange(of: foodOn) { _, on in changed(on) }
+        .onChange(of: weekReady) { _, on in changed(on) }
         .onChange(of: weighTime) { Reminders.update() }
         .onChange(of: foodTime) { Reminders.update() }
         .onChange(of: live) { WidgetBridge.publish(store) }

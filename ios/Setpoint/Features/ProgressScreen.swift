@@ -19,7 +19,7 @@ struct ProgressScreen: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
+                SwiftUI.Section {
                     PillTabs(selection: $page, options: [("weight", "Weight"), ("nutrition", "Nutrition"), ("body", "Body")])
                     if page != "body" { Picker("Range", selection: $range) {
                         Text("1M").tag(30); Text("3M").tag(90); Text("6M").tag(180); Text("1Y").tag(365); Text("All").tag(0)
@@ -66,7 +66,7 @@ struct ProgressScreen: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Trend weight").font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(data?.now.map { Fmt.weight($0, unit: unit) } ?? "—").font(Brand.display(44, .heavy)).monospacedDigit()
+                    Text(data?.now.map { Fmt.weight($0, unit: unit) } ?? "—").font(Brand.num(53, .bold)).monospacedDigit()
                     Text(LocalizedStringKey(unit)).foregroundStyle(.secondary)
                     Spacer()
                     if let c = change(pts) { deltaChip(c) }
@@ -149,7 +149,7 @@ struct ProgressScreen: View {
                     .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Day.date(sel.date).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())).font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2)
-                            Text("\(Fmt.weight(sel.kg, unit: unit)) \(unit)").font(Brand.display(17, .bold)).monospacedDigit()
+                            Text("\(Fmt.weight(sel.kg, unit: unit)) \(unit)").font(Brand.num(20, .semibold)).monospacedDigit()
                             Text("Trend \(Fmt.weight(sel.trend, unit: unit))").font(.brand(.caption2)).foregroundStyle(Brand.green).monospacedDigit()
                         }
                         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -269,7 +269,7 @@ struct ProgressScreen: View {
                 VStack(alignment: .leading, spacing: 6) {
                     Text("Average a day").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(Fmt.kcal(avg.kcal)).font(Brand.display(34, .bold))
+                        Text(Fmt.kcal(avg.kcal)).font(Brand.num(41, .semibold))
                         Text("kcal").foregroundStyle(.secondary)
                     }
                     if let t = avgTarget {

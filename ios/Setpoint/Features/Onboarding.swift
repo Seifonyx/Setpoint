@@ -48,7 +48,7 @@ struct OnboardingView: View {
             .transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
             .id(step)
         }
-        .background(Brand.bg.ignoresSafeArea())
+        .paperPage()
         .sheet(isPresented: $signingIn, onDismiss: { if account.signedIn { finish() } }) { NavigationStack { AccountView() } }
         .sensoryFeedback(.selection, trigger: step)
     }
@@ -86,13 +86,13 @@ struct OnboardingView: View {
         page("About you", "This sets how much you burn at rest.") {
             Picker("Sex", selection: $sex) { Text("Female").tag("female"); Text("Male").tag("male") }.pickerStyle(.segmented)
             card {
-                Stepper(value: $age, in: 13...100) { LabeledContent("Age") { Text("\(age)").font(Brand.display(22, .bold)).monospacedDigit() } }
+                Stepper(value: $age, in: 13...100) { LabeledContent("Age") { Text("\(age)").font(Brand.num(26, .semibold)).monospacedDigit() } }
             }
             card {
                 VStack(alignment: .leading, spacing: 8) {
                     LabeledContent("Height") {
                         Text(unit == "lb" ? "\(Int(heightCm / 2.54) / 12)′ \(Int((heightCm / 2.54).rounded()) % 12)″" : "\(Int(heightCm.rounded())) cm")
-                            .font(Brand.display(22, .bold)).monospacedDigit()
+                            .font(Brand.num(26, .semibold)).monospacedDigit()
                     }
                     Slider(value: $heightCm, in: 130...215, step: unit == "lb" ? 2.54 : 1).tint(Brand.green)
                 }
@@ -151,12 +151,12 @@ struct OnboardingView: View {
         page("How active are you?", "Steps and workouts add to what you burn.") {
             card {
                 VStack(alignment: .leading, spacing: 8) {
-                    LabeledContent("Daily steps") { Text(Int(steps).formatted()).font(Brand.display(22, .bold)).monospacedDigit() }
+                    LabeledContent("Daily steps") { Text(Int(steps).formatted()).font(Brand.num(26, .semibold)).monospacedDigit() }
                     Slider(value: $steps, in: 0...20000, step: 500).tint(Brand.green)
                 }
             }
             card {
-                Stepper(value: $workouts, in: 0...7) { LabeledContent("Workouts a week") { Text("\(workouts)").font(Brand.display(22, .bold)).monospacedDigit() } }
+                Stepper(value: $workouts, in: 0...7) { LabeledContent("Workouts a week") { Text("\(workouts)").font(Brand.num(26, .semibold)).monospacedDigit() } }
             }
         } next: {
             store.setProfile { p in
@@ -172,7 +172,7 @@ struct OnboardingView: View {
             Spacer()
             Text("Your daily target").font(.brand(.title3, .semibold)).foregroundStyle(Brand.ink2)
             if let p = store.overview?.plan {
-                Text(Fmt.kcal(shown)).font(Brand.display(72, .heavy)).monospacedDigit().contentTransition(.numericText())
+                Text(Fmt.kcal(shown)).font(Brand.num(86, .bold)).monospacedDigit().contentTransition(.numericText())
                     .onAppear { shown = 0; withAnimation(.spring(response: 1.2, dampingFraction: 0.9)) { shown = (p.target / 10).rounded() * 10 } }
                 Text("kcal a day").font(.brand(.title3)).foregroundStyle(Brand.ink2)
                 HStack(spacing: 12) {
@@ -231,7 +231,7 @@ struct OnboardingView: View {
     }
     private func macro(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(spacing: 4) {
-            Text("\(Fmt.grams(g)) g").font(Brand.display(22, .bold))
+            Text("\(Fmt.grams(g)) g").font(Brand.num(26, .semibold))
             HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
         }
         .frame(maxWidth: .infinity).brandCard(padding: 12)

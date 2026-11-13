@@ -181,7 +181,7 @@ struct CheckInView: View {
     }
     private func tile(_ v: String, _ l: LocalizedStringKey, _ c: Color) -> some View {
         VStack(spacing: 4) {
-            Text(v).font(Brand.display(22, .bold)).monospacedDigit().foregroundStyle(c).lineLimit(1).minimumScaleFactor(0.6)
+            Text(v).font(Brand.num(26, .semibold)).monospacedDigit().foregroundStyle(c).lineLimit(1).minimumScaleFactor(0.6)
             Text(l).font(.brand(.caption)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity, minHeight: 74).brandCard(padding: 10)

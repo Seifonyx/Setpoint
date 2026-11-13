@@ -36,7 +36,7 @@ struct TargetExplainer: View {
                         }
                         step(3, "Your target", "\(Fmt.kcal((p.target / 10).rounded() * 10)) kcal", Brand.protein) {
                             Text(verbatim: "\(Fmt.kcal(burn)) \(p.pace.dir == "gain" ? "+" : "−") \(Fmt.kcal(p.pace.dir == "maintain" ? 0 : perDay)) ≈ \(Fmt.kcal((p.target / 10).rounded() * 10)) kcal")
-                                .font(Brand.display(20, .bold)).monospacedDigit()
+                                .font(Brand.num(24, .semibold)).monospacedDigit()
                             if !p.warn.isEmpty { Text(LocalizedStringKey(p.warn)).foregroundStyle(Brand.amber) }
                             Text("Protein \(Fmt.grams(p.protein)) g · carbs \(Fmt.grams(p.carbs)) g · fat \(Fmt.grams(p.fat)) g")
                                 .foregroundStyle(Brand.ink2)
@@ -52,12 +52,12 @@ struct TargetExplainer: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .brandCard()
                     } else {
-                        EmptyState(icon: "target", title: "No plan yet", message: "Set up your plan in You › Plan and this explains your target with your own numbers.").brandCard()
+                        EmptyState(art: .target, title: "No plan yet", message: "Set up your plan in You › Plan and this explains your target with your own numbers.").brandCard()
                     }
                 }
                 .padding(.horizontal, 16).padding(.bottom, 24)
             }
-            .background(Brand.bg.ignoresSafeArea())
+            .paperPage()
             .navigationTitle("How your target works")
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .confirmationAction) { Button("Done") { dismiss() } } }
@@ -67,10 +67,10 @@ struct TargetExplainer: View {
     private func step<C: View>(_ n: Int, _ title: LocalizedStringKey, _ value: String, _ color: Color, @ViewBuilder _ body: () -> C) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack(spacing: 10) {
-                Text("\(n)").font(Brand.display(15, .bold)).foregroundStyle(.white).frame(width: 26, height: 26).background(color, in: Circle())
+                Text("\(n)").font(Brand.num(18, .semibold)).foregroundStyle(.white).frame(width: 26, height: 26).background(color, in: Circle())
                 Text(title).font(.brand(.headline))
                 Spacer()
-                Text(value).font(Brand.display(20, .bold)).monospacedDigit().foregroundStyle(color)
+                Text(value).font(Brand.num(24, .semibold)).monospacedDigit().foregroundStyle(color)
             }
             VStack(alignment: .leading, spacing: 6) { body() }.font(.brand(.body)).fixedSize(horizontal: false, vertical: true)
         }

@@ -9,6 +9,7 @@ struct MealSection: View {
     var kinds: [String: String] = [:]
     let addFood: () -> Void
     @State private var open: FoodItem?
+    @State private var openID: String?
     @AppStorage("closedMeals") private var closedMeals = ""
     private var expanded: Bool { !closedMeals.split(separator: ",").contains(Substring(meal.key)) }
     private func toggleOpen() {
@@ -17,7 +18,6 @@ struct MealSection: View {
         withAnimation(.snappy) { closedMeals = set.sorted().joined(separator: ",") }
     }
     @State private var naming = false
-    @State private var summary = false
     @State private var mealName = ""
 
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
@@ -25,36 +25,24 @@ struct MealSection: View {
 
     var body: some View {
         Section {
-            // the meal's heading, inside its card (like Cronometer): + adds, the name opens the meal, the chevron folds it
-            Group {
+            // the meal's heading: tap anywhere on it to fold or unfold the card (+ and ⋯ are their own buttons)
             HStack(alignment: .center, spacing: 8) {
-                // + adds to this meal; the name opens the meal; the chevron folds it
                 Button(action: addFood) {
-                    Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
-                        .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
+                    Image(systemName: "plus").font(.subheadline.weight(.bold)).foregroundStyle(Brand.green)
+                        .frame(width: 26, height: 26).background(Brand.greenSoft, in: Circle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Add food to \(meal.name)"))
-                Button { summary = true } label: {
-                    Text(meal.name).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink).contentShape(.rect)
+                Text(meal.name).font(Brand.display(17, .bold)).foregroundStyle(Brand.ink)
+                Image(systemName: "chevron.down").font(.brand(.caption2, .bold)).foregroundStyle(Brand.ink2)
+                    .rotationEffect(.degrees(expanded ? 0 : -90))
+                if !expanded && !foods.isEmpty {
+                    Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                        .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
                 }
-                .buttonStyle(.plain)
-                Button(action: toggleOpen) {
-                    HStack(spacing: 6) {
-                        Image(systemName: "chevron.down").font(.brand(.caption, .bold)).foregroundStyle(Brand.ink2)
-                            .rotationEffect(.degrees(expanded ? 0 : -90))
-                        if !expanded && !foods.isEmpty {
-                            Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
-                                .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
-                        }
-                    }
-                    .frame(minWidth: 28, minHeight: 28).contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
                 Spacer()
                 if !counted.isEmpty {
-                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal })) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
+                    Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal }))").font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
                 }
                 Menu {
                     Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
@@ -66,17 +54,31 @@ struct MealSection: View {
                         Button("Remove all", systemImage: "trash", role: .destructive) { withAnimation { store.removeMeal(meal.key, on: day) } }
                     }
                 } label: {
-                    Image(systemName: "ellipsis").font(.brand(.body, .semibold)).frame(width: 30, height: 24).contentShape(.rect)
+                    Image(systemName: "ellipsis").font(.brand(.subheadline, .semibold)).frame(width: 28, height: 24).contentShape(.rect)
                 }
                 .accessibilityLabel(Text("\(meal.name) options"))
             }
-            }
-            .padding(.vertical, 2)
+            .contentShape(Rectangle())
+            .onTapGesture(perform: toggleOpen)
+            .accessibilityAddTraits(.isButton)
+            .accessibilityHint(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
+            .padding(.vertical, 0)
             .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
             if expanded {
             ForEach(foods) { food in
-                Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
+                // tap a food: it opens in place (amount, macros, actions); tap again to fold it
+                VStack(spacing: 0) {
+                    Button { withAnimation(Motion.gentle) { openID = openID == food.id ? nil : food.id } } label: {
+                        FoodRow(food: food, day: day, kind: kinds[food.id])
+                    }
                     .buttonStyle(.plain)
+                    if openID == food.id {
+                        FoodQuickEdit(food: food, day: day) { open = food }
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
+                }
+                .listRowBackground(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card)
+                .animation(.easeOut(duration: 0.9), value: store.justAdded.contains(food.id))
                     .swipeActions(edge: .trailing) {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
@@ -106,10 +108,6 @@ struct MealSection: View {
             }
         }
         .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
-        .sheet(isPresented: $summary) {
-            MealSummarySheet(meal: meal, day: day, kinds: kinds, addFood: { summary = false; addFood() },
-                             saveAs: { summary = false; mealName = meal.name; naming = true }, copy: { summary = false; copying = foods })
-        }
         .alert("Save as meal", isPresented: $naming) {
             TextField("Name", text: $mealName)
             Button("Cancel", role: .cancel) {}
@@ -121,7 +119,8 @@ struct MealSection: View {
         .task {
             let f = UserDefaults.standard.string(forKey: "sheet")
             guard meal.key == store.meals.first?.key else { return }
-            if f == "food" { open = foods.first } else if f == "meal" { summary = true }
+            if f == "food" { open = foods.first }
+            if UserDefaults.standard.bool(forKey: "expand") { openID = foods.first?.id }
         } // build-server screenshots
     }
 }
@@ -133,7 +132,7 @@ struct FoodRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            FoodIcon(kind: kind ?? (food.ref == nil ? "quick" : "food"), size: 36, name: food.displayName)
+            FoodIcon(kind: kind ?? (food.ref == nil ? "quick" : "food"), size: 32, name: food.displayName)
             VStack(alignment: .leading, spacing: 2) {
                 HStack(spacing: 5) {
                     Text(food.displayName).lineLimit(1)
@@ -146,10 +145,7 @@ struct FoodRow: View {
                 if let note = food.note { Text(note).font(.brand(.footnote)).italic().foregroundStyle(.secondary).lineLimit(1) }
             }
             Spacer()
-            VStack(alignment: .trailing, spacing: 4) {
-                Text(Fmt.kcal(food.kcal)).font(.brand(.body, .semibold)).monospacedDigit()
-                MacroSplit(p: food.protein, c: food.carbs, f: food.fat).frame(width: 46, height: 4)
-            }
+            Text(Fmt.kcal(food.kcal)).font(Brand.num(20, .semibold)).monospacedDigit().foregroundStyle(Brand.ink)
         }
         .contentShape(.rect)
         .opacity(food.isPlanned && day <= Day.today ? 0.55 : 1)
@@ -207,7 +203,7 @@ struct MealSummarySheet: View {
                 Section {
                     HStack(alignment: .center) {
                         VStack(alignment: .leading, spacing: 0) {
-                            Text(Fmt.kcal(t.kcal)).font(Brand.display(46, .heavy)).monospacedDigit().contentTransition(.numericText())
+                            Text(Fmt.kcal(t.kcal)).font(Brand.num(55, .bold)).monospacedDigit().contentTransition(.numericText())
                             Text("kcal").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                         }
                         Spacer()
@@ -248,8 +244,68 @@ struct MealSummarySheet: View {
     private func cell(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
-            Text("\(Fmt.grams(g)) g").font(Brand.display(19, .bold)).monospacedDigit()
+            Text("\(Fmt.grams(g)) g").font(Brand.num(23, .semibold)).monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// A food opened in place in the Diary: its macros, quick amounts (½×, 1×, 1½×, 2×), and the full editor or delete.
+struct FoodQuickEdit: View {
+    let food: FoodItem
+    let day: String
+    let more: () -> Void
+    @Environment(Store.self) private var store
+    @State private var base: (qty: Double, unit: String)?
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: Space.m) {
+            HStack(spacing: Space.l) {
+                macro("Protein", food.protein, Brand.protein)
+                macro("Carbs", food.carbs, Brand.carbs)
+                macro("Fat", food.fat, Brand.fat)
+                Spacer()
+            }
+            if let b = base, food.ref != nil, (food.raw["mi"]?.array ?? []).isEmpty {
+                HStack(spacing: Space.s) {
+                    ForEach([0.5, 1, 1.5, 2], id: \.self) { f in
+                        let q = b.qty * f
+                        let on = abs((food.qty ?? 0) - q) < 0.001
+                        Button { Task { await set(q, b.unit) } } label: {
+                            Text(Fmt.amount(q, b.unit)).font(.brand(.caption, .semibold)).lineLimit(1).minimumScaleFactor(0.7)
+                                .padding(.horizontal, 10).frame(maxWidth: .infinity, minHeight: 32)
+                                .background(on ? Brand.green : Brand.card2, in: Capsule())
+                                .foregroundStyle(on ? Brand.onGreen : Brand.ink)
+                        }
+                        .buttonStyle(.plain)
+                    }
+                }
+            }
+            HStack {
+                Button(action: more) { Label("More", systemImage: "slider.horizontal.3").font(.brand(.subheadline, .semibold)) }
+                    .buttonStyle(.plain).foregroundStyle(Brand.green)
+                Spacer()
+                Button(role: .destructive) { withAnimation { store.delete(food, on: day) } } label: {
+                    Label("Delete", systemImage: "trash").font(.brand(.subheadline, .semibold))
+                }
+                .buttonStyle(.plain).foregroundStyle(Brand.over)
+            }
+        }
+        .padding(.top, Space.m).padding(.bottom, Space.xs)
+        .onAppear { if base == nil, let q = food.qty, let u = food.unit { base = (q, u) } } // the chips scale the amount you opened it at
+    }
+
+    private func macro(_ name: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
+        VStack(alignment: .leading, spacing: 2) {
+            Text(name).font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2)
+            HStack(spacing: 4) {
+                Circle().fill(c).frame(width: 6, height: 6)
+                Text("\(Fmt.grams(g)) g").font(Brand.num(18, .semibold)).monospacedDigit()
+            }
+        }
+    }
+    private func set(_ qty: Double, _ unit: String) async {
+        guard let raw = await store.engineRef.reamount(food.raw, qty: qty, unit: unit) else { return }
+        withAnimation(Motion.snappy) { store.replace(food, with: raw, on: day) }
     }
 }
