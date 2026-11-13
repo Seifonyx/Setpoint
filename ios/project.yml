@@ -32,6 +32,8 @@ targets:
         GENERATE_INFOPLIST_FILE: YES
         DEVELOPMENT_TEAM: ""
         CODE_SIGN_STYLE: Manual
+    dependencies:
+      - target: SetpointWidgets # embedded in the app (PlugIns/SetpointWidgets.appex)
     info:
       path: Setpoint/Info.plist
       properties:
@@ -48,3 +50,38 @@ targets:
         NSHealthShareUsageDescription: Setpoint reads your weight and steps from Apple Health to keep your log and expenditure up to date.
         NSHealthUpdateUsageDescription: Setpoint can save your weigh-ins to Apple Health.
         NSFaceIDUsageDescription: Setpoint uses Face ID to unlock the app when you turn on the lock.
+        NSSupportsLiveActivities: true
+        CFBundleURLTypes:
+          - CFBundleURLName: app.setpoint.ios
+            CFBundleURLSchemes: [setpoint]
+  SetpointWidgets:
+    type: app-extension
+    platform: iOS
+    sources:
+      - path: Widgets
+        excludes: ["*.entitlements"]
+      - path: Setpoint/Shared
+      - path: Setpoint/App/Design.swift
+      - path: Setpoint/Model/Format.swift
+      - path: Setpoint/Resources/Localizable.xcstrings
+      - path: Setpoint/Resources/Fonts
+        buildPhase: resources
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.setpoint.ios.widgets
+        GENERATE_INFOPLIST_FILE: YES
+        INFOPLIST_KEY_CFBundleDisplayName: Setpoint
+        SKIP_INSTALL: YES
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Manual
+    info:
+      path: Widgets/Info.plist
+      properties:
+        CFBundleDisplayName: Setpoint
+        CFBundleShortVersionString: $(MARKETING_VERSION)
+        CFBundleVersion: $(CURRENT_PROJECT_VERSION)
+        CFBundleDevelopmentRegion: en
+        CFBundleLocalizations: [en, ar]
+        NSExtension:
+          NSExtensionPointIdentifier: com.apple.widgetkit-extension
+        UIAppFonts: [BricolageGrotesque-SemiBold.ttf, BricolageGrotesque-Bold.ttf, BricolageGrotesque-ExtraBold.ttf, Figtree-Regular.ttf, Figtree-Medium.ttf, Figtree-SemiBold.ttf, Figtree-Bold.ttf, IBMPlexSansArabic-Regular.ttf, IBMPlexSansArabic-Medium.ttf, IBMPlexSansArabic-SemiBold.ttf, IBMPlexSansArabic-Bold.ttf]

@@ -40,11 +40,15 @@ jobs:
             MARKETING_VERSION=0.1.${{ github.run_number }} CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
           # Setpoint.ipa carries the Apple Health permission (ad-hoc signed so SideStore sees it).
-          # Setpoint-no-health.ipa is the same app without it, as a fallback if SideStore refuses the permission.
+          # Setpoint-no-health.ipa is the same app without it (widgets included), as a fallback if SideStore refuses the permission.
           mkdir -p out/Payload plain/Payload
           cp -R build/Build/Products/Release-iphoneos/Setpoint.app out/Payload/
           cp -R build/Build/Products/Release-iphoneos/Setpoint.app plain/Payload/
+          # Inside out: the widgets first, then the app around them. Both share the App Group the widgets read from.
+          codesign --force --sign - --entitlements Widgets/Widgets.entitlements out/Payload/Setpoint.app/PlugIns/SetpointWidgets.appex
           codesign --force --sign - --entitlements Setpoint/Setpoint-health.entitlements out/Payload/Setpoint.app
+          codesign --force --sign - --entitlements Widgets/Widgets.entitlements plain/Payload/Setpoint.app/PlugIns/SetpointWidgets.appex
+          codesign --force --sign - --entitlements Setpoint/Setpoint-plain.entitlements plain/Payload/Setpoint.app
           (cd out && zip -qry Setpoint.ipa Payload && rm -rf Payload)
           (cd plain && zip -qry ../out/Setpoint-no-health.ipa Payload) && rm -rf plain
       - name: Publish to the ios-latest release

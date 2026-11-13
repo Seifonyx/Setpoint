@@ -1151,6 +1151,16 @@
         }
       }
     },
+    "C": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ك"
+          }
+        }
+      }
+    },
     "Calculated times can differ from your local mosque by a few minutes.": {
       "localizations": {
         "ar": {
@@ -1181,12 +1191,32 @@
         }
       }
     },
+    "Calories left, macros and water.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات المتبقية والعناصر الغذائية والماء."
+          }
+        }
+      }
+    },
     "Calories on target": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "السعرات على الهدف"
+          }
+        }
+      }
+    },
+    "Calories on the Lock Screen": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات على شاشة القفل"
           }
         }
       }
@@ -2297,6 +2327,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "زيادة في ذلك اليوم"
+          }
+        }
+      }
+    },
+    "F": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "د"
           }
         }
       }
@@ -3831,6 +3871,16 @@
         }
       }
     },
+    "No weigh-ins yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد أوزان بعد"
+          }
+        }
+      }
+    },
     "None": {
       "localizations": {
         "ar": {
@@ -4041,6 +4091,16 @@
         }
       }
     },
+    "Open Setpoint once to set up this widget.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح Setpoint مرة واحدة لإعداد هذه الأداة."
+          }
+        }
+      }
+    },
     "Opens Setpoint ready to search for a food.": {
       "localizations": {
         "ar": {
@@ -4067,6 +4127,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "زيادة"
+          }
+        }
+      }
+    },
+    "P": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ب"
           }
         }
       }
@@ -4967,6 +5037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "إظهار على رسم الوزن"
+          }
+        }
+      }
+    },
+    "Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يعرض السعرات المتبقية اليوم على شاشة القفل وفي الجزيرة التفاعلية، ويتحدّث كلما سجّلت. لإضافة الأدوات، المس الشاشة الرئيسية مطوّلًا ثم اضغط تعديل."
           }
         }
       }
@@ -6297,6 +6377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هدفك"
+          }
+        }
+      }
+    },
+    "Your latest weigh-in and how it's trending.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر وزن سجّلته واتجاهه."
           }
         }
       }

@@ -97,6 +97,7 @@ struct DeviceSettingsView: View {
     @AppStorage(DeviceSettings.weighTime) private var weighTime = 7 * 60 + 30
     @AppStorage(DeviceSettings.foodReminder) private var foodOn = false
     @AppStorage(DeviceSettings.foodTime) private var foodTime = 20 * 60 + 30
+    @AppStorage(WidgetBridge.liveKey) private var live = false
     @State private var denied = false
     @State private var confirmErase = false
     @State private var ramadan = false
@@ -151,6 +152,9 @@ struct DeviceSettingsView: View {
                 Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
             }
             Section {
+                Toggle("Calories on the Lock Screen", isOn: $live)
+            } footer: { Text("Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.") }
+            Section {
                 Toggle("Lock with Face ID", isOn: $lock)
                 Toggle("Haptics", isOn: $haptics)
             } footer: { Text("These are for this iPhone only.") }
@@ -171,6 +175,7 @@ struct DeviceSettingsView: View {
         .onChange(of: foodOn) { _, on in changed(on) }
         .onChange(of: weighTime) { Reminders.update() }
         .onChange(of: foodTime) { Reminders.update() }
+        .onChange(of: live) { WidgetBridge.publish(store) }
     }
 
     private func changed(_ on: Bool) {

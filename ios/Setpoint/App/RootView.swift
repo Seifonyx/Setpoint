@@ -54,9 +54,15 @@ struct RootView: View {
         .foregroundStyle(Brand.ink)
         .environment(store)
         .environment(account)
-        .task { await store.start(); await account.pull(fresh: false) }
+        .task { await store.start(); WidgetBridge.publish(store); await account.pull(fresh: false) }
+        .onChange(of: store.version) { WidgetBridge.publish(store) } // widgets and the Live Activity
+        .onOpenURL { url in
+            // From a widget: setpoint://add opens Add food; anything else just opens the diary.
+            tab = .diary
+            if url.host == "add" { store.request = .addFood }
+        }
         .onChange(of: phase) { _, p in
-            if p == .active { Task { await store.tick(); await account.syncNow() } }
+            if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow() } }
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
