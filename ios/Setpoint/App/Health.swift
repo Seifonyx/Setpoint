@@ -44,6 +44,14 @@ enum Health {
 
     /// What went wrong, for working out whether SideStore kept the Health permission: the app version, whether the
     /// signing profile SideStore made includes HealthKit, and the error iOS gave.
+    /// Whether this install can use Apple Health at all: SideStore removes the HealthKit permission when it signs
+    /// with a free Apple ID, and then Settings hides the button. It comes back on its own if the permission is there.
+    static var allowed: Bool {
+        guard HKHealthStore.isHealthDataAvailable(),
+              let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+              let data = try? Data(contentsOf: url), let text = String(data: data, encoding: .isoLatin1) else { return false }
+        return text.contains("com.apple.developer.healthkit")
+    }
     static func diagnosis(_ error: Error) -> String {
         let info = Bundle.main.infoDictionary
         let version = "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"

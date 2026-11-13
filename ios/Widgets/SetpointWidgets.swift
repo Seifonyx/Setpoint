@@ -64,42 +64,69 @@ struct MiniDial: View {
     }
 }
 
+/// Fixed type sizes: a widget has a fixed size, so the text mustn't grow with the iPhone's text size setting.
+enum WFont {
+    static func display(_ size: CGFloat, _ weight: Font.Weight = .bold) -> Font {
+        if Brand.arabic { return text(size, weight == .semibold ? .semibold : .bold) }
+        return .custom(weight == .semibold ? "BricolageGrotesque-SemiBold" : "BricolageGrotesque-Bold", fixedSize: size)
+    }
+    static func text(_ size: CGFloat, _ weight: Font.Weight = .regular) -> Font {
+        let w = weight == .bold ? "Bold" : weight == .semibold ? "SemiBold" : weight == .medium ? "Medium" : "Regular"
+        return .custom((Brand.arabic ? "IBMPlexSansArabic-" : "Figtree-") + w, fixedSize: size)
+    }
+}
+
 struct DialWithNumber: View {
     var eaten: Double, target: Double, track: Bool = true
-    var width: CGFloat = 11
-    var size: CGFloat = 30
+    var width: CGFloat = 10
+    var size: CGFloat = 28
     var body: some View {
         let h = headline(eaten: eaten, target: target, track: track)
         ZStack {
             MiniDial(progress: target > 0 && track ? min(eaten / target, 1) : 0, over: track && target > 0 && eaten > target * 1.05, width: width)
-            VStack(spacing: -2) {
-                Text(verbatim: h.number).font(Brand.display(size)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
-                Text(verbatim: h.label).font(.brand(.caption2, .medium)).foregroundStyle(Brand.ink2)
+            VStack(spacing: 0) {
+                Text(verbatim: h.number).font(WFont.display(size)).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                Text(verbatim: h.label).font(WFont.text(size * 0.42, .medium)).foregroundStyle(Brand.ink2)
             }
-            .padding(.horizontal, width + 6)
+            .padding(.horizontal, width + 8)
         }
+        .aspectRatio(1, contentMode: .fit)
     }
 }
 
-struct MacroBar: View {
+/// One macro as a small column: name, grams of the target, and a thin bar.
+struct MacroColumn: View {
     var name: LocalizedStringKey
     var value: Double, target: Double
     var color: Color
     var body: some View {
         VStack(alignment: .leading, spacing: 3) {
-            HStack(spacing: 4) {
-                Text(name).font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2)
-                Spacer(minLength: 2)
-                Text(verbatim: target > 0 ? "\(Fmt.grams(value)) / \(Fmt.grams(target)) \(String(localized: "g"))" : "\(Fmt.grams(value)) \(String(localized: "g"))")
-                    .font(.brand(.caption2)).monospacedDigit().foregroundStyle(Brand.ink)
+            Text(name).font(WFont.text(11, .semibold)).foregroundStyle(Brand.ink2).lineLimit(1)
+            HStack(alignment: .firstTextBaseline, spacing: 1) {
+                Text(verbatim: Fmt.grams(value)).font(WFont.display(16, .semibold)).foregroundStyle(Brand.ink)
+                Text(verbatim: target > 0 ? "/\(Fmt.grams(target))" : String(localized: "g")).font(WFont.text(10, .medium)).foregroundStyle(Brand.ink2)
             }
+            .monospacedDigit().lineLimit(1).minimumScaleFactor(0.7)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Brand.card2)
-                    Capsule().fill(color).frame(width: g.size.width * (target > 0 ? min(value / target, 1) : 0)).widgetAccentable()
+                    Capsule().fill(color).frame(width: max(4, g.size.width * (target > 0 ? min(value / target, 1) : 0))).widgetAccentable()
                 }
             }
-            .frame(height: 5)
+            .frame(height: 4)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+struct MacroColumns: View {
+    var protein: Double, carbs: Double, fat: Double
+    var proteinTarget: Double, carbsTarget: Double, fatTarget: Double
+    var body: some View {
+        HStack(spacing: 12) {
+            MacroColumn(name: "Protein", value: protein, target: proteinTarget, color: Brand.protein)
+            MacroColumn(name: "Carbs", value: carbs, target: carbsTarget, color: Brand.carbs)
+            MacroColumn(name: "Fat", value: fat, target: fatTarget, color: Brand.fat)
         }
     }
 }
@@ -108,12 +135,14 @@ struct WaterButton: View {
     var water: Double
     var body: some View {
         Button(intent: WidgetWaterIntent()) {
-            Label { Text(verbatim: Fmt.ml(water)).monospacedDigit() } icon: { Image(systemName: "drop.fill") }
-                .font(.brand(.caption, .semibold))
-                .foregroundStyle(Brand.water)
-                .padding(.horizontal, 10).padding(.vertical, 6)
-                .frame(maxWidth: .infinity)
-                .background(Capsule().fill(Brand.water.opacity(0.14)))
+            HStack(spacing: 5) {
+                Image(systemName: "drop.fill").font(.system(size: 12, weight: .semibold))
+                Text(verbatim: Fmt.ml(water)).font(WFont.text(13, .semibold)).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
+                Image(systemName: "plus").font(.system(size: 10, weight: .bold)).opacity(0.7)
+            }
+            .foregroundStyle(Brand.water)
+            .frame(maxWidth: .infinity, minHeight: 32)
+            .background(Capsule().fill(Brand.water.opacity(0.15)))
         }
         .buttonStyle(.plain)
     }
@@ -123,7 +152,7 @@ struct SetUpNote: View {
     var body: some View {
         VStack(spacing: 6) {
             SetpointMark().frame(width: 30, height: 30)
-            Text("Open Setpoint once to set up this widget.").font(.brand(.caption)).multilineTextAlignment(.center).foregroundStyle(Brand.ink2)
+            Text("Open Setpoint once to set up this widget.").font(WFont.text(12)).multilineTextAlignment(.center).foregroundStyle(Brand.ink2)
         }
     }
 }
@@ -166,38 +195,38 @@ struct TodayView: View {
     }
 
     private func small(_ d: WidgetDay) -> some View {
-        VStack(spacing: 8) {
-            DialWithNumber(eaten: d.eaten, target: d.target, track: d.trackCalories)
+        VStack(spacing: 10) {
+            DialWithNumber(eaten: d.eaten, target: d.target, track: d.trackCalories, width: 9, size: 26)
+                .frame(maxHeight: .infinity)
             WaterButton(water: d.water)
         }
     }
 
     private func medium(_ d: WidgetDay) -> some View {
-        HStack(spacing: 16) {
-            DialWithNumber(eaten: d.eaten, target: d.target, track: d.trackCalories)
-                .frame(width: 128)
-            VStack(alignment: .leading, spacing: 7) {
-                HStack {
-                    Text("Today").font(Brand.display(15, .semibold))
-                    Spacer()
-                    if let kg = d.weightKg {
-                        Label { Text(verbatim: "\(Fmt.weight(kg, unit: d.unit)) \(d.unit)").monospacedDigit() } icon: { Image(systemName: "scalemass") }
-                            .font(.brand(.caption2, .medium)).foregroundStyle(Brand.ink2)
+        HStack(spacing: 18) {
+            DialWithNumber(eaten: d.eaten, target: d.target, track: d.trackCalories, width: 10, size: 28)
+                .frame(maxHeight: .infinity)
+            VStack(alignment: .leading, spacing: 0) {
+                MacroColumns(protein: d.protein, carbs: d.carbs, fat: d.fat,
+                             proteinTarget: d.proteinTarget, carbsTarget: d.carbsTarget, fatTarget: d.fatTarget)
+                Spacer(minLength: 6)
+                if let kg = d.weightKg {
+                    HStack(spacing: 4) {
+                        Image(systemName: "scalemass").font(.system(size: 10, weight: .semibold))
+                        Text(verbatim: "\(Fmt.weight(kg, unit: d.unit)) \(d.unit)").font(WFont.text(11, .medium)).monospacedDigit()
                     }
+                    .foregroundStyle(Brand.ink2)
+                    Spacer(minLength: 6)
                 }
-                MacroBar(name: "Protein", value: d.protein, target: d.proteinTarget, color: Brand.protein)
-                MacroBar(name: "Carbs", value: d.carbs, target: d.carbsTarget, color: Brand.carbs)
-                MacroBar(name: "Fat", value: d.fat, target: d.fatTarget, color: Brand.fat)
                 HStack(spacing: 8) {
                     WaterButton(water: d.water)
                     Link(destination: URL(string: "setpoint://add")!) {
-                        Label("Add food", systemImage: "plus")
-                            .font(.brand(.caption, .semibold))
+                        Image(systemName: "plus").font(.system(size: 15, weight: .bold))
                             .foregroundStyle(.white)
-                            .padding(.horizontal, 10).padding(.vertical, 6)
-                            .frame(maxWidth: .infinity)
+                            .frame(width: 44, height: 32)
                             .background(Capsule().fill(Brand.green))
                     }
+                    .accessibilityLabel(Text("Add food"))
                 }
             }
         }
@@ -294,13 +323,13 @@ struct WeightView: View {
                 }
             default:
                 VStack(alignment: .leading, spacing: 4) {
-                    Text("Weight").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                    Text("Weight").font(WFont.text(12, .semibold)).foregroundStyle(Brand.ink2)
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(verbatim: Fmt.weight(kg, unit: d.unit)).font(Brand.display(32)).monospacedDigit().minimumScaleFactor(0.6)
-                        Text(verbatim: d.unit).font(.brand(.footnote, .medium)).foregroundStyle(Brand.ink2)
+                        Text(verbatim: Fmt.weight(kg, unit: d.unit)).font(WFont.display(32)).monospacedDigit().minimumScaleFactor(0.6)
+                        Text(verbatim: d.unit).font(WFont.text(13, .medium)).foregroundStyle(Brand.ink2)
                     }
                     if d.recent.count > 1 {
-                        Text(verbatim: changeText).font(.brand(.caption, .semibold)).monospacedDigit()
+                        Text(verbatim: changeText).font(WFont.text(12, .semibold)).monospacedDigit()
                             .foregroundStyle(change <= 0 ? Brand.green : Brand.amber)
                         Sparkline(values: d.recent).padding(.vertical, 4)
                     } else {
@@ -311,7 +340,7 @@ struct WeightView: View {
             }
         } else if day != nil {
             if family == .accessoryCircular { Image(systemName: "scalemass") }
-            else { Text("No weigh-ins yet").font(.brand(.caption)).foregroundStyle(Brand.ink2) }
+            else { Text("No weigh-ins yet").font(WFont.text(12)).foregroundStyle(Brand.ink2) }
         } else if family == .systemSmall {
             SetUpNote()
         } else {
@@ -340,23 +369,21 @@ struct DayLiveActivity: Widget {
                 }
                 DynamicIslandExpandedRegion(.trailing) {
                     VStack(alignment: .trailing, spacing: -2) {
-                        Text(verbatim: h.number).font(Brand.display(26)).monospacedDigit()
-                        Text(verbatim: h.label).font(.brand(.caption, .medium)).foregroundStyle(.secondary)
+                        Text(verbatim: h.number).font(WFont.display(26)).monospacedDigit()
+                        Text(verbatim: h.label).font(WFont.text(12, .medium)).foregroundStyle(.secondary)
                     }
                 }
                 DynamicIslandExpandedRegion(.bottom) {
-                    HStack(spacing: 10) {
-                        MacroBar(name: "Protein", value: s.protein, target: s.proteinTarget, color: Brand.protein)
-                        MacroBar(name: "Carbs", value: s.carbs, target: s.carbsTarget, color: Brand.carbs)
-                        MacroBar(name: "Fat", value: s.fat, target: s.fatTarget, color: Brand.fat)
-                    }
+                    MacroColumns(protein: s.protein, carbs: s.carbs, fat: s.fat,
+                                 proteinTarget: s.proteinTarget, carbsTarget: s.carbsTarget, fatTarget: s.fatTarget)
+                        .padding(.top, 4)
                     .environment(\.colorScheme, .dark)
                 }
             } compactLeading: {
                 MiniDial(progress: s.target > 0 ? min(s.eaten / s.target, 1) : 0, over: s.eaten > s.target * 1.05, width: 3.5)
                     .frame(width: 20, height: 20)
             } compactTrailing: {
-                Text(verbatim: h.number).font(.brand(.caption, .semibold)).monospacedDigit().foregroundStyle(Brand.green)
+                Text(verbatim: h.number).font(WFont.text(13, .semibold)).monospacedDigit().foregroundStyle(Brand.green)
             } minimal: {
                 MiniDial(progress: s.target > 0 ? min(s.eaten / s.target, 1) : 0, over: s.eaten > s.target * 1.05, width: 3.5)
                     .frame(width: 20, height: 20)
@@ -371,13 +398,15 @@ struct LiveLockView: View {
     var body: some View {
         HStack(spacing: 16) {
             DialWithNumber(eaten: s.eaten, target: s.target, width: 8, size: 22)
-                .frame(width: 92, height: 92)
-            VStack(alignment: .leading, spacing: 6) {
-                MacroBar(name: "Protein", value: s.protein, target: s.proteinTarget, color: Brand.protein)
-                MacroBar(name: "Carbs", value: s.carbs, target: s.carbsTarget, color: Brand.carbs)
-                MacroBar(name: "Fat", value: s.fat, target: s.fatTarget, color: Brand.fat)
-                Label { Text(verbatim: "\(Fmt.ml(s.water)) / \(Fmt.ml(s.waterGoal))").monospacedDigit() } icon: { Image(systemName: "drop.fill") }
-                    .font(.brand(.caption2, .medium)).foregroundStyle(Brand.water)
+                .frame(width: 96, height: 96)
+            VStack(alignment: .leading, spacing: 10) {
+                MacroColumns(protein: s.protein, carbs: s.carbs, fat: s.fat,
+                             proteinTarget: s.proteinTarget, carbsTarget: s.carbsTarget, fatTarget: s.fatTarget)
+                HStack(spacing: 4) {
+                    Image(systemName: "drop.fill").font(.system(size: 10, weight: .semibold))
+                    Text(verbatim: "\(Fmt.ml(s.water)) / \(Fmt.ml(s.waterGoal))").font(WFont.text(11, .medium)).monospacedDigit()
+                }
+                .foregroundStyle(Brand.water)
             }
         }
     }

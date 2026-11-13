@@ -133,7 +133,7 @@ struct DeviceSettingsView: View {
             } header: { Text("Reminders") } footer: {
                 if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.amber) }
             }
-            Section {
+            if Health.allowed { Section {
                 Button {
                     healthBusy = true
                     Task {
@@ -150,7 +150,7 @@ struct DeviceSettingsView: View {
                 .disabled(healthBusy)
             } footer: {
                 Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
-            }
+            } }
             Section {
                 Toggle("Calories on the Lock Screen", isOn: $live)
             } footer: { Text("Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.") }
