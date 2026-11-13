@@ -22,7 +22,9 @@ struct MealEditor: View {
         NavigationStack {
             List {
                 Section {
-                    TextField("Meal name", text: $name).font(.brand(.headline))
+                    WordsField(label: "Name", text: $name, placeholder: "e.g. My usual breakfast")
+                } header: { Text("Meal") }
+                Section {
                     HStack(spacing: 14) {
                         stat("Calories", Fmt.kcal(total.kcal))
                         stat("Protein", "\(Fmt.grams(total.protein)) g")
@@ -30,7 +32,7 @@ struct MealEditor: View {
                         stat("Fat", "\(Fmt.grams(total.fat)) g")
                     }
                     .padding(.vertical, 2)
-                }
+                } header: { Text("Totals") }
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]

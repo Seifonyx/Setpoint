@@ -172,18 +172,21 @@ struct CustomFoodSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $name)
-                    TextField("Serving (e.g. scoop, slice)", text: $unit)
-                    row("Weight of a serving (optional)", $grams, "g")
-                }
+                    WordsField(label: "Name", text: $name, placeholder: "e.g. Protein shake")
+                } header: { Text("Food") }
                 Section {
-                    row("Calories", $kcal, "kcal")
-                    row("Protein", $p, "g")
-                    row("Carbs", $c, "g")
-                    row("Fat", $f, "g")
-                } header: { Text("Per serving") } footer: {
+                    WordsField(label: "Serving name", text: $unit, placeholder: "e.g. scoop, slice, bowl")
+                    NumberField(label: "Weight of one serving", text: $grams, unit: "g", placeholder: "Optional")
+                } header: { Text("Serving") } footer: { Text("Add the weight if you'd like to log it in grams too.") }
+                Section {
+                    NumberField(label: "Calories", text: $kcal, unit: "kcal", big: true)
+                    NumberField(label: "Protein", text: $p, unit: "g")
+                    NumberField(label: "Carbs", text: $c, unit: "g")
+                    NumberField(label: "Fat", text: $f, unit: "g")
+                } header: { Text("Nutrition facts") } footer: {
                     if let error { Text(error).foregroundStyle(Brand.danger) }
-                    else if let k = estimate { Text("About \(Fmt.kcal(k)) kcal from the macros") }
+                    else if let k = estimate { Text("Per serving. About \(Fmt.kcal(k)) kcal from the macros.") }
+                    else { Text("Per serving, as on the label.") }
                 }
                 // everything else on the label: each group folds, so the form stays short until you need it
                 ForEach(Self.groups.indices, id: \.self) { gi in
@@ -191,7 +194,7 @@ struct CustomFoodSheet: View {
                     Section {
                         DisclosureGroup {
                             ForEach(g.1, id: \.0) { n in
-                                row(n.1, Binding(get: { nuts[n.0] ?? "" }, set: { nuts[n.0] = $0 }), LocalizedStringKey(n.2))
+                                NumberField(label: n.1, text: Binding(get: { nuts[n.0] ?? "" }, set: { nuts[n.0] = $0 }), unit: LocalizedStringKey(n.2), placeholder: "–")
                             }
                         } label: {
                             HStack {
@@ -202,7 +205,7 @@ struct CustomFoodSheet: View {
                             }
                         }
                         .tint(Brand.ink2)
-                    }
+                    } header: { if gi == 0 { Text("More nutrition facts") } }
                 }
             }
             .brandList()
@@ -277,11 +280,11 @@ struct FoodsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     LazyVGrid(columns: cols, spacing: 12) {
-                        tile("My foods", "carrot.fill", Brand.ink2, count("myFoods")) { FoodLists(kind: .mine) }
-                        tile("Recipes", "frying.pan.fill", Brand.ink2, count("recipes")) { FoodLists(kind: .recipes) }
-                        tile("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.ink2, count("meals")) { FoodLists(kind: .meals) }
-                        tile("Repeating", "repeat", Brand.ink2, count("repeats")) { RepeatingView() }
-                        tile("Saved days", "calendar.badge.checkmark", Brand.ink2, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
+                        tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
+                        tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
+                        tile("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
+                        tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
+                        tile("Saved days", "calendar.badge.checkmark", Brand.fat, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }
                     planCard
                 }
@@ -304,8 +307,8 @@ struct FoodsView: View {
         NavigationLink { DayPlannerView() } label: {
             HStack(spacing: 14) {
                 ZStack {
-                    Circle().fill(Brand.card2)
-                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(Brand.ink)
+                    RoundedRectangle(cornerRadius: 16).fill(Brand.green)
+                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(.white)
                 }
                 .frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 3) {
@@ -325,8 +328,8 @@ struct FoodsView: View {
     private func tile<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {
         NavigationLink { dest() } label: {
             VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: icon).font(.title3).foregroundStyle(color)
-                    .frame(width: 44, height: 44).background(Brand.card2, in: .rect(cornerRadius: 13))
+                Image(systemName: icon).font(.title3.weight(.semibold)).foregroundStyle(.white)
+                    .frame(width: 44, height: 44).background(color, in: .rect(cornerRadius: 13))
                 Spacer(minLength: 6)
                 Text(title).font(Brand.display(18, .bold)).lineLimit(1).minimumScaleFactor(0.8)
                 Text(n == 1 ? String(localized: "1 item") : String(localized: "\(n) items")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)

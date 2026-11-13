@@ -144,3 +144,44 @@ struct LaunchDial: View {
         .accessibilityHidden(true)
     }
 }
+
+// MARK: - Forms: one clear layout everywhere (a title on every block, label left, a visible box for the value, the unit after it)
+
+/// A number you type: its name on the left, a box you can see on the right, and the unit after it.
+struct NumberField: View {
+    let label: LocalizedStringKey
+    @Binding var text: String
+    var unit: LocalizedStringKey? = nil
+    var placeholder: LocalizedStringKey = "0"
+    var big = false
+    var body: some View {
+        HStack(spacing: 10) {
+            Text(label).font(big ? .brand(.body, .semibold) : .brand(.body)).foregroundStyle(Brand.ink)
+            Spacer(minLength: 8)
+            TextField(placeholder, text: $text)
+                .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                .font(Brand.num(big ? 22 : 18, .semibold)).monospacedDigit()
+                .padding(.horizontal, 10).padding(.vertical, big ? 7 : 5)
+                .frame(width: big ? 110 : 92)
+                .background(Brand.card2, in: .rect(cornerRadius: 10))
+            Text(unit ?? "").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).frame(width: 40, alignment: .leading)
+        }
+    }
+}
+
+/// Words you type (a name): a small label above a full-width box.
+struct WordsField: View {
+    let label: LocalizedStringKey
+    @Binding var text: String
+    var placeholder: LocalizedStringKey = ""
+    var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(label).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+            TextField(placeholder, text: $text)
+                .font(.brand(.body))
+                .padding(.horizontal, 12).padding(.vertical, 10)
+                .background(Brand.card2, in: .rect(cornerRadius: 10))
+        }
+        .padding(.vertical, 2)
+    }
+}

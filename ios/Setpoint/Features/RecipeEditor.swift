@@ -17,15 +17,14 @@ struct RecipeEditor: View {
         NavigationStack {
             Form {
                 Section {
-                    TextField("Name", text: $name)
-                    Stepper(value: $servings, in: 1...100) { LabeledContent("Servings") { Text("\(servings)").monospacedDigit() } }
-                    LabeledContent("Cooked weight (optional)") {
-                        HStack(spacing: 4) {
-                            TextField("—", text: $cooked).keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(maxWidth: 90)
-                            Text("g").foregroundStyle(.secondary)
-                        }
+                    WordsField(label: "Name", text: $name, placeholder: "e.g. Chicken pasta bake")
+                } header: { Text("Recipe") }
+                Section {
+                    Stepper(value: $servings, in: 1...100) {
+                        HStack { Text("Servings"); Spacer(); Text("\(servings)").font(Brand.num(20, .semibold)).monospacedDigit() }
                     }
-                } footer: { Text("Weigh the whole pot after cooking to log it by weight later.") }
+                    NumberField(label: "Cooked weight", text: $cooked, unit: "g", placeholder: "Optional")
+                } header: { Text("Makes") } footer: { Text("Weigh the whole pot after cooking to log it by weight later.") }
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]

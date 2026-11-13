@@ -1101,6 +1101,16 @@
         }
       }
     },
+    "Add the weight if you'd like to log it in grams too.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف الوزن إن أردت تسجيله بالجرامات أيضًا."
+          }
+        }
+      }
+    },
     "Add to diary": {
       "localizations": {
         "ar": {
@@ -1987,6 +1997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المتابعة بجوجل"
+          }
+        }
+      }
+    },
+    "Cooked weight": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن بعد الطهي"
           }
         }
       }
@@ -4291,6 +4311,16 @@
         }
       }
     },
+    "Makes": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تكفي"
+          }
+        }
+      }
+    },
     "Male": {
       "localizations": {
         "ar": {
@@ -4517,6 +4547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عناصر غذائية أكتر"
+          }
+        }
+      }
+    },
+    "More nutrition facts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قيم غذائية أخرى"
           }
         }
       }
@@ -5071,6 +5111,16 @@
         }
       }
     },
+    "Nutrition facts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "القيم الغذائية"
+          }
+        }
+      }
+    },
     "Nutrition history": {
       "localizations": {
         "ar": {
@@ -5311,6 +5361,16 @@
         }
       }
     },
+    "Optional": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختياري"
+          }
+        }
+      }
+    },
     "Other": {
       "localizations": {
         "ar": {
@@ -5417,6 +5477,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "لكل حصة"
+          }
+        }
+      }
+    },
+    "Per serving, as on the label.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لكل حصة، كما على الملصق."
+          }
+        }
+      }
+    },
+    "Per serving. About %@ kcal from the macros.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لكل حصة. حوالي %@ سعرة من العناصر الكبرى."
           }
         }
       }
@@ -6381,12 +6461,32 @@
         }
       }
     },
+    "Serving": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحصة"
+          }
+        }
+      }
+    },
     "Serving (e.g. scoop, slice)": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الحصة (مثلاً مغرفة، شريحة)"
+          }
+        }
+      }
+    },
+    "Serving name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم الحصة"
           }
         }
       }
@@ -7411,6 +7511,16 @@
         }
       }
     },
+    "Totals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المجموع"
+          }
+        }
+      }
+    },
     "Track calories": {
       "localizations": {
         "ar": {
@@ -8031,6 +8141,16 @@
         }
       }
     },
+    "Weight of one serving": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزن الحصة الواحدة"
+          }
+        }
+      }
+    },
     "Weight saved": {
       "localizations": {
         "ar": {
@@ -8637,6 +8757,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "سم"
+          }
+        }
+      }
+    },
+    "e.g. Chicken pasta bake": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثلًا: مكرونة بالدجاج في الفرن"
+          }
+        }
+      }
+    },
+    "e.g. My usual breakfast": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثلًا: فطوري المعتاد"
+          }
+        }
+      }
+    },
+    "e.g. Protein shake": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثلًا: مشروب بروتين"
+          }
+        }
+      }
+    },
+    "e.g. scoop, slice, bowl": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مثلًا: مغرفة، شريحة، طبق"
           }
         }
       }
