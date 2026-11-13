@@ -46,9 +46,7 @@ struct FoodDetailSheet: View {
     var body: some View {
         NavigationStack {
             List {
-                header
-                portion
-                macroTargets
+                summary
                 if isMeal { mealFoods }
                 if isRecipe && recipe != nil { recipeFoods }
                 if !rows.isEmpty { nutrientList }
@@ -99,78 +97,59 @@ struct FoodDetailSheet: View {
 
     // MARK: Sections
 
-    private var header: some View {
-        Section {
-            HStack(spacing: 14) {
-                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 46, name: food.displayName)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text(food.displayName).font(Brand.display(20, .bold)).lineLimit(3)
-                    if !source.isEmpty { Text(source).font(.brand(.footnote)).foregroundStyle(Brand.ink2) }
+    /// One card: the food, its amount on a single line (number, unit, calories), and protein, carbs and fat.
+    private var summary: some View {
+        let plan = store.plans[day] ?? store.plan(day)
+        return Section {
+            HStack(spacing: 12) {
+                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 40, name: food.displayName)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(food.displayName).font(.brand(.headline)).lineLimit(2)
+                    if !source.isEmpty { Text(source).font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                 }
             }
-        }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
-    }
-
-    @ViewBuilder private var portion: some View {
-        Section {
-            HStack(alignment: .firstTextBaseline) {
+            // the amount, on one line
+            HStack(spacing: 10) {
+                Text("Amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                Spacer()
                 if byFood {
-                    TextField("Amount", text: $qtyText).keyboardType(.decimalPad)
-                        .font(Brand.num(44, .semibold)).monospacedDigit().fixedSize()
+                    TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
+                        .font(Brand.num(22, .semibold)).monospacedDigit().frame(width: 76)
+                        .padding(.horizontal, 8).padding(.vertical, 4).background(Brand.card2, in: .rect(cornerRadius: 10))
                     Menu {
                         Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
                     } label: {
-                        HStack(spacing: 3) { Text(info?.units.first { $0.label == unit }?.display ?? unit).lineLimit(1); Image(systemName: "chevron.down").font(.caption2.weight(.bold)) }
-                            .font(.brand(.headline)).foregroundStyle(Brand.green)
+                        HStack(spacing: 3) { Text(info?.units.first { $0.label == unit }?.display ?? unit).lineLimit(1); Image(systemName: "chevron.up.chevron.down").font(.caption2) }
+                            .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green).frame(maxWidth: 130, alignment: .leading)
                     }
                 } else {
-                    Text(Fmt.fraction(factor) + "×").font(Brand.num(44, .semibold)).monospacedDigit().contentTransition(.numericText())
-                    Text(isMeal ? "this meal" : "the logged amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                }
-                Spacer()
-                VStack(alignment: .trailing, spacing: 0) {
-                    Text(Fmt.kcal(shown.kcal)).font(Brand.num(34, .semibold)).monospacedDigit().contentTransition(.numericText())
-                    Text("kcal").font(.brand(.caption)).foregroundStyle(Brand.ink2)
-                }
-            }
-            HStack(spacing: 8) {
-                ForEach([0.5, 1, 1.5, 2], id: \.self) { m in
-                    let on = byFood ? (qty.map { abs($0 - base * m) < 0.001 } ?? false) : abs(factor - m) < 0.001
-                    Button { setMultiple(m) } label: {
-                        Text(byFood ? Fmt.fraction(base * m) : Fmt.fraction(m) + "×").font(.brand(.subheadline, .semibold)).lineLimit(1).minimumScaleFactor(0.7)
-                            .frame(maxWidth: .infinity, minHeight: 34)
-                            .background(on ? Brand.green : Brand.card2, in: Capsule())
-                            .foregroundStyle(on ? Brand.onGreen : Brand.ink)
+                    Stepper(value: $factor, in: 0.25...10, step: 0.25) {
+                        Text(Fmt.fraction(factor) + "×").font(Brand.num(22, .semibold)).monospacedDigit().frame(maxWidth: .infinity, alignment: .trailing)
                     }
-                    .buttonStyle(.plain)
+                    .fixedSize()
                 }
             }
-            if let g = gramsNow, byFood, unit != "g" {
-                Text("\(Fmt.grams(g)) g").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
-            }
-        }
-        .animation(.snappy, value: shown)
-    }
-
-    /// Protein, carbs and fat: how much this is, and what share of today's target.
-    @ViewBuilder private var macroTargets: some View {
-        let plan = store.plans[day] ?? store.plan(day)
-        Section {
             HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 5) {
+                    Text("Calories").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                    Text(Fmt.kcal(shown.kcal)).font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
+                    Spacer(minLength: 0)
+                }
+                .frame(maxWidth: .infinity, alignment: .leading)
                 macroBar("Protein", shown.protein, plan?.protein, Brand.protein)
                 macroBar("Carbs", shown.carbs, plan?.carbs, Brand.carbs)
                 macroBar("Fat", shown.fat, plan?.fat, Brand.fat)
             }
-            .padding(.vertical, 4)
+            .padding(.vertical, 2)
         }
+        .animation(.snappy, value: shown)
     }
+
     private func macroBar(_ l: LocalizedStringKey, _ g: Double, _ t: Double?, _ c: Color) -> some View {
         VStack(alignment: .leading, spacing: 5) {
             Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
             HStack(alignment: .firstTextBaseline, spacing: 3) {
-                Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
+                Text("\(Fmt.grams(g)) g").font(Brand.num(18, .semibold)).monospacedDigit().contentTransition(.numericText())
                 if let t, t > 0 { Text("\(Int((g / t * 100).rounded()))%").font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit() }
             }
             GeometryReader { geo in

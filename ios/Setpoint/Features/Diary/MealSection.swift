@@ -9,6 +9,8 @@ struct MealSection: View {
     var kinds: [String: String] = [:]
     let addFood: () -> Void
     @State private var open: FoodItem?
+    @State private var more: FoodItem?
+    @State private var repeating: FoodItem?
     @AppStorage("closedMeals") private var closedMeals = ""
     private var expanded: Bool { !closedMeals.split(separator: ",").contains(Substring(meal.key)) }
     private func toggleOpen() {
@@ -73,7 +75,9 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
                     .swipeActions(edge: .leading) {
-                        Button("Add another", systemImage: "plus") { withAnimation { store.addAnother(food, on: day) } }.tint(Brand.green)
+                        // swipe right: adjust it, or everything else under ⋯
+                        Button("Adjust", systemImage: "slider.horizontal.3") { open = food }.tint(Brand.green)
+                        Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.ink2)
                     }
                     .contextMenu {
                         if food.isPlanned && day <= Day.today {
@@ -98,6 +102,17 @@ struct MealSection: View {
             }
         }
         .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
+        .sheet(item: $repeating) { f in RepeatSheet(item: f.raw) }
+        .confirmationDialog(more?.displayName ?? "", isPresented: Binding(get: { more != nil }, set: { if !$0 { more = nil } }), titleVisibility: .visible, presenting: more) { f in
+            if f.isPlanned && day <= Day.today { Button("Mark as eaten") { store.markEaten(f, on: day) } }
+            Button("Add another") { withAnimation { store.addAnother(f, on: day) } }
+            ForEach(store.meals.filter { $0.key != meal.key }) { m in
+                Button("Move to \(m.name)") { withAnimation { store.move(f, to: m.key, on: day) } }
+            }
+            Button("Copy to another day") { copying = [f] }
+            Button("Repeat this food") { repeating = f }
+            Button("Delete", role: .destructive) { withAnimation { store.delete(f, on: day) } }
+        }
         .alert("Save as meal", isPresented: $naming) {
             TextField("Name", text: $mealName)
             Button("Cancel", role: .cancel) {}
