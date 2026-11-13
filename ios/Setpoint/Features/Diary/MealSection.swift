@@ -75,9 +75,8 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
                     .swipeActions(edge: .leading) {
-                        // swipe right: adjust it, or everything else under ⋯
-                        Button("Adjust", systemImage: "slider.horizontal.3") { open = food }.tint(Brand.green)
-                        Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.ink2)
+                        // swipe right: ⋯ with everything you can do to it
+                        Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.green)
                     }
                     .contextMenu {
                         if food.isPlanned && day <= Day.today {
@@ -104,6 +103,7 @@ struct MealSection: View {
         .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
         .sheet(item: $repeating) { f in RepeatSheet(item: f.raw) }
         .confirmationDialog(more?.displayName ?? "", isPresented: Binding(get: { more != nil }, set: { if !$0 { more = nil } }), titleVisibility: .visible, presenting: more) { f in
+            Button("Adjust") { open = f }
             if f.isPlanned && day <= Day.today { Button("Mark as eaten") { store.markEaten(f, on: day) } }
             Button("Add another") { withAnimation { store.addAnother(f, on: day) } }
             ForEach(store.meals.filter { $0.key != meal.key }) { m in
