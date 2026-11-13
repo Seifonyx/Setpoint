@@ -176,7 +176,7 @@ struct CustomFoodSheet: View {
                 } header: { Text("Food") }
                 Section {
                     WordsField(label: "Serving name", text: $unit, placeholder: "e.g. scoop, slice, bowl")
-                    NumberField(label: "Weight of one serving", text: $grams, unit: "g", placeholder: "Optional")
+                    NumberField(label: "Weight of one serving", text: $grams, unit: "g", placeholder: "–")
                 } header: { Text("Serving") } footer: { Text("Add the weight if you'd like to log it in grams too.") }
                 Section {
                     NumberField(label: "Calories", text: $kcal, unit: "kcal", big: true)

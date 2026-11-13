@@ -2051,6 +2051,16 @@
         }
       }
     },
+    "Cooked weight is optional: weigh the whole pot after cooking to log it by weight later.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن بعد الطهي اختياري: زِن القدر كله بعد الطهي لتسجيله بالوزن لاحقًا."
+          }
+        }
+      }
+    },
     "Copied %@": {
       "localizations": {
         "ar": {

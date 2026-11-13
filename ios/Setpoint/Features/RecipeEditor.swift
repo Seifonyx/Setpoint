@@ -23,8 +23,8 @@ struct RecipeEditor: View {
                     Stepper(value: $servings, in: 1...100) {
                         HStack { Text("Servings"); Spacer(); Text("\(servings)").font(Brand.num(20, .semibold)).monospacedDigit() }
                     }
-                    NumberField(label: "Cooked weight", text: $cooked, unit: "g", placeholder: "Optional")
-                } header: { Text("Makes") } footer: { Text("Weigh the whole pot after cooking to log it by weight later.") }
+                    NumberField(label: "Cooked weight", text: $cooked, unit: "g", placeholder: "–")
+                } header: { Text("Makes") } footer: { Text("Cooked weight is optional: weigh the whole pot after cooking to log it by weight later.") }
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
