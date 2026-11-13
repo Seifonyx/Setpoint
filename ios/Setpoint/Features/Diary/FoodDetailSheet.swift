@@ -493,9 +493,9 @@ struct Wash: View {
     var body: some View {
         ZStack {
             Brand.card
-            Circle().fill(color.opacity(scheme == .dark ? 0.30 : 0.24)).frame(width: 220, height: 220).blur(radius: 50)
+            Circle().fill(color.opacity(scheme == .dark ? 0.42 : 0.38)).frame(width: 240, height: 240).blur(radius: 44)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).offset(x: -70, y: -90)
-            Circle().fill(Brand.amber.opacity(scheme == .dark ? 0.12 : 0.10)).frame(width: 160, height: 160).blur(radius: 50)
+            Circle().fill(Brand.amber.opacity(scheme == .dark ? 0.18 : 0.16)).frame(width: 180, height: 180).blur(radius: 44)
                 .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing).offset(x: 40, y: -70)
         }
         .clipped()

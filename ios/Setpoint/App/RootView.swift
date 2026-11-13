@@ -31,23 +31,22 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab("Diary", systemImage: tab == .diary ? "book.pages.fill" : "book.pages", value: AppTab.diary) {
+            Tab(value: AppTab.diary) {
                 DiaryView(importing: $importing)
-            }
+            } label: { TabIcon(title: "Diary", icon: tab == .diary ? "book.pages.fill" : "book.pages") }
             // bars read the same in Arabic (the trend arrow flipped and looked like going down)
-            Tab("Progress", systemImage: tab == .progress ? "chart.bar.fill" : "chart.bar", value: AppTab.progress) {
+            Tab(value: AppTab.progress) {
                 ProgressScreen()
-            }
-            Tab("Foods", systemImage: tab == .foods ? "fork.knife.circle.fill" : "fork.knife.circle", value: AppTab.foods) {
+            } label: { TabIcon(title: "Progress", icon: tab == .progress ? "chart.bar.fill" : "chart.bar") }
+            Tab(value: AppTab.foods) {
                 FoodsView()
-            }
-            Tab("You", systemImage: tab == .you ? "person.crop.circle.fill" : "person.crop.circle", value: AppTab.you) {
+            } label: { TabIcon(title: "Foods", icon: tab == .foods ? "fork.knife.circle.fill" : "fork.knife.circle") }
+            Tab(value: AppTab.you) {
                 YouView(importing: $importing)
-            }
+            } label: { TabIcon(title: "You", icon: tab == .you ? "person.crop.circle.fill" : "person.crop.circle") }
             .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .environment(\.symbolVariants, .none) // tab icons: filled only on the tab you're on
         // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one
         .sensoryFeedback(trigger: store.changeCount) { _, _ in
             guard haptics else { return nil }
@@ -113,4 +112,13 @@ struct RootView: View {
 
 #Preview {
     RootView()
+}
+
+/// A tab's icon exactly as named: filled on the tab you're on, outlined on the others (the tab bar would fill them all).
+struct TabIcon: View {
+    let title: LocalizedStringKey
+    let icon: String
+    var body: some View {
+        Label { Text(title) } icon: { Image(systemName: icon).environment(\.symbolVariants, .none) }
+    }
 }
