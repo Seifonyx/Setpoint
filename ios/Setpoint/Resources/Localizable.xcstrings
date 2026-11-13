@@ -181,6 +181,16 @@
         }
       }
     },
+    "%@ kcal over. One day doesn't change your trend.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "زيادة %@ سعرة. يوم واحد لا يغيّر اتجاهك."
+          }
+        }
+      }
+    },
     "%@ kcal under target": {
       "localizations": {
         "ar": {
@@ -461,6 +471,16 @@
         }
       }
     },
+    "%lld vitamins and minerals covered": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld فيتامينات ومعادن مكتملة"
+          }
+        }
+      }
+    },
     "%lld weigh-ins": {
       "localizations": {
         "ar": {
@@ -721,12 +741,52 @@
         }
       }
     },
+    "A decent day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم لا بأس به"
+          }
+        }
+      }
+    },
     "A few more weigh-ins and your trend shows here.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "بضع قياسات وزن أخرى ويظهر اتجاهك هنا."
+          }
+        }
+      }
+    },
+    "A fresh day. %@ kcal to work with.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم جديد. لديك %@ سعرة."
+          }
+        }
+      }
+    },
+    "A good day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم جيد"
+          }
+        }
+      }
+    },
+    "A great day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم رائع"
           }
         }
       }
@@ -2651,6 +2711,16 @@
         }
       }
     },
+    "Every day on target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل يوم على الهدف"
+          }
+        }
+      }
+    },
     "Everything on this iPhone is replaced with the backup.": {
       "localizations": {
         "ar": {
@@ -4201,6 +4271,16 @@
         }
       }
     },
+    "More": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المزيد"
+          }
+        }
+      }
+    },
     "More nutrients": {
       "localizations": {
         "ar": {
@@ -4807,6 +4887,46 @@
           "stringUnit": {
             "state": "translated",
             "value": "على الهدف يعني في حدود ١٠٪ من سعرات اليوم ده."
+          }
+        }
+      }
+    },
+    "On track. %@ kcal left, mostly carbs.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على المسار. متبقٍ %@ سعرة، معظمها كربوهيدرات."
+          }
+        }
+      }
+    },
+    "On track. %@ kcal left, mostly fat.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على المسار. متبقٍ %@ سعرة، معظمها دهون."
+          }
+        }
+      }
+    },
+    "On track. %@ kcal left, mostly protein.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على المسار. متبقٍ %@ سعرة، معظمها بروتين."
+          }
+        }
+      }
+    },
+    "On track. %@ kcal left, nicely balanced.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على المسار. متبقٍ %@ سعرة، ومتوازنة."
           }
         }
       }
@@ -5591,6 +5711,16 @@
         }
       }
     },
+    "Right on target. Nicely done.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الهدف تمامًا. أحسنت."
+          }
+        }
+      }
+    },
     "Rose": {
       "localizations": {
         "ar": {
@@ -6191,6 +6321,16 @@
         }
       }
     },
+    "Sounds": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأصوات"
+          }
+        }
+      }
+    },
     "Split into %lld foods": {
       "localizations": {
         "ar": {
@@ -6581,6 +6721,16 @@
         }
       }
     },
+    "These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه لهذا الآيفون فقط. الأصوات: نقرة خفيفة عند التسجيل، ورنّة عند بلوغ الهدف."
+          }
+        }
+      }
+    },
     "These sync with the web app.": {
       "localizations": {
         "ar": {
@@ -6767,6 +6917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بكرة"
+          }
+        }
+      }
+    },
+    "Tomorrow's a fresh start": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غدًا بداية جديدة"
           }
         }
       }
@@ -7541,6 +7701,16 @@
         }
       }
     },
+    "Your day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يومك"
+          }
+        }
+      }
+    },
     "Your diary starts here": {
       "localizations": {
         "ar": {
@@ -8097,6 +8267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "زيادة"
+          }
+        }
+      }
+    },
+    "protein hit": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البروتين مكتمل"
           }
         }
       }

@@ -2,7 +2,8 @@ import SwiftUI
 
 /// One empty state for the whole app: an icon in a soft circle, a title, a line of help and (maybe) one action.
 struct EmptyState: View {
-    let icon: String
+    var art: EmptyArt? = nil
+    var icon: String = "sparkles"
     let title: LocalizedStringKey
     let message: LocalizedStringKey
     var color: Color = Brand.green
@@ -10,8 +11,10 @@ struct EmptyState: View {
 
     var body: some View {
         VStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 26, weight: .semibold)).foregroundStyle(color)
-                .frame(width: 64, height: 64).background(color.opacity(0.14), in: Circle())
+            if let art { EmptyArtView(art: art) } else {
+                Image(systemName: icon).font(.system(size: 26, weight: .semibold)).foregroundStyle(color)
+                    .frame(width: 64, height: 64).background(color.opacity(0.14), in: Circle())
+            }
             Text(title).font(Brand.display(20, .bold)).multilineTextAlignment(.center)
             Text(message).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
@@ -49,5 +52,95 @@ struct SkeletonRows: View {
         .opacity(on ? 0.45 : 1)
         .onAppear { if !reduceMotion { withAnimation(.easeInOut(duration: 0.9).repeatForever(autoreverses: true)) { on = true } } }
         .accessibilityLabel(Text("Loading"))
+    }
+}
+
+/// Small line drawings for empty screens, in the brand colours (drawn in code, so they're crisp at any size).
+enum EmptyArt { case plate, cup, scale, target, repeating }
+
+struct EmptyArtView: View {
+    let art: EmptyArt
+    var body: some View {
+        Canvas { ctx, size in
+            let w = size.width, h = size.height
+            let ink = GraphicsContext.Shading.color(Brand.green), dot = GraphicsContext.Shading.color(Brand.amber)
+            let stroke = StrokeStyle(lineWidth: 3, lineCap: .round, lineJoin: .round)
+            func line(_ pts: [CGPoint]) -> Path { var p = Path(); p.addLines(pts); return p }
+            switch art {
+            case .plate:
+                ctx.stroke(Path(ellipseIn: CGRect(x: w * 0.25, y: h * 0.12, width: w * 0.5, height: w * 0.5)), with: ink, style: stroke)
+                ctx.stroke(Path(ellipseIn: CGRect(x: w * 0.34, y: h * 0.12 + w * 0.09, width: w * 0.32, height: w * 0.32)), with: ink, style: StrokeStyle(lineWidth: 2, dash: [4, 5]))
+                // fork and knife
+                ctx.stroke(line([CGPoint(x: w * 0.14, y: h * 0.14), CGPoint(x: w * 0.14, y: h * 0.86)]), with: ink, style: stroke)
+                for dx in [-0.04, 0.0, 0.04] { ctx.stroke(line([CGPoint(x: w * (0.14 + dx), y: h * 0.14), CGPoint(x: w * (0.14 + dx), y: h * 0.32)]), with: ink, style: stroke) }
+                var knife = Path(); knife.move(to: CGPoint(x: w * 0.86, y: h * 0.86)); knife.addLine(to: CGPoint(x: w * 0.86, y: h * 0.14))
+                knife.addQuadCurve(to: CGPoint(x: w * 0.86, y: h * 0.5), control: CGPoint(x: w * 0.96, y: h * 0.3))
+                ctx.stroke(knife, with: ink, style: stroke)
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.47, y: h * 0.12 + w * 0.22, width: w * 0.06, height: w * 0.06)), with: dot)
+            case .cup:
+                var cup = Path()
+                cup.move(to: CGPoint(x: w * 0.24, y: h * 0.42)); cup.addLine(to: CGPoint(x: w * 0.68, y: h * 0.42))
+                cup.addLine(to: CGPoint(x: w * 0.64, y: h * 0.84)); cup.addQuadCurve(to: CGPoint(x: w * 0.28, y: h * 0.84), control: CGPoint(x: w * 0.46, y: h * 0.92))
+                cup.closeSubpath()
+                ctx.stroke(cup, with: ink, style: stroke)
+                var handle = Path(); handle.move(to: CGPoint(x: w * 0.67, y: h * 0.5))
+                handle.addCurve(to: CGPoint(x: w * 0.65, y: h * 0.72), control1: CGPoint(x: w * 0.84, y: h * 0.48), control2: CGPoint(x: w * 0.84, y: h * 0.74))
+                ctx.stroke(handle, with: ink, style: stroke)
+                for x in [0.38, 0.52] {
+                    var steam = Path(); steam.move(to: CGPoint(x: w * x, y: h * 0.34))
+                    steam.addCurve(to: CGPoint(x: w * x, y: h * 0.08), control1: CGPoint(x: w * (x - 0.07), y: h * 0.26), control2: CGPoint(x: w * (x + 0.07), y: h * 0.16))
+                    ctx.stroke(steam, with: .color(Brand.amber), style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                }
+            case .scale:
+                ctx.stroke(Path(roundedRect: CGRect(x: w * 0.2, y: h * 0.14, width: w * 0.6, height: h * 0.72), cornerRadius: 14), with: ink, style: stroke)
+                var dial = Path(); dial.addArc(center: CGPoint(x: w * 0.5, y: h * 0.48), radius: w * 0.16, startAngle: .degrees(200), endAngle: .degrees(340), clockwise: false)
+                ctx.stroke(dial, with: ink, style: stroke)
+                ctx.stroke(line([CGPoint(x: w * 0.5, y: h * 0.48), CGPoint(x: w * 0.58, y: h * 0.36)]), with: dot, style: stroke)
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.47, y: h * 0.45, width: w * 0.06, height: w * 0.06)), with: dot)
+                ctx.stroke(line([CGPoint(x: w * 0.34, y: h * 0.72), CGPoint(x: w * 0.66, y: h * 0.72)]), with: ink, style: StrokeStyle(lineWidth: 2, lineCap: .round))
+            case .target:
+                for r in [0.36, 0.24, 0.12] {
+                    ctx.stroke(Path(ellipseIn: CGRect(x: w * 0.5 - w * r, y: h * 0.5 - w * r, width: w * r * 2, height: w * r * 2)), with: ink, style: stroke)
+                }
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.47, y: h * 0.5 - w * 0.03, width: w * 0.06, height: w * 0.06)), with: dot)
+                ctx.stroke(line([CGPoint(x: w * 0.53, y: h * 0.47), CGPoint(x: w * 0.88, y: h * 0.12)]), with: dot, style: stroke)
+                ctx.stroke(line([CGPoint(x: w * 0.78, y: h * 0.12), CGPoint(x: w * 0.88, y: h * 0.12), CGPoint(x: w * 0.88, y: h * 0.22)]), with: dot, style: stroke)
+            case .repeating:
+                var a = Path(); a.addArc(center: CGPoint(x: w * 0.5, y: h * 0.5), radius: w * 0.3, startAngle: .degrees(200), endAngle: .degrees(340), clockwise: false)
+                var b = Path(); b.addArc(center: CGPoint(x: w * 0.5, y: h * 0.5), radius: w * 0.3, startAngle: .degrees(20), endAngle: .degrees(160), clockwise: false)
+                ctx.stroke(a, with: ink, style: stroke); ctx.stroke(b, with: ink, style: stroke)
+                let tip1 = CGPoint(x: w * 0.5 + w * 0.3 * cos(340 * .pi / 180), y: h * 0.5 + w * 0.3 * sin(340 * .pi / 180))
+                ctx.stroke(line([CGPoint(x: tip1.x - 10, y: tip1.y - 4), tip1, CGPoint(x: tip1.x + 2, y: tip1.y - 11)]), with: ink, style: stroke)
+                let tip2 = CGPoint(x: w * 0.5 + w * 0.3 * cos(160 * .pi / 180), y: h * 0.5 + w * 0.3 * sin(160 * .pi / 180))
+                ctx.stroke(line([CGPoint(x: tip2.x + 10, y: tip2.y + 4), tip2, CGPoint(x: tip2.x - 2, y: tip2.y + 11)]), with: ink, style: stroke)
+                ctx.fill(Path(ellipseIn: CGRect(x: w * 0.46, y: h * 0.46, width: w * 0.08, height: w * 0.08)), with: dot)
+            }
+        }
+        .frame(width: 104, height: 84)
+        .accessibilityHidden(true)
+    }
+}
+
+/// The opening moment: the dial from the app icon draws itself, then the app fades in behind it.
+struct LaunchDial: View {
+    let done: () -> Void
+    @State private var fill = 0.0
+    @State private var fade = false
+    var body: some View {
+        ZStack {
+            PaperBackground().ignoresSafeArea()
+            CalorieDial(eaten: fill, target: 100, protein: (fill * 0.8, 100), carbs: (fill * 0.95, 100), fat: (fill * 0.6, 100))
+                .frame(width: 150, height: 150)
+                .scaleEffect(fade ? 1.15 : 1)
+        }
+        .opacity(fade ? 0 : 1)
+        .task {
+            withAnimation(.spring(response: 0.9, dampingFraction: 0.8)) { fill = 78 }
+            try? await Task.sleep(for: .milliseconds(850))
+            withAnimation(.easeIn(duration: 0.35)) { fade = true }
+            try? await Task.sleep(for: .milliseconds(380))
+            done()
+        }
+        .accessibilityHidden(true)
     }
 }

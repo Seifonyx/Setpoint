@@ -19,7 +19,7 @@ enum Brand {
     static let carbs = amber
     static let fat = dyn(0x4F6FA3, 0x87A0D2)         // slate blue
     static let water = dyn(0x2C88A8, 0x60B2CC)
-    static let over = dyn(0xB8412E, 0xE2705A)
+    static let over = dyn(0xB8691C, 0xE69A4E)       // going over is a calm amber, not an alarm
 
     static func dyn(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
@@ -34,6 +34,12 @@ enum Brand {
     static func display(_ size: CGFloat, _ weight: Font.Weight = .bold, relativeTo style: Font.TextStyle = .largeTitle) -> Font {
         if arabic { return .custom(plex(weight), size: size, relativeTo: style) }
         let name = weight == .heavy || weight == .black ? "BricolageGrotesque-ExtraBold" : weight == .semibold || weight == .medium ? "BricolageGrotesque-SemiBold" : "BricolageGrotesque-Bold"
+        return .custom(name, size: size, relativeTo: style)
+    }
+    /// Numbers: tall and condensed, like a good watch face (Barlow Condensed). Arabic keeps IBM Plex Sans Arabic.
+    static func num(_ size: CGFloat, _ weight: Font.Weight = .semibold, relativeTo style: Font.TextStyle = .largeTitle) -> Font {
+        if arabic { return .custom(plex(weight == .medium ? .medium : .bold), size: size, relativeTo: style) }
+        let name = weight == .bold || weight == .heavy || weight == .black ? "BarlowCondensed-Bold" : weight == .medium ? "BarlowCondensed-Medium" : "BarlowCondensed-SemiBold"
         return .custom(name, size: size, relativeTo: style)
     }
     /// Body text in a text style (scales with Dynamic Type).
@@ -68,6 +74,58 @@ enum Brand {
     }
 }
 
+/// The style guide: every screen takes its spacing, corners and motion from here, so they all match.
+enum Space {
+    static let xs: CGFloat = 4, s: CGFloat = 8, m: CGFloat = 12, l: CGFloat = 16, xl: CGFloat = 24, xxl: CGFloat = 32
+}
+enum Radius {
+    static let card: CGFloat = 24, tile: CGFloat = 18, chip: CGFloat = 12
+}
+enum Motion {
+    static let snappy = Animation.snappy(duration: 0.3)
+    static let gentle = Animation.spring(response: 0.55, dampingFraction: 0.85)
+    static let slow = Animation.spring(response: 1.1, dampingFraction: 0.8)
+}
+
+/// The page behind everything: warm paper with a faint grain, tinted by the time of day (a little warmer in the
+/// morning, neutral at midday, softer and dimmer at night).
+struct PaperBackground: View {
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        TimelineView(.everyMinute) { ctx in
+            ZStack {
+                Brand.bg
+                LinearGradient(colors: [tint(ctx.date), .clear], startPoint: .top, endPoint: .center)
+                Image("Grain").resizable(resizingMode: .tile)
+                    .opacity(scheme == .dark ? 0.035 : 0.05)
+                    .blendMode(scheme == .dark ? .screen : .multiply)
+            }
+        }
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+    private func tint(_ d: Date) -> Color {
+        let h = Double(Calendar.current.component(.hour, from: d)) + Double(Calendar.current.component(.minute, from: d)) / 60
+        switch h {
+        case 5..<11: return Brand.amber.opacity(scheme == .dark ? 0.07 : 0.09)        // morning: warm
+        case 11..<17: return .clear                                                      // midday: plain paper
+        case 17..<21: return Brand.protein.opacity(scheme == .dark ? 0.05 : 0.06)      // evening: a little glow
+        default: return Color(Brand.rgb(0x2C3A5A)).opacity(scheme == .dark ? 0.12 : 0.06) // night: dimmer and cooler
+        }
+    }
+}
+
+/// A Setpoint card: no outlines. In the light, a soft shadow lifts it off the paper; in the dark it's one step lighter.
+struct BrandCardStyle: ViewModifier {
+    var padding: CGFloat
+    @Environment(\.colorScheme) private var scheme
+    func body(content: Content) -> some View {
+        content.padding(padding)
+            .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).fill(Brand.card)
+                .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.06), radius: 14, y: 5))
+    }
+}
+
 extension Font {
     /// Figtree (IBM Plex Sans Arabic in Arabic) in a text style.
     static func brand(_ style: Font.TextStyle, _ weight: Font.Weight = .regular) -> Font { Brand.text(style, weight) }
@@ -77,45 +135,71 @@ extension View {
     /// Lists and forms on the warm page with warm cards.
     func brandList() -> some View {
         self.scrollContentBackground(.hidden)
-            .background(Brand.bg.ignoresSafeArea())
+            .background(PaperBackground().ignoresSafeArea())
     }
-    /// A Setpoint card: warm surface, soft corners, a hairline in dark mode.
-    func brandCard(padding: CGFloat = 16) -> some View {
-        self.padding(padding)
-            .background(RoundedRectangle(cornerRadius: 24, style: .continuous).fill(Brand.card))
-            .overlay(RoundedRectangle(cornerRadius: 24, style: .continuous).strokeBorder(Brand.line.opacity(0.6), lineWidth: 0.5))
-    }
+    /// A Setpoint card: warm surface, soft corners, no outline.
+    func brandCard(padding: CGFloat = Space.l) -> some View { modifier(BrandCardStyle(padding: padding)) }
+    /// The paper page, for screens that aren't lists.
+    func paperPage() -> some View { background(PaperBackground().ignoresSafeArea()) }
 }
 
-/// The signature: an arc that fills towards your target, with the three macros as thin arcs inside it.
+/// The signature, and it's alive: an arc that fills towards your target through the day, with the three macros as
+/// thin arcs inside it. It glows softly as you get close, turns a calm amber if you go over, and when the day lands on
+/// target the opening at the bottom closes into a full circle. Hitting your protein makes its ring flash once.
 struct CalorieDial: View {
     let eaten: Double
     let target: Double?
     let protein: (Double, Double)?
     let carbs: (Double, Double)?
     let fat: (Double, Double)?
+    var lineWidth: CGFloat = 18
 
-    private let start = 0.125, span = 0.75 // a 270° arc, open at the bottom
+    @State private var proteinFlash = false
+    @State private var breathe = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+
+    private let start = 0.125
+    private var t: Double { max(target ?? eaten, 1) }
+    private var p: Double { min(eaten / t, 1) }
+    private var over: Bool { (target ?? .infinity) < eaten * 0.95 }
+    /// On target: within 5% of it (and you've eaten most of the day).
+    private var onTarget: Bool { guard let target, target > 0 else { return false }; return abs(eaten - target) <= target * 0.05 }
+    private var near: Bool { target != nil && p >= 0.85 && !over }
+    private var span: Double { onTarget ? 1 : 0.75 }
 
     var body: some View {
-        let t = max(target ?? eaten, 1), p = min(eaten / t, 1), over = (target ?? .infinity) < eaten * 0.95
         ZStack {
-            arc(1, width: 18, color: Brand.card2)
-            arc(p, width: 18, color: over ? Brand.over : Brand.green)
-            if let protein { ring(protein, inset: 26, color: Brand.protein) }
-            if let carbs { ring(carbs, inset: 36, color: Brand.carbs) }
-            if let fat { ring(fat, inset: 46, color: Brand.fat) }
-            // a dot where the arc ends: "today's point"
+            arc(1, width: lineWidth, color: Brand.card2)
+            arc(p, width: lineWidth, color: over ? Brand.over : Brand.green)
+                .shadow(color: (over ? Brand.over : Brand.green).opacity(near || over ? (breathe ? 0.55 : 0.25) : 0), radius: near || over ? 12 : 0)
+            if let protein {
+                ring(protein, inset: lineWidth + 8, color: Brand.protein)
+                    .shadow(color: Brand.protein.opacity(proteinFlash ? 0.9 : 0), radius: proteinFlash ? 10 : 0)
+                    .scaleEffect(proteinFlash ? 1.03 : 1)
+            }
+            if let carbs { ring(carbs, inset: lineWidth + 18, color: Brand.carbs) }
+            if let fat { ring(fat, inset: lineWidth + 28, color: Brand.fat) }
+            // a dot where the arc ends: "today's point" (hidden once the circle closes)
             GeometryReader { g in
-                let r = min(g.size.width, g.size.height) / 2 - 9
+                let r = min(g.size.width, g.size.height) / 2 - lineWidth / 2
                 let a = Angle.degrees(90 + 360 * (start + span * p))
-                Circle().fill(Brand.amber).frame(width: 10, height: 10)
+                Circle().fill(Brand.amber).frame(width: lineWidth * 0.55, height: lineWidth * 0.55)
                     .shadow(color: Brand.amber.opacity(0.6), radius: 6)
                     .position(x: g.size.width / 2 + r * cos(a.radians), y: g.size.height / 2 + r * sin(a.radians))
-                    .opacity(eaten > 0 ? 1 : 0)
+                    .opacity(eaten > 0 && !onTarget ? 1 : 0)
             }
         }
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: eaten)
+        .animation(.spring(response: 1.0, dampingFraction: 0.75), value: onTarget)
+        .onChange(of: protein?.0 ?? 0) { old, new in
+            guard let goal = protein?.1, goal > 0, old < goal, new >= goal, !reduceMotion else { return }
+            withAnimation(.easeOut(duration: 0.25)) { proteinFlash = true }
+            withAnimation(.easeIn(duration: 0.8).delay(0.35)) { proteinFlash = false }
+        }
+        .onAppear {
+            guard !reduceMotion else { return }
+            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) { breathe = true }
+        }
     }
     private func arc(_ f: Double, width: CGFloat, color: Color, inset: CGFloat = 0) -> some View {
         Circle().trim(from: 0, to: span * max(0, min(f, 1)))

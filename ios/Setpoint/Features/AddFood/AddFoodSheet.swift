@@ -141,13 +141,7 @@ struct AddFoodSheet: View {
     }
 
     private func emptyCard(_ title: LocalizedStringKey, _ note: LocalizedStringKey) -> some View {
-        Section {
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title).font(.brand(.headline))
-                Text(note).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-            }
-            .padding(.vertical, 6)
-        }
+        Section { EmptyState(art: .cup, title: title, message: note) }
     }
 
     private var sortedMeals: [SavedMeal] {

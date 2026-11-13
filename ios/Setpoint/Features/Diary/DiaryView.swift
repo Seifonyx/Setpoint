@@ -20,7 +20,7 @@ struct DiaryView: View {
             List {
                 if store.isEmpty {
                     Section {
-                        EmptyState(icon: "book.pages", title: "Your diary starts here",
+                        EmptyState(art: .plate, title: "Your diary starts here",
                                    message: "Log your first food or weigh-in. If you've used Setpoint before, sign in under You and your data comes back.",
                                    action: (title: "Add food", run: { adding = AddJob(meal: mealNow) }))
                         Button("Import a backup file", systemImage: "square.and.arrow.down") { importing = true }
@@ -29,6 +29,9 @@ struct DiaryView: View {
                 }
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
                     Section { RamadanBanner() }
+                }
+                if day == Day.today && !store.isEmpty && WrapUpCard.shows(store) {
+                    Section { WrapUpCard() }
                 }
                 if day == Day.today && store.entries.count >= 3 && CheckInBanner.due {
                     Section { CheckInBanner() }
@@ -161,7 +164,7 @@ struct SummaryPager: View {
     let totals: Totals
     let plan: DayPlan?
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
-    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 318 // grows with the iPhone's text size
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 346 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -188,8 +191,26 @@ struct SummaryCard: View {
     let totals: Totals
     let plan: DayPlan?
 
+    /// The day in one sentence, above the numbers: what matters, in plain words.
+    private var sentence: LocalizedStringKey? {
+        guard let plan, plan.kcal > 0 else { return nil }
+        let left = plan.kcal - totals.kcal
+        if totals.kcal < 1 { return "A fresh day. \(Fmt.kcal(plan.kcal)) kcal to work with." }
+        if abs(left) <= plan.kcal * 0.05 { return "Right on target. Nicely done." }
+        if left < 0 { return "\(Fmt.kcal(-left)) kcal over. One day doesn't change your trend." }
+        // what most of what's left should be
+        let gaps = [(plan.protein - totals.protein) * 4 / max(plan.protein * 4, 1), (plan.carbs - totals.carbs) * 4 / max(plan.carbs * 4, 1), (plan.fat - totals.fat) * 9 / max(plan.fat * 9, 1)]
+        let i = gaps.indices.max { gaps[$0] < gaps[$1] } ?? 0
+        if gaps[i] < 0.15 { return "On track. \(Fmt.kcal(left)) kcal left, nicely balanced." }
+        return i == 0 ? "On track. \(Fmt.kcal(left)) kcal left, mostly protein." : i == 1 ? "On track. \(Fmt.kcal(left)) kcal left, mostly carbs." : "On track. \(Fmt.kcal(left)) kcal left, mostly fat."
+    }
+
     var body: some View {
         VStack(spacing: 14) {
+            if let sentence {
+                Text(sentence).font(.brand(.headline)).foregroundStyle(Brand.ink).multilineTextAlignment(.center)
+                    .frame(maxWidth: .infinity).contentTransition(.opacity).animation(Motion.snappy, value: totals)
+            }
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
@@ -200,11 +221,11 @@ struct SummaryCard: View {
                         let left = plan.kcal - totals.kcal
                         Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
                             .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
-                        Text(Fmt.kcal(abs(left))).font(Brand.display(36, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                        Text(Fmt.kcal(abs(left))).font(Brand.num(43, .bold)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     } else {
                         Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
-                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(36, .heavy)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                        Text(Fmt.kcal(totals.kcal)).font(Brand.num(43, .bold)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     }
                 }
                 .frame(maxWidth: 104)
@@ -240,7 +261,7 @@ struct SummaryCard: View {
         .overlay {
             // the logging moment: what you just added floats up out of the dial
             if let g = gained {
-                Text("+\(Fmt.kcal(g)) kcal").font(Brand.display(22, .bold)).foregroundStyle(Brand.green).monospacedDigit()
+                Text("+\(Fmt.kcal(g)) kcal").font(Brand.num(26, .semibold)).foregroundStyle(Brand.green).monospacedDigit()
                     .padding(.horizontal, 14).padding(.vertical, 6).background(Brand.greenSoft, in: Capsule())
                     .offset(y: rise ? -150 : -70).opacity(rise ? 0 : 1)
                     .allowsHitTesting(false)
@@ -274,6 +295,7 @@ struct SummaryCard: View {
     @State private var rise = false
     @State private var pulse = false
     private func celebrate(_ text: String) {
+        Sounds.play(.chime)
         withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { cheer = text }
         Task { try? await Task.sleep(for: .seconds(2.5)); withAnimation { cheer = nil } }
     }
@@ -354,7 +376,7 @@ struct MacroBar: View {
                 Text(label).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.grams(value)).font(Brand.display(19, .bold)).monospacedDigit().contentTransition(.numericText())
+                Text(Fmt.grams(value)).font(Brand.num(23, .semibold)).monospacedDigit().contentTransition(.numericText())
                 Text("/ \(Fmt.grams(target)) g").font(.brand(.caption2)).foregroundStyle(Brand.ink2)
             }
             .lineLimit(1).minimumScaleFactor(0.7)
@@ -389,7 +411,7 @@ struct WeightTile: View {
                 Label("Weight", systemImage: "scalemass.fill").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                 if let entry {
                     HStack(alignment: .firstTextBaseline, spacing: 3) {
-                        Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.display(30, .bold)).monospacedDigit()
+                        Text(Fmt.weight(entry.kg, unit: unit)).font(Brand.num(36, .semibold)).monospacedDigit()
                         Text(LocalizedStringKey(unit)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
                     if entry.excluded { Text("Excluded").font(.brand(.caption)).foregroundStyle(Brand.ink2) }
@@ -438,7 +460,7 @@ struct WaterTile: View {
                         .labelStyle(.iconOnly).symbolEffect(.bounce, value: ml).buttonStyle(.glass).buttonBorderShape(.circle).controlSize(.small)
                 }
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(Fmt.ml(ml)).font(Brand.display(30, .bold)).contentTransition(.numericText()).monospacedDigit()
+                    Text(Fmt.ml(ml)).font(Brand.num(36, .semibold)).contentTransition(.numericText()).monospacedDigit()
                     Text("of \(Fmt.ml(goal))").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
                 .lineLimit(1).minimumScaleFactor(0.7)

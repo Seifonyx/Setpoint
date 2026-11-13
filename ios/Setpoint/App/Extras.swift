@@ -92,6 +92,7 @@ struct LockCover: ViewModifier {
 struct DeviceSettingsView: View {
     @Environment(Store.self) private var store
     @AppStorage(DeviceSettings.haptics) private var haptics = true
+    @AppStorage(Sounds.key) private var sounds = false
     @AppStorage(DeviceSettings.lock) private var lock = false
     @AppStorage(DeviceSettings.weighReminder) private var weigh = false
     @AppStorage(DeviceSettings.weighTime) private var weighTime = 7 * 60 + 30
@@ -157,7 +158,8 @@ struct DeviceSettingsView: View {
             Section {
                 Toggle("Lock with Face ID", isOn: $lock)
                 Toggle("Haptics", isOn: $haptics)
-            } footer: { Text("These are for this iPhone only.") }
+                Toggle("Sounds", isOn: $sounds)
+            } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
             Section {
                 Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }
                     .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {

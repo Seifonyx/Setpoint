@@ -20,10 +20,10 @@ struct PlanView: View {
                     if !o.ready || o.kg == nil {
                         Section {
                             if !o.ready {
-                                EmptyState(icon: "target", title: "Let's work out your targets", message: "Add your age, sex and height.",
+                                EmptyState(art: .target, title: "Let's work out your targets", message: "Add your age, sex and height.",
                                            action: (title: "About you", run: { about = true }))
                             } else {
-                                EmptyState(icon: "target", title: "Let's work out your targets", message: "Log your weight in the Diary to finish.")
+                                EmptyState(art: .scale, title: "Let's work out your targets", message: "Log your weight in the Diary to finish.")
                             }
                         }
                     }
@@ -74,7 +74,7 @@ struct PlanView: View {
             VStack(alignment: .leading, spacing: 10) {
                 Text("Daily target").font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(Fmt.kcal(round10(p.target))).font(Brand.display(44, .bold)).contentTransition(.numericText())
+                    Text(Fmt.kcal(round10(p.target))).font(Brand.num(53, .semibold)).contentTransition(.numericText())
                     Text("kcal").foregroundStyle(.secondary)
                 }
                 if let e = o.energy {
@@ -127,7 +127,7 @@ struct PlanView: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Daily expenditure").font(.brand(.subheadline)).foregroundStyle(.secondary)
                     HStack(alignment: .firstTextBaseline, spacing: 4) {
-                        Text(Fmt.kcal(round10(e.tdee))).font(Brand.display(34, .bold))
+                        Text(Fmt.kcal(round10(e.tdee))).font(Brand.num(41, .semibold))
                         Text("kcal").foregroundStyle(.secondary)
                     }
                     Text(sourceLabel(e) + (e.level.map { " · " + NSLocalizedString($0, comment: "") } ?? "")).font(.brand(.subheadline)).foregroundStyle(.secondary)

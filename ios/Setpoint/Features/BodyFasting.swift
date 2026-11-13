@@ -25,7 +25,7 @@ struct FastingView: View {
                                 .stroke(elapsed >= goalS ? Brand.green : Brand.green, style: StrokeStyle(lineWidth: 14, lineCap: .round))
                                 .rotationEffect(.degrees(-90))
                             VStack(spacing: 4) {
-                                Text(duration(elapsed)).font(Brand.display(40, .bold)).monospacedDigit()
+                                Text(duration(elapsed)).font(Brand.num(48, .semibold)).monospacedDigit()
                                 if start != nil {
                                     if elapsed >= goalS { Text("Goal reached").foregroundStyle(Brand.green) }
                                     else { Text("\(duration(goalS - elapsed)) to go").foregroundStyle(.secondary) }

@@ -1,5 +1,6 @@
 import SwiftUI
 import UniformTypeIdentifiers
+import UIKit
 
 /// The four main sections in the iOS 26 tab bar (real Liquid Glass, drawn by the system).
 enum AppTab: String, Hashable, CaseIterable {
@@ -17,6 +18,7 @@ struct RootView: View {
     @Environment(\.scenePhase) private var phase
     @AppStorage(DeviceSettings.haptics) private var haptics = true
     @State private var onboarding = false
+    @State private var launching = !UIAccessibility.isReduceMotionEnabled // the dial draws itself on launch
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
 
@@ -47,8 +49,10 @@ struct RootView: View {
             guard haptics else { return nil }
             switch store.changeKind { case .add: return .success; case .remove: return .impact(weight: .medium); case .edit: return .selection }
         }
+        .onChange(of: store.changeCount) { if store.changeKind == .add { Sounds.play(.tick) } }
         .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
         .modifier(LockCover())
+        .overlay { if launching { LaunchDial { launching = false } } }
         .fullScreenCover(isPresented: $shotStory) { WeekStory().environment(store) } // build-server screenshots
         .sheet(isPresented: $shotTarget) { TargetExplainer().environment(store) }
         .fullScreenCover(isPresented: $onboarding) { OnboardingView { onboarding = false }.environment(store).environment(account) }
