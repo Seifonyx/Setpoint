@@ -203,6 +203,8 @@ struct CustomFoodSheet: View {
 /// Foods: categories, each on its own page.
 struct FoodsView: View {
     @Environment(Store.self) private var store
+    @State private var openPlanner = false
+    @State private var openRepeating = false
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -210,18 +212,50 @@ struct FoodsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
+                    planCard
                     LazyVGrid(columns: cols, spacing: 12) {
                         tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
                         tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
                         tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
                         tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
+                        tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
+                        tile("Saved days", "calendar.badge.checkmark", Brand.green, SavedDays.load().count) { SavedDaysView() }
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
             }
             .background(Brand.bg.ignoresSafeArea())
             .navigationTitle("Foods")
+            .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
+            .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
+            .task { // build-server screenshots: -open planner / -open repeating
+                let o = UserDefaults.standard.string(forKey: "open")
+                openPlanner = o == "planner"; openRepeating = o == "repeating"
+            }
         }
+    }
+
+    /// The day planner, up top: it's the one thing here that does the work for you.
+    private var planCard: some View {
+        NavigationLink { DayPlannerView() } label: {
+            HStack(spacing: 14) {
+                ZStack {
+                    Circle().fill(Brand.greenSoft)
+                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(Brand.green)
+                }
+                .frame(width: 56, height: 56)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text("Plan my day").font(Brand.display(20, .bold))
+                    Text("A balanced day for your targets, rich in vitamins, built from what you eat").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+                Image(systemName: "chevron.forward").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink2)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .brandCard()
+        }
+        .buttonStyle(.plain)
     }
 
     private func tile<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {

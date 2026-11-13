@@ -56,6 +56,7 @@ ${extract(read('09-diary.js'), ['foodStreak', 'repOn', 'repItemId', 'applyRepeat
 ${extract(read('17-smart-touches.js'), ['weekReview', 'weekReviewNow'])}
   var photos = []; // progress photos stay in the app's own file
 ${extract(read('18-body-measurements-photos.js'), ['achievements', 'achievementsNow'])}
+${fs.readFileSync(path.join(__dirname, 'ios-planner.js'), 'utf8')}
 ${fs.readFileSync(path.join(__dirname, 'ios-engine-api.js'), 'utf8')}
 })();
 `;

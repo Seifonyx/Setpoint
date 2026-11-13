@@ -32,6 +32,9 @@ struct AddFoodSheet: View {
     @AppStorage("addFoodClosed") private var closedGroups = ""
     @AppStorage("searchSort") private var sort = "best"
     @AppStorage("verifiedOnly") private var verifiedOnly = false
+    @AppStorage("favSort") private var favSort = "recent"
+    @AppStorage("favVerified") private var favVerified = false
+    @AppStorage("mineSort") private var mineSort = "recent"
 
     enum Tab: String, CaseIterable, Identifiable {
         case all, favorites, mine
@@ -59,7 +62,7 @@ struct AddFoodSheet: View {
                 } else {
                     switch tab {
                     case .all: allTab
-                    case .favorites: rows(favorites, empty: ("No favorites yet", "Tap the star on a food to keep it here."))
+                    case .favorites: favoritesTab
                     case .mine: mineTab
                     }
                 }
@@ -93,7 +96,7 @@ struct AddFoodSheet: View {
                 Button("Cancel", role: .cancel) {}
             } message: { Text("This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.") }
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
-            .task(id: "\(meal)|\(store.version)|\(store.foodsReady)") { await loadLists() }
+            .task(id: "\(meal)|\(store.version)|\(store.foodsReady)|\(favSort)|\(favVerified)|\(mineSort)") { await loadLists() }
             .task(id: "\(query)|\(meal)|\(store.foodsReady)|\(sort)|\(verifiedOnly)") {
                 guard !query.isEmpty else { hits = []; return }
                 try? await Task.sleep(for: .milliseconds(150)) // wait for typing to pause
@@ -133,7 +136,63 @@ struct AddFoodSheet: View {
         }
     }
 
+    @ViewBuilder private var favoritesTab: some View {
+        let header = SortHeader(title: "Favorites", sort: $favSort, verifiedOnly: $favVerified,
+                                options: [("recent", "Most recent", "clock"), ("frequent", "Most frequent", "chart.bar.fill"), ("az", "A to Z", "textformat")])
+        if favorites.isEmpty {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(favVerified ? LocalizedStringKey("No verified favorites") : LocalizedStringKey("No favorites yet")).font(.brand(.headline))
+                    Text(favVerified ? LocalizedStringKey("Turn off Verified only to see all your favorites.") : LocalizedStringKey("Tap the star on a food to keep it here."))
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.vertical, 6)
+            } header: { header }
+        } else {
+            Section { ForEach(favorites) { row($0) } } header: { header }
+        }
+    }
+
+    /// Your own foods are never "verified", so here it's just the order, as a small pill above the groups.
+    private var mineSortRow: some View {
+        HStack {
+            Spacer()
+            Menu {
+                Picker("Sort", selection: $mineSort) {
+                    Label("Most recent", systemImage: "clock").tag("recent")
+                    Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
+                    Label("A to Z", systemImage: "textformat").tag("az")
+                    Label("Fewest calories", systemImage: "flame").tag("kcal")
+                }
+                .pickerStyle(.inline)
+            } label: {
+                HStack(spacing: 5) {
+                    Image(systemName: "arrow.up.arrow.down").font(.caption.weight(.semibold))
+                    Text(mineSort == "frequent" ? LocalizedStringKey("Most frequent") : mineSort == "az" ? LocalizedStringKey("A to Z")
+                         : mineSort == "kcal" ? LocalizedStringKey("Fewest calories") : LocalizedStringKey("Most recent")).font(.brand(.subheadline, .semibold))
+                    Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 6)
+                .background(Brand.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
+                .foregroundStyle(Brand.ink)
+            }
+            .sensoryFeedback(.selection, trigger: mineSort)
+        }
+    }
+
+    private var sortedMeals: [SavedMeal] {
+        switch mineSort {
+        case "az": meals.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
+        case "kcal": meals.sorted { $0.kcal < $1.kcal }
+        default: meals
+        }
+    }
+
     @ViewBuilder private var mineTab: some View {
+        SwiftUI.Section { mineSortRow }
+            .listRowBackground(Color.clear)
+            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         group("mine", "My foods", "carrot.fill", Brand.green, count: mine.count) {
             ForEach(mine) { row($0) }
             Button { creating = "" } label: { Label("New food", systemImage: "plus") }.tint(Brand.green)
@@ -143,7 +202,7 @@ struct AddFoodSheet: View {
             if recipes.isEmpty { Text("Make recipes in Foods › Recipes.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
         }
         group("meals", "Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
-            ForEach(meals) { m in
+            ForEach(sortedMeals) { m in
                 HStack(spacing: 12) {
                     FoodIcon(kind: "dish")
                     VStack(alignment: .leading, spacing: 2) {
@@ -372,9 +431,9 @@ struct AddFoodSheet: View {
         let e = store.engineRef
         recents = await e.list("recents", meal: meal)
         frequent = await e.list("frequent", meal: meal)
-        favorites = await e.list("favorites", meal: meal)
-        mine = await e.list("myFoods", meal: meal)
-        recipes = await e.list("recipes", meal: meal)
+        favorites = await e.list("favorites", meal: meal, sort: favSort, verifiedOnly: favVerified)
+        mine = await e.list("myFoods", meal: meal, sort: mineSort, verifiedOnly: false)
+        recipes = await e.list("recipes", meal: meal, sort: mineSort, verifiedOnly: false)
         meals = await e.savedMeals()
     }
     private func toggle(_ h: FoodHit) {
@@ -502,4 +561,32 @@ struct FoodIcon: View {
         "oil": Brand.dyn(0x7D7A26, 0xBDB85E), "dish": Brand.green, "soup": Brand.protein, "snack": Brand.amber, "spice": Brand.over,
         "recipe": Brand.protein, "meal": Brand.green, "mine": Brand.green, "pack": Brand.ink2, "rest": Brand.ink2, "quick": Brand.amber, "food": Brand.green
     ]
+}
+
+/// A list heading that's also its dropdown ("Favorites ⌄"): how it's sorted, and Verified only.
+struct SortHeader: View {
+    let title: LocalizedStringKey
+    @Binding var sort: String
+    @Binding var verifiedOnly: Bool
+    let options: [(String, LocalizedStringKey, String)]
+    var body: some View {
+        Menu {
+            Picker("Sort", selection: $sort) {
+                ForEach(options, id: \.0) { o in Label(o.1, systemImage: o.2).tag(o.0) }
+            }
+            .pickerStyle(.inline)
+            SwiftUI.Section { Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") } }
+        } label: {
+            HStack(spacing: 6) {
+                Text(title)
+                if verifiedOnly { Image(systemName: "checkmark.seal.fill").font(.subheadline).foregroundStyle(.blue).accessibilityLabel(Text("Verified only")) }
+                Text(options.first { $0.0 == sort }?.1 ?? options[0].1).font(.brand(.subheadline, .medium)).foregroundStyle(Brand.ink2)
+                Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Brand.ink2)
+            }
+            .foregroundStyle(Brand.ink)
+            .contentShape(Rectangle())
+        }
+        .menuActionDismissBehavior(.disabled)
+        .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
+    }
 }

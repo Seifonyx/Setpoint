@@ -55,6 +55,14 @@ actor Engine {
     func search(_ q: String, meal: String) -> [FoodHit] { decode([FoodHit].self, "search", [q, meal]) ?? [] }
     func search(_ q: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "searchSorted", [q, meal, sort, verifiedOnly]) ?? [] }
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
+    func list(_ kind: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "listSorted", [kind, meal, sort, verifiedOnly]) ?? [] }
+    /// A whole day of food for your targets (tools/ios-planner.js).
+    func planDay(target: DayPlan, meals: [String], seeds: [String: Int], seed: Int, mine: Bool) -> DayPlanResult? {
+        let o: [String: Any] = ["target": ["kcal": target.kcal, "p": target.protein, "c": target.carbs, "f": target.fat],
+                                "meals": meals, "seeds": seeds, "seed": seed, "mine": mine]
+        guard let d = try? JSONSerialization.data(withJSONObject: o), let txt = String(data: d, encoding: .utf8) else { return nil }
+        return decode(DayPlanResult.self, "planDay", [txt])
+    }
     func savedMeals() -> [SavedMeal] { decode([SavedMeal].self, "savedMeals") ?? [] }
     func food(_ id: String, meal: String) -> FoodInfo? { decode(FoodInfo.self, "food", [id, meal]) }
     func macros(_ id: String, qty: Double, unit: String) -> Macros? { decode(Macros.self, "macros", [id, qty, unit]) }
@@ -94,6 +102,7 @@ actor Engine {
     func insights() -> Insights? { decode(Insights.self, "insights") }
     func applyRepeats() -> Int { Int(sp.invokeMethod("applyRepeats", withArguments: [])?.toInt32() ?? 0) }
     func dayScore(_ day: String) -> DayScore? { decode(DayScore.self, "dayScore", [day]) }
+    func repeatKinds() -> [String: String] { decode([String: String].self, "repeatKinds") ?? [:] }
     func itemKinds(_ day: String) -> [String: String] { decode([String: String].self, "itemKinds", [day]) ?? [:] }
     func expenditureHistory(weeks: Int) -> [ExpPoint] { decode([ExpPoint].self, "expenditureHistory", [weeks]) ?? [] }
     func nutrientSources(_ key: String, day: String, days: Int) -> NutrientSources? { decode(NutrientSources.self, "nutrientSources", [key, day, days]) }
@@ -295,4 +304,25 @@ struct ExpPoint: Decodable, Sendable, Identifiable {
 struct NutrientSources: Decodable, Sendable {
     struct Item: Decodable, Sendable { let name: String; let v: Double; let times: Int }
     let unit: String; let label: String; let list: [Item]
+}
+
+/// A planned day: meals with foods and amounts, the totals against your targets, and vitamins and minerals covered.
+struct DayPlanResult: Codable, Sendable, Equatable {
+    struct Totals: Codable, Sendable, Equatable { let kcal: Double; let protein: Double; let carbs: Double; let fat: Double }
+    struct Item: Codable, Sendable, Equatable, Hashable, Identifiable {
+        let ref: String; let name: String; let qty: Double; let unit: String; let g: Double; let amt: String; let kind: String
+        let kcal: Double; let protein: Double; let carbs: Double; let fat: Double; let usual: Bool
+        var id: String { ref }
+    }
+    struct Meal: Codable, Sendable, Equatable, Identifiable {
+        let meal: String; let name: String; let on: Bool; let items: [Item]
+        let kcal: Double; let protein: Double; let carbs: Double; let fat: Double
+        var id: String { meal }
+    }
+    struct Micro: Codable, Sendable, Equatable, Identifiable { let key: String; let label: String; let pct: Double; var id: String { key } }
+    let target: Totals
+    let total: Totals
+    let meals: [Meal]
+    let micros: [Micro]
+    let met: Int
 }

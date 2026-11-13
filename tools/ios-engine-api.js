@@ -20,6 +20,17 @@
       off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), verified: isVerified(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
       kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
   }
+  function sortRows(list, sort, verifiedOnly) {
+    var fu = foodUse(), rec = {};
+    fu.order.forEach(function (o, i) { if (o.item.ref && rec[o.item.ref] == null) rec[o.item.ref] = i; });
+    if (verifiedOnly) list = list.filter(function (r) { return r.verified; });
+    var by = function (cmp) { return list.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return cmp(a[0], b[0]) || a[1] - b[1]; }).map(function (x) { return x[0]; }); };
+    if (sort === 'recent') return by(function (a, b) { var x = rec[a.id], y = rec[b.id]; return (x == null ? 1e9 : x) - (y == null ? 1e9 : y); });
+    if (sort === 'frequent') return by(function (a, b) { return (fu.use[b.id] || 0) - (fu.use[a.id] || 0); });
+    if (sort === 'az') return by(function (a, b) { return String(a.name).localeCompare(String(b.name)); });
+    if (sort === 'kcal') return by(function (a, b) { return (a.kcal || 0) - (b.kcal || 0); });
+    return list;
+  }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
     return { id: newId(), meal: meal, ref: f.id, g: Math.round(g * 10) / 10, qty: Math.round(qty * 1000) / 1000, unit: u.label,
@@ -36,14 +47,9 @@
 
     // ---- Adding food ----
     // sort: 'best' (the web app's ranking), 'recent' (what you logged lately first) or 'frequent' (most logged first).
-    searchSorted: function (q, meal, sort, verifiedOnly) {
-      var list = JSON.parse(this.search(q, meal)), fu = foodUse(), rec = {};
-      fu.order.forEach(function (o, i) { if (o.item.ref && rec[o.item.ref] == null) rec[o.item.ref] = i; });
-      if (verifiedOnly) list = list.filter(function (r) { return r.verified; });
-      if (sort === 'recent') list = list.map(function (r, i) { return [r, i]; }).sort(function (a, b) { var x = rec[a[0].id], y = rec[b[0].id]; return (x == null ? 1e9 : x) - (y == null ? 1e9 : y) || a[1] - b[1]; }).map(function (x) { return x[0]; });
-      if (sort === 'frequent') list = list.map(function (r, i) { return [r, i]; }).sort(function (a, b) { return ((fu.use[b[0].id] || 0) - (fu.use[a[0].id] || 0)) || a[1] - b[1]; }).map(function (x) { return x[0]; });
-      return J(list);
-    },
+    searchSorted: function (q, meal, sort, verifiedOnly) { return J(sortRows(JSON.parse(this.search(q, meal)), sort, verifiedOnly)); },
+    // Favorites, your foods and recipes, sorted the same ways (plus A to Z and by calories).
+    listSorted: function (kind, meal, sort, verifiedOnly) { return J(sortRows(JSON.parse(this[kind](meal)), sort, verifiedOnly)); },
     search: function (q, meal) {
       if (!foodDB || !String(q).trim()) return '[]';
       var fu = foodUse(), rec = {}, mu = {}, from = dayNum(todayISO()) - 90;
@@ -70,6 +76,8 @@
       return J(Object.keys(fu.use).sort(function (a, b) { return fu.use[b] - fu.use[a]; }).slice(0, 40)
         .map(getFood).filter(Boolean).map(function (f) { return row(f, meal); }));
     },
+    // A whole day of food for your targets: opts {target: {kcal, p, c, f}, meals: [keys], seeds: {meal: n}, seed, mine}.
+    planDay: function (txt) { return J(planDayNow(JSON.parse(txt))); },
     favorites: function (meal) { return J(state.favs.map(getFood).filter(Boolean).map(function (f) { return row(f, meal); })); },
     myFoods: function (meal) { return J(state.myFoods.map(customFood).map(function (f) { return row(f, meal); })); },
     recipes: function (meal) { return J(state.recipes.map(recipeFood).filter(Boolean).map(function (f) { return row(f, meal); })); },
@@ -219,6 +227,12 @@
     },
 
     // A kind for each food logged on a day (egg, grain, fruit…), for the Diary's food icons.
+    // Icons for your repeating foods: repeat id → kind.
+    repeatKinds: function () {
+      var o = {};
+      (state.repeats || []).forEach(function (r) { var it = r.item || {}, f = it.ref ? itemFood(it) : null; o[r.id] = f ? ftKind(f) : (ftGuess(it.name || '', '') || 'quick'); });
+      return J(o);
+    },
     itemKinds: function (d) {
       var o = {};
       (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = f ? ftKind(f) : (Array.isArray(it.mi) ? 'dish' : (ftGuess(it.name || '', '') || 'quick')); });

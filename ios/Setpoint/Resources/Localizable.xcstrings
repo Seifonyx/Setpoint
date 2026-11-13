@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ / %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ / %@ جم"
+          }
+        }
+      }
+    },
     "%@ / %@ kcal": {
       "localizations": {
         "ar": {
@@ -161,6 +171,16 @@
         }
       }
     },
+    "%@ kcal · P %@ · C %@ · F %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعرة · ب %@ · ك %@ · د %@"
+          }
+        }
+      }
+    },
     "%@ left · drink %@ more before Fajr": {
       "localizations": {
         "ar": {
@@ -227,6 +247,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فاضل %@"
+          }
+        }
+      }
+    },
+    "%@ · %lld foods · %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ · %lld أطعمة · %@ سعرة"
           }
         }
       }
@@ -327,6 +357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld دقيقة"
+          }
+        }
+      }
+    },
+    "%lld of %lld covered": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld من %lld مكتملة"
           }
         }
       }
@@ -541,12 +581,32 @@
         }
       }
     },
+    "A balanced day for your targets, rich in vitamins, built from what you eat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم متوازن حسب أهدافك، غني بالفيتامينات، مبني على ما تأكله"
+          }
+        }
+      }
+    },
     "A light week of logging. More days logged makes your plan sharper.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "أسبوع تسجيل خفيف. كل ما تسجل أيام أكتر خطتك بتبقى أدق."
+          }
+        }
+      }
+    },
+    "A new day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم جديد"
           }
         }
       }
@@ -561,12 +621,42 @@
         }
       }
     },
+    "A starting point from your targets. Everything goes in as planned, so you can swap foods and tick them off as you eat.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقطة بداية حسب أهدافك. كل شيء يُضاف كمخطَّط، فتقدر تبدّل الأطعمة وتعلّمها كمأكولة وأنت تأكل."
+          }
+        }
+      }
+    },
+    "A to Z": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أ إلى ي"
+          }
+        }
+      }
+    },
     "A week": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "في الأسبوع"
+          }
+        }
+      }
+    },
+    "About %@ kcal a day goes in by itself": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حوالي %@ سعرة يوميًا تُضاف تلقائيًا"
           }
         }
       }
@@ -691,6 +781,16 @@
         }
       }
     },
+    "Add a repeating food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف طعامًا متكرّرًا"
+          }
+        }
+      }
+    },
     "Add another": {
       "localizations": {
         "ar": {
@@ -767,6 +867,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف صور"
+          }
+        }
+      }
+    },
+    "Add the foods you have most days, like your morning coffee or the same lunch. They go into your diary by themselves on the days you choose.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف الأطعمة التي تأكلها معظم الأيام، مثل قهوة الصباح أو نفس الغداء. تُضاف إلى يومياتك تلقائيًا في الأيام التي تختارها."
+          }
+        }
+      }
+    },
+    "Add to diary": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف إلى اليوميات"
           }
         }
       }
@@ -907,6 +1027,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم تغيير الكمية"
+          }
+        }
+      }
+    },
+    "Another day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم آخر"
+          }
+        }
+      }
+    },
+    "Another idea": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فكرة أخرى"
           }
         }
       }
@@ -2431,6 +2571,16 @@
         }
       }
     },
+    "Fewest calories": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقل سعرات"
+          }
+        }
+      }
+    },
     "Fiber": {
       "localizations": {
         "ar": {
@@ -3091,6 +3241,26 @@
         }
       }
     },
+    "Leans towards the foods you eat, at your usual amounts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يميل إلى الأطعمة التي تأكلها، بكمياتك المعتادة"
+          }
+        }
+      }
+    },
+    "Learn from my logs": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تعلّم من تسجيلاتي"
+          }
+        }
+      }
+    },
     "Learning": {
       "localizations": {
         "ar": {
@@ -3681,6 +3851,16 @@
         }
       }
     },
+    "My day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يومي"
+          }
+        }
+      }
+    },
     "My foods": {
       "localizations": {
         "ar": {
@@ -3871,6 +4051,16 @@
         }
       }
     },
+    "No verified favorites": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد مفضلات موثّقة"
+          }
+        }
+      }
+    },
     "No verified foods here": {
       "localizations": {
         "ar": {
@@ -3921,6 +4111,16 @@
         }
       }
     },
+    "Not planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غير مخطَّط"
+          }
+        }
+      }
+    },
     "Not set": {
       "localizations": {
         "ar": {
@@ -3967,6 +4167,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش حاجة متسجلة"
+          }
+        }
+      }
+    },
+    "Nothing repeats on this day.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء يتكرّر في هذا اليوم."
+          }
+        }
+      }
+    },
+    "Nothing repeats yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا شيء يتكرّر بعد"
           }
         }
       }
@@ -4151,6 +4371,16 @@
         }
       }
     },
+    "P %@ · C %@ · F %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ب %@ · ك %@ · د %@"
+          }
+        }
+      }
+    },
     "Pace per week": {
       "localizations": {
         "ar": {
@@ -4271,12 +4501,52 @@
         }
       }
     },
+    "Plan %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط %@"
+          }
+        }
+      }
+    },
+    "Plan a day, then tap the bookmark to keep it here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط يومًا، ثم اضغط على الإشارة المرجعية لحفظه هنا."
+          }
+        }
+      }
+    },
+    "Plan my day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط يومي"
+          }
+        }
+      }
+    },
     "Planned": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "متخططة"
+          }
+        }
+      }
+    },
+    "Planned %lld foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تخطيط %lld أطعمة"
           }
         }
       }
@@ -4611,6 +4881,16 @@
         }
       }
     },
+    "Repeat a food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كرّر طعامًا"
+          }
+        }
+      }
+    },
     "Repeat item": {
       "localizations": {
         "ar": {
@@ -4671,6 +4951,16 @@
         }
       }
     },
+    "Repeating foods go in by themselves each day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأطعمة المتكرّرة تُضاف تلقائيًا كل يوم"
+          }
+        }
+      }
+    },
     "Replace the data on this iPhone?": {
       "localizations": {
         "ar": {
@@ -4707,6 +4997,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "الراحة"
+          }
+        }
+      }
+    },
+    "Results": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النتائج"
+          }
+        }
+      }
+    },
+    "Resume": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استئناف"
           }
         }
       }
@@ -4791,12 +5101,42 @@
         }
       }
     },
+    "Save this day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ هذا اليوم"
+          }
+        }
+      }
+    },
     "Saved %@ %@ for today.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اتحفظ %@ %@ للنهارده."
+          }
+        }
+      }
+    },
+    "Saved days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأيام المحفوظة"
+          }
+        }
+      }
+    },
+    "Saved days are kept on this iPhone, ready to add to any day.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأيام المحفوظة تبقى على هذا الآيفون، جاهزة لإضافتها لأي يوم."
           }
         }
       }
@@ -4951,6 +5291,16 @@
         }
       }
     },
+    "Set your targets first": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حدّد أهدافك أولًا"
+          }
+        }
+      }
+    },
     "Setpoint": {
       "localizations": {
         "ar": {
@@ -4967,6 +5317,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "Setpoint مقفول"
+          }
+        }
+      }
+    },
+    "Setpoint plans a day around your calories, protein, carbs and fat. Set them in You › Plan.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يخطّط Setpoint يومًا حول سعراتك والبروتين والكربوهيدرات والدهون. حدّدها من أنت › الخطة."
           }
         }
       }
@@ -5137,6 +5497,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "من %@"
+          }
+        }
+      }
+    },
+    "Skip meals that already have food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تخطَّ الوجبات التي فيها أكل"
+          }
+        }
+      }
+    },
+    "Skipped": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التخطي"
           }
         }
       }
@@ -5581,6 +5961,16 @@
         }
       }
     },
+    "This day already has %@ kcal logged.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا اليوم فيه بالفعل %@ سعرة مسجّلة."
+          }
+        }
+      }
+    },
     "This install of Setpoint can't use Apple Health. It needs the Health test build (and an Apple ID that allows it).": {
       "localizations": {
         "ar": {
@@ -5791,6 +6181,16 @@
         }
       }
     },
+    "Turn off Verified only to see all your favorites.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقف «الموثّقة فقط» لترى كل مفضلاتك."
+          }
+        }
+      }
+    },
     "Turn off Verified only to see all your foods.": {
       "localizations": {
         "ar": {
@@ -5971,6 +6371,16 @@
         }
       }
     },
+    "Usual": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المعتاد"
+          }
+        }
+      }
+    },
     "Verified": {
       "localizations": {
         "ar": {
@@ -6022,6 +6432,16 @@
       }
     },
     "Vitamins & minerals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفيتامينات والمعادن"
+          }
+        }
+      }
+    },
+    "Vitamins and minerals": {
       "localizations": {
         "ar": {
           "stringUnit": {
@@ -6267,6 +6687,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وزنك كام بالـ %@؟"
+          }
+        }
+      }
+    },
+    "Which day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي يوم"
           }
         }
       }
