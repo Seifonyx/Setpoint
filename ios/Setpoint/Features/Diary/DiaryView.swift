@@ -37,6 +37,10 @@ struct DiaryView: View {
                 Section {
                     SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                 }
+                if day == Day.today && !store.isEmpty && NextUpCard.shows(store) {
+                    Section { NextUpCard() }
+                        .listRowInsets(EdgeInsets())
+                }
                 Section {
                     HStack(spacing: 12) {
                         WeightTile(entry: store.entry(day), unit: store.unit, recent: store.entries.filter { $0.date <= day && !$0.excluded }.suffix(14).map(\.kg)) { weightSheet = true }
@@ -214,6 +218,8 @@ struct SummaryCard: View {
                     .offset(y: 112)
             }
             .frame(maxWidth: .infinity)
+            .contentShape(Rectangle())
+            .onTapGesture { if plan != nil { explain = true } } // tap the dial: how your target is worked out
             if let plan {
                 HStack(spacing: 14) {
                     MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: Brand.protein)
@@ -233,7 +239,24 @@ struct SummaryCard: View {
                     .transition(.scale.combined(with: .opacity))
             }
         }
+        .overlay {
+            // the logging moment: what you just added floats up out of the dial
+            if let g = gained {
+                Text("+\(Fmt.kcal(g)) kcal").font(Brand.display(22, .bold)).foregroundStyle(Brand.green).monospacedDigit()
+                    .padding(.horizontal, 14).padding(.vertical, 6).background(Brand.greenSoft, in: Capsule())
+                    .offset(y: rise ? -150 : -70).opacity(rise ? 0 : 1)
+                    .allowsHitTesting(false)
+            }
+        }
+        .scaleEffect(pulse ? 1.025 : 1)
         .onChange(of: totals) { old, new in
+            if new.kcal > old.kcal + 1 && !reduceMotion {
+                gained = new.kcal - old.kcal; rise = false
+                withAnimation(.spring(response: 0.25, dampingFraction: 0.5)) { pulse = true }
+                withAnimation(.easeOut(duration: 1.4).delay(0.35)) { rise = true }
+                Task { try? await Task.sleep(for: .milliseconds(220)); withAnimation(.spring(response: 0.4, dampingFraction: 0.7)) { pulse = false } }
+                Task { try? await Task.sleep(for: .seconds(1.8)); gained = nil }
+            }
             guard let plan else { return }
             // A small moment when you reach a target (only when it's crossed, not every time).
             if old.protein < plan.protein && new.protein >= plan.protein { celebrate(String(localized: "Protein target hit")) }
@@ -242,9 +265,16 @@ struct SummaryCard: View {
         .sensoryFeedback(.success, trigger: cheer) { _, n in n != nil }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(accessibilityText)
+        .accessibilityAction(named: Text("How your target works")) { explain = true }
+        .sheet(isPresented: $explain) { TargetExplainer() }
     }
 
     @State private var cheer: String?
+    @State private var explain = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    @State private var gained: Double?
+    @State private var rise = false
+    @State private var pulse = false
     private func celebrate(_ text: String) {
         withAnimation(.spring(response: 0.4, dampingFraction: 0.6)) { cheer = text }
         Task { try? await Task.sleep(for: .seconds(2.5)); withAnimation { cheer = nil } }

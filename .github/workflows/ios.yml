@@ -129,6 +129,8 @@ jobs:
           shot -tab foods -open planner; sleep 3; xcrun simctl io "$UDID" screenshot out/planner-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open repeating; xcrun simctl io "$UDID" screenshot out/repeating-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods; xcrun simctl io "$UDID" screenshot out/foods-tiles-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -open story; sleep 2; xcrun simctl io "$UDID" screenshot out/story-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -open target; xcrun simctl io "$UDID" screenshot out/target-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open plan -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/plan-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance light

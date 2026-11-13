@@ -57,9 +57,9 @@ actor Engine {
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
     func list(_ kind: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "listSorted", [kind, meal, sort, verifiedOnly]) ?? [] }
     /// A whole day of food for your targets (tools/ios-planner.js).
-    func planDay(target: DayPlan, meals: [String], seeds: [String: Int], seed: Int, mine: Bool) -> DayPlanResult? {
+    func planDay(target: DayPlan, meals: [String], seeds: [String: Int], seed: Int, mine: Bool, today: Bool = false) -> DayPlanResult? {
         let o: [String: Any] = ["target": ["kcal": target.kcal, "p": target.protein, "c": target.carbs, "f": target.fat],
-                                "meals": meals, "seeds": seeds, "seed": seed, "mine": mine]
+                                "meals": meals, "seeds": seeds, "seed": seed, "mine": mine, "today": today]
         guard let d = try? JSONSerialization.data(withJSONObject: o), let txt = String(data: d, encoding: .utf8) else { return nil }
         return decode(DayPlanResult.self, "planDay", [txt])
     }

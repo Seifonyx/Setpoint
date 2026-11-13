@@ -93,6 +93,8 @@ struct NutrientSourcesView: View {
 /// The weekly check-in: last week in one screen, what changed in your plan and why, and one message.
 struct CheckInView: View {
     @Environment(Store.self) private var store
+    @State private var story = false
+    @State private var explain = false
     @State private var review: WeekReview?
     @State private var history: [ExpPoint] = []
 
@@ -126,6 +128,7 @@ struct CheckInView: View {
                         Text("No change this week: your target still fits how your weight is moving.").font(.brand(.body)).foregroundStyle(Brand.ink2)
                     }
                     if let t = store.overview?.plan?.target { LabeledContent("Your target") { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").bold().monospacedDigit() } }
+                    Button { explain = true } label: { Label("How your target works", systemImage: "info.circle") }.tint(Brand.green)
                 } header: { Text("Your plan") }
                 Section { ExpenditureChart() }
             } else {
@@ -134,6 +137,16 @@ struct CheckInView: View {
         }
         .brandList()
         .navigationTitle("Weekly check-in")
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Play your week", systemImage: "play.circle.fill") { story = true } } }
+        .fullScreenCover(isPresented: $story) { WeekStory().environment(store) }
+        .sheet(isPresented: $explain) { TargetExplainer() }
+        .task {
+            // the first time this week's check-in opens, the story plays first
+            if UserDefaults.standard.string(forKey: "storySeen") != Self.weekKey {
+                UserDefaults.standard.set(Self.weekKey, forKey: "storySeen")
+                story = true
+            }
+        }
         .task(id: store.version) {
             review = await store.engineRef.weekReview()
             history = await store.engineRef.expenditureHistory(weeks: 3)

@@ -21,6 +21,16 @@
         }
       }
     },
+    "%@ %@ a week is about %@ kcal a day %@ what you burn (a kilo of body weight is about 7,700 kcal).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %@ أسبوعيًا تعني حوالي %@ سعرة يوميًا %@ ما تحرقه (الكيلو من وزن الجسم حوالي 7,700 سعرة)."
+          }
+        }
+      }
+    },
     "%@ / %@ g": {
       "localizations": {
         "ar": {
@@ -107,6 +117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ سعرة أكتر من حرقك"
+          }
+        }
+      }
+    },
+    "%@ kcal and %@ g protein left today. This fits:": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متبقٍ اليوم %@ سعرة و%@ جم بروتين. هذا يناسب:"
           }
         }
       }
@@ -421,12 +441,32 @@
         }
       }
     },
+    "%lld-day streak": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سلسلة %lld أيام"
+          }
+        }
+      }
+    },
     "%lld/%lld on target": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld/%lld على الهدف"
+          }
+        }
+      }
+    },
+    "+%@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ سعرة"
           }
         }
       }
@@ -477,6 +517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "/ %lld سعرة"
+          }
+        }
+      }
+    },
+    "/wk": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "/أسبوع"
           }
         }
       }
@@ -587,6 +637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يوم متوازن حسب أهدافك، غني بالفيتامينات، مبني على ما تأكله"
+          }
+        }
+      }
+    },
+    "A few more weigh-ins and your trend shows here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بضع قياسات وزن أخرى ويظهر اتجاهك هنا."
           }
         }
       }
@@ -747,6 +807,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أضف %lld"
+          }
+        }
+      }
+    },
+    "Add %lld foods · %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أضف %lld أطعمة · %@ سعرة"
           }
         }
       }
@@ -991,6 +1061,16 @@
         }
       }
     },
+    "All good": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل شيء جيد"
+          }
+        }
+      }
+    },
     "Allow camera access in Settings, or type the number.": {
       "localizations": {
         "ar": {
@@ -1167,6 +1247,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "رقم الباركود"
+          }
+        }
+      }
+    },
+    "Best day": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أفضل يوم"
           }
         }
       }
@@ -1561,6 +1651,16 @@
         }
       }
     },
+    "Close": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "إغلاق"
+          }
+        }
+      }
+    },
     "Closer to your calories and macros scores higher. It's a guide, not a grade on you.": {
       "localizations": {
         "ar": {
@@ -1577,6 +1677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأقرب للهدف"
+          }
+        }
+      }
+    },
+    "Closest to your targets, with the most nutrients covered.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأقرب لأهدافك، وبأكثر العناصر الغذائية المكتملة."
           }
         }
       }
@@ -1811,6 +1921,16 @@
         }
       }
     },
+    "Couldn't tell what's on the plate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم نتعرّف على ما في الطبق"
+          }
+        }
+      }
+    },
     "Create account": {
       "localizations": {
         "ar": {
@@ -1867,6 +1987,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحرق اليومي"
+          }
+        }
+      }
+    },
+    "Daily life": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحياة اليومية"
           }
         }
       }
@@ -1931,6 +2061,16 @@
         }
       }
     },
+    "Day score %lld · %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقييم اليوم %lld · %@"
+          }
+        }
+      }
+    },
     "Day streak": {
       "localizations": {
         "ar": {
@@ -1977,6 +2117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أيام على الهدف"
+          }
+        }
+      }
+    },
+    "Days with food logged": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام بطعام مسجّل"
           }
         }
       }
@@ -2067,6 +2217,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيمسح حسابك وكل اللي متزامن معاه نهائيًا. البيانات على الآيفون ده بتفضل."
+          }
+        }
+      }
+    },
+    "Describe it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صِفه"
+          }
+        }
+      }
+    },
+    "Describe it instead": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صِفه بدلًا من ذلك"
           }
         }
       }
@@ -2361,6 +2531,16 @@
         }
       }
     },
+    "Estimated from your body and activity until your log can measure it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تقدير من جسمك ونشاطك حتى يتمكّن سجلّك من قياسه."
+          }
+        }
+      }
+    },
     "Estimates, not medical advice. See a doctor first if you're pregnant, ill or have had an eating disorder.": {
       "localizations": {
         "ar": {
@@ -2617,6 +2797,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "دوّر على الأكلات دي"
+          }
+        }
+      }
+    },
+    "Finding a meal that fits…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نبحث عن وجبة مناسبة…"
           }
         }
       }
@@ -3051,6 +3241,16 @@
         }
       }
     },
+    "How your target works": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كيف يُحسب هدفك"
+          }
+        }
+      }
+    },
     "I agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html)": {
       "localizations": {
         "ar": {
@@ -3067,6 +3267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عندي حساب بالفعل"
+          }
+        }
+      }
+    },
+    "I ate it all": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلتها كلها"
           }
         }
       }
@@ -3191,6 +3401,16 @@
         }
       }
     },
+    "It's been at %@ of what you need lately. Plan my day puts foods rich in it first.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كان عند %@ مما تحتاجه مؤخرًا. «خطّط يومي» يقدّم الأطعمة الغنية به أولًا."
+          }
+        }
+      }
+    },
     "Jug": {
       "localizations": {
         "ar": {
@@ -3241,6 +3461,16 @@
         }
       }
     },
+    "Latest change": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر تغيير"
+          }
+        }
+      }
+    },
     "Leans towards the foods you eat, at your usual amounts": {
       "localizations": {
         "ar": {
@@ -3267,6 +3497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيتعلّم"
+          }
+        }
+      }
+    },
+    "Learning your metabolism": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتعلّم معدل حرقك"
           }
         }
       }
@@ -3317,6 +3557,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المدة"
+          }
+        }
+      }
+    },
+    "Let's go": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هيا بنا"
           }
         }
       }
@@ -3401,6 +3651,16 @@
         }
       }
     },
+    "Log a few days this week to get your first story.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل بضعة أيام هذا الأسبوع لتحصل على أول قصة."
+          }
+        }
+      }
+    },
     "Log every day and weigh in to learn your real burn.": {
       "localizations": {
         "ar": {
@@ -3417,6 +3677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجّل أكلك واوزن نفسك كام أسبوع عشان تشوف حرقك بيتشكل."
+          }
+        }
+      }
+    },
+    "Log it · %@ kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّلها · %@ سعرة"
           }
         }
       }
@@ -3511,12 +3781,32 @@
         }
       }
     },
+    "Logged %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم تسجيل %@"
+          }
+        }
+      }
+    },
     "Look up": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "بحث"
+          }
+        }
+      }
+    },
+    "Looking at your plate…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نفحص طبقك…"
           }
         }
       }
@@ -3727,6 +4017,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحرق المقاس"
+          }
+        }
+      }
+    },
+    "Measured from your own log: you ate about %@ kcal a day while your weight trend moved %@ a week. What you burn is what explains both.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقاس من سجلّك: أكلت حوالي %@ سعرة يوميًا بينما تحرّك اتجاه وزنك %@ أسبوعيًا. ما تحرقه هو ما يفسّر الاثنين."
           }
         }
       }
@@ -3991,12 +4291,42 @@
         }
       }
     },
+    "Next up": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التالي"
+          }
+        }
+      }
+    },
+    "Next week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأسبوع القادم"
+          }
+        }
+      }
+    },
     "Next-morning weight: your highest third of days vs your lowest.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "وزن الصبح اللي بعده: أعلى تلت من الأيام مقابل أقل تلت."
+          }
+        }
+      }
+    },
+    "No change lately: your target still fits how your weight is moving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا تغيير مؤخرًا: هدفك ما زال يناسب حركة وزنك."
           }
         }
       }
@@ -4051,6 +4381,16 @@
         }
       }
     },
+    "No plan yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد خطة بعد"
+          }
+        }
+      }
+    },
     "No verified favorites": {
       "localizations": {
         "ar": {
@@ -4067,6 +4407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا توجد أطعمة موثّقة هنا"
+          }
+        }
+      }
+    },
+    "No vitamin or mineral has been running low lately.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا يوجد فيتامين أو معدن منخفض مؤخرًا."
           }
         }
       }
@@ -4167,6 +4517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش حاجة متسجلة"
+          }
+        }
+      }
+    },
+    "Nothing logged yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تسجّل شيئًا بعد"
           }
         }
       }
@@ -4311,12 +4671,52 @@
         }
       }
     },
+    "On target %lld of %lld days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الهدف %lld من %lld أيام"
+          }
+        }
+      }
+    },
     "On target means within 10% of that day's calories.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "على الهدف يعني في حدود ١٠٪ من سعرات اليوم ده."
+          }
+        }
+      }
+    },
+    "On your plate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في طبقك"
+          }
+        }
+      }
+    },
+    "Once both are full, what you burn is measured from your own log instead of estimated, and your target follows it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عندما يكتمل الاثنان، يُقاس ما تحرقه من سجلّك بدل التقدير، ويتبعه هدفك."
+          }
+        }
+      }
+    },
+    "One to watch": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انتبه لهذا"
           }
         }
       }
@@ -4491,6 +4891,16 @@
         }
       }
     },
+    "Pick what you ate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر ما أكلته"
+          }
+        }
+      }
+    },
     "Plan": {
       "localizations": {
         "ar": {
@@ -4547,6 +4957,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم تخطيط %lld أطعمة"
+          }
+        }
+      }
+    },
+    "Play your week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شاهد أسبوعك"
           }
         }
       }
@@ -4617,6 +5037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بروتين"
+          }
+        }
+      }
+    },
+    "Protein %@ g · carbs %@ g · fat %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بروتين %@ جم · كربوهيدرات %@ جم · دهون %@ جم"
           }
         }
       }
@@ -4797,6 +5227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوصفات"
+          }
+        }
+      }
+    },
+    "Recognised on this iPhone. Check the amounts: a photo can't weigh food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تم التعرّف على هذا الآيفون. راجع الكميات: الصورة لا تزن الطعام."
           }
         }
       }
@@ -5221,6 +5661,16 @@
         }
       }
     },
+    "Search for a food to start.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ابحث عن طعام للبدء."
+          }
+        }
+      }
+    },
     "Sedentary": {
       "localizations": {
         "ar": {
@@ -5287,6 +5737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حدّد"
+          }
+        }
+      }
+    },
+    "Set up your plan in You › Plan and this explains your target with your own numbers.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جهّز خطتك من أنت › الخطة وسيُشرح هدفك بأرقامك."
           }
         }
       }
@@ -5541,12 +6001,32 @@
         }
       }
     },
+    "Snap your plate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صوّر طبقك"
+          }
+        }
+      }
+    },
     "Sodium": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "صوديوم"
+          }
+        }
+      }
+    },
+    "Something missing? Add it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ينقص شيء؟ أضفه"
           }
         }
       }
@@ -5677,6 +6157,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ثابت زي ما خططت. حافظت عليه كويس."
+          }
+        }
+      }
+    },
+    "Steady, as planned. Nicely maintained.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ثابت كما خُطط. حافظت عليه جيدًا."
           }
         }
       }
@@ -6191,6 +6681,16 @@
         }
       }
     },
+    "Try a closer photo from above, in good light. Or search for it below.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب صورة أقرب من الأعلى وفي إضاءة جيدة. أو ابحث عنه بالأسفل."
+          }
+        }
+      }
+    },
     "Turn off Verified only to see all your favorites.": {
       "localizations": {
         "ar": {
@@ -6377,6 +6877,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استخدم الأربعة الأساسية"
+          }
+        }
+      }
+    },
+    "Using your real numbers": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نستخدم أرقامك الحقيقية"
           }
         }
       }
@@ -6691,6 +7201,16 @@
         }
       }
     },
+    "What you burn": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما تحرقه"
+          }
+        }
+      }
+    },
     "What's your weight in %@?": {
       "localizations": {
         "ar": {
@@ -6781,12 +7301,32 @@
         }
       }
     },
+    "You logged %lld of 7 days.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّلت %lld من 7 أيام."
+          }
+        }
+      }
+    },
     "You were signed out. Sign in again.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اتسجل خروجك. ادخل تاني."
+          }
+        }
+      }
+    },
+    "You're maintaining, so you eat what you burn.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أنت في وضع الثبات، فتأكل ما تحرقه."
           }
         }
       }
@@ -6861,12 +7401,32 @@
         }
       }
     },
+    "Your pace": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وتيرتك"
+          }
+        }
+      }
+    },
     "Your plan": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "خطتك"
+          }
+        }
+      }
+    },
+    "Your plate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طبقك"
           }
         }
       }
@@ -6887,6 +7447,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "هدفك"
+          }
+        }
+      }
+    },
+    "Your target follows what your log shows you burn, and keeps adjusting as you go.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هدفك يتبع ما يُظهر سجلّك أنك تحرقه، ويستمر في التعديل."
+          }
+        }
+      }
+    },
+    "Your target stays the same: it still fits how your weight is moving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هدفك يبقى كما هو: ما زال يناسب حركة وزنك."
           }
         }
       }
@@ -6921,12 +7501,42 @@
         }
       }
     },
+    "Your trend held. A little more food will move it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك ثابت. القليل من الأكل الإضافي سيحرّكه."
+          }
+        }
+      }
+    },
+    "Your trend held. One week is short; stay steady.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك ثابت. أسبوع واحد قصير؛ استمر بثبات."
+          }
+        }
+      }
+    },
     "Your trend moved a little. Your target adjusts for you.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "اتجاهك اتحرك شوية. هدفك بيتظبط لوحده."
+          }
+        }
+      }
+    },
+    "Your trend went down. That's the direction you want.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتجاهك انخفض. هذا هو الاتجاه الذي تريده."
           }
         }
       }
@@ -7021,12 +7631,72 @@
         }
       }
     },
+    "a day on average, against a target of %@.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوميًا في المتوسط، مقابل هدف %@."
+          }
+        }
+      }
+    },
+    "a day on average.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوميًا في المتوسط."
+          }
+        }
+      }
+    },
+    "a day, %@ of your goal. Plan my day can help close the gap.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوميًا، %@ من هدفك. «خطّط يومي» يساعدك على سدّ الفجوة."
+          }
+        }
+      }
+    },
+    "a day. Right on your goal, which keeps muscle while you change.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوميًا. على هدفك تمامًا، وهذا يحافظ على العضلات أثناء التغيير."
+          }
+        }
+      }
+    },
+    "above": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكثر من"
+          }
+        }
+      }
+    },
     "and hips": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "والأرداف"
+          }
+        }
+      }
+    },
+    "below": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقل من"
           }
         }
       }

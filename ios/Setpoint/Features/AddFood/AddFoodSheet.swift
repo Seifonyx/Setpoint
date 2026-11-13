@@ -32,6 +32,8 @@ struct AddFoodSheet: View {
     @AppStorage("addFoodClosed") private var closedGroups = ""
     @AppStorage("searchSort") private var sort = "best"
     @AppStorage("verifiedOnly") private var verifiedOnly = false
+    @State private var plateCam = false
+    @State private var plate: PlateBox?
     @AppStorage("favSort") private var favSort = "recent"
     @AppStorage("favVerified") private var favVerified = false
     @AppStorage("mineSort") private var mineSort = "recent"
@@ -88,6 +90,11 @@ struct AddFoodSheet: View {
                 }
                 .ignoresSafeArea()
             }
+            .fullScreenCover(isPresented: $plateCam) {
+                LabelCamera { img in plateCam = false; if let img { plate = PlateBox(image: img) } }
+                    .ignoresSafeArea()
+            }
+            .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: DescribeMealSheet.available ? { describing = true } : nil) }
             .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
             .alert("Product not found", isPresented: $notFound) {
@@ -113,15 +120,15 @@ struct AddFoodSheet: View {
     // MARK: Tabs
 
     @ViewBuilder private var allTab: some View {
-        if DescribeMealSheet.available {
-            SwiftUI.Section {
-                Button { describing = true } label: {
-                    Label { Text("Describe what you ate").font(.brand(.body, .semibold)) } icon: { Image(systemName: "sparkles").foregroundStyle(Brand.amber) }
-                }
-                .tint(.primary)
-                .listRowBackground(Brand.card)
+        SwiftUI.Section {
+            HStack(spacing: 10) {
+                quickWay("Snap your plate", "camera.viewfinder", Brand.green) { plateCam = true }
+                if DescribeMealSheet.available { quickWay("Describe it", "sparkles", Brand.amber) { describing = true } }
+                quickWay("Barcode", "barcode.viewfinder", Brand.water) { scanning = true }
             }
         }
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         let list = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }
         if list.isEmpty {
             Section {
@@ -310,6 +317,20 @@ struct AddFoodSheet: View {
         }
     }
 
+    /// One of the quick ways to log, as a tile.
+    private func quickWay(_ title: LocalizedStringKey, _ icon: String, _ color: Color, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            VStack(spacing: 6) {
+                Image(systemName: icon).font(.title3.weight(.semibold)).foregroundStyle(color)
+                Text(title).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink).lineLimit(1).minimumScaleFactor(0.8)
+            }
+            .frame(maxWidth: .infinity, minHeight: 66)
+            .background(Brand.card, in: .rect(cornerRadius: 18))
+            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Brand.line.opacity(0.6), lineWidth: 0.5))
+        }
+        .buttonStyle(.plain)
+    }
+
     private func chip(_ t: LocalizedStringKey, icon: String, on: Bool, tint: Color = Brand.green) -> some View {
         HStack(spacing: 5) { Image(systemName: icon).font(.caption.weight(.semibold)); Text(t).font(.brand(.subheadline, .semibold)) }
             .padding(.horizontal, 12).padding(.vertical, 7)
@@ -377,6 +398,7 @@ struct AddFoodSheet: View {
                 withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } }
             }
             Menu {
+                Button("Snap your plate", systemImage: "camera.viewfinder") { plateCam = true }
                 Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
                 Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
                 Button("Quick add calories", systemImage: "bolt") { quickAdd = true }

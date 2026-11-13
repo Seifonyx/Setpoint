@@ -168,6 +168,16 @@
     var have = {}; MICRO_KEYS.forEach(function (k) { have[k] = 0; });
     var used = {}, fleshMeals = 0, fleshG = 0, famUsed = {}, eggs = 0;
     var proteinNeed = Math.min(2, Math.max(0.5, T.p * 4 / T.kcal / 0.2)); // how protein-heavy your targets are
+    // What you've already eaten today counts: no repeats of it, its meat or fish counts towards the day's limit, and
+    // its vitamins and minerals are already in (so the next meal fills what's still missing).
+    if (o.today) eatenFor(todayISO()).forEach(function (it) {
+      var f = it.ref ? getFood(it.ref) : null; if (!f || isDailyTotal(it)) return;
+      used[f.id] = 1;
+      var k = ftKind(f), g = it.g || 0;
+      if (FLESH[k] && g >= 40) { fleshMeals++; famUsed[k] = 1; fleshG += g; }
+      if (k === 'egg') eggs += Math.round(g / 50);
+      MICRO_KEYS.forEach(function (m) { have[m] += nutAt(f, m, g); });
+    });
     var share = { b: 25, m: 35, s: 10 }, wsum = open.reduce(function (a, k) { return a + share[planKind(k)]; }, 0);
     // Main meals first (they carry the day's protein), then breakfast, then snacks.
     var order = open.slice().sort(function (a, b) { return 'mbs'.indexOf(planKind(a)) - 'mbs'.indexOf(planKind(b)); });

@@ -45,7 +45,7 @@ targets:
         UILaunchScreen: {}
         UISupportedInterfaceOrientations: [UIInterfaceOrientationPortrait]
         ITSAppUsesNonExemptEncryption: false
-        NSCameraUsageDescription: Setpoint uses the camera to scan food barcodes.
+        NSCameraUsageDescription: Setpoint uses the camera to scan barcodes and nutrition labels, and to recognise the food on your plate.
         UIAppFonts: [BricolageGrotesque-SemiBold.ttf, BricolageGrotesque-Bold.ttf, BricolageGrotesque-ExtraBold.ttf, Figtree-Regular.ttf, Figtree-Medium.ttf, Figtree-SemiBold.ttf, Figtree-Bold.ttf, IBMPlexSansArabic-Regular.ttf, IBMPlexSansArabic-Medium.ttf, IBMPlexSansArabic-SemiBold.ttf, IBMPlexSansArabic-Bold.ttf]
         NSHealthShareUsageDescription: Setpoint reads your weight and steps from Apple Health to keep your log and expenditure up to date.
         NSHealthUpdateUsageDescription: Setpoint can save your weigh-ins to Apple Health.
