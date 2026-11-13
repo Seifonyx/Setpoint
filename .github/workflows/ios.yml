@@ -39,13 +39,14 @@ jobs:
             -destination 'generic/platform=iOS' -derivedDataPath build \
             MARKETING_VERSION=0.1.${{ github.run_number }} CURRENT_PROJECT_VERSION=${{ github.run_number }} \
             CODE_SIGNING_ALLOWED=NO CODE_SIGNING_REQUIRED=NO CODE_SIGN_IDENTITY="" build 2>&1 | tee build.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
-          mkdir -p out/Payload
+          # Setpoint.ipa carries the Apple Health permission (ad-hoc signed so SideStore sees it).
+          # Setpoint-no-health.ipa is the same app without it, as a fallback if SideStore refuses the permission.
+          mkdir -p out/Payload plain/Payload
           cp -R build/Build/Products/Release-iphoneos/Setpoint.app out/Payload/
+          cp -R build/Build/Products/Release-iphoneos/Setpoint.app plain/Payload/
+          codesign --force --sign - --entitlements Setpoint/Setpoint-health.entitlements out/Payload/Setpoint.app
           (cd out && zip -qry Setpoint.ipa Payload && rm -rf Payload)
-          # A test copy carrying the Apple Health permission (ad-hoc signed so SideStore sees it). Installed by hand only.
-          mkdir -p health/Payload && cp -R build/Build/Products/Release-iphoneos/Setpoint.app health/Payload/
-          codesign --force --sign - --entitlements Setpoint/Setpoint-health.entitlements health/Payload/Setpoint.app
-          (cd health && zip -qry ../out/Setpoint-health.ipa Payload) && rm -rf health
+          (cd plain && zip -qry ../out/Setpoint-no-health.ipa Payload) && rm -rf plain
       - name: Publish to the ios-latest release
         if: env.RELEASE == 'true'
         run: |
