@@ -19,7 +19,7 @@ struct ProgressScreen: View {
     var body: some View {
         NavigationStack {
             List {
-                Section {
+                SwiftUI.Section {
                     PillTabs(selection: $page, options: [("weight", "Weight"), ("nutrition", "Nutrition"), ("body", "Body")])
                     if page != "body" { Picker("Range", selection: $range) {
                         Text("1M").tag(30); Text("3M").tag(90); Text("6M").tag(180); Text("1Y").tag(365); Text("All").tag(0)

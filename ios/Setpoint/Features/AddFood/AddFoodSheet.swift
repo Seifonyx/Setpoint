@@ -186,7 +186,7 @@ struct AddFoodSheet: View {
 
     @ViewBuilder private var listBar: some View {
         HStack(alignment: .center) {
-            Text(barTitle).font(.brand(.subheadline, .medium)).foregroundStyle(Brand.ink2).monospacedDigit().contentTransition(.numericText())
+            Text(barTitle).font(.brand(.subheadline, .medium)).opacity(barCount == 0 ? 0 : 1).foregroundStyle(Brand.ink2).monospacedDigit().contentTransition(.numericText())
             Spacer()
             if !query.isEmpty {
                 FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "sparkle.magnifyingglass"), Self.recent, Self.frequentOpt])
@@ -204,6 +204,14 @@ struct AddFoodSheet: View {
         }
     }
     /// How many there are (the pill beside it says how they're sorted, so nothing is said twice).
+    private var barCount: Int {
+        if !query.isEmpty { return hits.count }
+        switch tab {
+        case .all: return (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
+        case .favorites: return favorites.count
+        case .mine: return mine.count + recipes.count + meals.count
+        }
+    }
     private var barTitle: LocalizedStringKey {
         if !query.isEmpty { return hits.count == 1 ? "1 result" : "\(hits.count) results" }
         let n: Int
@@ -321,7 +329,7 @@ struct AddFoodSheet: View {
                 VStack(spacing: 0) {
                     // the name is centred exactly; the arrow hangs beside it without pushing it over
                     Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold))
-                        .overlay(alignment: .trailing) { Image(systemName: "chevron.down").font(.brand(.caption, .bold)).offset(x: 16) }
+                        .overlay(alignment: .trailing) { Image(systemName: "chevron.down").font(.brand(.caption, .bold)).fixedSize().alignmentGuide(.trailing) { $0[.leading] - 5 } }
                     if let left = kcalLeft {
                         Text(left >= 0 ? "\(Fmt.kcal(left)) kcal left" : "\(Fmt.kcal(-left)) kcal over").font(.brand(.caption)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit()
