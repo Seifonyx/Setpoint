@@ -15,7 +15,7 @@ enum Health {
         do {
             try await store.requestAuthorization(toShare: [], read: [mass, steps])
         } catch {
-            return .unavailable(String(localized: "This install of Setpoint can't use Apple Health. It needs the Health test build (and an Apple ID that allows it)."))
+            return .unavailable(String(localized: "This install of Setpoint can't use Apple Health. It needs the Health test build (and an Apple ID that allows it).") + "\n\n" + diagnosis(error))
         }
         // Weigh-ins from the last 60 days: the first of each day, added where you haven't logged one.
         let start = Calendar.current.date(byAdding: .day, value: -60, to: Date())!
@@ -41,4 +41,19 @@ enum Health {
         if let a = avg, a > 500 { app.setProfile { $0["steps"] = .number(Double(a)) } }
         return .imported(weights: added, steps: avg)
     }
+
+    /// What went wrong, for working out whether SideStore kept the Health permission: the app version, whether the
+    /// signing profile SideStore made includes HealthKit, and the error iOS gave.
+    static func diagnosis(_ error: Error) -> String {
+        let info = Bundle.main.infoDictionary
+        let version = "\(info?["CFBundleShortVersionString"] as? String ?? "?") (\(info?["CFBundleVersion"] as? String ?? "?"))"
+        var profile = "no profile"
+        if let url = Bundle.main.url(forResource: "embedded", withExtension: "mobileprovision"),
+           let data = try? Data(contentsOf: url), let text = String(data: data, encoding: .isoLatin1) {
+            profile = text.contains("com.apple.developer.healthkit") ? "HealthKit in profile" : "no HealthKit in profile"
+        }
+        let e = error as NSError
+        return "Setpoint \(version) · \(profile) · \(e.domain) \(e.code): \(e.localizedDescription)"
+    }
 }
+
