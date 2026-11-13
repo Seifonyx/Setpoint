@@ -53,12 +53,6 @@ struct AddFoodSheet: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
                 .listSectionSpacing(6)
 
-                if !query.isEmpty || tab == .all {
-                    SwiftUI.Section { filterRow }
-                        .listRowBackground(Color.clear)
-                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
-                        .listSectionSpacing(6)
-                }
 
                 if !query.isEmpty {
                     searchResults
@@ -126,10 +120,17 @@ struct AddFoodSheet: View {
             }
         }
         let list = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }
-        let header: LocalizedStringKey = sort == "frequent" ? "Most frequent" : "Recent"
-        let empty: (LocalizedStringKey, LocalizedStringKey) = verifiedOnly
-            ? ("No verified foods here", "Turn off Verified only to see all your foods.") : ("Nothing logged yet", "Search for a food to start.")
-        rows(list, header: header, empty: empty)
+        if list.isEmpty {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text(verifiedOnly ? LocalizedStringKey("No verified foods here") : LocalizedStringKey("Nothing logged yet")).font(.brand(.headline))
+                    Text(verifiedOnly ? LocalizedStringKey("Turn off Verified only to see all your foods.") : LocalizedStringKey("Search for a food to start.")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.vertical, 6)
+            } header: { sortHeader }
+        } else {
+            Section { ForEach(list) { row($0) } } header: { sortHeader }
+        }
     }
 
     @ViewBuilder private var mineTab: some View {
@@ -158,47 +159,47 @@ struct AddFoodSheet: View {
         }
     }
 
-    /// Sort (best match, most recent, most frequent) and Verified only, in one dropdown that's always in view.
-    private var filterRow: some View {
-        HStack {
-            Menu {
-                Picker("Sort", selection: $sort) {
-                    Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best")
-                    Label("Most recent", systemImage: "clock").tag("recent")
-                    Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
-                }
-                .pickerStyle(.inline)
-                SwiftUI.Section {
-                    Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") }
-                }
-            } label: {
-                HStack(spacing: 6) {
-                    Image(systemName: "line.3.horizontal.decrease").font(.caption.weight(.bold))
-                    Text(sort == "recent" ? LocalizedStringKey("Most recent") : sort == "frequent" ? LocalizedStringKey("Most frequent") : LocalizedStringKey("Best match")).font(.brand(.subheadline, .semibold))
-                    if verifiedOnly {
-                        Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue)
-                            .accessibilityLabel(Text("Verified only"))
-                    }
-                    Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
-                }
-                .padding(.horizontal, 12).padding(.vertical, 7)
-                .background(Brand.card, in: Capsule())
-                .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
-                .foregroundStyle(Brand.ink)
+    /// The list's heading is the dropdown ("Recent ⌄"): sort (best match while searching, most recent, most frequent)
+    /// and Verified only.
+    private var sortHeader: some View {
+        Menu {
+            Picker("Sort", selection: $sort) {
+                if !query.isEmpty { Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best") }
+                Label("Most recent", systemImage: "clock").tag(query.isEmpty && sort != "recent" ? "best" : "recent")
+                Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
             }
-            .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
-            Spacer()
+            .pickerStyle(.inline)
+            SwiftUI.Section {
+                Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") }
+            }
+        } label: {
+            HStack(spacing: 6) {
+                Text(sortTitle)
+                if verifiedOnly {
+                    Image(systemName: "checkmark.seal.fill").font(.subheadline).foregroundStyle(.blue)
+                        .accessibilityLabel(Text("Verified only"))
+                }
+                Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Brand.ink2)
+            }
+            .foregroundStyle(Brand.ink)
+            .contentShape(Rectangle())
         }
+        .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
         .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
+    }
+    private var sortTitle: LocalizedStringKey {
+        if sort == "frequent" { return "Most frequent" }
+        if query.isEmpty { return "Recent" }
+        return sort == "recent" ? "Most recent" : "Best match"
     }
 
     @ViewBuilder private var searchResults: some View {
         if !store.foodsReady {
             SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
         }
-        rows(hits, empty: nil)
+        if !hits.isEmpty { Section { ForEach(hits) { row($0) } } header: { sortHeader } }
         if store.foodsReady && hits.isEmpty {
-            SwiftUI.Section {
+            Section {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No matches for “\(query)”").font(.brand(.headline))
                     Text("Make it one of your foods, or scan its barcode.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
@@ -208,8 +209,7 @@ struct AddFoodSheet: View {
                 Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }.tint(Brand.green)
                 Button { labelCam = true } label: { Label("Scan the nutrition label", systemImage: "text.viewfinder") }.tint(Brand.green)
                 Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }.tint(Brand.green)
-            }
-            .listRowBackground(Brand.card)
+            } header: { sortHeader }
         }
     }
 
