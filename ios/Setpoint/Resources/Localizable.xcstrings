@@ -5691,6 +5691,16 @@
         }
       }
     },
+    "Select several": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختر عدة أطعمة"
+          }
+        }
+      }
+    },
     "Send verification email": {
       "localizations": {
         "ar": {
@@ -7627,6 +7637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وزنك"
+          }
+        }
+      }
+    },
+    "Yours": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أطعمتك"
           }
         }
       }

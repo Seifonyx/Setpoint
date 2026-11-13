@@ -58,6 +58,10 @@ struct AddFoodSheet: View {
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
                 .listSectionSpacing(6)
 
+                SwiftUI.Section { listBar }
+                    .listRowBackground(Color.clear)
+                    .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 0))
+                    .listSectionSpacing(4)
 
                 if !query.isEmpty {
                     searchResults
@@ -120,71 +124,31 @@ struct AddFoodSheet: View {
     // MARK: Tabs
 
     @ViewBuilder private var allTab: some View {
-        SwiftUI.Section {
-            HStack(spacing: 10) {
-                quickWay("Snap your plate", "camera.viewfinder", Brand.green) { plateCam = true }
-                if DescribeMealSheet.available { quickWay("Describe it", "sparkles", Brand.amber) { describing = true } }
-                quickWay("Barcode", "barcode.viewfinder", Brand.water) { scanning = true }
-            }
-        }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         let list = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }
         if list.isEmpty {
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(verifiedOnly ? LocalizedStringKey("No verified foods here") : LocalizedStringKey("Nothing logged yet")).font(.brand(.headline))
-                    Text(verifiedOnly ? LocalizedStringKey("Turn off Verified only to see all your foods.") : LocalizedStringKey("Search for a food to start.")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                }
-                .padding(.vertical, 6)
-            } header: { sortHeader }
+            emptyCard(verifiedOnly ? "No verified foods here" : "Nothing logged yet",
+                      verifiedOnly ? "Turn off Verified only to see all your foods." : "Search for a food to start.")
         } else {
-            Section { ForEach(list) { row($0) } } header: { sortHeader }
+            Section { ForEach(list) { row($0) } }
         }
     }
 
     @ViewBuilder private var favoritesTab: some View {
-        let header = SortHeader(title: "Favorites", sort: $favSort, verifiedOnly: $favVerified,
-                                options: [("recent", "Most recent", "clock"), ("frequent", "Most frequent", "chart.bar.fill"), ("az", "A to Z", "textformat")])
         if favorites.isEmpty {
-            Section {
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(favVerified ? LocalizedStringKey("No verified favorites") : LocalizedStringKey("No favorites yet")).font(.brand(.headline))
-                    Text(favVerified ? LocalizedStringKey("Turn off Verified only to see all your favorites.") : LocalizedStringKey("Tap the star on a food to keep it here."))
-                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                }
-                .padding(.vertical, 6)
-            } header: { header }
+            emptyCard(favVerified ? "No verified favorites" : "No favorites yet",
+                      favVerified ? "Turn off Verified only to see all your favorites." : "Tap the star on a food to keep it here.")
         } else {
-            Section { ForEach(favorites) { row($0) } } header: { header }
+            Section { ForEach(favorites) { row($0) } }
         }
     }
 
-    /// Your own foods are never "verified", so here it's just the order, as a small pill above the groups.
-    private var mineSortRow: some View {
-        HStack {
-            Spacer()
-            Menu {
-                Picker("Sort", selection: $mineSort) {
-                    Label("Most recent", systemImage: "clock").tag("recent")
-                    Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
-                    Label("A to Z", systemImage: "textformat").tag("az")
-                    Label("Fewest calories", systemImage: "flame").tag("kcal")
-                }
-                .pickerStyle(.inline)
-            } label: {
-                HStack(spacing: 5) {
-                    Image(systemName: "arrow.up.arrow.down").font(.caption.weight(.semibold))
-                    Text(mineSort == "frequent" ? LocalizedStringKey("Most frequent") : mineSort == "az" ? LocalizedStringKey("A to Z")
-                         : mineSort == "kcal" ? LocalizedStringKey("Fewest calories") : LocalizedStringKey("Most recent")).font(.brand(.subheadline, .semibold))
-                    Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
-                }
-                .padding(.horizontal, 12).padding(.vertical, 6)
-                .background(Brand.card, in: Capsule())
-                .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
-                .foregroundStyle(Brand.ink)
+    private func emptyCard(_ title: LocalizedStringKey, _ note: LocalizedStringKey) -> some View {
+        Section {
+            VStack(alignment: .leading, spacing: 4) {
+                Text(title).font(.brand(.headline))
+                Text(note).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
             }
-            .sensoryFeedback(.selection, trigger: mineSort)
+            .padding(.vertical, 6)
         }
     }
 
@@ -197,9 +161,6 @@ struct AddFoodSheet: View {
     }
 
     @ViewBuilder private var mineTab: some View {
-        SwiftUI.Section { mineSortRow }
-            .listRowBackground(Color.clear)
-            .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
         group("mine", "My foods", "carrot.fill", Brand.green, count: mine.count) {
             ForEach(mine) { row($0) }
             Button { creating = "" } label: { Label("New food", systemImage: "plus") }.tint(Brand.green)
@@ -225,45 +186,45 @@ struct AddFoodSheet: View {
         }
     }
 
-    /// The list's heading is the dropdown ("Recent ⌄"): sort (best match while searching, most recent, most frequent)
-    /// and Verified only.
-    private var sortHeader: some View {
-        Menu {
-            Picker("Sort", selection: $sort) {
-                if !query.isEmpty { Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best") }
-                Label("Most recent", systemImage: "clock").tag(query.isEmpty && sort != "recent" ? "best" : "recent")
-                Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
-            }
-            .pickerStyle(.inline)
-            SwiftUI.Section {
-                Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") }
-            }
-        } label: {
-            HStack(spacing: 6) {
-                Text(sortTitle)
-                if verifiedOnly {
-                    Image(systemName: "checkmark.seal.fill").font(.subheadline).foregroundStyle(.blue)
-                        .accessibilityLabel(Text("Verified only"))
+    // MARK: The list bar: a title, and the one filter pill (the same on every tab)
+
+    private static var recent: FilterPill.Option { ("recent", "Most recent", "clock") }
+    private static var frequentOpt: FilterPill.Option { ("frequent", "Most frequent", "chart.bar.fill") }
+    private static var az: FilterPill.Option { ("az", "A to Z", "textformat") }
+
+    @ViewBuilder private var listBar: some View {
+        HStack(alignment: .center) {
+            Text(barTitle).font(Brand.display(19, .bold)).foregroundStyle(Brand.ink)
+            Spacer()
+            if !query.isEmpty {
+                FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "sparkle.magnifyingglass"), Self.recent, Self.frequentOpt])
+            } else {
+                switch tab {
+                case .all:
+                    FilterPill(sort: Binding(get: { sort == "frequent" ? "frequent" : "recent" }, set: { sort = $0 == "frequent" ? "frequent" : (sort == "recent" ? "recent" : "best") }),
+                               verified: $verifiedOnly, options: [Self.recent, Self.frequentOpt])
+                case .favorites:
+                    FilterPill(sort: $favSort, verified: $favVerified, options: [Self.recent, Self.frequentOpt, Self.az])
+                case .mine:
+                    FilterPill(sort: $mineSort, verified: nil, options: [Self.recent, Self.frequentOpt, Self.az, ("kcal", "Fewest calories", "flame")])
                 }
-                Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Brand.ink2)
             }
-            .foregroundStyle(Brand.ink)
-            .contentShape(Rectangle())
         }
-        .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
-        .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
     }
-    private var sortTitle: LocalizedStringKey {
-        if sort == "frequent" { return "Most frequent" }
-        if query.isEmpty { return "Recent" }
-        return sort == "recent" ? "Most recent" : "Best match"
+    private var barTitle: LocalizedStringKey {
+        if !query.isEmpty { return "Results" }
+        switch tab {
+        case .all: return sort == "frequent" ? "Most frequent" : "Recent"
+        case .favorites: return "Favorites"
+        case .mine: return "Yours"
+        }
     }
 
     @ViewBuilder private var searchResults: some View {
         if !store.foodsReady {
             SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
         }
-        if !hits.isEmpty { Section { ForEach(hits) { row($0) } } header: { sortHeader } }
+        if !hits.isEmpty { Section { ForEach(hits) { row($0) } } }
         if store.foodsReady && hits.isEmpty {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
@@ -275,7 +236,7 @@ struct AddFoodSheet: View {
                 Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }.tint(Brand.green)
                 Button { labelCam = true } label: { Label("Scan the nutrition label", systemImage: "text.viewfinder") }.tint(Brand.green)
                 Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }.tint(Brand.green)
-            } header: { sortHeader }
+            }
         }
     }
 
@@ -315,28 +276,6 @@ struct AddFoodSheet: View {
                 Button(h.fav == true ? "Remove from favorites" : "Add to favorites", systemImage: h.fav == true ? "star.slash" : "star") { toggleFav(h) }.tint(Brand.amber)
             }
         }
-    }
-
-    /// One of the quick ways to log, as a tile.
-    private func quickWay(_ title: LocalizedStringKey, _ icon: String, _ color: Color, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            VStack(spacing: 6) {
-                Image(systemName: icon).font(.title3.weight(.semibold)).foregroundStyle(color)
-                Text(title).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink).lineLimit(1).minimumScaleFactor(0.8)
-            }
-            .frame(maxWidth: .infinity, minHeight: 66)
-            .background(Brand.card, in: .rect(cornerRadius: 18))
-            .overlay(RoundedRectangle(cornerRadius: 18).strokeBorder(Brand.line.opacity(0.6), lineWidth: 0.5))
-        }
-        .buttonStyle(.plain)
-    }
-
-    private func chip(_ t: LocalizedStringKey, icon: String, on: Bool, tint: Color = Brand.green) -> some View {
-        HStack(spacing: 5) { Image(systemName: icon).font(.caption.weight(.semibold)); Text(t).font(.brand(.subheadline, .semibold)) }
-            .padding(.horizontal, 12).padding(.vertical, 7)
-            .background(on ? tint.opacity(0.18) : Brand.card, in: Capsule())
-            .overlay(Capsule().strokeBorder(on ? tint.opacity(0.5) : Brand.line, lineWidth: 1))
-            .foregroundStyle(on ? tint : Brand.ink)
     }
 
     private func addButton(_ action: @escaping () -> Void) -> some View {
@@ -394,18 +333,21 @@ struct AddFoodSheet: View {
             .tint(.primary)
         }
         ToolbarItemGroup(placement: .primaryAction) {
-            Button(selecting ? "Done selecting" : "Select", systemImage: selecting ? "checkmark.circle.fill" : "checkmark.circle") {
-                withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } }
+            if selecting {
+                Button("Done") { withAnimation(.snappy) { selecting = false; selected = [:] } }
+            } else {
+                Button("Snap your plate", systemImage: "camera") { plateCam = true }
+                Menu {
+                    Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
+                    Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
+                    if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "sparkles") { describing = true } }
+                    Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
+                    Button("New food", systemImage: "carrot") { creating = "" }
+                    Divider()
+                    Button("Select several", systemImage: "checkmark.circle") { withAnimation(.snappy) { selecting = true } }
+                } label: { Image(systemName: "ellipsis") }
+                .accessibilityLabel(Text("More ways to add"))
             }
-            Menu {
-                Button("Snap your plate", systemImage: "camera.viewfinder") { plateCam = true }
-                Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
-                Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
-                Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
-                Button("New food", systemImage: "carrot") { creating = "" }
-                if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "sparkles") { describing = true } }
-            } label: { Image(systemName: "plus.viewfinder") }
-            .accessibilityLabel(Text("More ways to add"))
         }
     }
 
@@ -585,30 +527,37 @@ struct FoodIcon: View {
     ]
 }
 
-/// A list heading that's also its dropdown ("Favorites ⌄"): how it's sorted, and Verified only.
-struct SortHeader: View {
-    let title: LocalizedStringKey
+/// The filter pill used on every tab of Add food: how the list is sorted, and (where it applies) Verified only.
+struct FilterPill: View {
+    typealias Option = (String, LocalizedStringKey, String)
     @Binding var sort: String
-    @Binding var verifiedOnly: Bool
-    let options: [(String, LocalizedStringKey, String)]
+    var verified: Binding<Bool>?
+    let options: [Option]
+
     var body: some View {
         Menu {
             Picker("Sort", selection: $sort) {
                 ForEach(options, id: \.0) { o in Label(o.1, systemImage: o.2).tag(o.0) }
             }
             .pickerStyle(.inline)
-            SwiftUI.Section { Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") } }
-        } label: {
-            HStack(spacing: 6) {
-                Text(title)
-                if verifiedOnly { Image(systemName: "checkmark.seal.fill").font(.subheadline).foregroundStyle(.blue).accessibilityLabel(Text("Verified only")) }
-                Text(options.first { $0.0 == sort }?.1 ?? options[0].1).font(.brand(.subheadline, .medium)).foregroundStyle(Brand.ink2)
-                Image(systemName: "chevron.down").font(.subheadline.weight(.bold)).foregroundStyle(Brand.ink2)
+            if let verified {
+                SwiftUI.Section { Toggle(isOn: verified) { Label("Verified only", systemImage: "checkmark.seal.fill") } }
             }
+        } label: {
+            HStack(spacing: 5) {
+                Image(systemName: "arrow.up.arrow.down").font(.caption.weight(.semibold))
+                Text(options.first { $0.0 == sort }?.1 ?? options[0].1).font(.brand(.subheadline, .semibold)).lineLimit(1)
+                if verified?.wrappedValue == true {
+                    Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Verified only"))
+                }
+                Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
+            }
+            .padding(.horizontal, 12).padding(.vertical, 6)
+            .background(Brand.card, in: Capsule())
+            .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
             .foregroundStyle(Brand.ink)
-            .contentShape(Rectangle())
         }
-        .menuActionDismissBehavior(.disabled)
-        .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
+        .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
+        .sensoryFeedback(.selection, trigger: "\(sort)\(verified?.wrappedValue ?? false)")
     }
 }

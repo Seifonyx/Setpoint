@@ -212,7 +212,6 @@ struct FoodsView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 12) {
-                    planCard
                     LazyVGrid(columns: cols, spacing: 12) {
                         tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
                         tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
@@ -221,6 +220,7 @@ struct FoodsView: View {
                         tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
                         tile("Saved days", "calendar.badge.checkmark", Brand.green, SavedDays.load(store).count) { SavedDaysView() }
                     }
+                    planCard
                 }
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
             }

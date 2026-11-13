@@ -37,10 +37,6 @@ struct DiaryView: View {
                 Section {
                     SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
                 }
-                if day == Day.today && !store.isEmpty && NextUpCard.shows(store) {
-                    Section { NextUpCard() }
-                        .listRowInsets(EdgeInsets())
-                }
                 Section {
                     HStack(spacing: 12) {
                         WeightTile(entry: store.entry(day), unit: store.unit, recent: store.entries.filter { $0.date <= day && !$0.excluded }.suffix(14).map(\.kg)) { weightSheet = true }
