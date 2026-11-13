@@ -174,7 +174,7 @@ struct AddFoodSheet: View {
             } label: {
                 HStack(spacing: 6) {
                     Image(systemName: "line.3.horizontal.decrease").font(.caption.weight(.bold))
-                    Text(sort == "recent" ? "Most recent" : sort == "frequent" ? "Most frequent" : "Best match").font(.brand(.subheadline, .semibold))
+                    Text(sort == "recent" ? LocalizedStringKey("Most recent") : sort == "frequent" ? LocalizedStringKey("Most frequent") : LocalizedStringKey("Best match")).font(.brand(.subheadline, .semibold))
                     if verifiedOnly {
                         Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue)
                             .accessibilityLabel(Text("Verified only"))
