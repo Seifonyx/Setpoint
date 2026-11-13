@@ -421,6 +421,16 @@
         }
       }
     },
+    "%lld results": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld نتائج"
+          }
+        }
+      }
+    },
     "%lld selected": {
       "localizations": {
         "ar": {
@@ -571,6 +581,16 @@
         }
       }
     },
+    "1 food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طعام واحد"
+          }
+        }
+      }
+    },
     "1 food added": {
       "localizations": {
         "ar": {
@@ -587,6 +607,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "عنصر واحد"
+          }
+        }
+      }
+    },
+    "1 result": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نتيجة واحدة"
           }
         }
       }

@@ -165,7 +165,7 @@ struct DayPlannerView: View {
             if isOn {
                 ForEach(m.items) { it in
                     HStack(spacing: 12) {
-                        FoodIcon(kind: it.kind, size: 34, name: it.name)
+                        FoodIcon(kind: it.kind, size: 32, name: it.name)
                         VStack(alignment: .leading, spacing: 1) {
                             HStack(spacing: 5) {
                                 Text(it.name).font(.brand(.body)).lineLimit(1)

@@ -56,7 +56,7 @@ struct DescribeMealSheet: View {
                                     Image(systemName: m.on ? "checkmark.circle.fill" : "circle").font(.title3).foregroundStyle(m.on ? Brand.green : Brand.ink2)
                                 }
                                 .buttonStyle(.plain)
-                                FoodIcon(kind: m.hit.kind ?? "food", size: 34)
+                                FoodIcon(kind: m.hit.kind ?? "food", size: 32)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(m.hit.name).lineLimit(2)
                                     Text("“\(m.said)” · \(Fmt.amount(m.qty, m.unit))").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)

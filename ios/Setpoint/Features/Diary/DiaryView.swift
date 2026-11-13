@@ -161,7 +161,7 @@ struct SummaryPager: View {
     let totals: Totals
     let plan: DayPlan?
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
-    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 372 // grows with the iPhone's text size
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 318 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -193,26 +193,26 @@ struct SummaryCard: View {
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
-                    .frame(width: 262, height: 262)
+                    .frame(width: 214, height: 214)
                 // inside the rings: what's left
                 VStack(spacing: 0) {
                     if let plan {
                         let left = plan.kcal - totals.kcal
                         Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
                             .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
-                        Text(Fmt.kcal(abs(left))).font(Brand.display(44, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                        Text(Fmt.kcal(abs(left))).font(Brand.display(36, .heavy)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     } else {
                         Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
-                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(44, .heavy)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                        Text(Fmt.kcal(totals.kcal)).font(Brand.display(36, .heavy)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                     }
                 }
-                .frame(maxWidth: 124)
+                .frame(maxWidth: 104)
                 // in the opening at the bottom of the dial: eaten of target
                 Text(plan.map { "\(Fmt.kcal(totals.kcal)) / \(Fmt.kcal($0.kcal)) kcal" } ?? String(localized: "kcal"))
                     .font(.brand(.footnote, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 140)
-                    .offset(y: 112)
+                    .offset(y: 92)
             }
             .frame(maxWidth: .infinity)
             .contentShape(Rectangle())

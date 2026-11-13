@@ -192,7 +192,7 @@ struct AddFoodSheet: View {
 
     @ViewBuilder private var listBar: some View {
         HStack(alignment: .center) {
-            Text(barTitle).font(Brand.display(19, .bold)).foregroundStyle(Brand.ink)
+            Text(barTitle).font(.brand(.subheadline, .medium)).foregroundStyle(Brand.ink2).monospacedDigit().contentTransition(.numericText())
             Spacer()
             if !query.isEmpty {
                 FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "sparkle.magnifyingglass"), Self.recent, Self.frequentOpt])
@@ -209,13 +209,16 @@ struct AddFoodSheet: View {
             }
         }
     }
+    /// How many there are (the pill beside it says how they're sorted, so nothing is said twice).
     private var barTitle: LocalizedStringKey {
-        if !query.isEmpty { return "Results" }
+        if !query.isEmpty { return hits.count == 1 ? "1 result" : "\(hits.count) results" }
+        let n: Int
         switch tab {
-        case .all: return sort == "frequent" ? "Most frequent" : "Recent"
-        case .favorites: return "Favorites"
-        case .mine: return "Yours"
+        case .all: n = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
+        case .favorites: n = favorites.count
+        case .mine: n = mine.count + recipes.count + meals.count
         }
+        return n == 1 ? "1 food" : "\(n) foods"
     }
 
     @ViewBuilder private var searchResults: some View {
@@ -314,14 +317,17 @@ struct AddFoodSheet: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button(added.isEmpty ? "Cancel" : "Done", role: added.isEmpty ? .cancel : nil) { dismiss() }
+            Button { dismiss() } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)) }
+                .accessibilityLabel(Text(added.isEmpty ? "Cancel" : "Done"))
         }
         ToolbarItem(placement: .principal) {
             Menu {
                 Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
             } label: {
                 VStack(spacing: 0) {
-                    HStack(spacing: 4) { Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold)); Image(systemName: "chevron.down").font(.brand(.caption, .bold)) }
+                    // the name is centred exactly; the arrow hangs beside it without pushing it over
+                    Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold))
+                        .overlay(alignment: .trailing) { Image(systemName: "chevron.down").font(.brand(.caption, .bold)).offset(x: 16) }
                     if let left = kcalLeft {
                         Text(left >= 0 ? "\(Fmt.kcal(left)) kcal left" : "\(Fmt.kcal(-left)) kcal over").font(.brand(.caption)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit()
@@ -499,7 +505,7 @@ struct FoodHitRow: View {
 /// A food's kind as a small drawn icon on a tinted tile (Setpoint's own set, matching the web app's).
 struct FoodIcon: View {
     let kind: String
-    var size: CGFloat = 38
+    var size: CGFloat = 32
     var name: String? = nil
 
     private var key: String {

@@ -179,7 +179,7 @@ struct RepeatingView: View {
         let amount = Fmt.amount(item["qty"]?.number ?? 1, item["unit"]?.string ?? "")
         return Button { editing = Edit(id: r["id"]?.string ?? "", rec: r, item: item) } label: {
             HStack(spacing: 12) {
-                FoodIcon(kind: kinds[r["id"]?.string ?? ""] ?? "food", size: 38, name: item["name"]?.string)
+                FoodIcon(kind: kinds[r["id"]?.string ?? ""] ?? "food", size: 32, name: item["name"]?.string)
                 VStack(alignment: .leading, spacing: 4) {
                     Text(item["name"]?.string ?? "").font(.brand(.body)).lineLimit(1)
                     HStack(spacing: 6) {

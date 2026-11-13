@@ -93,7 +93,7 @@ struct PlateSheet: View {
                                         .foregroundStyle(f.on ? Brand.green : Brand.ink2)
                                 }
                                 .buttonStyle(.plain)
-                                FoodIcon(kind: f.hit.kind ?? "food", size: 36, name: f.hit.name)
+                                FoodIcon(kind: f.hit.kind ?? "food", size: 32, name: f.hit.name)
                                 VStack(alignment: .leading, spacing: 2) {
                                     Text(f.hit.name).font(.brand(.body)).lineLimit(1)
                                     Text(amount(f)).font(.brand(.footnote)).foregroundStyle(Brand.ink2)
