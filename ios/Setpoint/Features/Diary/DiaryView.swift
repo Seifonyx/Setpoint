@@ -42,6 +42,9 @@ struct DiaryView: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(Color.clear)
                 }
+                if day == Day.today && !store.isEmpty && store.items(day).isEmpty && store.dailyTotals(day).isEmpty {
+                    Section { FreshDay { adding = AddJob(meal: mealNow) } }
+                }
                 let totalsSaved = store.dailyTotals(day)
                 if !totalsSaved.isEmpty {
                     Section {
@@ -354,7 +357,7 @@ struct MacroBar: View {
                 Text(label).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
-                Text(Fmt.grams(value)).font(Brand.num(23, .semibold)).monospacedDigit().contentTransition(.numericText())
+                Text(Fmt.grams(value)).font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
                 Text("/ \(Fmt.grams(target)) g").font(.brand(.caption2)).foregroundStyle(Brand.ink2)
             }
             .lineLimit(1).minimumScaleFactor(0.7)
@@ -484,5 +487,30 @@ struct UndoBanner: View {
                 withAnimation { store.clearUndo() }
             }
         }
+    }
+}
+
+/// Today, before anything's logged: a small sunrise and a nudge, instead of a page of empty meals.
+struct FreshDay: View {
+    let add: () -> Void
+    var body: some View {
+        Button(action: add) {
+            HStack(spacing: 14) {
+                EmptyArtView(art: .sunrise).scaleEffect(0.8).frame(width: 84, height: 68)
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(greeting).font(Brand.display(18, .bold)).foregroundStyle(Brand.ink)
+                    Text("Nothing logged yet. Tap to add your first food.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+                Spacer(minLength: 0)
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityHint(Text("Add food"))
+    }
+    private var greeting: LocalizedStringKey {
+        let h = Calendar.current.component(.hour, from: Date())
+        return h < 12 ? "A fresh morning" : h < 18 ? "A fresh afternoon" : "A fresh evening"
     }
 }

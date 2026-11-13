@@ -40,7 +40,7 @@ struct DayPlannerView: View {
                         
                         .brandCard(padding: 14)
                     }
-                    ForEach(p.meals) { m in mealCard(m) }
+                    VStack(spacing: 14) { ForEach(p.meals) { m in timelineRow(m) } } // the day, as a timeline
                     Text("A starting point from your targets. Everything goes in as planned, so you can swap foods and tick them off as you eat.")
                         .font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center).padding(.horizontal, 12)
                 } else if target == nil {
@@ -83,7 +83,7 @@ struct DayPlannerView: View {
                 ZStack {
                     CalorieDial(eaten: p.total.kcal, target: p.target.kcal, protein: nil, carbs: nil, fat: nil, lineWidth: 12)
                     VStack(spacing: 0) {
-                        Text(Fmt.kcal(p.total.kcal)).font(Brand.num(29, .semibold)).monospacedDigit()
+                        Text(Fmt.kcal(p.total.kcal)).font(Brand.num(28, .semibold)).monospacedDigit()
                         Text("of \(Fmt.kcal(p.target.kcal))").font(.brand(.caption)).foregroundStyle(Brand.ink2)
                     }
                 }
@@ -146,6 +146,33 @@ struct DayPlannerView: View {
         .accessibilityValue(Text("\(Int(m.pct)) percent"))
     }
 
+    /// A meal on the day's timeline: its time on the left, a dot in its colour, and a line on to the next meal.
+    private func timelineRow(_ m: DayPlanResult.Meal) -> some View {
+        let isOn = m.on && !off.contains(m.meal), last = m.id == shown?.meals.last?.id
+        return mealCard(m)
+            .padding(.leading, 54)
+            .overlay(alignment: .topLeading) {
+                VStack(spacing: 6) {
+                    Text(Self.time(m.meal)).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+                        .lineLimit(2).multilineTextAlignment(.center).minimumScaleFactor(0.8).frame(width: 48)
+                    Circle().fill(isOn ? Brand.meal(m.meal) : Brand.card2).frame(width: 12, height: 12)
+                        .overlay(Circle().stroke(Brand.bg, lineWidth: 3))
+                    Rectangle().fill(Brand.line).frame(width: 2).frame(maxHeight: .infinity)
+                        .padding(.bottom, last ? 0 : -20)
+                        .opacity(last ? 0 : 1)
+                }
+                .padding(.top, 18)
+            }
+    }
+    /// The usual time for a meal, in the iPhone's own clock style.
+    static func time(_ key: String) -> String {
+        let hm: (Int, Int)? = ["breakfast": (8, 0), "lunch": (13, 0), "dinner": (19, 30)][key]
+        guard let (h, mi) = hm, let d = Calendar.current.date(bySettingHour: h, minute: mi, second: 0, of: Date()) else {
+            return key == "snacks" ? String(localized: "Any time") : ""
+        }
+        return d.formatted(date: .omitted, time: .shortened)
+    }
+
     @ViewBuilder private func mealCard(_ m: DayPlanResult.Meal) -> some View {
         let isOn = m.on && !off.contains(m.meal)
         VStack(alignment: .leading, spacing: 0) {
@@ -179,7 +206,7 @@ struct DayPlannerView: View {
                             Text(it.amt).font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                         }
                         Spacer()
-                        Text(Fmt.kcal(it.kcal)).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(Brand.ink2)
+                        Text(Fmt.kcal(it.kcal)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
                     }
                     .padding(.vertical, 6)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))

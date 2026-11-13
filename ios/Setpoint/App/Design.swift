@@ -21,6 +21,16 @@ enum Brand {
     static let water = dyn(0x2C88A8, 0x60B2CC)
     static let danger = dyn(0xC0392B, 0xEF6B5E)     // deleting, erasing, errors and warnings: a clear red
     static let over = dyn(0xB8691C, 0xE69A4E)       // going over is a calm amber, not an alarm
+    /// Each meal's own colour (the thin edge on its card, its dot on the planner's timeline).
+    static func meal(_ key: String) -> Color {
+        switch key {
+        case "breakfast": amber
+        case "lunch": green
+        case "dinner": fat
+        case "snacks": protein
+        default: [water, amber, green, fat, protein][key.unicodeScalars.reduce(0) { $0 + Int($1.value) } % 5]
+        }
+    }
 
     static func dyn(_ light: UInt32, _ dark: UInt32) -> Color {
         Color(UIColor { $0.userInterfaceStyle == .dark ? rgb(dark) : rgb(light) })
@@ -123,7 +133,32 @@ struct BrandCardStyle: ViewModifier {
     func body(content: Content) -> some View {
         content.padding(padding)
             .background(RoundedRectangle(cornerRadius: Radius.card, style: .continuous).fill(Brand.card)
-                .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.06), radius: 14, y: 5))
+                .shadow(color: .black.opacity(scheme == .dark ? 0 : 0.06), radius: 14, y: 5)
+                .overlay(CardSheen(cornerRadius: Radius.card)))
+    }
+}
+
+/// The same light for a list section's first row: one fine line across the top, fading at the ends.
+struct TopSheen: View {
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        if scheme == .dark {
+            LinearGradient(colors: [.clear, .white.opacity(0.11), .white.opacity(0.11), .clear], startPoint: .leading, endPoint: .trailing)
+                .frame(height: 1).frame(maxHeight: .infinity, alignment: .top).allowsHitTesting(false)
+        }
+    }
+}
+
+/// In dark mode, a barely-there light along a card's top edge, so cards read as soft surfaces, not flat cut-outs.
+struct CardSheen: View {
+    var cornerRadius: CGFloat = 0
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        if scheme == .dark {
+            RoundedRectangle(cornerRadius: cornerRadius, style: .continuous)
+                .strokeBorder(LinearGradient(colors: [.white.opacity(0.10), .white.opacity(0.02), .clear], startPoint: .top, endPoint: .center), lineWidth: 1)
+                .allowsHitTesting(false)
+        }
     }
 }
 

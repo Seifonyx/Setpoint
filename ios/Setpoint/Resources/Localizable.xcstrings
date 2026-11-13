@@ -761,12 +761,42 @@
         }
       }
     },
+    "A fresh afternoon": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ظهيرة جديدة"
+          }
+        }
+      }
+    },
     "A fresh day. %@ kcal to work with.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "يوم جديد. لديك %@ سعرة."
+          }
+        }
+      }
+    },
+    "A fresh evening": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مساء جديد"
+          }
+        }
+      }
+    },
+    "A fresh morning": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صباح جديد"
           }
         }
       }
@@ -1317,6 +1347,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فكرة أخرى"
+          }
+        }
+      }
+    },
+    "Any time": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في أي وقت"
           }
         }
       }
@@ -5107,6 +5147,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم تسجّل شيئًا بعد"
+          }
+        }
+      }
+    },
+    "Nothing logged yet. Tap to add your first food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لم تسجّل شيئًا بعد. اضغط لإضافة أول طعام."
           }
         }
       }

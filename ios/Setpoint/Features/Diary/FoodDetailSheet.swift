@@ -95,6 +95,8 @@ struct FoodDetailSheet: View {
         .sensoryFeedback(.selection, trigger: qtyText)
     }
 
+    private var iconKind: String { isMeal ? "meal" : isRecipe ? "recipe" : kind ?? (food.ref == nil ? "quick" : "food") }
+
     // MARK: Sections
 
     /// One card: the food, its amount on a single line (number, unit, calories), and protein, carbs and fat.
@@ -102,12 +104,14 @@ struct FoodDetailSheet: View {
         let plan = store.plans[day] ?? store.plan(day)
         return Section {
             HStack(spacing: 12) {
-                FoodIcon(kind: isMeal ? "meal" : isRecipe ? "recipe" : kind ?? (food.ref == nil ? "quick" : "food"), size: 40, name: food.displayName)
+                FoodIcon(kind: iconKind, size: 40, name: food.displayName)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(food.displayName).font(.brand(.headline)).lineLimit(2)
+                    Text(food.displayName).font(Brand.display(20, .bold)).lineLimit(2)
                     if !source.isEmpty { Text(source).font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                 }
             }
+            .padding(.vertical, 6)
+            .listRowBackground(Wash(color: FoodIcon.colors[iconKind] ?? Brand.green))
             // the amount, on one line (not for meals and recipes: you change what's in them instead)
             if !isMeal && !isRecipe { HStack(spacing: 10) {
                 Text("Amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
@@ -280,7 +284,7 @@ struct FoodDetailSheet: View {
     private func macro(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
-            Text("\(Fmt.grams(g)) g").font(Brand.num(23, .semibold)).monospacedDigit().contentTransition(.numericText())
+            Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }
@@ -479,5 +483,22 @@ struct PartAmountSheet: View {
             }
             dismiss()
         }
+    }
+}
+
+/// A soft, blurred wash of the food's colour behind its name, fading into the card.
+struct Wash: View {
+    let color: Color
+    @Environment(\.colorScheme) private var scheme
+    var body: some View {
+        ZStack {
+            Brand.card
+            Circle().fill(color.opacity(scheme == .dark ? 0.30 : 0.24)).frame(width: 220, height: 220).blur(radius: 50)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).offset(x: -70, y: -90)
+            Circle().fill(Brand.amber.opacity(scheme == .dark ? 0.12 : 0.10)).frame(width: 160, height: 160).blur(radius: 50)
+                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing).offset(x: 40, y: -70)
+        }
+        .clipped()
+        .overlay(TopSheen())
     }
 }

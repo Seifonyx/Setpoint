@@ -56,7 +56,7 @@ struct SkeletonRows: View {
 }
 
 /// Small line drawings for empty screens, in the brand colours (drawn in code, so they're crisp at any size).
-enum EmptyArt { case plate, cup, scale, target, repeating }
+enum EmptyArt { case plate, cup, scale, target, repeating, sunrise }
 
 struct EmptyArtView: View {
     let art: EmptyArt
@@ -114,6 +114,21 @@ struct EmptyArtView: View {
                 let tip2 = CGPoint(x: w * 0.5 + w * 0.3 * cos(160 * .pi / 180), y: h * 0.5 + w * 0.3 * sin(160 * .pi / 180))
                 ctx.stroke(line([CGPoint(x: tip2.x + 10, y: tip2.y + 4), tip2, CGPoint(x: tip2.x - 2, y: tip2.y + 11)]), with: ink, style: stroke)
                 ctx.fill(Path(ellipseIn: CGRect(x: w * 0.46, y: h * 0.46, width: w * 0.08, height: w * 0.08)), with: dot)
+            case .sunrise:
+                // a sun coming up over a plate's rim: a new day, nothing on it yet
+                let c = CGPoint(x: w * 0.5, y: h * 0.7), r = w * 0.2
+                var sun = Path(); sun.addArc(center: c, radius: r, startAngle: .degrees(180), endAngle: .degrees(360), clockwise: false)
+                ctx.fill(sun, with: .color(Brand.amber.opacity(0.22)))
+                ctx.stroke(sun, with: dot, style: stroke)
+                for a in stride(from: 200.0, through: 340.0, by: 35.0) {
+                    let t = a * .pi / 180
+                    ctx.stroke(line([CGPoint(x: c.x + (r + 7) * cos(t), y: c.y + (r + 7) * sin(t)), CGPoint(x: c.x + (r + 16) * cos(t), y: c.y + (r + 16) * sin(t))]),
+                               with: dot, style: StrokeStyle(lineWidth: 2.5, lineCap: .round))
+                }
+                ctx.stroke(line([CGPoint(x: w * 0.1, y: c.y), CGPoint(x: w * 0.9, y: c.y)]), with: ink, style: stroke)
+                var rim = Path(); rim.move(to: CGPoint(x: w * 0.22, y: c.y + 8))
+                rim.addQuadCurve(to: CGPoint(x: w * 0.78, y: c.y + 8), control: CGPoint(x: w * 0.5, y: c.y + 22))
+                ctx.stroke(rim, with: ink, style: StrokeStyle(lineWidth: 2, lineCap: .round))
             }
         }
         .frame(width: 104, height: 84)

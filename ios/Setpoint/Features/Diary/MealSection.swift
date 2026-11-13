@@ -22,6 +22,11 @@ struct MealSection: View {
     @State private var naming = false
     @State private var mealName = ""
 
+    /// Each meal has its own colour, as a thin edge down the side of its card: easy to tell apart at a glance.
+    private var accent: Color { Brand.meal(meal.key) }
+    private func edge(_ fill: Color) -> some View {
+        ZStack(alignment: .leading) { fill; Rectangle().fill(accent).frame(width: 4) }
+    }
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
 
@@ -66,11 +71,12 @@ struct MealSection: View {
             .accessibilityHint(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
             .padding(.vertical, 0)
             .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
+            .listRowBackground(edge(Brand.card).overlay(TopSheen()))
             if expanded {
             ForEach(foods) { food in
                 Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
                     .buttonStyle(.plain)
-                .listRowBackground(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card)
+                .listRowBackground(edge(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
                 .animation(.easeOut(duration: 0.9), value: store.justAdded.contains(food.id))
                     .swipeActions(edge: .trailing) {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
@@ -149,7 +155,7 @@ struct FoodRow: View {
                 if let note = food.note { Text(note).font(.brand(.footnote)).italic().foregroundStyle(.secondary).lineLimit(1) }
             }
             Spacer()
-            Text(Fmt.kcal(food.kcal)).font(Brand.num(20, .semibold)).monospacedDigit().foregroundStyle(Brand.ink)
+            Text(Fmt.kcal(food.kcal)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink)
         }
         .contentShape(.rect)
         .opacity(food.isPlanned && day <= Day.today ? 0.55 : 1)
@@ -248,7 +254,7 @@ struct MealSummarySheet: View {
     private func cell(_ l: LocalizedStringKey, _ g: Double, _ c: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 4) { Circle().fill(c).frame(width: 7, height: 7); Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2) }
-            Text("\(Fmt.grams(g)) g").font(Brand.num(23, .semibold)).monospacedDigit()
+            Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

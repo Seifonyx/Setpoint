@@ -13,6 +13,9 @@ struct ProgressScreen: View {
     @State private var showWeeks = false
     @State private var showAll = false
     @State private var picked: Date?   // touch and hold the chart to read a day
+    @State private var reveal: CGFloat = 1 // the trend line draws itself in when you open Progress
+    @State private var drawn = false
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
 
     struct EditDay: Identifiable { let id: String }
 
@@ -40,7 +43,18 @@ struct ProgressScreen: View {
             .navigationTitle("Progress")
             .task(id: "\(store.version)|\(range)|\(store.foodsReady)") { await load() }
             .sheet(item: $editing) { WeightSheet(day: $0.id) }
+            .onDisappear { drawn = false }
+            .onChange(of: page) { drawn = false }
         }
+    }
+
+    /// Draw the line from left to right and count the numbers up, once each time you come to the page.
+    private func drawIn() {
+        guard !drawn else { return }
+        drawn = true
+        guard !reduceMotion else { reveal = 1; return }
+        reveal = 0
+        withAnimation(.easeInOut(duration: 1.2).delay(0.1)) { reveal = 1 }
     }
 
     private func load() async {
@@ -66,12 +80,15 @@ struct ProgressScreen: View {
             VStack(alignment: .leading, spacing: 6) {
                 Text("Trend weight").font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(alignment: .firstTextBaseline, spacing: 4) {
-                    Text(data?.now.map { Fmt.weight($0, unit: unit) } ?? "—").font(Brand.num(53, .bold)).monospacedDigit()
+                    Group {
+                        if let now = data?.now { CountUp(value: now, progress: reveal) { Fmt.weight($0, unit: unit) } } else { Text("—") }
+                    }
+                    .font(Brand.num(53, .bold)).monospacedDigit()
                     Text(LocalizedStringKey(unit)).foregroundStyle(.secondary)
                     Spacer()
                     if let c = change(pts) { deltaChip(c) }
                 }
-                if pts.count >= 2 { chart(pts) } else {
+                if pts.count >= 2 { chart(pts).onAppear(perform: drawIn) } else {
                     Text("Log your weight a few times to see your trend.").font(.brand(.subheadline)).foregroundStyle(.secondary).padding(.vertical, 30)
                 }
             }
@@ -149,7 +166,7 @@ struct ProgressScreen: View {
                     .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
                         VStack(alignment: .leading, spacing: 2) {
                             Text(Day.date(sel.date).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())).font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2)
-                            Text("\(Fmt.weight(sel.kg, unit: unit)) \(unit)").font(Brand.num(20, .semibold)).monospacedDigit()
+                            Text("\(Fmt.weight(sel.kg, unit: unit)) \(unit)").font(Brand.num(22, .semibold)).monospacedDigit()
                             Text("Trend \(Fmt.weight(sel.trend, unit: unit))").font(.brand(.caption2)).foregroundStyle(Brand.green).monospacedDigit()
                         }
                         .padding(.horizontal, 10).padding(.vertical, 6)
@@ -171,6 +188,11 @@ struct ProgressScreen: View {
         .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { AxisGridLine(); AxisValueLabel(format: .dateTime.month(.abbreviated).day()) } }
         .chartYAxis { AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) }
         .frame(height: 220)
+        .mask {
+            GeometryReader { g in
+                Rectangle().frame(width: g.size.width * reveal + (reveal >= 1 ? 80 : 0), height: g.size.height + 160).offset(y: -80)
+            }
+        }
         .padding(.top, 8)
     }
 
@@ -187,15 +209,15 @@ struct ProgressScreen: View {
         let days = Double(max(1, Day.number(last.date) - Day.number(first.date)))
         let perWeek = (last.trend - first.trend) / days * 7
         return HStack {
-            stat("\(pts.count)", "Weigh-ins")
-            stat((perWeek >= 0 ? "+" : "−") + Fmt.weight(abs(perWeek), unit: unit), "Per week")
-            stat(Fmt.weight(pts.map(\.kg).min() ?? 0, unit: unit), "Lowest")
-            stat(Fmt.weight(pts.map(\.kg).max() ?? 0, unit: unit), "Highest")
+            stat(Double(pts.count), "Weigh-ins") { "\(Int($0.rounded()))" }
+            stat(perWeek, "Per week") { ($0 >= 0 ? "+" : "−") + Fmt.weight(abs($0), unit: unit) }
+            stat(pts.map(\.kg).min() ?? 0, "Lowest") { Fmt.weight($0, unit: unit) }
+            stat(pts.map(\.kg).max() ?? 0, "Highest") { Fmt.weight($0, unit: unit) }
         }
     }
-    private func stat(_ v: String, _ l: LocalizedStringKey) -> some View {
+    private func stat(_ v: Double, _ l: LocalizedStringKey, _ f: @escaping (Double) -> String) -> some View {
         VStack(spacing: 2) {
-            Text(v).font(.brand(.headline)).monospacedDigit()
+            CountUp(value: v, progress: reveal, format: f).font(.brand(.headline)).monospacedDigit()
             Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
@@ -309,5 +331,18 @@ struct ProgressScreen: View {
                 } footer: { Text("Days you ate at least 90% of your protein target.") }
             }
         }
+    }
+}
+
+/// A number that counts up to its value as `progress` goes from 0 to 1 (weights count up from a little below,
+/// so it reads as settling in rather than racing from zero).
+struct CountUp: View, Animatable {
+    var value: Double
+    var progress: CGFloat
+    var format: (Double) -> String
+    var animatableData: CGFloat { get { progress } set { progress = newValue } }
+    var body: some View {
+        let start = abs(value) > 20 ? value * 0.94 : 0
+        Text(format(progress >= 1 ? value : start + (value - start) * Double(progress)))
     }
 }

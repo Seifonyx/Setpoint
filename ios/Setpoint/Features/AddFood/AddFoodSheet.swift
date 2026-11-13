@@ -179,7 +179,7 @@ struct AddFoodSheet: View {
                         .contentShape(.rect)
                     }
                     .buttonStyle(.plain)
-                    Text(Fmt.kcal(m.kcal)).font(.brand(.body, .semibold)).monospacedDigit()
+                    Text(Fmt.kcal(m.kcal)).font(Brand.num(18, .semibold)).monospacedDigit()
                     addButton { logSavedMeal(m) }
                 }
             }
@@ -492,7 +492,7 @@ struct FoodHitRow: View {
             Spacer(minLength: 6)
             if let k = hit.kcal {
                 VStack(alignment: .trailing, spacing: 5) {
-                    Text(Fmt.kcal(k)).font(.brand(.body, .semibold)).monospacedDigit()
+                    Text(Fmt.kcal(k)).font(Brand.num(18, .semibold)).monospacedDigit()
                     MacroSplit(p: hit.protein ?? 0, c: hit.carbs ?? 0, f: hit.fat ?? 0).frame(width: 40, height: 4)
                 }
             }
