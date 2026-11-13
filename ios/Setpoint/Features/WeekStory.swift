@@ -37,12 +37,12 @@ struct WeekStory: View {
                 .padding(32).frame(maxHeight: .infinity)
             }
             // story progress, like the ones you know
-            HStack(spacing: 4) {
+            if review != nil { HStack(spacing: 4) {
                 ForEach(0..<count, id: \.self) { i in
                     Capsule().fill(.white.opacity(i <= page ? 0.95 : 0.3)).frame(height: 3)
                 }
             }
-            .padding(.horizontal, 16).padding(.top, 8)
+            .padding(.horizontal, 16).padding(.top, 8) }
             HStack {
                 Spacer()
                 Button { dismiss() } label: { Image(systemName: "xmark").font(.headline).foregroundStyle(.white).frame(width: 44, height: 44) }
@@ -55,6 +55,7 @@ struct WeekStory: View {
         .task {
             let e = store.engineRef
             review = await e.weekReview()
+            if review == nil { review = await e.weekReview(CheckInView.weekKey) } // nothing last week: this week so far
             let t = await e.expenditureHistory(weeks: 3).compactMap(\.trend)
             trend = t.count >= 2 ? t[t.count - 1] - t[t.count - 2] : nil
             low = await e.nutrients(Day.today)?.low.first
