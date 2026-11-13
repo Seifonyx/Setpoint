@@ -557,6 +557,8 @@ struct FilterPill: View {
         }
         .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
         .sensoryFeedback(.selection, trigger: "\(sort)\(verified?.wrappedValue ?? false)")
+        .accessibilityLabel(Text("Sort"))
+        .accessibilityValue(Text(options.first { $0.0 == sort }?.1 ?? options[0].1))
     }
 }
 

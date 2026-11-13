@@ -12,6 +12,7 @@ struct ProgressScreen: View {
     @State private var editing: EditDay?
     @State private var showWeeks = false
     @State private var showAll = false
+    @State private var picked: Date?   // touch and hold the chart to read a day
 
     struct EditDay: Identifiable { let id: String }
 
@@ -19,8 +20,7 @@ struct ProgressScreen: View {
         NavigationStack {
             List {
                 Section {
-                    Picker("Show", selection: $page) { Text("Weight").tag("weight"); Text("Nutrition").tag("nutrition"); Text("Body").tag("body") }
-                        .pickerStyle(.segmented)
+                    PillTabs(selection: $page, options: [("weight", "Weight"), ("nutrition", "Nutrition"), ("body", "Body")])
                     if page != "body" { Picker("Range", selection: $range) {
                         Text("1M").tag(30); Text("3M").tag(90); Text("6M").tag(180); Text("1Y").tag(365); Text("All").tag(0)
                     }
@@ -142,6 +142,22 @@ struct ProgressScreen: View {
                 PointMark(x: .value("Day", Day.date(last.date), unit: .day), y: .value("Trend", disp(last.trend)))
                     .symbolSize(360).foregroundStyle(Brand.amber.opacity(0.22))
             }
+            if let sel = nearest(pts) {
+                RuleMark(x: .value("Day", Day.date(sel.date), unit: .day))
+                    .foregroundStyle(Brand.ink2.opacity(0.5))
+                    .lineStyle(StrokeStyle(lineWidth: 1))
+                    .annotation(position: .top, spacing: 4, overflowResolution: .init(x: .fit(to: .chart), y: .disabled)) {
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(Day.date(sel.date).formatted(.dateTime.weekday(.abbreviated).month(.abbreviated).day())).font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2)
+                            Text("\(Fmt.weight(sel.kg, unit: unit)) \(unit)").font(Brand.display(17, .bold)).monospacedDigit()
+                            Text("Trend \(Fmt.weight(sel.trend, unit: unit))").font(.brand(.caption2)).foregroundStyle(Brand.green).monospacedDigit()
+                        }
+                        .padding(.horizontal, 10).padding(.vertical, 6)
+                        .background(Brand.card2, in: .rect(cornerRadius: 12))
+                    }
+                PointMark(x: .value("Day", Day.date(sel.date), unit: .day), y: .value("Weight", disp(sel.kg)))
+                    .symbolSize(90).foregroundStyle(Brand.ink)
+            }
             if let g = goal {
                 RuleMark(y: .value("Goal", disp(g)))
                     .lineStyle(StrokeStyle(lineWidth: 1, dash: [4, 4]))
@@ -150,10 +166,19 @@ struct ProgressScreen: View {
             }
         }
         .chartYScale(domain: yLo...yHi)
+        .chartXSelection(value: $picked)
+        .sensoryFeedback(.selection, trigger: nearest(pts)?.date)
         .chartXAxis { AxisMarks(values: .automatic(desiredCount: 4)) { AxisGridLine(); AxisValueLabel(format: .dateTime.month(.abbreviated).day()) } }
         .chartYAxis { AxisMarks(position: .trailing, values: .automatic(desiredCount: 4)) }
         .frame(height: 220)
         .padding(.top, 8)
+    }
+
+    /// The weigh-in closest to where your finger is on the chart.
+    private func nearest(_ pts: [ProgressData.Point]) -> ProgressData.Point? {
+        guard let d = picked else { return nil }
+        let n = Day.number(Day.iso(d))
+        return pts.min { abs(Day.number($0.date) - n) < abs(Day.number($1.date) - n) }
     }
 
     private func stats(_ pts: [ProgressData.Point]) -> some View {

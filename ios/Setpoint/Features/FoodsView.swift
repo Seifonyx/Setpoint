@@ -219,7 +219,7 @@ struct FoodsView: View {
                         tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
                         tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
                         tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
-                        tile("Saved days", "calendar.badge.checkmark", Brand.green, SavedDays.load(store).count) { SavedDaysView() }
+                        tile("Saved days", "calendar.badge.checkmark", Brand.green, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }
                     planCard
                 }

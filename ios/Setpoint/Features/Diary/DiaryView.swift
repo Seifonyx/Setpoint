@@ -161,6 +161,7 @@ struct SummaryPager: View {
     let totals: Totals
     let plan: DayPlan?
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 372 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -169,7 +170,7 @@ struct SummaryPager: View {
                 MicrosCard(day: day).tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
-            .frame(height: 372)
+            .frame(height: pagerHeight)
             HStack(spacing: 6) {
                 ForEach(0..<2, id: \.self) { i in
                     Capsule().fill(i == page ? Brand.green : Brand.ink2.opacity(0.25)).frame(width: i == page ? 18 : 6, height: 6)
@@ -227,6 +228,7 @@ struct SummaryCard: View {
             }
         }
         .padding(.vertical, 8)
+        .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
         .overlay(alignment: .top) {
             if let c = cheer {
@@ -367,6 +369,9 @@ struct MacroBar: View {
             .animation(.spring(response: 0.6, dampingFraction: 0.85), value: value)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(label))
+        .accessibilityValue(Text("\(Fmt.grams(value)) of \(Fmt.grams(target)) grams"))
     }
 }
 

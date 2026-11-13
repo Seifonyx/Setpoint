@@ -20,6 +20,7 @@ struct OnboardingView: View {
     @State private var steps = 6000.0
     @State private var workouts = 3
     @State private var shown = 0.0
+    @State private var arrived = false
 
     private let steps_ = 6
 
@@ -61,18 +62,23 @@ struct OnboardingView: View {
                 CalorieDial(eaten: shown, target: 100, protein: (shown * 0.8, 100), carbs: (shown * 0.95, 100), fat: (shown * 0.6, 100))
                     .frame(width: 220, height: 220)
             }
-            .onAppear { withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 } }
+            .onAppear {
+                withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 }
+                withAnimation(.spring(response: 0.8, dampingFraction: 0.85).delay(0.55)) { arrived = true }
+            }
             VStack(spacing: 8) {
                 Text("Setpoint").font(Brand.display(46, .heavy))
                 Text("Eat to your target. Watch your weight trend settle where you want it.")
                     .font(.brand(.title3)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center).padding(.horizontal, 30)
             }
+            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 18)
             Spacer()
             VStack(spacing: 12) {
                 primary("Get started") { next() }
                 Button("I already have an account") { signingIn = true }.font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
             }
             .padding(.horizontal, 24).padding(.bottom, 20)
+            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 24)
         }
     }
 

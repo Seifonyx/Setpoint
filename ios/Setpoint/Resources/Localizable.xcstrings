@@ -221,6 +221,16 @@
         }
       }
     },
+    "%@ of %@ grams": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ من %@ جرام"
+          }
+        }
+      }
+    },
     "%@ of %@ kcal": {
       "localizations": {
         "ar": {
@@ -287,6 +297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld أيام في الأسبوع"
+          }
+        }
+      }
+    },
+    "%lld days logged": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أيام مسجّلة"
           }
         }
       }
@@ -391,6 +411,16 @@
         }
       }
     },
+    "%lld percent": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld بالمئة"
+          }
+        }
+      }
+    },
     "%lld selected": {
       "localizations": {
         "ar": {
@@ -417,6 +447,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld مرات"
+          }
+        }
+      }
+    },
+    "%lld weigh-ins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld قياسات وزن"
           }
         }
       }
@@ -627,6 +667,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "88.7 كجم"
+          }
+        }
+      }
+    },
+    "A backup is one file with everything in it. Keep it in Files or iCloud Drive.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة الاحتياطية ملف واحد فيه كل شيء. احفظه في الملفات أو iCloud Drive."
           }
         }
       }
@@ -1127,6 +1177,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "فكرة أخرى"
+          }
+        }
+      }
+    },
+    "App": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التطبيق"
           }
         }
       }
@@ -5471,6 +5531,16 @@
         }
       }
     },
+    "Restore from a backup": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاستعادة من نسخة احتياطية"
+          }
+        }
+      }
+    },
     "Results": {
       "localizations": {
         "ar": {
@@ -5951,6 +6021,16 @@
         }
       }
     },
+    "Sign in to sync and keep a copy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل الدخول للمزامنة والاحتفاظ بنسخة"
+          }
+        }
+      }
+    },
     "Sign out": {
       "localizations": {
         "ar": {
@@ -6307,6 +6387,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتزامن %@"
+          }
+        }
+      }
+    },
+    "Synced with your account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متزامن مع حسابك"
           }
         }
       }
@@ -6697,6 +6787,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أيام التمرين"
+          }
+        }
+      }
+    },
+    "Trend %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الاتجاه %@"
           }
         }
       }
@@ -7617,6 +7717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أسبوعك"
+          }
+        }
+      }
+    },
+    "Your week is ready": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أسبوعك جاهز"
           }
         }
       }

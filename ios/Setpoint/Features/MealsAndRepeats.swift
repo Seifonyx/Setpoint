@@ -136,6 +136,9 @@ struct RepeatingView: View {
                         .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel(Text(Calendar.current.weekdaySymbols[d]))
+                    .accessibilityValue(Text("\(Fmt.kcal(k)) kcal"))
+                    .accessibilityAddTraits(sel ? .isSelected : [])
                 }
             }
             if !repeats.isEmpty {

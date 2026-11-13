@@ -137,6 +137,9 @@ struct DayPlannerView: View {
             .frame(width: 38, height: 38)
             Text(m.label).font(.brand(.caption2)).foregroundStyle(Brand.ink2).lineLimit(1).frame(width: 64)
         }
+        .accessibilityElement(children: .ignore)
+        .accessibilityLabel(Text(m.label))
+        .accessibilityValue(Text("\(Int(m.pct)) percent"))
     }
 
     @ViewBuilder private func mealCard(_ m: DayPlanResult.Meal) -> some View {

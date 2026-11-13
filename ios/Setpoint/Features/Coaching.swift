@@ -198,13 +198,11 @@ struct CheckInBanner: View {
     var body: some View {
         if seen != CheckInView.weekKey {
             NavigationLink { CheckInView() } label: {
-                HStack(spacing: 12) {
-                    Image(systemName: "chart.line.uptrend.xyaxis").font(.title3).foregroundStyle(Brand.green)
-                        .frame(width: 40, height: 40).background(Brand.greenSoft, in: .rect(cornerRadius: 12))
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text("Your weekly check-in is ready").font(.brand(.body, .semibold))
-                        Text("How last week went, and what changed in your plan.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                    }
+                HStack(spacing: 10) {
+                    Image(systemName: "sparkles").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.green)
+                        .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
+                    Text("Your week is ready").font(.brand(.subheadline, .semibold))
+                    Spacer(minLength: 0)
                 }
             }
         }
