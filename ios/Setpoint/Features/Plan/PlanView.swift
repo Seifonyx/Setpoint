@@ -19,12 +19,11 @@ struct PlanView: View {
                 case nil:
                     if !o.ready || o.kg == nil {
                         Section {
-                            ContentUnavailableView {
-                                Label("Let's work out your targets", systemImage: "target")
-                            } description: {
-                                Text(!o.ready ? "Add your age, sex and height." : "Log your weight in the Diary to finish.")
-                            } actions: {
-                                if !o.ready { Button("About you") { about = true }.buttonStyle(.glassProminent) }
+                            if !o.ready {
+                                EmptyState(icon: "target", title: "Let's work out your targets", message: "Add your age, sex and height.",
+                                           action: (title: "About you", run: { about = true }))
+                            } else {
+                                EmptyState(icon: "target", title: "Let's work out your targets", message: "Log your weight in the Diary to finish.")
                             }
                         }
                     }

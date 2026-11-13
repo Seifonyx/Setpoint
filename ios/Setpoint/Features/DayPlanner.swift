@@ -44,10 +44,10 @@ struct DayPlannerView: View {
                     Text("A starting point from your targets. Everything goes in as planned, so you can swap foods and tick them off as you eat.")
                         .font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center).padding(.horizontal, 12)
                 } else if target == nil {
-                    ContentUnavailableView("Set your targets first", systemImage: "target",
-                                           description: Text("Setpoint plans a day around your calories, protein, carbs and fat. Set them in You › Plan."))
+                    EmptyState(icon: "target", title: "Set your targets first",
+                               message: "Setpoint plans a day around your calories, protein, carbs and fat. Set them in You › Plan.").brandCard()
                 } else if loading || !store.foodsReady {
-                    ProgressView().padding(.top, 80)
+                    SkeletonRows(count: 6).brandCard()
                 }
             }
             .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 110)
@@ -64,6 +64,7 @@ struct DayPlannerView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { bottomBar }
+        .toolbar(.hidden, for: .tabBar)
         .sheet(isPresented: $adding) { if let p = shown { AddPlanSheet(plan: p) } }
         .alert("Save this day", isPresented: $naming) {
             TextField("Name", text: $name)
@@ -360,5 +361,6 @@ struct SavedDaysView: View {
         }
         .brandList()
         .navigationTitle("Saved days")
+        .toolbar(.hidden, for: .tabBar)
     }
 }

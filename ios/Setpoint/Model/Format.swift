@@ -38,6 +38,14 @@ enum Fmt {
             : Int(v).formatted(.number) + " " + String(localized: "ml")
     }
     static func amount(_ qty: Double, _ unit: String) -> String {
-        qty.formatted(.number.precision(.fractionLength(0...2))) + " " + unit
+        (unit == "g" || unit == "ml" ? qty.formatted(.number.precision(.fractionLength(0...1))) : fraction(qty)) + " " + unit
+    }
+    /// ½, 1½, ¼, ¾, ⅓, ⅔: how people say amounts.
+    static func fraction(_ q: Double) -> String {
+        let w = (q + 1e-9).rounded(.down), f = q - w
+        for (v, s) in [(0.25, "¼"), (1.0 / 3, "⅓"), (0.5, "½"), (2.0 / 3, "⅔"), (0.75, "¾")] where abs(f - v) < 0.02 {
+            return (w > 0 ? Int(w).formatted() : "") + s
+        }
+        return q.formatted(.number.precision(.fractionLength(0...2)))
     }
 }

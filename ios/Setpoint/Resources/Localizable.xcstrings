@@ -3291,6 +3291,16 @@
         }
       }
     },
+    "Import a backup file": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد ملف نسخة احتياطية"
+          }
+        }
+      }
+    },
     "Import a backup made in the web app (Settings › Back up). Backups made here can be restored in the web app too.": {
       "localizations": {
         "ar": {
@@ -3601,6 +3611,16 @@
         }
       }
     },
+    "Loading": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جارٍ التحميل"
+          }
+        }
+      }
+    },
     "Loading the food list…": {
       "localizations": {
         "ar": {
@@ -3757,6 +3777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سجّل الوزن"
+          }
+        }
+      }
+    },
+    "Log your first food or weigh-in. If you've used Setpoint before, sign in under You and your data comes back.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل أول طعام أو وزن. إن استخدمت Setpoint من قبل، سجّل الدخول من «أنت» وستعود بياناتك."
           }
         }
       }
@@ -7377,6 +7407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بياناتك بتفضل على الآيفون ده. سجّل دخول تاني عشان تزامن."
+          }
+        }
+      }
+    },
+    "Your diary starts here": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يومياتك تبدأ من هنا"
           }
         }
       }

@@ -42,7 +42,11 @@ struct RootView: View {
             }
         }
         .tabBarMinimizeBehavior(.onScrollDown)
-        .sensoryFeedback(trigger: store.changeCount) { _, _ in haptics ? .success : nil }
+        // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one
+        .sensoryFeedback(trigger: store.changeCount) { _, _ in
+            guard haptics else { return nil }
+            switch store.changeKind { case .add: return .success; case .remove: return .impact(weight: .medium); case .edit: return .selection }
+        }
         .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
         .modifier(LockCover())
         .fullScreenCover(isPresented: $shotStory) { WeekStory().environment(store) } // build-server screenshots

@@ -100,6 +100,7 @@ struct FoodLists: View {
             }
             .brandList()
             .navigationTitle(title)
+            .toolbar(.hidden, for: .tabBar)
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
             .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }

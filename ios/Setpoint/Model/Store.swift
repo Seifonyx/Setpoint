@@ -11,6 +11,9 @@ final class Store {
     private(set) var root: [String: JSONValue] = [:]
     /// Goes up on every change you make (for haptics).
     private(set) var changeCount = 0
+    /// What the last change was, so the haptic matches it: adding, removing, or changing something.
+    enum ChangeKind { case add, remove, edit }
+    private(set) var changeKind = ChangeKind.edit
     /// Something Siri or a shortcut asked the app to open.
     var request: AppRequest?
     private(set) var food: [String: [FoodItem]] = [:]
@@ -236,7 +239,7 @@ final class Store {
             r["u"] = ms
             return FoodItem(raw: r)
         }
-        remember(label ?? String(localized: "Added \(new.count) foods"))
+        remember(label ?? String(localized: "Added \(new.count) foods"), .add)
         food[day, default: []].append(contentsOf: new)
         save()
     }
@@ -372,7 +375,8 @@ final class Store {
 
     // MARK: Changes (each can be undone from the banner)
 
-    private func remember(_ label: String) {
+    private func remember(_ label: String, _ kind: ChangeKind = .edit) {
+        changeKind = kind
         changeCount += 1
         undoSnap = Snapshot(food: food, entries: entries, water: water)
         undoAction = nil
@@ -397,7 +401,7 @@ final class Store {
     }
 
     func delete(_ item: FoodItem, on day: String) {
-        remember(String(localized: "Removed \(item.displayName)"))
+        remember(String(localized: "Removed \(item.displayName)"), .remove)
         food[day]?.removeAll { $0.id == item.id }
         save()
     }
@@ -435,7 +439,7 @@ final class Store {
     func stopRepeat(_ id: String) {
         root["repeats"] = .array((root["repeats"]?.array ?? []).filter { $0["id"]?.string != id })
         var del = root["del"]?.object ?? [:]; del["rp:" + id] = .number(Self.nowMs); root["del"] = .object(del)
-        remember(String(localized: "Stopped repeating"))
+        remember(String(localized: "Stopped repeating"), .remove)
         save()
     }
 
@@ -449,20 +453,20 @@ final class Store {
     func copy(_ items: [FoodItem], to day: String) {
         let copies = items.filter { !$0.isDailyTotal }.map { f -> FoodItem in var c = f.copy(); stamp(&c); return c }
         guard !copies.isEmpty else { return }
-        remember(String(localized: "Copied \(copies.count) foods"))
+        remember(String(localized: "Copied \(copies.count) foods"), .add)
         food[day, default: []].append(contentsOf: copies)
         save()
     }
     func copyFromYesterday(meal: String, to day: String) -> Int {
         let prev = eaten(Day.add(day, -1)).filter { mealKey(of: $0) == meal && !$0.isDailyTotal }
         guard !prev.isEmpty else { return 0 }
-        remember(String(localized: "Added from yesterday"))
+        remember(String(localized: "Added from yesterday"), .add)
         food[day, default: []].append(contentsOf: prev.map { f -> FoodItem in var c = f.copy(meal: meal); stamp(&c); return c })
         save()
         return prev.count
     }
     func removeMeal(_ meal: String, on day: String) {
-        remember(String(localized: "Meal cleared"))
+        remember(String(localized: "Meal cleared"), .remove)
         food[day]?.removeAll { mealKey(of: $0) == meal && !$0.isDailyTotal }
         save()
     }
@@ -480,7 +484,7 @@ final class Store {
     func dailyTotals(_ day: String) -> [FoodItem] { items(day).filter(\.isDailyTotal) }
 
     func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool, kcal: Double?? = nil) {
-        remember(String(localized: "Weight saved"))
+        remember(String(localized: "Weight saved"), .add)
         var raw = entry(day)?.raw ?? [:]
         // The day's calories as one total (for days you didn't log food), like the web app.
         if let k = kcal { if let k { raw["kcal"] = .number(min(10000, k.rounded())) } else { raw.removeValue(forKey: "kcal") } }
@@ -494,12 +498,12 @@ final class Store {
         save()
     }
     func deleteWeight(on day: String) {
-        remember(String(localized: "Weight deleted"))
+        remember(String(localized: "Weight deleted"), .remove)
         entries.removeAll { $0.date == day }
         save()
     }
     func addWater(_ ml: Double, on day: String) {
-        remember(String(localized: "Water added"))
+        remember(String(localized: "Water added"), .add)
         water[day] = max(0, (water[day] ?? 0) + ml)
         if water[day] == 0 { water.removeValue(forKey: day) }
         save()

@@ -45,6 +45,19 @@
     out.del = del;
     return out;
   }
+  // Amounts read like a person says them: ½ cup, 1½ slices, ¼ tsp (grams stay plain numbers). Overrides the web's fmtAmt.
+  function fracQty(q) {
+    var w = Math.floor(q + 1e-9), f = q - w, sym = null;
+    [[0.25, '¼'], [1 / 3, '⅓'], [0.5, '½'], [2 / 3, '⅔'], [0.75, '¾']].forEach(function (m) { if (Math.abs(f - m[0]) < 0.02) sym = m[1]; });
+    return sym ? (w ? String(w) : '') + sym : fmtQty(q);
+  }
+  function fmtAmt(qty, unit) {
+    if (unit === 'g') return fmtQty(qty) + ' g';
+    var u = String(unit || '').replace(/^small\/regular fillet$/, 'fillet');
+    if (/^\d/.test(u)) return qty === 1 ? u : fracQty(qty) + ' × ' + u;
+    if (qty > 1) u = u.replace(/^([^,(]*?)([a-z]+)(?=\s*(,|\(|$))/i, function (all, pre, w) { return pre + (UNIT_PL[w.toLowerCase()] || w); });
+    return fracQty(qty) + ' ' + u;
+  }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
     return { id: newId(), meal: meal, ref: f.id, g: Math.round(g * 10) / 10, qty: Math.round(qty * 1000) / 1000, unit: u.label,

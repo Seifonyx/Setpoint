@@ -2,6 +2,7 @@ import SwiftUI
 
 struct DiaryView: View {
     @Environment(Store.self) private var store
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
     @State private var day = Day.today
     @State private var weightSheet = false
     @State private var waterSheet = false
@@ -19,13 +20,11 @@ struct DiaryView: View {
             List {
                 if store.isEmpty {
                     Section {
-                        ContentUnavailableView {
-                            Label("Bring your diary over", systemImage: "square.and.arrow.down")
-                        } description: {
-                            Text("In the Setpoint web app, open Settings › Back up, then import that file here.")
-                        } actions: {
-                            Button("Import backup") { importing = true }.buttonStyle(.glassProminent)
-                        }
+                        EmptyState(icon: "book.pages", title: "Your diary starts here",
+                                   message: "Log your first food or weigh-in. If you've used Setpoint before, sign in under You and your data comes back.",
+                                   action: (title: "Add food", run: { adding = AddJob(meal: mealNow) }))
+                        Button("Import a backup file", systemImage: "square.and.arrow.down") { importing = true }
+                            .font(.brand(.subheadline, .semibold)).tint(Brand.green).frame(maxWidth: .infinity)
                     }
                 }
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
@@ -62,6 +61,7 @@ struct DiaryView: View {
                 }
             }
             .listSectionSpacing(14)
+            .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
             .brandList()
             .navigationTitle(title)
             .navigationSubtitle(subtitle)
@@ -364,6 +364,7 @@ struct MacroBar: View {
                 }
             }
             .frame(height: 5)
+            .animation(.spring(response: 0.6, dampingFraction: 0.85), value: value)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
     }

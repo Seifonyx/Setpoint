@@ -52,7 +52,7 @@ struct TargetExplainer: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .brandCard()
                     } else {
-                        ContentUnavailableView("No plan yet", systemImage: "target", description: Text("Set up your plan in You › Plan and this explains your target with your own numbers."))
+                        EmptyState(icon: "target", title: "No plan yet", message: "Set up your plan in You › Plan and this explains your target with your own numbers.").brandCard()
                     }
                 }
                 .padding(.horizontal, 16).padding(.bottom, 24)

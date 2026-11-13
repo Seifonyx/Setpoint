@@ -51,8 +51,7 @@ struct AddFoodSheet: View {
         NavigationStack(path: $path) {
             List {
                 SwiftUI.Section {
-                    Picker("Show", selection: $tab) { ForEach(Tab.allCases) { Text($0.title).tag($0) } }
-                        .pickerStyle(.segmented)
+                    PillTabs(selection: $tab, options: Tab.allCases.map { ($0, $0.title) })
                 }
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
@@ -114,7 +113,6 @@ struct AddFoodSheet: View {
                 hits = await store.engineRef.search(query, meal: meal, sort: sort, verifiedOnly: verifiedOnly)
             }
             .onAppear { if startIDs.isEmpty { startIDs = Set(store.items(day).map(\.id)) } }
-            .sensoryFeedback(.success, trigger: added.count)
         }
     }
 
@@ -222,7 +220,7 @@ struct AddFoodSheet: View {
 
     @ViewBuilder private var searchResults: some View {
         if !store.foodsReady {
-            SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
+            Section { SkeletonRows(count: 5).padding(.vertical, 6) }
         }
         if !hits.isEmpty { Section { ForEach(hits) { row($0) } } }
         if store.foodsReady && hits.isEmpty {
@@ -559,5 +557,34 @@ struct FilterPill: View {
         }
         .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
         .sensoryFeedback(.selection, trigger: "\(sort)\(verified?.wrappedValue ?? false)")
+    }
+}
+
+/// Setpoint's tab switch: a green pill that slides to the tab you pick.
+struct PillTabs<T: Hashable>: View {
+    @Binding var selection: T
+    let options: [(T, LocalizedStringKey)]
+    @Namespace private var ns
+
+    var body: some View {
+        HStack(spacing: 4) {
+            ForEach(options.indices, id: \.self) { i in
+                let value = options[i].0, title = options[i].1
+                let on = value == selection
+                Button { withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { selection = value } } label: {
+                    Text(title).font(.brand(.subheadline, .semibold)).lineLimit(1).minimumScaleFactor(0.8)
+                        .foregroundStyle(on ? Brand.onGreen : Brand.ink2)
+                        .frame(maxWidth: .infinity, minHeight: 36)
+                        .background { if on { Capsule().fill(Brand.green).matchedGeometryEffect(id: "pill", in: ns) } }
+                        .contentShape(Capsule())
+                }
+                .buttonStyle(.plain)
+                .accessibilityAddTraits(on ? .isSelected : [])
+            }
+        }
+        .padding(4)
+        .background(Brand.card, in: Capsule())
+        .overlay(Capsule().strokeBorder(Brand.line.opacity(0.7), lineWidth: 0.5))
+        .sensoryFeedback(.selection, trigger: selection)
     }
 }
