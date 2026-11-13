@@ -102,6 +102,11 @@ actor Engine {
     func insights() -> Insights? { decode(Insights.self, "insights") }
     func applyRepeats() -> Int { Int(sp.invokeMethod("applyRepeats", withArguments: [])?.toInt32() ?? 0) }
     func dayScore(_ day: String) -> DayScore? { decode(DayScore.self, "dayScore", [day]) }
+    /// A logged item's vitamins, minerals and fiber against your daily targets.
+    func itemNutrientRows(_ item: [String: JSONValue]) -> [NutrientRow] {
+        guard let d = try? JSONEncoder().encode(JSONValue.object(item)), let s = String(data: d, encoding: .utf8) else { return [] }
+        return decode([NutrientRow].self, "itemNutrientRows", [s]) ?? []
+    }
     func repeatKinds() -> [String: String] { decode([String: String].self, "repeatKinds") ?? [:] }
     func itemKinds(_ day: String) -> [String: String] { decode([String: String].self, "itemKinds", [day]) ?? [:] }
     func expenditureHistory(weeks: Int) -> [ExpPoint] { decode([ExpPoint].self, "expenditureHistory", [weeks]) ?? [] }
@@ -325,4 +330,9 @@ struct DayPlanResult: Codable, Sendable, Equatable {
     let meals: [Meal]
     let micros: [Micro]
     let met: Int
+}
+
+struct NutrientRow: Decodable, Sendable, Identifiable, Equatable {
+    let key: String; let label: String; let unit: String; let v: Double; let goal: Double?; let hi: Double?
+    var id: String { key }
 }

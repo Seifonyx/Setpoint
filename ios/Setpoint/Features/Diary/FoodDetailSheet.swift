@@ -1,7 +1,8 @@
 import SwiftUI
 
-/// Tap a logged food: change how much you had (with live numbers), see its nutrition and its share of your day,
-/// and move it, time it or note it. A saved meal logged as one entry shows its foods, each resizable or removable.
+/// Tap a logged food: how much you had (the number and its unit, with the calories beside them), its protein, carbs
+/// and fat against today's targets, and its vitamins and minerals. A meal or a recipe also lists what's in it, each
+/// one changeable for this day. Nothing else: moving, repeating and deleting are in the ⋯ menu.
 struct FoodDetailSheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
@@ -25,7 +26,8 @@ struct FoodDetailSheet: View {
     @State private var hasTime = false
     @State private var time = Date()
     @State private var note = ""
-    @State private var moreNutrients = false
+    @State private var rows: [NutrientRow] = []
+    @State private var allNutrients = false
     @State private var confirmDelete = false
     @State private var repeating = false
 
@@ -46,11 +48,10 @@ struct FoodDetailSheet: View {
             List {
                 header
                 portion
+                macroTargets
                 if isMeal { mealFoods }
                 if isRecipe && recipe != nil { recipeFoods }
-                if !isMeal { share }
-                if byFood, info?.per100 != nil { nutrients }
-                details
+                if !rows.isEmpty { nutrientList }
             }
             .listSectionSpacing(14)
             .brandList()
@@ -63,6 +64,11 @@ struct FoodDetailSheet: View {
                         if food.isPlanned && day <= Day.today { Button("Mark as eaten", systemImage: "checkmark.circle") { store.markEaten(food, on: day); dismiss() } }
                         Button(repeatRec == nil ? "Repeat this food" : "Repeating", systemImage: "repeat") { repeating = true }
                         if isMeal { Button("Split into separate foods", systemImage: "square.split.2x2") { split() } }
+                        Menu("Move to", systemImage: "arrow.right") {
+                            ForEach(store.meals.filter { $0.key != store.mealKey(of: food) }) { m in
+                                Button(m.name) { store.move(food, to: m.key, on: day); dismiss() }
+                            }
+                        }
                         Divider()
                         Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
                     } label: { Image(systemName: "ellipsis") }
@@ -96,60 +102,47 @@ struct FoodDetailSheet: View {
     private var header: some View {
         Section {
             HStack(spacing: 14) {
-                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 52, name: food.displayName)
+                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 46, name: food.displayName)
                 VStack(alignment: .leading, spacing: 3) {
-                    Text(food.displayName).font(Brand.display(22, .bold)).lineLimit(3)
-                    Text(subtitle).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                    Text(food.displayName).font(Brand.display(20, .bold)).lineLimit(3)
+                    if !source.isEmpty { Text(source).font(.brand(.footnote)).foregroundStyle(Brand.ink2) }
                 }
-            }
-            HStack(alignment: .center, spacing: 18) {
-                VStack(alignment: .leading, spacing: 0) {
-                    Text(Fmt.kcal(shown.kcal)).font(Brand.num(55, .bold)).monospacedDigit().contentTransition(.numericText())
-                    Text("kcal").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                }
-                Spacer()
-                MacroDonut(p: shown.protein, c: shown.carbs, f: shown.fat).frame(width: 74, height: 74)
-            }
-            .padding(.vertical, 4)
-            HStack(spacing: 10) {
-                macro("Protein", shown.protein, Brand.protein)
-                macro("Carbs", shown.carbs, Brand.carbs)
-                macro("Fat", shown.fat, Brand.fat)
             }
         }
-        .animation(.snappy, value: shown)
+        .listRowBackground(Color.clear)
+        .listRowInsets(EdgeInsets(top: 0, leading: 4, bottom: 0, trailing: 4))
     }
 
     @ViewBuilder private var portion: some View {
         Section {
-            HStack(spacing: 12) {
-                stepButton("minus") { bump(-1) }
-                VStack(spacing: 2) {
-                    if byFood {
-                        TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.center)
-                            .font(Brand.num(36, .semibold)).monospacedDigit()
-                        Menu {
-                            Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
-                        } label: {
-                            HStack(spacing: 3) { Text(info?.units.first { $0.label == unit }?.display ?? unit); Image(systemName: "chevron.up.chevron.down").font(.caption2) }
-                                .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
-                        }
-                    } else {
-                        Text(factor.formatted(.number.precision(.fractionLength(0...2))) + "×").font(Brand.num(36, .semibold)).monospacedDigit()
-                        Text(isMeal ? "of this meal" : "of the logged amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+            HStack(alignment: .firstTextBaseline) {
+                if byFood {
+                    TextField("Amount", text: $qtyText).keyboardType(.decimalPad)
+                        .font(Brand.num(44, .semibold)).monospacedDigit().fixedSize()
+                    Menu {
+                        Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
+                    } label: {
+                        HStack(spacing: 3) { Text(info?.units.first { $0.label == unit }?.display ?? unit).lineLimit(1); Image(systemName: "chevron.down").font(.caption2.weight(.bold)) }
+                            .font(.brand(.headline)).foregroundStyle(Brand.green)
                     }
+                } else {
+                    Text(Fmt.fraction(factor) + "×").font(Brand.num(44, .semibold)).monospacedDigit().contentTransition(.numericText())
+                    Text(isMeal ? "this meal" : "the logged amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
-                .frame(maxWidth: .infinity)
-                stepButton("plus") { bump(1) }
+                Spacer()
+                VStack(alignment: .trailing, spacing: 0) {
+                    Text(Fmt.kcal(shown.kcal)).font(Brand.num(34, .semibold)).monospacedDigit().contentTransition(.numericText())
+                    Text("kcal").font(.brand(.caption)).foregroundStyle(Brand.ink2)
+                }
             }
             HStack(spacing: 8) {
                 ForEach([0.5, 1, 1.5, 2], id: \.self) { m in
                     let on = byFood ? (qty.map { abs($0 - base * m) < 0.001 } ?? false) : abs(factor - m) < 0.001
                     Button { setMultiple(m) } label: {
-                        Text(m == 0.5 ? "½" : m == 1.5 ? "1½" : "\(Int(m))×").font(.brand(.subheadline, .semibold))
+                        Text(byFood ? Fmt.fraction(base * m) : Fmt.fraction(m) + "×").font(.brand(.subheadline, .semibold)).lineLimit(1).minimumScaleFactor(0.7)
                             .frame(maxWidth: .infinity, minHeight: 34)
                             .background(on ? Brand.green : Brand.card2, in: Capsule())
-                            .foregroundStyle(on ? Color(uiColor: .systemBackground) : Brand.ink)
+                            .foregroundStyle(on ? Brand.onGreen : Brand.ink)
                     }
                     .buttonStyle(.plain)
                 }
@@ -157,7 +150,38 @@ struct FoodDetailSheet: View {
             if let g = gramsNow, byFood, unit != "g" {
                 Text("\(Fmt.grams(g)) g").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
             }
-        } header: { Text("Portion") }
+        }
+        .animation(.snappy, value: shown)
+    }
+
+    /// Protein, carbs and fat: how much this is, and what share of today's target.
+    @ViewBuilder private var macroTargets: some View {
+        let plan = store.plans[day] ?? store.plan(day)
+        Section {
+            HStack(spacing: 14) {
+                macroBar("Protein", shown.protein, plan?.protein, Brand.protein)
+                macroBar("Carbs", shown.carbs, plan?.carbs, Brand.carbs)
+                macroBar("Fat", shown.fat, plan?.fat, Brand.fat)
+            }
+            .padding(.vertical, 4)
+        }
+    }
+    private func macroBar(_ l: LocalizedStringKey, _ g: Double, _ t: Double?, _ c: Color) -> some View {
+        VStack(alignment: .leading, spacing: 5) {
+            Text(l).font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
+            HStack(alignment: .firstTextBaseline, spacing: 3) {
+                Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
+                if let t, t > 0 { Text("\(Int((g / t * 100).rounded()))%").font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit() }
+            }
+            GeometryReader { geo in
+                ZStack(alignment: .leading) {
+                    Capsule().fill(Brand.card2)
+                    Capsule().fill(c).frame(width: geo.size.width * min(1, g / max(t ?? g, 1)))
+                }
+            }
+            .frame(height: 5)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
     }
 
     private var mealFoods: some View {
@@ -179,7 +203,7 @@ struct FoodDetailSheet: View {
                 .buttonStyle(.plain)
                 .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
             }
-        } header: { Text("In this meal") } footer: { Text("Changes this day only. Tap a food to change its amount, swipe to take it out. ⋯ › Split turns it into separate foods.") }
+        } header: { Text("In this meal") } footer: { Text("Tap a food to change it, swipe to remove. For this day only.") }
     }
 
     private var recipeFoods: some View {
@@ -209,44 +233,60 @@ struct FoodDetailSheet: View {
                 Button("Use the saved recipe", systemImage: "arrow.uturn.backward") { resetRecipe = true; recipeEdited = false; Task { await loadRecipe(saved: true) } }
                     .tint(Brand.green)
             }
-        } header: { Text("Ingredients") } footer: { Text("Changes this day only. To change the recipe itself, go to Foods › Recipes.") }
+        } header: { Text("Ingredients") } footer: { Text("Tap an ingredient to change it, swipe to remove. For this day only.") }
     }
 
-    @ViewBuilder private var share: some View {
-        if let plan = store.plans[day] ?? store.plan(day) {
-            Section {
-                bar("Calories", shown.kcal, plan.kcal, Brand.green, "kcal")
-                bar("Protein", shown.protein, plan.protein, Brand.protein, "g")
-            } header: { Text("Of your day") }
-        }
-    }
-
-    private var nutrients: some View {
-        Section {
-            DisclosureGroup("More nutrients", isExpanded: $moreNutrients) {
-                if let p = info?.per100, let g = gramsNow {
-                    let k = g / 100
-                    if let v = p.fib { nutrient("Fiber", v * k, "g") }
-                    if let v = p.sug { nutrient("Sugars", v * k, "g") }
-                    if let v = p.sat { nutrient("Saturated fat", v * k, "g") }
-                    if let v = p.na { nutrient("Sodium", v * k, "mg") }
+    /// Vitamins, minerals and fiber in this amount, as a share of your daily targets (most covered first).
+    private var nutrientList: some View {
+        let sorted = rows.sorted { pct($0) > pct($1) }
+        let shownRows = allNutrients ? sorted : Array(sorted.prefix(6))
+        return Section {
+            ForEach(shownRows) { r in
+                let p = pct(r), limit = r.goal == nil && r.hi != nil
+                VStack(alignment: .leading, spacing: 5) {
+                    HStack {
+                        Text(r.label).font(.brand(.subheadline))
+                        Spacer()
+                        Text(amountText(r)).font(.brand(.footnote)).foregroundStyle(Brand.ink2).monospacedDigit()
+                        Text(p > 0 ? "\(Int((p * 100).rounded()))%" : "–").font(.brand(.subheadline, .semibold)).monospacedDigit()
+                            .frame(minWidth: 44, alignment: .trailing)
+                    }
+                    GeometryReader { g in
+                        ZStack(alignment: .leading) {
+                            Capsule().fill(Brand.card2)
+                            Capsule().fill(limit ? (p > 1 ? Brand.over : Brand.ink2) : Brand.green).frame(width: g.size.width * min(1, p))
+                        }
+                    }
+                    .frame(height: 4)
                 }
+                .padding(.vertical, 2)
             }
-            .tint(Brand.ink)
-        }
+            if rows.count > 6 {
+                Button(allNutrients ? "Show fewer" : "Show all \(rows.count)") { withAnimation(.snappy) { allNutrients.toggle() } }
+                    .font(.brand(.subheadline, .semibold)).tint(Brand.green)
+            }
+        } header: { Text("Nutrients") } footer: { Text("Share of your daily targets.") }
     }
-
-    private var details: some View {
-        Section {
-            Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
-            Toggle("Time eaten", isOn: $hasTime.animation())
-            if hasTime { DatePicker("Time", selection: $time, displayedComponents: .hourAndMinute) }
-            TextField("Note", text: $note, axis: .vertical).lineLimit(1...4)
-        } header: { Text("Details") }
+    private func pct(_ r: NutrientRow) -> Double { let t = r.goal ?? r.hi ?? 0; return t > 0 ? r.v / t : 0 }
+    private func amountText(_ r: NutrientRow) -> String {
+        (r.v >= 10 ? Int(r.v.rounded()).formatted() : r.v.formatted(.number.precision(.fractionLength(0...1)))) + " " + r.unit
     }
 
     // MARK: Bits
 
+    /// Where the food comes from, in a few words.
+    private var source: String {
+        var s: [String] = []
+        if isMeal { s.append(String(localized: "Meal · \(parts.count) foods")) }
+        else if isRecipe { s.append(String(localized: "Recipe")) }
+        else if info?.custom == true { s.append(String(localized: "My food")) }
+        else if info?.est == true { s.append(String(localized: "Estimate")) }
+        else if food.ref?.hasPrefix("u") == true { s.append("USDA") }
+        else if food.ref == nil { s.append(String(localized: "Quick add")) }
+        if food.isPlanned { s.append(String(localized: "Planned")) }
+        if repeatRec != nil { s.append(String(localized: "Repeating")) }
+        return s.joined(separator: " · ")
+    }
     private var subtitle: String {
         var s = [store.meals.first { $0.key == store.mealKey(of: food) }?.name ?? ""]
         if let t = food.time { s.append(t) }
@@ -338,6 +378,10 @@ struct FoodDetailSheet: View {
         return raw
     }
     private func recalc() async {
+        let r = await edited()
+        let list = await store.engineRef.itemNutrientRows(r)
+        let k = byFood ? 1 : factor
+        rows = list.map { NutrientRow(key: $0.key, label: $0.label, unit: $0.unit, v: $0.v * k, goal: $0.goal, hi: $0.hi) }
         if isRecipe && (recipeEdited || resetRecipe) {
             let r = await edited()
             live = Totals(kcal: r["kcal"]?.number ?? 0, protein: r["protein"]?.number ?? 0, carbs: r["carbs"]?.number ?? 0, fat: r["fat"]?.number ?? 0)
@@ -352,8 +396,6 @@ struct FoodDetailSheet: View {
     }
 
     private func save() {
-        var t: String?
-        if hasTime { let c = Calendar.current.dateComponents([.hour, .minute], from: time); t = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0) }
         Task {
             var raw = await edited()
             if isMeal || !byFood {
@@ -370,9 +412,6 @@ struct FoodDetailSheet: View {
                 }
             }
             if raw != food.raw { store.replace(food, with: raw, on: day) }
-            if let fresh = store.items(day).first(where: { $0.id == food.id }) {
-                store.updateDetails(fresh, on: day, time: t, meal: meal, note: note)
-            }
             dismiss()
         }
     }

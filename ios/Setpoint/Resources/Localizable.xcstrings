@@ -4181,6 +4181,16 @@
         }
       }
     },
+    "Meal · %lld foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وجبة · %lld أطعمة"
+          }
+        }
+      }
+    },
     "Meals": {
       "localizations": {
         "ar": {
@@ -4357,6 +4367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يومي"
+          }
+        }
+      }
+    },
+    "My food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "طعامي"
           }
         }
       }
@@ -4777,6 +4797,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الآن"
+          }
+        }
+      }
+    },
+    "Nutrients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "العناصر الغذائية"
           }
         }
       }
@@ -6131,6 +6161,16 @@
         }
       }
     },
+    "Share of your daily targets.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسبة من أهدافك اليومية."
+          }
+        }
+      }
+    },
     "Show": {
       "localizations": {
         "ar": {
@@ -6157,6 +6197,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اعرض الـ %lld أسبوع"
+          }
+        }
+      }
+    },
+    "Show fewer": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عرض أقل"
           }
         }
       }
@@ -6607,6 +6657,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "اضغط على أكلة في اليوميات واختار تكرار عشان تتضاف لوحدها، زي قهوة الصبح."
+          }
+        }
+      }
+    },
+    "Tap a food to change it, swipe to remove. For this day only.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على طعام لتغييره، واسحب لإزالته. لهذا اليوم فقط."
+          }
+        }
+      }
+    },
+    "Tap an ingredient to change it, swipe to remove. For this day only.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على مكوّن لتغييره، واسحب لإزالته. لهذا اليوم فقط."
           }
         }
       }
@@ -8297,6 +8367,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "البروتين مكتمل"
+          }
+        }
+      }
+    },
+    "the logged amount": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكمية المسجّلة"
+          }
+        }
+      }
+    },
+    "this meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذه الوجبة"
           }
         }
       }

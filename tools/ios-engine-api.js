@@ -264,6 +264,15 @@
       (state.repeats || []).forEach(function (r) { var it = r.item || {}, f = it.ref ? itemFood(it) : null; o[r.id] = f ? ftKind(f) : (ftGuess(it.name || '', '') || 'quick'); });
       return J(o);
     },
+    // A logged item's (or an edited one's) vitamins, minerals and fiber against your daily targets, most covered first.
+    itemNutrientRows: function (txt) {
+      var it = JSON.parse(txt), v = itemNutrients(it); if (!v) return '[]';
+      var tg = nutTargets(todayISO()), keys = ['fib', 'sug', 'sat', 'na', 'k', 'ca', 'fe', 'mg', 'zn', 'vA', 'vC', 'vD', 'vE', 'vK', 'b1', 'b2', 'b3', 'b6', 'b12', 'fol', 'chol'];
+      return J(keys.filter(function (k) { return v[k] != null && NUT[k]; }).map(function (k) {
+        var t = tg[k] || {};
+        return { key: k, label: L(NUT[k].label), unit: NUT[k].unit, v: v[k], goal: t.goal == null ? null : t.goal, hi: t.hi == null ? null : t.hi };
+      }));
+    },
     itemKinds: function (d) {
       var o = {};
       (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = f ? ftKind(f) : (Array.isArray(it.mi) ? 'dish' : (ftGuess(it.name || '', '') || 'quick')); });

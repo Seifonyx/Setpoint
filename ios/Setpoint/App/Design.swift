@@ -143,9 +143,7 @@ extension View {
     func paperPage() -> some View { background(PaperBackground().ignoresSafeArea()) }
 }
 
-/// The signature, and it's alive: an arc that fills towards your target through the day, with the three macros as
-/// thin arcs inside it. It glows softly as you get close, turns a calm amber if you go over, and when the day lands on
-/// target the opening at the bottom closes into a full circle. Hitting your protein makes its ring flash once.
+/// The signature: an arc that fills towards your target, with the three macros as thin arcs inside it.
 struct CalorieDial: View {
     let eaten: Double
     let target: Double?
@@ -154,52 +152,27 @@ struct CalorieDial: View {
     let fat: (Double, Double)?
     var lineWidth: CGFloat = 18
 
-    @State private var proteinFlash = false
-    @State private var breathe = false
-    @Environment(\.accessibilityReduceMotion) private var reduceMotion
-
-    private let start = 0.125
-    private var t: Double { max(target ?? eaten, 1) }
-    private var p: Double { min(eaten / t, 1) }
-    private var over: Bool { (target ?? .infinity) < eaten * 0.95 }
-    /// On target: within 5% of it (and you've eaten most of the day).
-    private var onTarget: Bool { guard let target, target > 0 else { return false }; return abs(eaten - target) <= target * 0.05 }
-    private var near: Bool { target != nil && p >= 0.85 && !over }
-    private var span: Double { onTarget ? 1 : 0.75 }
+    private let start = 0.125, span = 0.75 // a 270° arc, open at the bottom
 
     var body: some View {
+        let t = max(target ?? eaten, 1), p = min(eaten / t, 1), over = (target ?? .infinity) < eaten * 0.95
         ZStack {
             arc(1, width: lineWidth, color: Brand.card2)
             arc(p, width: lineWidth, color: over ? Brand.over : Brand.green)
-                .shadow(color: (over ? Brand.over : Brand.green).opacity(near || over ? (breathe ? 0.55 : 0.25) : 0), radius: near || over ? 12 : 0)
-            if let protein {
-                ring(protein, inset: lineWidth + 8, color: Brand.protein)
-                    .shadow(color: Brand.protein.opacity(proteinFlash ? 0.9 : 0), radius: proteinFlash ? 10 : 0)
-                    .scaleEffect(proteinFlash ? 1.03 : 1)
-            }
+            if let protein { ring(protein, inset: lineWidth + 8, color: Brand.protein) }
             if let carbs { ring(carbs, inset: lineWidth + 18, color: Brand.carbs) }
             if let fat { ring(fat, inset: lineWidth + 28, color: Brand.fat) }
-            // a dot where the arc ends: "today's point" (hidden once the circle closes)
+            // a dot where the arc ends: "today's point"
             GeometryReader { g in
                 let r = min(g.size.width, g.size.height) / 2 - lineWidth / 2
                 let a = Angle.degrees(90 + 360 * (start + span * p))
                 Circle().fill(Brand.amber).frame(width: lineWidth * 0.55, height: lineWidth * 0.55)
                     .shadow(color: Brand.amber.opacity(0.6), radius: 6)
                     .position(x: g.size.width / 2 + r * cos(a.radians), y: g.size.height / 2 + r * sin(a.radians))
-                    .opacity(eaten > 0 && !onTarget ? 1 : 0)
+                    .opacity(eaten > 0 ? 1 : 0)
             }
         }
         .animation(.spring(response: 0.6, dampingFraction: 0.8), value: eaten)
-        .animation(.spring(response: 1.0, dampingFraction: 0.75), value: onTarget)
-        .onChange(of: protein?.0 ?? 0) { old, new in
-            guard let goal = protein?.1, goal > 0, old < goal, new >= goal, !reduceMotion else { return }
-            withAnimation(.easeOut(duration: 0.25)) { proteinFlash = true }
-            withAnimation(.easeIn(duration: 0.8).delay(0.35)) { proteinFlash = false }
-        }
-        .onAppear {
-            guard !reduceMotion else { return }
-            withAnimation(.easeInOut(duration: 2.2).repeatForever(autoreverses: true)) { breathe = true }
-        }
     }
     private func arc(_ f: Double, width: CGFloat, color: Color, inset: CGFloat = 0) -> some View {
         Circle().trim(from: 0, to: span * max(0, min(f, 1)))
