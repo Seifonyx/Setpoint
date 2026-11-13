@@ -93,7 +93,7 @@ struct FoodAmountView: View {
                 Button(fav ? "Remove from favorites" : "Add to favorites", systemImage: fav ? "star.fill" : "star") { toggleFav() }
             }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Add", action: add).disabled(qty == nil || info == nil).buttonStyle(.glassProminent)
+                Button("Add", action: add).disabled(qty == nil || info == nil).buttonStyle(.glassProminent).tint(Brand.green)
             }
         }
         .task {

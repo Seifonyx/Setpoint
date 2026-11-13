@@ -88,7 +88,7 @@ struct RamadanBanner: View {
                     VStack(alignment: .leading, spacing: 4) {
                         Text("Ramadan Mubarak").font(.brand(.subheadline, .semibold))
                         Text("Turn on Ramadan mode: Suhoor and Iftar meals, with fasting times for your city.").font(.brand(.subheadline)).foregroundStyle(.secondary)
-                        Button("Turn on") { sheet = true }.buttonStyle(.glassProminent).controlSize(.small)
+                        Button("Turn on") { sheet = true }.buttonStyle(.glassProminent).tint(Brand.green).controlSize(.small)
                     }
                 }
             }

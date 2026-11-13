@@ -371,7 +371,7 @@ struct AddFoodSheet: View {
                     Text("\(Fmt.kcal(k)) kcal").font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit()
                 }
                 Spacer()
-                Button("Add \(selected.count)") { addSelected() }.buttonStyle(.glassProminent).fontWeight(.semibold)
+                Button("Add \(selected.count)") { addSelected() }.buttonStyle(.glassProminent).tint(Brand.green).fontWeight(.semibold)
             }
             .padding(.horizontal, 18).padding(.vertical, 10)
             .glassEffect(.regular, in: .capsule)

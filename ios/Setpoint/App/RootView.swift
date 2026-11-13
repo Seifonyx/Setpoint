@@ -64,7 +64,8 @@ struct RootView: View {
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-onboarding") || (!args.contains("-demo") && store.isEmpty && !account.signedIn && !UserDefaults.standard.bool(forKey: "onboarded")) { onboarding = true }
         }
-        .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the + button
+        .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the main actions
+        .toggleStyle(SwitchToggleStyle(tint: Brand.green)) // switches stay green, as on the iPhone itself
         .font(.brand(.body))
         .foregroundStyle(Brand.ink)
         .environment(store)

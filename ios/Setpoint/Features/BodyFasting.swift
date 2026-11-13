@@ -43,12 +43,12 @@ struct FastingView: View {
                                     f["start"] = .null
                                 }
                             }
-                            .buttonStyle(.glassProminent).controlSize(.large)
+                            .buttonStyle(.glassProminent).tint(Brand.green).controlSize(.large)
                             DatePicker("Started", selection: Binding(get: { s }, set: { d in set { $0["start"] = .number((d.timeIntervalSince1970 * 1000).rounded()) } }),
                                        in: Date().addingTimeInterval(-7 * 86400)...Date())
                         } else {
                             Button("Start fast", systemImage: "play.fill") { set { $0["start"] = .number(Store.nowMs) } }
-                                .buttonStyle(.glassProminent).controlSize(.large)
+                                .buttonStyle(.glassProminent).tint(Brand.green).controlSize(.large)
                         }
                     }
                     .frame(maxWidth: .infinity)

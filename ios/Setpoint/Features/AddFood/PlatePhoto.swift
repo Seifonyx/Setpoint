@@ -130,7 +130,7 @@ struct PlateSheet: View {
                     Text(picked.isEmpty ? LocalizedStringKey("Pick what you ate") : LocalizedStringKey("Add \(picked.count) foods · \(pickedKcal) kcal"))
                         .font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 50)
                 }
-                .buttonStyle(.glassProminent)
+                .buttonStyle(.glassProminent).tint(Brand.green)
                 .disabled(picked.isEmpty)
                 .padding(.horizontal, 16).padding(.bottom, 8)
             }

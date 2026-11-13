@@ -71,7 +71,7 @@ struct FoodDetailSheet: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { confirmDelete = true }
                     } label: { Image(systemName: "ellipsis") }
                 }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .sheet(item: $editingPart) { job in
                 PartAmountSheet(part: job.part) { updated in

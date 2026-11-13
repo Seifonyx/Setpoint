@@ -20,7 +20,7 @@ struct EmptyState: View {
                 .fixedSize(horizontal: false, vertical: true)
             if let action {
                 Button(action: action.run) { Text(action.title).font(.brand(.headline)).padding(.horizontal, 8) }
-                    .buttonStyle(.glassProminent).padding(.top, 4)
+                    .buttonStyle(.glassProminent).tint(Brand.green).padding(.top, 4)
             }
         }
         .frame(maxWidth: .infinity)

@@ -96,7 +96,7 @@ struct DayPlannerView: View {
             }
             Divider().overlay(Brand.line)
             HStack {
-                Label { Text("Vitamins and minerals") } icon: { Image(systemName: "leaf.fill").foregroundStyle(Brand.green) }
+                Label { Text("Nutrients").lineLimit(1) } icon: { Image(systemName: "leaf.fill").foregroundStyle(Brand.green) }
                     .font(.brand(.subheadline, .semibold))
                 Spacer()
                 Text("\(p.met) of \(p.micros.count) covered").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).monospacedDigit()
@@ -126,6 +126,9 @@ struct DayPlannerView: View {
         }
     }
 
+    /// Short names so the rings' labels fit ("Vit A", not "Vitami…").
+    static let short = ["fib": "Fiber", "vA": "Vit A", "vC": "Vit C", "vD": "Vit D", "vE": "Vit E", "vK": "Vit K", "fol": "Folate",
+                        "b12": "B12", "b6": "B6", "ca": "Calcium", "fe": "Iron", "mg": "Magnesium", "k": "Potassium", "zn": "Zinc"]
     private func microRing(_ m: DayPlanResult.Micro) -> some View {
         let c = m.pct >= 100 ? Brand.green : m.pct >= 60 ? Brand.amber : Brand.over
         return VStack(spacing: 5) {
@@ -135,7 +138,8 @@ struct DayPlannerView: View {
                 Text(m.pct >= 100 ? "✓" : "\(Int(m.pct))").font(.brand(.caption2, .bold)).monospacedDigit().foregroundStyle(m.pct >= 100 ? Brand.green : Brand.ink)
             }
             .frame(width: 38, height: 38)
-            Text(m.label).font(.brand(.caption2)).foregroundStyle(Brand.ink2).lineLimit(1).frame(width: 64)
+            Text(Self.short[m.key].map { Brand.arabic ? m.label : $0 } ?? m.label).font(.brand(.caption2)).foregroundStyle(Brand.ink2)
+                .lineLimit(1).minimumScaleFactor(0.8).frame(width: 64)
         }
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(m.label))
@@ -205,7 +209,7 @@ struct DayPlannerView: View {
             Button { adding = true } label: {
                 Text("Add to diary").font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 50)
             }
-            .buttonStyle(.glassProminent)
+            .buttonStyle(.glassProminent).tint(Brand.green)
             .disabled(shown?.meals.contains { $0.on && !$0.items.isEmpty } != true)
         }
         .padding(.horizontal, 16).padding(.bottom, 8)

@@ -76,7 +76,7 @@ struct DescribeMealSheet: View {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Add \(matches.filter(\.on).count)") { Task { await addAll() } }
-                        .disabled(!matches.contains(where: \.on)).buttonStyle(.glassProminent)
+                        .disabled(!matches.contains(where: \.on)).buttonStyle(.glassProminent).tint(Brand.green)
                 }
             }
             .onAppear { focused = true }

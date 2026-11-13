@@ -70,7 +70,7 @@ struct LockCover: ViewModifier {
                         VStack(spacing: 18) {
                             Image(systemName: "lock.fill").font(.system(size: 44)).foregroundStyle(.secondary)
                             Text("Setpoint is locked").font(.brand(.title3, .semibold))
-                            if locked { Button("Unlock", systemImage: "faceid") { unlock() }.buttonStyle(.glassProminent).controlSize(.large) }
+                            if locked { Button("Unlock", systemImage: "faceid") { unlock() }.buttonStyle(.glassProminent).tint(Brand.green).controlSize(.large) }
                         }
                     }
                     .transition(.opacity)
