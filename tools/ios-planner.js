@@ -207,7 +207,7 @@
         var best = null, bs = -1e9;
         pool.forEach(function (x) {
           if (!ok(x, slot) || picked.indexOf(x) >= 0) return;
-          var learn = useMine ? Math.log(1 + (logs.use[kind][x.f.id] || 0)) * 1.6 : 0;
+          var learn = useMine ? Math.log(1 + (logs.use[kind][x.f.id] || 0)) * (seeds[mk] ? 0.35 : 1.6) : 0; // "Another idea" means something new
           var kc = per100(x.f, 'kcal') || 1, pd = (per100(x.f, 'p') || 0) * 400 / kc; // % of calories from protein
           var prot = x.slot === 'p' || slot === 'ps' ? Math.min(1.6, Math.max(0, pd - 20) / 15) * proteinNeed : 0;
           if (kind === 'b' && mood && style(x) && style(x) !== mood) return; // no blueberries with ful
