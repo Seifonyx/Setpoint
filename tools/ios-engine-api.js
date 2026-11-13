@@ -64,6 +64,12 @@
       });
       return J(out);
     },
+    // The foods you log most, most first.
+    frequent: function (meal) {
+      var fu = foodUse();
+      return J(Object.keys(fu.use).sort(function (a, b) { return fu.use[b] - fu.use[a]; }).slice(0, 40)
+        .map(getFood).filter(Boolean).map(function (f) { return row(f, meal); }));
+    },
     favorites: function (meal) { return J(state.favs.map(getFood).filter(Boolean).map(function (f) { return row(f, meal); })); },
     myFoods: function (meal) { return J(state.myFoods.map(customFood).map(function (f) { return row(f, meal); })); },
     recipes: function (meal) { return J(state.recipes.map(recipeFood).filter(Boolean).map(function (f) { return row(f, meal); })); },

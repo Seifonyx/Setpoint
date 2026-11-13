@@ -12,6 +12,7 @@ struct AddFoodSheet: View {
     @State private var tab = Tab.all
     @State private var hits: [FoodHit] = []
     @State private var recents: [FoodHit] = []
+    @State private var frequent: [FoodHit] = []
     @State private var favorites: [FoodHit] = []
     @State private var mine: [FoodHit] = []
     @State private var recipes: [FoodHit] = []
@@ -51,6 +52,13 @@ struct AddFoodSheet: View {
                 .listRowBackground(Color.clear)
                 .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 4, trailing: 0))
                 .listSectionSpacing(6)
+
+                if !query.isEmpty || tab == .all {
+                    SwiftUI.Section { filterRow }
+                        .listRowBackground(Color.clear)
+                        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+                        .listSectionSpacing(6)
+                }
 
                 if !query.isEmpty {
                     searchResults
@@ -117,7 +125,11 @@ struct AddFoodSheet: View {
                 .listRowBackground(Brand.card)
             }
         }
-        rows(recents, header: "Recent", empty: ("Nothing logged yet", "Search for a food to start."))
+        let list = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }
+        let header: LocalizedStringKey = sort == "frequent" ? "Most frequent" : "Recent"
+        let empty: (LocalizedStringKey, LocalizedStringKey) = verifiedOnly
+            ? ("No verified foods here", "Turn off Verified only to see all your foods.") : ("Nothing logged yet", "Search for a food to start.")
+        rows(list, header: header, empty: empty)
     }
 
     @ViewBuilder private var mineTab: some View {
@@ -146,25 +158,25 @@ struct AddFoodSheet: View {
         }
     }
 
-    @ViewBuilder private var searchResults: some View {
-        SwiftUI.Section {
+    /// Sort (best match, most recent, most frequent) and Verified only, always in view.
+    private var filterRow: some View {
+        ScrollView(.horizontal, showsIndicators: false) {
             HStack(spacing: 8) {
-                Menu {
-                    Picker("Sort", selection: $sort) {
-                        Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best")
-                        Label("Most recent", systemImage: "clock").tag("recent")
-                        Label("Most frequent", systemImage: "chart.bar").tag("frequent")
-                    }
-                } label: {
-                    chip(sort == "recent" ? "Most recent" : sort == "frequent" ? "Most frequent" : "Best match", icon: "arrow.up.arrow.down", on: sort != "best")
+                ForEach([("best", "Best match", "sparkle.magnifyingglass"), ("recent", "Most recent", "clock"), ("frequent", "Most frequent", "chart.bar.fill")], id: \.0) { key, title, icon in
+                    Button { withAnimation(.snappy) { sort = key } } label: { chip(LocalizedStringKey(title), icon: icon, on: sort == key) }
+                        .buttonStyle(.plain)
                 }
-                Button { verifiedOnly.toggle() } label: { chip("Verified", icon: "checkmark.seal.fill", on: verifiedOnly, tint: .blue) }
+                Rectangle().fill(Brand.line).frame(width: 1, height: 22)
+                Button { withAnimation(.snappy) { verifiedOnly.toggle() } } label: { chip("Verified only", icon: "checkmark.seal.fill", on: verifiedOnly, tint: .blue) }
                     .buttonStyle(.plain)
-                Spacer()
             }
+            .padding(.vertical, 2)
         }
-        .listRowBackground(Color.clear)
-        .listRowInsets(EdgeInsets(top: 0, leading: 0, bottom: 0, trailing: 0))
+        .scrollClipDisabled()
+        .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
+    }
+
+    @ViewBuilder private var searchResults: some View {
         if !store.foodsReady {
             SwiftUI.Section { HStack { ProgressView(); Text("Loading the food list…").foregroundStyle(Brand.ink2) } }
         }
@@ -343,6 +355,7 @@ struct AddFoodSheet: View {
     private func loadLists() async {
         let e = store.engineRef
         recents = await e.list("recents", meal: meal)
+        frequent = await e.list("frequent", meal: meal)
         favorites = await e.list("favorites", meal: meal)
         mine = await e.list("myFoods", meal: meal)
         recipes = await e.list("recipes", meal: meal)

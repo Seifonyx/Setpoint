@@ -3871,6 +3871,16 @@
         }
       }
     },
+    "No verified foods here": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لا توجد أطعمة موثّقة هنا"
+          }
+        }
+      }
+    },
     "No weigh-ins yet": {
       "localizations": {
         "ar": {
@@ -5781,6 +5791,16 @@
         }
       }
     },
+    "Turn off Verified only to see all your foods.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوقف «الموثّقة فقط» لترى كل أطعمتك."
+          }
+        }
+      }
+    },
     "Turn on": {
       "localizations": {
         "ar": {
@@ -5957,6 +5977,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "موثّقة"
+          }
+        }
+      }
+    },
+    "Verified only": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الموثّقة فقط"
           }
         }
       }
