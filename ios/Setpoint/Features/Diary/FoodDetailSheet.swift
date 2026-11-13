@@ -102,14 +102,14 @@ struct FoodDetailSheet: View {
         let plan = store.plans[day] ?? store.plan(day)
         return Section {
             HStack(spacing: 12) {
-                FoodIcon(kind: kind ?? (isMeal ? "dish" : food.ref == nil ? "quick" : "food"), size: 40, name: food.displayName)
+                FoodIcon(kind: isMeal ? "meal" : isRecipe ? "recipe" : kind ?? (food.ref == nil ? "quick" : "food"), size: 40, name: food.displayName)
                 VStack(alignment: .leading, spacing: 2) {
                     Text(food.displayName).font(.brand(.headline)).lineLimit(2)
                     if !source.isEmpty { Text(source).font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                 }
             }
-            // the amount, on one line
-            HStack(spacing: 10) {
+            // the amount, on one line (not for meals and recipes: you change what's in them instead)
+            if !isMeal && !isRecipe { HStack(spacing: 10) {
                 Text("Amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 Spacer()
                 if byFood {
@@ -128,7 +128,7 @@ struct FoodDetailSheet: View {
                     }
                     .fixedSize()
                 }
-            }
+            } }
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Calories").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
@@ -210,7 +210,7 @@ struct FoodDetailSheet: View {
             }
             if food.raw["rc"] != nil || recipeEdited {
                 Button("Use the saved recipe", systemImage: "arrow.uturn.backward") { resetRecipe = true; recipeEdited = false; Task { await loadRecipe(saved: true) } }
-                    .tint(Brand.green)
+                    
             }
         } header: { Text("Ingredients") } footer: { Text("Tap an ingredient to change it, swipe to remove. For this day only.") }
     }
@@ -242,7 +242,7 @@ struct FoodDetailSheet: View {
             }
             if rows.count > 6 {
                 Button(allNutrients ? "Show fewer" : "Show all \(rows.count)") { withAnimation(.snappy) { allNutrients.toggle() } }
-                    .font(.brand(.subheadline, .semibold)).tint(Brand.green)
+                    .font(.brand(.subheadline, .semibold))
             }
         } header: { Text("Nutrients") } footer: { Text("Share of your daily targets.") }
     }

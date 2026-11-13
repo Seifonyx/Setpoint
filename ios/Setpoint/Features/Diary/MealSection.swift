@@ -7,8 +7,9 @@ struct MealSection: View {
     let day: String
     @Binding var copying: [FoodItem]?
     var kinds: [String: String] = [:]
+    /// The food being edited: the Diary shows its editor (a sheet up there doesn't get dropped when this list redraws).
+    @Binding var open: FoodItem?
     let addFood: () -> Void
-    @State private var open: FoodItem?
     @State private var more: FoodItem?
     @State private var repeating: FoodItem?
     @AppStorage("closedMeals") private var closedMeals = ""
@@ -29,8 +30,8 @@ struct MealSection: View {
             // the meal's heading: tap anywhere on it to fold or unfold the card (+ and ⋯ are their own buttons)
             HStack(alignment: .center, spacing: 8) {
                 Button(action: addFood) {
-                    Image(systemName: "plus").font(.subheadline.weight(.bold)).foregroundStyle(Brand.green)
-                        .frame(width: 26, height: 26).background(Brand.greenSoft, in: Circle())
+                    Image(systemName: "plus").font(.subheadline.weight(.bold)).foregroundStyle(Brand.ink)
+                        .frame(width: 26, height: 26).background(Brand.card2, in: Circle())
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Add food to \(meal.name)"))
@@ -76,7 +77,7 @@ struct MealSection: View {
                     }
                     .swipeActions(edge: .leading) {
                         // swipe right: ⋯ with everything you can do to it
-                        Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.green)
+                        Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.ink2)
                     }
                     .contextMenu {
                         if food.isPlanned && day <= Day.today {
@@ -100,7 +101,6 @@ struct MealSection: View {
             }
             }
         }
-        .sheet(item: $open) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
         .sheet(item: $repeating) { f in RepeatSheet(item: f.raw) }
         .confirmationDialog(more?.displayName ?? "", isPresented: Binding(get: { more != nil }, set: { if !$0 { more = nil } }), titleVisibility: .visible, presenting: more) { f in
             Button("Adjust") { open = f }

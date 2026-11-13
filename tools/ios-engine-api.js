@@ -275,7 +275,7 @@
     },
     itemKinds: function (d) {
       var o = {};
-      (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = f ? ftKind(f) : (Array.isArray(it.mi) ? 'dish' : (ftGuess(it.name || '', '') || 'quick')); });
+      (state.food[d] || []).forEach(function (it) { var f = it.ref ? itemFood(it) : null; o[it.id] = Array.isArray(it.mi) ? 'meal' : f ? ftKind(f) : (ftGuess(it.name || '', '') || 'quick'); });
       return J(o);
     },
 

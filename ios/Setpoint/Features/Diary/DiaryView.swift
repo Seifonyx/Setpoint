@@ -9,6 +9,7 @@ struct DiaryView: View {
     @State private var pickDay = false
     @State private var copying: [FoodItem]?
     @State private var adding: AddJob?
+    @State private var openFood: FoodItem?
     @State private var score: DayScore?
     @State private var kinds: [String: String] = [:]
     @State private var showScore = false
@@ -24,7 +25,7 @@ struct DiaryView: View {
                                    message: "Log your first food or weigh-in. If you've used Setpoint before, sign in under You and your data comes back.",
                                    action: (title: "Add food", run: { adding = AddJob(meal: mealNow) }))
                         Button("Import a backup file", systemImage: "square.and.arrow.down") { importing = true }
-                            .font(.brand(.subheadline, .semibold)).tint(Brand.green).frame(maxWidth: .infinity)
+                            .font(.brand(.subheadline, .semibold)).frame(maxWidth: .infinity)
                     }
                 }
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
@@ -54,7 +55,7 @@ struct DiaryView: View {
                     }
                 }
                 ForEach(store.meals) { meal in
-                    MealSection(meal: meal, day: day, copying: $copying, kinds: kinds) { adding = AddJob(meal: meal.key) }
+                    MealSection(meal: meal, day: day, copying: $copying, kinds: kinds, open: $openFood) { adding = AddJob(meal: meal.key) }
                 }
             }
             .listSectionSpacing(10)
@@ -72,7 +73,7 @@ struct DiaryView: View {
                     ShareLink(item: shareText) { Label("Share day", systemImage: "square.and.arrow.up") }
                     Button("Choose day", systemImage: "calendar") { pickDay = true }
                     Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
-                        .buttonStyle(.glassProminent)
+                        .buttonStyle(.glassProminent).tint(Brand.green)
                 }
             }
             .safeAreaInset(edge: .bottom) { UndoBanner() }
@@ -84,6 +85,7 @@ struct DiaryView: View {
             }
             .sensoryFeedback(.selection, trigger: day)
             .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day) }
+            .sheet(item: $openFood) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
             .onChange(of: store.request) { _, r in
                 if r == .addFood { day = Day.today; adding = AddJob(meal: mealNow); store.request = nil }
             }

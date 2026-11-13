@@ -11,7 +11,7 @@ enum Brand {
     static let ink = dyn(0x1E1A14, 0xEAE5DC)
     static let ink2 = dyn(0x766D60, 0x9A9286)        // secondary text
     static let line = dyn(0xE4DACB, 0x292622)
-    static let green = dyn(0x0F5C45, 0x55AF8B)       // the signature
+    static let green = dyn(0x0F5C45, 0x4C9C7E)       // the signature (kept for the ring and the main action)
     static let greenSoft = dyn(0xDCEBE2, 0x14261F)
     static let onGreen = dyn(0xFFFBF4, 0x0A0A09)     // text on the signature green
     static let amber = dyn(0xC9801F, 0xE2A758)       // highlights, carbs
@@ -68,8 +68,8 @@ enum Brand {
         nav.titleTextAttributes = [.font: UIFontMetrics(forTextStyle: .headline).scaledFont(for: small), .foregroundColor: ink]
         let seg = UISegmentedControl.appearance(), segFont = UIFont(name: arabic ? "IBMPlexSansArabic-SemiBold" : "Figtree-SemiBold", size: 13) ?? .systemFont(ofSize: 13)
         seg.setTitleTextAttributes([.font: segFont, .foregroundColor: UIColor(Brand.ink2)], for: .normal)
-        seg.setTitleTextAttributes([.font: segFont, .foregroundColor: UIColor(Brand.onGreen)], for: .selected)
-        seg.selectedSegmentTintColor = UIColor(Brand.green)
+        seg.setTitleTextAttributes([.font: segFont, .foregroundColor: UIColor(Brand.bg)], for: .selected)
+        seg.selectedSegmentTintColor = UIColor(Brand.ink)
         seg.backgroundColor = UIColor(Brand.card2)
     }
 }

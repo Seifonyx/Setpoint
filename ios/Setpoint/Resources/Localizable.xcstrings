@@ -1201,6 +1201,16 @@
         }
       }
     },
+    "Alcohol": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكحول"
+          }
+        }
+      }
+    },
     "All": {
       "localizations": {
         "ar": {
@@ -1551,6 +1561,26 @@
         }
       }
     },
+    "Caffeine": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكافيين"
+          }
+        }
+      }
+    },
+    "Calcium": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكالسيوم"
+          }
+        }
+      }
+    },
     "Calculated times can differ from your local mosque by a few minutes.": {
       "localizations": {
         "ar": {
@@ -1751,6 +1781,26 @@
         }
       }
     },
+    "Cholesterol": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكوليسترول"
+          }
+        }
+      }
+    },
+    "Choline": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكولين"
+          }
+        }
+      }
+    },
     "Choose English or العربية for Setpoint in the Settings app.": {
       "localizations": {
         "ar": {
@@ -1937,6 +1987,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتنسخ %lld أكلات"
+          }
+        }
+      }
+    },
+    "Copper": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النحاس"
           }
         }
       }
@@ -2901,6 +2961,16 @@
         }
       }
     },
+    "Fats": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدهون"
+          }
+        }
+      }
+    },
     "Favorites": {
       "localizations": {
         "ar": {
@@ -2997,6 +3067,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أسبوع مرن"
+          }
+        }
+      }
+    },
+    "Folate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفولات"
           }
         }
       }
@@ -3571,6 +3651,16 @@
         }
       }
     },
+    "Iron": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحديد"
+          }
+        }
+      }
+    },
     "It learns from your log and weigh-ins, and adjusts once a week.": {
       "localizations": {
         "ar": {
@@ -4081,6 +4171,16 @@
         }
       }
     },
+    "Magnesium": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المغنيسيوم"
+          }
+        }
+      }
+    },
     "Maintain": {
       "localizations": {
         "ar": {
@@ -4127,6 +4227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ذكر"
+          }
+        }
+      }
+    },
+    "Manganese": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المنغنيز"
           }
         }
       }
@@ -4271,6 +4381,16 @@
         }
       }
     },
+    "Minerals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المعادن"
+          }
+        }
+      }
+    },
     "Moderate": {
       "localizations": {
         "ar": {
@@ -4287,6 +4407,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نشاط متوسط"
+          }
+        }
+      }
+    },
+    "Monounsaturated fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دهون أحادية غير مشبعة"
           }
         }
       }
@@ -4567,6 +4697,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وزن الصبح اللي بعده: أعلى تلت من الأيام مقابل أقل تلت."
+          }
+        }
+      }
+    },
+    "Niacin (B3)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النياسين (ب3)"
           }
         }
       }
@@ -4911,6 +5051,46 @@
         }
       }
     },
+    "Omega-3 (ALA)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوميغا 3 (ALA)"
+          }
+        }
+      }
+    },
+    "Omega-3 (DHA)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوميغا 3 (DHA)"
+          }
+        }
+      }
+    },
+    "Omega-3 (EPA)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوميغا 3 (EPA)"
+          }
+        }
+      }
+    },
+    "Omega-6": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوميغا 6"
+          }
+        }
+      }
+    },
     "On": {
       "localizations": {
         "ar": {
@@ -5091,6 +5271,16 @@
         }
       }
     },
+    "Pantothenic acid (B5)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حمض البانتوثينيك (ب5)"
+          }
+        }
+      }
+    },
     "Password": {
       "localizations": {
         "ar": {
@@ -5167,6 +5357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المراحل"
+          }
+        }
+      }
+    },
+    "Phosphorus": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفوسفور"
           }
         }
       }
@@ -5271,6 +5471,16 @@
         }
       }
     },
+    "Polyunsaturated fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دهون متعددة غير مشبعة"
+          }
+        }
+      }
+    },
     "Portion": {
       "localizations": {
         "ar": {
@@ -5287,6 +5497,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوضعية"
+          }
+        }
+      }
+    },
+    "Potassium": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "البوتاسيوم"
           }
         }
       }
@@ -5771,6 +5991,16 @@
         }
       }
     },
+    "Riboflavin (B2)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الريبوفلافين (ب2)"
+          }
+        }
+      }
+    },
     "Right on target. Nicely done.": {
       "localizations": {
         "ar": {
@@ -6027,6 +6257,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اختر عدة أطعمة"
+          }
+        }
+      }
+    },
+    "Selenium": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السيلينيوم"
           }
         }
       }
@@ -6851,6 +7091,16 @@
         }
       }
     },
+    "Thiamin (B1)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الثيامين (ب1)"
+          }
+        }
+      }
+    },
     "Thigh": {
       "localizations": {
         "ar": {
@@ -7087,6 +7337,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أيام التمرين"
+          }
+        }
+      }
+    },
+    "Trans fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دهون متحولة"
           }
         }
       }
@@ -7387,6 +7647,86 @@
           "stringUnit": {
             "state": "translated",
             "value": "نشاط عالي"
+          }
+        }
+      }
+    },
+    "Vitamin A": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين أ"
+          }
+        }
+      }
+    },
+    "Vitamin B12": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين ب12"
+          }
+        }
+      }
+    },
+    "Vitamin B6": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين ب6"
+          }
+        }
+      }
+    },
+    "Vitamin C": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين ج"
+          }
+        }
+      }
+    },
+    "Vitamin D": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين د"
+          }
+        }
+      }
+    },
+    "Vitamin E": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين هـ"
+          }
+        }
+      }
+    },
+    "Vitamin K": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيتامين ك"
+          }
+        }
+      }
+    },
+    "Vitamins": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفيتامينات"
           }
         }
       }
@@ -8111,6 +8451,16 @@
         }
       }
     },
+    "Zinc": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الزنك"
+          }
+        }
+      }
+    },
     "a day on average, against a target of %@.": {
       "localizations": {
         "ar": {
@@ -8427,6 +8777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المعتاد بتاعك"
+          }
+        }
+      }
+    },
+    "µg": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ميكروجرام"
           }
         }
       }

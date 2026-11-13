@@ -128,7 +128,7 @@ struct CheckInView: View {
                         Text("No change this week: your target still fits how your weight is moving.").font(.brand(.body)).foregroundStyle(Brand.ink2)
                     }
                     if let t = store.overview?.plan?.target { LabeledContent("Your target") { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").bold().monospacedDigit() } }
-                    Button { explain = true } label: { Label("How your target works", systemImage: "info.circle") }.tint(Brand.green)
+                    Button { explain = true } label: { Label("How your target works", systemImage: "info.circle") }
                 } header: { Text("Your plan") }
                 Section { ExpenditureChart() }
             } else {

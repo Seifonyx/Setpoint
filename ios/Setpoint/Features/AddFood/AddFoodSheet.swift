@@ -155,7 +155,7 @@ struct AddFoodSheet: View {
     @ViewBuilder private var mineTab: some View {
         group("mine", "My foods", "carrot.fill", Brand.green, count: mine.count) {
             ForEach(mine) { row($0) }
-            Button { creating = "" } label: { Label("New food", systemImage: "plus") }.tint(Brand.green)
+            Button { creating = "" } label: { Label("New food", systemImage: "plus") }
         }
         group("recipes", "Recipes", "frying.pan.fill", Brand.protein, count: recipes.count) {
             ForEach(recipes) { row($0) }
@@ -164,7 +164,7 @@ struct AddFoodSheet: View {
         group("meals", "Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
             ForEach(sortedMeals) { m in
                 HStack(spacing: 12) {
-                    FoodIcon(kind: "dish")
+                    FoodIcon(kind: "meal")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(m.name).lineLimit(1)
                         Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
@@ -235,10 +235,10 @@ struct AddFoodSheet: View {
                     Text("Make it one of your foods, or scan its barcode.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
                 .padding(.vertical, 4)
-                Button { creating = query } label: { Label("Create “\(query)”", systemImage: "plus.circle.fill") }.tint(Brand.green)
-                Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }.tint(Brand.green)
-                Button { labelCam = true } label: { Label("Scan the nutrition label", systemImage: "text.viewfinder") }.tint(Brand.green)
-                Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }.tint(Brand.green)
+                Button { creating = query } label: { Label("Create “\(query)”", systemImage: "plus.circle.fill") }
+                Button { scanning = true } label: { Label("Scan barcode", systemImage: "barcode.viewfinder") }
+                Button { labelCam = true } label: { Label("Scan the nutrition label", systemImage: "text.viewfinder") }
+                Button { quickAdd = true } label: { Label("Quick add calories", systemImage: "bolt.fill") }
             }
         }
     }
@@ -283,8 +283,8 @@ struct AddFoodSheet: View {
 
     private func addButton(_ action: @escaping () -> Void) -> some View {
         Button(action: action) {
-            Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.green)
-                .frame(width: 34, height: 34).background(Brand.greenSoft, in: Circle())
+            Image(systemName: "plus").font(.body.weight(.bold)).foregroundStyle(Brand.ink)
+                .frame(width: 34, height: 34).background(Brand.card2, in: Circle())
         }
         .buttonStyle(.plain)
         .accessibilityLabel(Text("Add"))
@@ -516,13 +516,20 @@ struct FoodIcon: View {
         return Self.colors[kind] == nil ? "food" : kind
     }
     var body: some View {
-        let c = Self.colors[key] ?? Brand.green
-        Image("food-\(key)").resizable().renderingMode(.template).scaledToFit()
-            .foregroundStyle(c)
-            .frame(width: size * 0.56, height: size * 0.56)
-            .frame(width: size, height: size)
-            .background(c.opacity(0.14), in: .rect(cornerRadius: size * 0.3))
-            .accessibilityHidden(true)
+        // quiet and consistent: grey glyphs on a soft tile. Saved meals and recipes have their own symbols.
+        Group {
+            if kind == "meal" || kind == "recipe" {
+                Image(systemName: kind == "meal" ? "takeoutbag.and.cup.and.straw.fill" : "frying.pan.fill")
+                    .font(.system(size: size * 0.42, weight: .semibold))
+            } else {
+                Image("food-\(key)").resizable().renderingMode(.template).scaledToFit()
+                    .frame(width: size * 0.56, height: size * 0.56)
+            }
+        }
+        .foregroundStyle(Brand.ink2)
+        .frame(width: size, height: size)
+        .background(Brand.card2, in: .rect(cornerRadius: size * 0.3))
+        .accessibilityHidden(true)
     }
     static let colors: [String: Color] = [
         "fruit": Brand.protein, "veg": Brand.green, "meat": Brand.over, "poultry": Brand.amber, "fish": Brand.water, "dairy": Brand.fat,
@@ -583,9 +590,9 @@ struct PillTabs<T: Hashable>: View {
                 let on = value == selection
                 Button { withAnimation(.spring(response: 0.35, dampingFraction: 0.82)) { selection = value } } label: {
                     Text(title).font(.brand(.subheadline, .semibold)).lineLimit(1).minimumScaleFactor(0.8)
-                        .foregroundStyle(on ? Brand.onGreen : Brand.ink2)
+                        .foregroundStyle(on ? Brand.bg : Brand.ink2)
                         .frame(maxWidth: .infinity, minHeight: 36)
-                        .background { if on { Capsule().fill(Brand.green).matchedGeometryEffect(id: "pill", in: ns) } }
+                        .background { if on { Capsule().fill(Brand.ink).matchedGeometryEffect(id: "pill", in: ns) } }
                         .contentShape(Capsule())
                 }
                 .buttonStyle(.plain)

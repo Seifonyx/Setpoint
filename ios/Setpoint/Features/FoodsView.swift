@@ -123,7 +123,21 @@ struct CustomFoodSheet: View {
     @State private var p = ""
     @State private var c = ""
     @State private var f = ""
+    @State private var nuts: [String: String] = [:]   // every other nutrient, per serving
     @State private var error: String?
+
+    /// All the nutrients you can add, grouped like a full nutrition label.
+    static var groups: [(LocalizedStringKey, [(String, LocalizedStringKey, String)])] { [
+        ("Fats", [("sat", "Saturated fat", "g"), ("trans", "Trans fat", "g"), ("mono", "Monounsaturated fat", "g"), ("poly", "Polyunsaturated fat", "g"),
+                  ("chol", "Cholesterol", "mg"), ("ala", "Omega-3 (ALA)", "g"), ("epa", "Omega-3 (EPA)", "g"), ("dha", "Omega-3 (DHA)", "g"), ("la", "Omega-6", "g")]),
+        ("Carbs", [("fib", "Fiber", "g"), ("sug", "Sugars", "g")]),
+        ("Minerals", [("na", "Sodium", "mg"), ("k", "Potassium", "mg"), ("ca", "Calcium", "mg"), ("fe", "Iron", "mg"), ("mg", "Magnesium", "mg"),
+                      ("zn", "Zinc", "mg"), ("ph", "Phosphorus", "mg"), ("cu", "Copper", "mg"), ("mn", "Manganese", "mg"), ("se", "Selenium", "µg")]),
+        ("Vitamins", [("vA", "Vitamin A", "µg"), ("vC", "Vitamin C", "mg"), ("vD", "Vitamin D", "µg"), ("vE", "Vitamin E", "mg"), ("vK", "Vitamin K", "µg"),
+                      ("b1", "Thiamin (B1)", "mg"), ("b2", "Riboflavin (B2)", "mg"), ("b3", "Niacin (B3)", "mg"), ("b5", "Pantothenic acid (B5)", "mg"),
+                      ("b6", "Vitamin B6", "mg"), ("fol", "Folate", "µg"), ("b12", "Vitamin B12", "µg"), ("chl", "Choline", "mg")]),
+        ("Other", [("water", "Water", "g"), ("caff", "Caffeine", "mg"), ("alc", "Alcohol", "g")]),
+    ] }
 
     private func num(_ s: String) -> Double? { s.isEmpty ? nil : Double(s.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: "٫", with: ".")) }
 
@@ -143,6 +157,25 @@ struct CustomFoodSheet: View {
                 } header: { Text("Per serving") } footer: {
                     if let error { Text(error).foregroundStyle(Brand.over) }
                     else if let k = estimate { Text("About \(Fmt.kcal(k)) kcal from the macros") }
+                }
+                // everything else on the label: each group folds, so the form stays short until you need it
+                ForEach(Self.groups.indices, id: \.self) { gi in
+                    let g = Self.groups[gi]
+                    Section {
+                        DisclosureGroup {
+                            ForEach(g.1, id: \.0) { n in
+                                row(n.1, Binding(get: { nuts[n.0] ?? "" }, set: { nuts[n.0] = $0 }), LocalizedStringKey(n.2))
+                            }
+                        } label: {
+                            HStack {
+                                Text(g.0).font(.brand(.body, .semibold))
+                                Spacer()
+                                let filled = g.1.filter { !(nuts[$0.0] ?? "").isEmpty }.count
+                                if filled > 0 { Text("\(filled)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).monospacedDigit() }
+                            }
+                        }
+                        .tint(Brand.ink2)
+                    }
                 }
             }
             .brandList()
@@ -167,6 +200,7 @@ struct CustomFoodSheet: View {
                 p = x["p"]?.number.map { $0.formatted(.number.grouping(.never)) } ?? ""
                 c = x["c"]?.number.map { $0.formatted(.number.grouping(.never)) } ?? ""
                 f = x["f"]?.number.map { $0.formatted(.number.grouping(.never)) } ?? ""
+                for (k, v) in x["n"]?.object ?? [:] { if let d = v.number { nuts[k] = d.formatted(.number.grouping(.never).locale(Locale(identifier: "en_US_POSIX"))) } }
             }
         }
     }
@@ -193,7 +227,9 @@ struct CustomFoodSheet: View {
         v["g"] = num(grams).map { .number(($0 * 10).rounded() / 10) } ?? .null
         v["kcal"] = .number(k.rounded())
         v["p"] = .number(num(p) ?? 0); v["c"] = .number(num(c) ?? 0); v["f"] = .number(num(f) ?? 0)
-        if v["n"] == nil { v["n"] = .object([:]) }
+        var n: [String: JSONValue] = [:]
+        for (k, t) in nuts { if let d = num(t), d >= 0 { n[k] = .number(d) } }
+        v["n"] = .object(n)
         var all = (store.root["myFoods"]?.array ?? []).compactMap { $0.object }
         if let i = all.firstIndex(where: { $0["id"]?.string == v["id"]?.string }) { all[i] = v } else { all.append(v) }
         store.setRoot("myFoods", .array(all.map { .object($0) }))
@@ -214,12 +250,12 @@ struct FoodsView: View {
             ScrollView {
                 VStack(spacing: 12) {
                     LazyVGrid(columns: cols, spacing: 12) {
-                        tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
-                        tile("Recipes", "frying.pan.fill", Brand.green, count("recipes")) { FoodLists(kind: .recipes) }
-                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.green, count("meals")) { FoodLists(kind: .meals) }
-                        tile("Favorites", "star.fill", Brand.green, count("favs")) { FoodLists(kind: .favorites) }
-                        tile("Repeating", "repeat", Brand.green, count("repeats")) { RepeatingView() }
-                        tile("Saved days", "calendar.badge.checkmark", Brand.green, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
+                        tile("My foods", "carrot.fill", Brand.ink2, count("myFoods")) { FoodLists(kind: .mine) }
+                        tile("Recipes", "frying.pan.fill", Brand.ink2, count("recipes")) { FoodLists(kind: .recipes) }
+                        tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.ink2, count("meals")) { FoodLists(kind: .meals) }
+                        tile("Favorites", "star.fill", Brand.ink2, count("favs")) { FoodLists(kind: .favorites) }
+                        tile("Repeating", "repeat", Brand.ink2, count("repeats")) { RepeatingView() }
+                        tile("Saved days", "calendar.badge.checkmark", Brand.ink2, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }
                     planCard
                 }
@@ -242,8 +278,8 @@ struct FoodsView: View {
         NavigationLink { DayPlannerView() } label: {
             HStack(spacing: 14) {
                 ZStack {
-                    Circle().fill(Brand.greenSoft)
-                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(Brand.green)
+                    Circle().fill(Brand.card2)
+                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(Brand.ink)
                 }
                 .frame(width: 56, height: 56)
                 VStack(alignment: .leading, spacing: 3) {
@@ -264,7 +300,7 @@ struct FoodsView: View {
         NavigationLink { dest() } label: {
             VStack(alignment: .leading, spacing: 10) {
                 Image(systemName: icon).font(.title3).foregroundStyle(color)
-                    .frame(width: 44, height: 44).background(color.opacity(0.14), in: .rect(cornerRadius: 13))
+                    .frame(width: 44, height: 44).background(Brand.card2, in: .rect(cornerRadius: 13))
                 Spacer(minLength: 6)
                 Text(title).font(Brand.display(18, .bold)).lineLimit(1).minimumScaleFactor(0.8)
                 Text(n == 1 ? String(localized: "1 item") : String(localized: "\(n) items")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)

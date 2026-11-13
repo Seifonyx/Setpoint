@@ -114,7 +114,7 @@ struct PlateSheet: View {
                         TextField("Something missing? Add it", text: $search).submitLabel(.search).onSubmit { Task { await addSearch() } }
                     }
                     if let describe {
-                        Button { dismiss(); describe() } label: { Label("Describe it instead", systemImage: "sparkles") }.tint(Brand.green)
+                        Button { dismiss(); describe() } label: { Label("Describe it instead", systemImage: "sparkles") }
                     }
                 }
             }

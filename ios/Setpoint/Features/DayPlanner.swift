@@ -37,7 +37,7 @@ struct DayPlannerView: View {
                                 Text("Leans towards the foods you eat, at your usual amounts").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                             }
                         }
-                        .tint(Brand.green)
+                        
                         .brandCard(padding: 14)
                     }
                     ForEach(p.meals) { m in mealCard(m) }
@@ -158,7 +158,7 @@ struct DayPlannerView: View {
                 if isOn { Text("\(Fmt.kcal(m.kcal)) kcal").font(.brand(.subheadline, .semibold)).monospacedDigit() }
                 if savedDay == nil {
                     Toggle("Plan \(m.name)", isOn: Binding(get: { isOn }, set: { setMeal(m.meal, $0) }))
-                        .labelsHidden().tint(Brand.green).scaleEffect(0.85)
+                        .labelsHidden().scaleEffect(0.85)
                 }
             }
             .padding(.bottom, isOn ? 10 : 0)
@@ -184,7 +184,7 @@ struct DayPlannerView: View {
                     Button { withAnimation(.snappy) { seeds[m.meal, default: 0] += 1 } } label: {
                         Label("Another idea", systemImage: "arrow.triangle.2.circlepath").font(.brand(.subheadline, .semibold))
                     }
-                    .tint(Brand.green)
+                    
                     .padding(.top, 8)
                 }
             }
@@ -301,7 +301,7 @@ struct AddPlanSheet: View {
                 }
                 if !full.isEmpty {
                     Section {
-                        Toggle("Skip meals that already have food", isOn: $skipFull).tint(Brand.green)
+                        Toggle("Skip meals that already have food", isOn: $skipFull)
                     } footer: { Text("This day already has \(Fmt.kcal(store.totals(day).kcal)) kcal logged.") }
                 }
                 Section {

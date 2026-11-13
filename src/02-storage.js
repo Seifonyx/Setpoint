@@ -242,7 +242,7 @@
     out.myFoods = (Array.isArray(d.myFoods) ? d.myFoods : []).filter(function (c) { return c && typeof c.name === 'string' && c.name.trim() && numIn(c.kcal, 0, 10000) != null; }).slice(0, 500).map(function (c) {
       return { id: typeof c.id === 'string' && /^c[\w-]{1,23}$/.test(c.id) ? c.id : 'c' + Math.random().toString(36).slice(2, 10), name: c.name.trim().slice(0, 60),
         unit: (typeof c.unit === 'string' && c.unit.trim() ? c.unit.trim() : 'serving').slice(0, 30), g: numIn(c.g, 0.1, 5000), kcal: Math.round(Number(c.kcal)), p: g1(c.p), c: g1(c.c), f: g1(c.f), code: typeof c.code === 'string' && /^\d{8,14}$/.test(c.code) ? c.code : undefined, ok: c.ok === true ? true : undefined,
-        n: (function () { const n = {}; if (c.n && typeof c.n === 'object') ['fib', 'sug', 'sat', 'na', 'k', 'ca', 'fe', 'vD'].forEach(function (k) { const v = numIn(c.n[k], 0, 100000); if (v != null) n[k] = v; }); return n; })() };
+        n: (function () { const n = {}; if (c.n && typeof c.n === 'object') ['fib', 'sug', 'sat', 'trans', 'mono', 'poly', 'chol', 'na', 'k', 'ca', 'fe', 'mg', 'zn', 'ph', 'cu', 'mn', 'se', 'vA', 'vC', 'vD', 'vE', 'vK', 'b1', 'b2', 'b3', 'b5', 'b6', 'fol', 'b12', 'chl', 'ala', 'epa', 'dha', 'la', 'water', 'caff', 'alc'].forEach(function (k) { const v = numIn(c.n[k], 0, 100000); if (v != null) n[k] = v; }); return n; })() };
     });
     // Scanned products (Open Food Facts), kept so they work offline and show up in search.
     const NKEYS = ['kcal', 'p', 'c', 'f', 'fib', 'sug', 'sat', 'trans', 'mono', 'poly', 'chol', 'na', 'k', 'ca', 'fe', 'mg', 'zn', 'ph', 'vC', 'vA', 'vD', 'b12', 'caff', 'alc'];

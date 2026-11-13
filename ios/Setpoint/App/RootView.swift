@@ -64,7 +64,7 @@ struct RootView: View {
             let args = ProcessInfo.processInfo.arguments
             if args.contains("-onboarding") || (!args.contains("-demo") && store.isEmpty && !account.signedIn && !UserDefaults.standard.bool(forKey: "onboarded")) { onboarding = true }
         }
-        .tint(Brand.green)
+        .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the + button
         .font(.brand(.body))
         .foregroundStyle(Brand.ink)
         .environment(store)
