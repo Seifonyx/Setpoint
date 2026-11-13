@@ -215,6 +215,13 @@ struct ProgressScreen: View {
             stat(pts.map(\.kg).max() ?? 0, "Highest") { Fmt.weight($0, unit: unit) }
         }
     }
+    private func stat(_ v: String, _ l: LocalizedStringKey) -> some View {
+        VStack(spacing: 2) {
+            Text(v).font(.brand(.headline)).monospacedDigit()
+            Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
+        }
+        .frame(maxWidth: .infinity)
+    }
     private func stat(_ v: Double, _ l: LocalizedStringKey, _ f: @escaping (Double) -> String) -> some View {
         VStack(spacing: 2) {
             CountUp(value: v, progress: reveal, format: f).font(.brand(.headline)).monospacedDigit()
@@ -340,7 +347,7 @@ struct CountUp: View, Animatable {
     var value: Double
     var progress: CGFloat
     var format: (Double) -> String
-    var animatableData: CGFloat { get { progress } set { progress = newValue } }
+    nonisolated var animatableData: CGFloat { get { progress } set { progress = newValue } }
     var body: some View {
         let start = abs(value) > 20 ? value * 0.94 : 0
         Text(format(progress >= 1 ? value : start + (value - start) * Double(progress)))
