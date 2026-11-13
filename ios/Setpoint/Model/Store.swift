@@ -115,7 +115,7 @@ final class Store {
     @ObservationIgnored private var itemSigs: [String: String]?
     static var nowMs: Double { (Date().timeIntervalSince1970 * 1000).rounded() }
     static let cloudKeys = ["v", "entries", "phases", "food", "measures", "myFoods", "favs", "offFoods", "recipes", "meals", "repeats", "water",
-                            "portions", "del", "goals", "dayType", "dayMode", "fast", "settings", "profile", "guest"]
+                            "portions", "del", "goals", "dayType", "dayMode", "fast", "settings", "profile", "guest", "ios"]
     var schema: Int { Int(root["v"]?.number ?? 1) }
 
     private static func text(_ v: JSONValue) -> String {
@@ -209,6 +209,11 @@ final class Store {
     }
     /// Change part of your data (profile, settings, favorites…) and save.
     func setRoot(_ key: String, _ value: JSONValue) { root[key] = value; save() }
+    /// The iPhone app's own synced data (root.ios), like saved days.
+    func ios(_ key: String) -> JSONValue? { root["ios"]?[key] }
+    func setIos(_ change: (inout [String: JSONValue]) -> Void) {
+        var o = root["ios"]?.object ?? [:]; change(&o); root["ios"] = .object(o); save()
+    }
     func setProfile(_ change: (inout [String: JSONValue]) -> Void) {
         var p = root["profile"]?.object ?? [:]; change(&p); root["profile"] = .object(p); save()
     }

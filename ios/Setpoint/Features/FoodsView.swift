@@ -219,7 +219,7 @@ struct FoodsView: View {
                         tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
                         tile("Favorites", "star.fill", Brand.fat, count("favs")) { FoodLists(kind: .favorites) }
                         tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
-                        tile("Saved days", "calendar.badge.checkmark", Brand.green, SavedDays.load().count) { SavedDaysView() }
+                        tile("Saved days", "calendar.badge.checkmark", Brand.green, SavedDays.load(store).count) { SavedDaysView() }
                     }
                 }
                 .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
@@ -229,6 +229,7 @@ struct FoodsView: View {
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
             .task { // build-server screenshots: -open planner / -open repeating
+                SavedDays.moveOld(store)
                 let o = UserDefaults.standard.string(forKey: "open")
                 openPlanner = o == "planner"; openRepeating = o == "repeating"
             }

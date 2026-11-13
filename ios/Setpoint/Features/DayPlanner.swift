@@ -14,7 +14,6 @@ struct DayPlannerView: View {
     @State private var adding = false
     @State private var naming = false
     @State private var name = ""
-    @State private var saved = SavedDays.load()
     /// A saved day you opened (shown as it was saved, not re-planned).
     var savedDay: SavedDay? = nil
 
@@ -70,7 +69,7 @@ struct DayPlannerView: View {
             TextField("Name", text: $name)
             Button("Save") { save() }
             Button("Cancel", role: .cancel) {}
-        } message: { Text("Saved days are kept on this iPhone, ready to add to any day.") }
+        } message: { Text("Saved days sync with your account, ready to add to any day.") }
         .task(id: taskKey) { await replan() }
         .sensoryFeedback(.selection, trigger: seeds)
     }
@@ -227,29 +226,48 @@ struct DayPlannerView: View {
     private func save() {
         guard let p = plan else { return }
         let n = name.trimmingCharacters(in: .whitespaces)
-        let day = SavedDay(id: Ids.new(), name: n.isEmpty ? String(localized: "My day") : n, created: Date(), plan: p)
-        saved.insert(day, at: 0)
-        SavedDays.save(saved)
+        SavedDays.add(SavedDay(id: Ids.new(), name: n.isEmpty ? String(localized: "My day") : n, created: Date(), plan: p), store)
     }
 }
 
-/// Days you saved from the planner (kept on this iPhone).
+/// Days you saved from the planner. They sync with your account (root.ios.savedDays).
 struct SavedDay: Codable, Identifiable, Hashable, Sendable {
     let id: String
     var name: String
     let created: Date
     let plan: DayPlanResult
+    var u: Double?
     static func == (a: SavedDay, b: SavedDay) -> Bool { a.id == b.id && a.name == b.name }
     func hash(into h: inout Hasher) { h.combine(id) }
 }
+@MainActor
 enum SavedDays {
-    static let key = "savedDays"
-    static func load() -> [SavedDay] {
-        guard let d = UserDefaults.standard.data(forKey: key) else { return [] }
+    private static let oldKey = "savedDays" // kept on the phone before they synced
+    /// Days saved on the phone by the first version move into your synced data (once).
+    static func moveOld(_ store: Store) {
+        guard let d = UserDefaults.standard.data(forKey: oldKey) else { return }
+        UserDefaults.standard.removeObject(forKey: oldKey)
+        for day in (try? JSONDecoder().decode([SavedDay].self, from: d)) ?? [] { add(day, store) }
+    }
+    static func load(_ store: Store) -> [SavedDay] {
+        guard let v = store.ios("savedDays"), let d = try? JSONEncoder().encode(v) else { return [] }
         return (try? JSONDecoder().decode([SavedDay].self, from: d)) ?? []
     }
-    static func save(_ days: [SavedDay]) {
-        if let d = try? JSONEncoder().encode(days) { UserDefaults.standard.set(d, forKey: key) }
+    static func add(_ day: SavedDay, _ store: Store) {
+        var day = day; day.u = Store.nowMs
+        guard let d = try? JSONEncoder().encode(day), let v = try? JSONDecoder().decode(JSONValue.self, from: d) else { return }
+        store.setIos { o in
+            var list = o["savedDays"]?.array ?? []
+            list.removeAll { $0["id"]?.string == day.id }
+            list.insert(v, at: 0)
+            o["savedDays"] = .array(list)
+        }
+    }
+    static func delete(_ id: String, _ store: Store) {
+        store.setIos { o in
+            o["savedDays"] = .array((o["savedDays"]?.array ?? []).filter { $0["id"]?.string != id })
+            var del = o["del"]?.object ?? [:]; del[id] = .number(Store.nowMs); o["del"] = .object(del)
+        }
     }
 }
 
@@ -322,7 +340,8 @@ struct AddPlanSheet: View {
 
 /// Your saved days, from the Foods tab.
 struct SavedDaysView: View {
-    @State private var days = SavedDays.load()
+    @Environment(Store.self) private var store
+    private var days: [SavedDay] { SavedDays.load(store) }
     var body: some View {
         List {
             if days.isEmpty {
@@ -337,10 +356,9 @@ struct SavedDaysView: View {
                     }
                 }
             }
-            .onDelete { idx in days.remove(atOffsets: idx); SavedDays.save(days) }
+            .onDelete { idx in let list = days; for i in idx { SavedDays.delete(list[i].id, store) } }
         }
         .brandList()
         .navigationTitle("Saved days")
-        .onAppear { days = SavedDays.load() }
     }
 }

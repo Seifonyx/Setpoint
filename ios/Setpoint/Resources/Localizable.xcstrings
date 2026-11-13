@@ -5141,6 +5141,16 @@
         }
       }
     },
+    "Saved days sync with your account, ready to add to any day.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأيام المحفوظة تتزامن مع حسابك، جاهزة لإضافتها لأي يوم."
+          }
+        }
+      }
+    },
     "Saved meals": {
       "localizations": {
         "ar": {

@@ -31,6 +31,20 @@
     if (sort === 'kcal') return by(function (a, b) { return (a.kcal || 0) - (b.kcal || 0); });
     return list;
   }
+  // The iPhone app's own data (root.ios): migrate() only knows the web app's keys, so it's carried across here.
+  function keepIos(raw, out) { if (raw && raw.ios && typeof raw.ios === 'object' && !Array.isArray(raw.ios)) out.ios = raw.ios; return out; }
+  // Saved days merge by id; the newer copy wins, and a deleted day stays deleted (ios.del: id -> when).
+  function mergeIos(a, b) {
+    a = a && typeof a === 'object' ? a : {}; b = b && typeof b === 'object' ? b : {};
+    var out = Object.assign({}, a, b), del = Object.assign({}, a.del || {});
+    Object.keys(b.del || {}).forEach(function (k) { if (!del[k] || b.del[k] > del[k]) del[k] = b.del[k]; });
+    var by = {};
+    (a.savedDays || []).concat(b.savedDays || []).forEach(function (d) { if (d && d.id && (!by[d.id] || (d.u || 0) > (by[d.id].u || 0))) by[d.id] = d; });
+    out.savedDays = Object.keys(by).map(function (k) { return by[k]; }).filter(function (d) { return !(del[d.id] && del[d.id] >= (d.u || 0)); })
+      .sort(function (x, y) { return (y.created || 0) - (x.created || 0); });
+    out.del = del;
+    return out;
+  }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
     return { id: newId(), meal: meal, ref: f.id, g: Math.round(g * 10) / 10, qty: Math.round(qty * 1000) / 1000, unit: u.label,
@@ -38,7 +52,7 @@
   }
   return {
     // Your data, in the web app's format (cleaned exactly as the web app cleans it).
-    setState: function (txt) { state = migrate(JSON.parse(txt)); setMeals(); dataVer++; return 'ok'; },
+    setState: function (txt) { var raw = JSON.parse(txt); state = keepIos(raw, migrate(raw)); setMeals(); dataVer++; return 'ok'; },
     getState: function () { return J(state); },
     part: function (k) { return J(state[k] === undefined ? null : state[k]); },
     // The food list (foods.json). Built in one go; ready once the promise settles (right after this call returns).
@@ -172,7 +186,11 @@
     paceValue: function (dir, i) { return paceValue(dir, i); },
     // ---- Account sync (the web app's own merge; the iPhone app does the network part) ----
     // Two saves joined: weigh-ins and foods by date/id, the most recently changed copy winning, deletions kept.
-    syncMerge: function (localTxt, cloudTxt, cloudNewer) { return J(migrate(mergeData(migrate(JSON.parse(localTxt)), migrate(JSON.parse(cloudTxt)), !!cloudNewer))); },
+    syncMerge: function (localTxt, cloudTxt, cloudNewer) {
+      var a = JSON.parse(localTxt), b = JSON.parse(cloudTxt), out = migrate(mergeData(migrate(a), migrate(b), !!cloudNewer));
+      out.ios = mergeIos(a.ios, b.ios);
+      return J(out);
+    },
     syncHasData: function (txt) { return hasData(migrate(JSON.parse(txt))); },
     // The cloud save put back together: the main document's data plus each food month (and food an old version left in the main document).
     syncJoin: function (mainTxt, monthsTxt) {
