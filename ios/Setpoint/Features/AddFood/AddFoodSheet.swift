@@ -158,21 +158,37 @@ struct AddFoodSheet: View {
         }
     }
 
-    /// Sort (best match, most recent, most frequent) and Verified only, always in view.
+    /// Sort (best match, most recent, most frequent) and Verified only, in one dropdown that's always in view.
     private var filterRow: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            HStack(spacing: 8) {
-                ForEach([("best", "Best match", "sparkle.magnifyingglass"), ("recent", "Most recent", "clock"), ("frequent", "Most frequent", "chart.bar.fill")], id: \.0) { key, title, icon in
-                    Button { withAnimation(.snappy) { sort = key } } label: { chip(LocalizedStringKey(title), icon: icon, on: sort == key) }
-                        .buttonStyle(.plain)
+        HStack {
+            Menu {
+                Picker("Sort", selection: $sort) {
+                    Label("Best match", systemImage: "sparkle.magnifyingglass").tag("best")
+                    Label("Most recent", systemImage: "clock").tag("recent")
+                    Label("Most frequent", systemImage: "chart.bar.fill").tag("frequent")
                 }
-                Rectangle().fill(Brand.line).frame(width: 1, height: 22)
-                Button { withAnimation(.snappy) { verifiedOnly.toggle() } } label: { chip("Verified only", icon: "checkmark.seal.fill", on: verifiedOnly, tint: .blue) }
-                    .buttonStyle(.plain)
+                .pickerStyle(.inline)
+                SwiftUI.Section {
+                    Toggle(isOn: $verifiedOnly) { Label("Verified only", systemImage: "checkmark.seal.fill") }
+                }
+            } label: {
+                HStack(spacing: 6) {
+                    Image(systemName: "line.3.horizontal.decrease").font(.caption.weight(.bold))
+                    Text(sort == "recent" ? "Most recent" : sort == "frequent" ? "Most frequent" : "Best match").font(.brand(.subheadline, .semibold))
+                    if verifiedOnly {
+                        Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue)
+                            .accessibilityLabel(Text("Verified only"))
+                    }
+                    Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.horizontal, 12).padding(.vertical, 7)
+                .background(Brand.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
+                .foregroundStyle(Brand.ink)
             }
-            .padding(.vertical, 2)
+            .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
+            Spacer()
         }
-        .scrollClipDisabled()
         .sensoryFeedback(.selection, trigger: "\(sort)\(verifiedOnly)")
     }
 
