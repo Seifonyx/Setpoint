@@ -28,7 +28,7 @@ struct MealsEditor: View {
         }
         .environment(\.editMode, .constant(.active))
         .brandList()
-        .navigationTitle("Meals")
+        .navigationTitle("Diary sections")
         .onAppear(perform: load)
         .onDisappear(perform: save)
         .alert("New meal", isPresented: $adding) {

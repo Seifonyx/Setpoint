@@ -272,6 +272,8 @@ struct FoodsView: View {
     @Environment(Store.self) private var store
     @State private var openPlanner = false
     @State private var openRepeating = false
+    @State private var shotNewFood = false   // build-server screenshots
+    @State private var shotNewMeal = false
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
     private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
@@ -294,10 +296,13 @@ struct FoodsView: View {
             .navigationTitle("Foods")
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
+            .sheet(isPresented: $shotNewFood) { CustomFoodSheet(food: nil) }
+            .sheet(isPresented: $shotNewMeal) { MealEditor(meal: nil) }
             .task { // build-server screenshots: -open planner / -open repeating
                 SavedDays.moveOld(store)
                 let o = UserDefaults.standard.string(forKey: "open")
                 openPlanner = o == "planner"; openRepeating = o == "repeating"
+                shotNewFood = o == "newfood"; shotNewMeal = o == "newmeal"
             }
         }
     }

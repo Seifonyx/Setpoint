@@ -135,7 +135,14 @@ jobs:
           shot -tab diary -wrapup YES -expand YES; xcrun simctl io "$UDID" screenshot out/today-redesign-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open repeating; xcrun simctl io "$UDID" screenshot out/repeating-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab progress; xcrun simctl io "$UDID" screenshot out/progress-redesign-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -sheet food; xcrun simctl io "$UDID" screenshot out/food-editor-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab foods; xcrun simctl io "$UDID" screenshot out/foods-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you; xcrun simctl io "$UDID" screenshot out/you-tiles-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -sheet add -search chicken; xcrun simctl io "$UDID" screenshot out/search-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance dark
+          shot -tab foods -open newfood; xcrun simctl io "$UDID" screenshot out/newfood-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab foods -open newmeal; xcrun simctl io "$UDID" screenshot out/newmeal-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open settings; xcrun simctl io "$UDID" screenshot out/settings-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -open story; sleep 2; xcrun simctl io "$UDID" screenshot out/story-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -open target; xcrun simctl io "$UDID" screenshot out/target-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open plan -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/plan-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true

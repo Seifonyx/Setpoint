@@ -118,28 +118,28 @@ struct DeviceSettingsView: View {
     var body: some View {
         Form {
             Section {
-                Picker("Weight unit", selection: Binding(get: { store.unit }, set: { store.setSetting("unit", .string($0)) })) {
+                Picker(selection: Binding(get: { store.unit }, set: { store.setSetting("unit", .string($0)) })) {
                     Text("kg").tag("kg"); Text("lb").tag("lb")
-                }
-                Picker("Week starts on", selection: Binding(get: { Int(store.root["settings"]?.object?["weekStart"]?.number ?? 5) },
-                                                            set: { store.setSetting("weekStart", .number(Double($0))) })) {
+                } label: { TileLabel("Weight unit", "scalemass.fill", Brand.fat) }
+                Picker(selection: Binding(get: { Int(store.root["settings"]?.object?["weekStart"]?.number ?? 5) },
+                                          set: { store.setSetting("weekStart", .number(Double($0))) })) {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
-                }
-                NavigationLink("Meals") { MealsEditor() }
-                NavigationLink("Repeating foods") { RepeatingView() }
+                } label: { TileLabel("Week starts on", "calendar", Brand.water) }
+                NavigationLink { MealsEditor() } label: { TileLabel("Diary sections", "list.bullet", Brand.amber) }
+                NavigationLink { RepeatingView() } label: { TileLabel("Repeating foods", "repeat", Brand.water) }
                 Button { ramadan = true } label: {
-                    LabeledContent("Ramadan mode") { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) }
+                    LabeledContent { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) } label: { TileLabel("Ramadan mode", "moon.stars.fill", Brand.green) }
                 }.tint(.primary)
-                Toggle("Track calories", isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
-                                                       set: { store.setSetting("trackCalories", .bool($0)) }))
-            } footer: { Text("These sync with the web app.") }
+                Toggle(isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
+                                     set: { store.setSetting("trackCalories", .bool($0)) })) { TileLabel("Track calories", "flame.fill", Brand.protein) }
+            } header: { Text("Your diary") } footer: { Text("These sync with your account.") }
 
             Section {
-                Toggle("Weigh-in reminder", isOn: $weigh)
+                Toggle(isOn: $weigh) { TileLabel("Weigh-in reminder", "scalemass.fill", Brand.fat) }
                 if weigh { DatePicker("Time", selection: time($weighTime), displayedComponents: .hourAndMinute) }
-                Toggle("Food log reminder", isOn: $foodOn)
+                Toggle(isOn: $foodOn) { TileLabel("Food log reminder", "fork.knife", Brand.amber) }
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
-                Toggle("Your week is ready", isOn: $weekReady)
+                Toggle(isOn: $weekReady) { TileLabel("Your week is ready", "sparkles", Brand.green) }
             } header: { Text("Reminders") } footer: {
                 if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.danger) }
             }
@@ -155,29 +155,29 @@ struct DeviceSettingsView: View {
                         healthBusy = false
                     }
                 } label: {
-                    HStack { Label("Import from Apple Health", systemImage: "heart.text.square"); Spacer(); if healthBusy { ProgressView() } }
+                    HStack { TileLabel("Import from Apple Health", "heart.fill", Brand.danger); Spacer(); if healthBusy { ProgressView() } }
                 }
                 .disabled(healthBusy)
-            } footer: {
+            } header: { Text("Apple Health") } footer: {
                 Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
             } }
             Section {
-                Toggle("Calories on the Lock Screen", isOn: $live)
-            } footer: { Text("Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.") }
+                Toggle(isOn: $live) { TileLabel("Calories on the Lock Screen", "lock.iphone", Brand.ink2) }
+            } header: { Text("Lock Screen") } footer: { Text("Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.") }
             Section {
-                Toggle("Lock with Face ID", isOn: $lock)
-                Toggle("Haptics", isOn: $haptics)
-                Toggle("Sounds", isOn: $sounds)
-            } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
+                Toggle(isOn: $lock) { TileLabel("Lock with Face ID", "faceid", Brand.green) }
+                Toggle(isOn: $haptics) { TileLabel("Haptics", "iphone.radiowaves.left.and.right", Brand.fat) }
+                Toggle(isOn: $sounds) { TileLabel("Sounds", "speaker.wave.2.fill", Brand.protein) }
+            } header: { Text("This iPhone") } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
             Section {
-                Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }.foregroundStyle(Brand.danger)
+                Button(role: .destructive) { confirmErase = true } label: { TileLabel("Erase all data on this iPhone", "trash.fill", Brand.danger).foregroundStyle(Brand.danger) }
                     .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {
                         Button("Erase", role: .destructive) { Account.shared.signOut(); store.eraseAll() }
                     } message: { Text("Your weigh-ins, food log and settings on this iPhone are deleted. If you're signed in, you're signed out first, so your account keeps its copy.") }
             }
             Section {
-                Link(destination: URL(string: UIApplication.openSettingsURLString)!) { Label("Language", systemImage: "globe") }
-            } footer: { Text("Choose English or العربية for Setpoint in the Settings app.") }
+                Link(destination: URL(string: UIApplication.openSettingsURLString)!) { TileLabel("Language", "globe", Brand.water) }
+            } header: { Text("Language") } footer: { Text("Choose English or العربية for Setpoint in the Settings app.") }
         }
         .brandList()
         .navigationTitle("Settings")

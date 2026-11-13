@@ -18,12 +18,12 @@ struct AboutYouSheet: View {
                 Section {
                     Picker("Sex", selection: $sex) { Text("Female").tag("female"); Text("Male").tag("male"); Text("Other").tag("other") }
                         .pickerStyle(.segmented)
-                }
+                } header: { Text("Sex") }
                 Section {
                     numberRow("Age", $age, "years", .numberPad)
                     numberRow("Height", $height, "cm", .decimalPad)
-                    numberRow("Body fat (optional)", $bodyFat, "%", .decimalPad)
-                } footer: { Text("Body fat makes resting burn and protein more precise.") }
+                    numberRow("Body fat", $bodyFat, "%", .decimalPad)
+                } header: { Text("Body") } footer: { Text("Body fat is optional. It makes resting burn and protein more precise.") }
             }
             .brandList()
             .navigationTitle("About you")
@@ -44,12 +44,7 @@ struct AboutYouSheet: View {
     }
 
     private func numberRow(_ title: LocalizedStringKey, _ text: Binding<String>, _ unit: LocalizedStringKey, _ keyboard: UIKeyboardType) -> some View {
-        LabeledContent(title) {
-            HStack(spacing: 4) {
-                TextField("", text: text).keyboardType(keyboard).multilineTextAlignment(.trailing).frame(maxWidth: 90)
-                Text(unit).foregroundStyle(.secondary)
-            }
-        }
+        NumberField(label: title, text: text, unit: unit, placeholder: "–").keyboardType(keyboard)
     }
 
     private func save() {

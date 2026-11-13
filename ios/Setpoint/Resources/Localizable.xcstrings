@@ -1331,6 +1331,16 @@
         }
       }
     },
+    "Apple Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Apple Health"
+          }
+        }
+      }
+    },
     "Apple Health isn't available on this device.": {
       "localizations": {
         "ar": {
@@ -1491,6 +1501,16 @@
         }
       }
     },
+    "Body fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسبة الدهون"
+          }
+        }
+      }
+    },
     "Body fat (estimate)": {
       "localizations": {
         "ar": {
@@ -1507,6 +1527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نسبة الدهون (اختياري)"
+          }
+        }
+      }
+    },
+    "Body fat is optional. It makes resting burn and protein more precise.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسبة الدهون اختيارية. تجعل حساب الحرق والبروتين أدق."
           }
         }
       }
@@ -2557,6 +2587,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوميات"
+          }
+        }
+      }
+    },
+    "Diary sections": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أقسام اليوميات"
           }
         }
       }
@@ -3967,6 +4007,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيحمّل قايمة الأكل…"
+          }
+        }
+      }
+    },
+    "Lock Screen": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شاشة القفل"
           }
         }
       }
@@ -7291,6 +7341,16 @@
         }
       }
     },
+    "These sync with your account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تتزامن مع حسابك."
+          }
+        }
+      }
+    },
     "Thiamin (B1)": {
       "localizations": {
         "ar": {
@@ -7337,6 +7397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "هذا اليوم فيه بالفعل %@ سعرة مسجّلة."
+          }
+        }
+      }
+    },
+    "This iPhone": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هذا الآيفون"
           }
         }
       }
@@ -8221,6 +8291,16 @@
         }
       }
     },
+    "When": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متى"
+          }
+        }
+      }
+    },
     "Which day": {
       "localizations": {
         "ar": {
@@ -8377,6 +8457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يومك"
+          }
+        }
+      }
+    },
+    "Your diary": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يومياتك"
           }
         }
       }

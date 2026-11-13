@@ -477,11 +477,13 @@ struct FoodHitRow: View {
         HStack(spacing: 12) {
             FoodIcon(kind: hit.quick == true ? "quick" : hit.kind ?? "food", name: hit.name)
             VStack(alignment: .leading, spacing: 3) {
+                // "Chicken breast" in bold, "baked, no skin…" under it: quick to scan, nothing hidden
                 HStack(spacing: 5) {
-                    Text(hit.name).lineLimit(2).font(.brand(.body))
+                    Text(head).lineLimit(1).font(.brand(.body, .semibold))
                     if hit.verified == true { Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Verified")) }
                     if hit.fav == true { Image(systemName: "star.fill").font(.caption2).foregroundStyle(Brand.amber) }
                 }
+                if let rest { Text(rest).font(.brand(.footnote)).foregroundStyle(Brand.ink2).lineLimit(1) }
                 HStack(spacing: 6) {
                     if let badge { Text(badge).font(.brand(.caption2, .semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(Brand.card2, in: Capsule()).foregroundStyle(Brand.ink2) }
                     Text(detail).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
@@ -497,6 +499,19 @@ struct FoodHitRow: View {
         }
         .contentShape(.rect)
     }
+    /// The food's name up to the first comma (or " · " before a brand), and the rest.
+    private var parts: (String, String?) {
+        let n = hit.name
+        for sep in [", ", " · ", " - "] {
+            if let r = n.range(of: sep), r.lowerBound > n.startIndex {
+                let rest = n[r.upperBound...].trimmingCharacters(in: .whitespaces)
+                return (String(n[..<r.lowerBound]), rest.isEmpty ? nil : rest)
+            }
+        }
+        return (n, nil)
+    }
+    private var head: String { parts.0 }
+    private var rest: String? { parts.1 }
     private var badge: LocalizedStringKey? {
         if hit.quick == true { return "Quick add" }
         if hit.recipe == true { return "Recipe" }

@@ -154,18 +154,14 @@ struct MeasureSheet: View {
     var body: some View {
         NavigationStack {
             Form {
-                DatePicker("Date", selection: $date, in: ...Date(), displayedComponents: .date)
+                Section {
+                    DatePicker("Date", selection: $date, in: ...Date(), displayedComponents: .date)
+                } header: { Text("When") }
                 Section {
                     ForEach(BodySection.parts, id: \.0) { key, name in
-                        LabeledContent(name) {
-                            HStack(spacing: 4) {
-                                TextField("—", text: Binding(get: { vals[key] ?? "" }, set: { vals[key] = $0 }))
-                                    .keyboardType(.decimalPad).multilineTextAlignment(.trailing).frame(maxWidth: 90)
-                                Text(inches ? "in" : "cm").foregroundStyle(.secondary)
-                            }
-                        }
+                        NumberField(label: name, text: Binding(get: { vals[key] ?? "" }, set: { vals[key] = $0 }), unit: inches ? "in" : "cm", placeholder: "–")
                     }
-                } footer: { if let error { Text(error).foregroundStyle(Brand.danger) } else { Text("Fill in any you measured.") } }
+                } header: { Text("Measurements") } footer: { if let error { Text(error).foregroundStyle(Brand.danger) } else { Text("Fill in any you measured.") } }
             }
             .brandList()
             .navigationTitle("Measurements")
