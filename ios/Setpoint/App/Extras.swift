@@ -141,7 +141,7 @@ struct DeviceSettingsView: View {
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
                 Toggle("Your week is ready", isOn: $weekReady)
             } header: { Text("Reminders") } footer: {
-                if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.amber) }
+                if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.danger) }
             }
             if Health.allowed { Section {
                 Button {
@@ -170,7 +170,7 @@ struct DeviceSettingsView: View {
                 Toggle("Sounds", isOn: $sounds)
             } footer: { Text("These are for this iPhone only. Sounds: a soft tick when you log, a chime when you hit a target.") }
             Section {
-                Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }
+                Button("Erase all data on this iPhone", role: .destructive) { confirmErase = true }.foregroundStyle(Brand.danger)
                     .confirmationDialog("Erase everything on this iPhone?", isPresented: $confirmErase, titleVisibility: .visible) {
                         Button("Erase", role: .destructive) { Account.shared.signOut(); store.eraseAll() }
                     } message: { Text("Your weigh-ins, food log and settings on this iPhone are deleted. If you're signed in, you're signed out first, so your account keeps its copy.") }

@@ -19,6 +19,7 @@ enum Brand {
     static let carbs = amber
     static let fat = dyn(0x4F6FA3, 0x87A0D2)         // slate blue
     static let water = dyn(0x2C88A8, 0x60B2CC)
+    static let danger = dyn(0xC0392B, 0xEF6B5E)     // deleting, erasing, errors and warnings: a clear red
     static let over = dyn(0xB8691C, 0xE69A4E)       // going over is a calm amber, not an alarm
 
     static func dyn(_ light: UInt32, _ dark: UInt32) -> Color {

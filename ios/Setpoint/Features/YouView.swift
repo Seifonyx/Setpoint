@@ -46,31 +46,31 @@ struct YouView: View {
                     NavigationLink { PlanView() } label: {
                         LabeledContent {
                             if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
-                        } label: { Label("Plan", systemImage: "target") }
+                        } label: { TileLabel("Plan", "target", Brand.green) }
                     }
-                    Button { explain = true } label: { Label("How your target works", systemImage: "info.circle") }.tint(.primary)
+                    Button { explain = true } label: { TileLabel("How your target works", "info", Brand.fat) }.tint(.primary)
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
                             if CheckInBanner.due && store.entries.count >= 3 {
                                 Text("New").font(.brand(.caption, .bold)).foregroundStyle(Brand.onGreen)
                                     .padding(.horizontal, 8).padding(.vertical, 2).background(Brand.green, in: Capsule())
                             }
-                        } label: { Label("Weekly check-in", systemImage: "chart.line.uptrend.xyaxis") }
+                        } label: { TileLabel("Weekly check-in", "chart.line.uptrend.xyaxis", Brand.amber) }
                     }
                 } header: { Text("Your plan") }
                 Section {
                     NavigationLink { FastingView() } label: {
                         LabeledContent {
                             if store.root["fast"]?.object?["start"]?.number != nil { Text("Fasting").foregroundStyle(Brand.green) }
-                        } label: { Label("Fasting timer", systemImage: "timer") }
+                        } label: { TileLabel("Fasting timer", "timer", Brand.protein) }
                     }
-                    NavigationLink { DeviceSettingsView() } label: { Label("Settings", systemImage: "gearshape") }
+                    NavigationLink { DeviceSettingsView() } label: { TileLabel("Settings", "gearshape.fill", Brand.ink2) }
                 } header: { Text("App") }
                 Section {
                     Button {
                         do { shareURL = try store.exportBackup() } catch { self.error = error.localizedDescription }
-                    } label: { Label("Back up", systemImage: "square.and.arrow.up") }
-                    Button { importing = true } label: { Label("Restore from a backup", systemImage: "square.and.arrow.down") }
+                    } label: { TileLabel("Back up", "square.and.arrow.up", Brand.water) }
+                    Button { importing = true } label: { TileLabel("Restore from a backup", "square.and.arrow.down", Brand.water) }
                 } header: {
                     Text("Your data")
                 } footer: {
@@ -103,4 +103,20 @@ struct ShareSheet: UIViewControllerRepresentable {
     let url: URL
     func makeUIViewController(context: Context) -> UIActivityViewController { UIActivityViewController(activityItems: [url], applicationActivities: nil) }
     func updateUIViewController(_ vc: UIActivityViewController, context: Context) {}
+}
+
+/// A row label with its icon on a small coloured tile, like the iPhone's Settings: colour where it helps you find things.
+struct TileLabel: View {
+    let title: LocalizedStringKey
+    let icon: String
+    let color: Color
+    init(_ title: LocalizedStringKey, _ icon: String, _ color: Color) { self.title = title; self.icon = icon; self.color = color }
+    var body: some View {
+        Label {
+            Text(title).foregroundStyle(Brand.ink)
+        } icon: {
+            Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                .frame(width: 28, height: 28).background(color, in: .rect(cornerRadius: 8))
+        }
+    }
 }

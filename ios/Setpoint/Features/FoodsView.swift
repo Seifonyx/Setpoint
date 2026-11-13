@@ -182,7 +182,7 @@ struct CustomFoodSheet: View {
                     row("Carbs", $c, "g")
                     row("Fat", $f, "g")
                 } header: { Text("Per serving") } footer: {
-                    if let error { Text(error).foregroundStyle(Brand.over) }
+                    if let error { Text(error).foregroundStyle(Brand.danger) }
                     else if let k = estimate { Text("About \(Fmt.kcal(k)) kcal from the macros") }
                 }
                 // everything else on the label: each group folds, so the form stays short until you need it

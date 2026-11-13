@@ -39,7 +39,7 @@ struct RecipeEditor: View {
                     .onDelete { items.remove(atOffsets: $0) }
                     Button("Add ingredient", systemImage: "plus") { picking = true }
                 } header: { Text("Ingredients") } footer: {
-                    if let error { Text(error).foregroundStyle(Brand.over) }
+                    if let error { Text(error).foregroundStyle(Brand.danger) }
                     else if !items.isEmpty {
                         let k = items.reduce(0) { $0 + ($1["kcal"]?.number ?? 0) }
                         Text("\(Fmt.kcal(k / Double(servings))) kcal a serving")

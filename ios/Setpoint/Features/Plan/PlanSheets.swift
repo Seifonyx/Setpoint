@@ -128,7 +128,7 @@ struct GoalWeightSheet: View {
                     Text(LocalizedStringKey(store.unit)).foregroundStyle(.secondary)
                 }
                 if store.overview?.goalKg != nil {
-                    Button("Remove goal weight", role: .destructive) { store.setSetting("goalKg", nil); dismiss() }
+                    Button("Remove goal weight", role: .destructive) { store.setSetting("goalKg", nil); dismiss() }.foregroundStyle(Brand.danger)
                 }
             }
             .brandList()

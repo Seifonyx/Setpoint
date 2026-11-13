@@ -55,7 +55,7 @@ struct MealEditor: View {
                     Text("Tap a food to change its amount, swipe to remove it. Logging the meal adds each food to your diary.")
                 }
                 if meal != nil {
-                    Section { Button("Delete meal", role: .destructive) { confirmDelete = true } }
+                    Section { Button("Delete meal", role: .destructive) { confirmDelete = true }.foregroundStyle(Brand.danger) }
                 }
             }
             .brandList()

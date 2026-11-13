@@ -45,7 +45,7 @@ struct DescribeMealSheet: View {
                     }
                     .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty || working)
                 } footer: {
-                    if let error { Text(error).foregroundStyle(Brand.over) } else { Text("Works on this iPhone, offline. You check everything before it's added.") }
+                    if let error { Text(error).foregroundStyle(Brand.danger) } else { Text("Works on this iPhone, offline. You check everything before it's added.") }
                 }
                 .listRowBackground(Brand.card)
                 if !matches.isEmpty {

@@ -40,7 +40,7 @@ struct WeightSheet: View {
                 }
                 if store.entry(day) != nil {
                     Section {
-                        Button("Delete weigh-in", role: .destructive) { confirmDelete = true }
+                        Button("Delete weigh-in", role: .destructive) { confirmDelete = true }.foregroundStyle(Brand.danger)
                     }
                 }
             }

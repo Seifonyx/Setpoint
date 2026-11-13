@@ -86,7 +86,7 @@ struct PlanView: View {
                     }
                     .font(.brand(.subheadline)).foregroundStyle(.secondary)
                 }
-                if !p.warn.isEmpty { Label(LocalizedStringKey(p.warn), systemImage: "exclamationmark.triangle.fill").font(.brand(.subheadline)).foregroundStyle(Brand.amber) }
+                if !p.warn.isEmpty { Label(LocalizedStringKey(p.warn), systemImage: "exclamationmark.triangle.fill").font(.brand(.subheadline)).foregroundStyle(Brand.danger) }
                 HStack(spacing: 12) {
                     macro("Protein", p.protein, 4, p, Brand.protein)
                     macro("Carbs", p.carbs, 4, p, Brand.carbs)

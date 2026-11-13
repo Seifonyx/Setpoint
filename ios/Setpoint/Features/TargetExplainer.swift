@@ -37,7 +37,7 @@ struct TargetExplainer: View {
                         step(3, "Your target", "\(Fmt.kcal((p.target / 10).rounded() * 10)) kcal", Brand.protein) {
                             Text(verbatim: "\(Fmt.kcal(burn)) \(p.pace.dir == "gain" ? "+" : "−") \(Fmt.kcal(p.pace.dir == "maintain" ? 0 : perDay)) ≈ \(Fmt.kcal((p.target / 10).rounded() * 10)) kcal")
                                 .font(Brand.num(24, .semibold)).monospacedDigit()
-                            if !p.warn.isEmpty { Text(LocalizedStringKey(p.warn)).foregroundStyle(Brand.amber) }
+                            if !p.warn.isEmpty { Text(LocalizedStringKey(p.warn)).foregroundStyle(Brand.danger) }
                             Text("Protein \(Fmt.grams(p.protein)) g · carbs \(Fmt.grams(p.carbs)) g · fat \(Fmt.grams(p.fat)) g")
                                 .foregroundStyle(Brand.ink2)
                         }

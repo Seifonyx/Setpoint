@@ -331,7 +331,7 @@ struct RepeatSheet: View {
                     if existing != nil { Toggle("Pause", isOn: $paused) }
                 }
                 if existing != nil {
-                    Section { Button("Stop repeating", role: .destructive, action: stop) }
+                    Section { Button("Stop repeating", role: .destructive, action: stop).foregroundStyle(Brand.danger) }
                 }
             }
             .brandList()

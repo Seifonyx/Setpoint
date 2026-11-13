@@ -165,7 +165,7 @@ struct MeasureSheet: View {
                             }
                         }
                     }
-                } footer: { if let error { Text(error).foregroundStyle(Brand.over) } else { Text("Fill in any you measured.") } }
+                } footer: { if let error { Text(error).foregroundStyle(Brand.danger) } else { Text("Fill in any you measured.") } }
             }
             .brandList()
             .navigationTitle("Measurements")

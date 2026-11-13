@@ -56,13 +56,13 @@ struct AccountView: View {
             Text("Your weigh-ins, food log, foods, recipes, plan, settings and progress photos sync with the web app.")
         }
         Section {
-            Button("Sign out", role: .destructive) { confirmOut = true }
+            Button("Sign out", role: .destructive) { confirmOut = true }.foregroundStyle(Brand.danger)
                 .confirmationDialog("Sign out?", isPresented: $confirmOut, titleVisibility: .visible) {
                     Button("Sign out", role: .destructive) { account.signOut() }
                 } message: { Text("Your data stays on this iPhone. Sign in again to sync.") }
         }
         Section {
-            Button("Delete account", role: .destructive) { confirmDelete = true }
+            Button("Delete account", role: .destructive) { confirmDelete = true }.foregroundStyle(Brand.danger)
                 .confirmationDialog("Delete your account?", isPresented: $confirmDelete, titleVisibility: .visible) {
                     Button("Delete account", role: .destructive) {
                         act { try await account.deleteAccount(); note = String(localized: "Account deleted. Your data on this iPhone is still here.") }
@@ -83,7 +83,7 @@ struct AccountView: View {
         } header: {
             Text("Use the same account as the web app")
         } footer: {
-            if let error { Text(error).foregroundStyle(Brand.over) }
+            if let error { Text(error).foregroundStyle(Brand.danger) }
         }
         Section {
             Toggle(isOn: $agreed) {
