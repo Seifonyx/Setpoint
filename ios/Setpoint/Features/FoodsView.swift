@@ -42,7 +42,6 @@ struct FoodLists: View {
                         .tint(.primary)
                         .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("myFoods", id: f["id"]?.string ?? "") } }
                     }
-                    Button("New food", systemImage: "plus") { editing = EditFood(id: "new", food: nil) }
                 } header: { Text("My foods") }
 
                 case .recipes:
@@ -61,7 +60,6 @@ struct FoodLists: View {
                         .tint(.primary)
                         .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") } }
                     }
-                    Button("New recipe", systemImage: "plus") { recipeEdit = EditFood(id: "new", food: nil) }
                 } header: { Text("Recipes") }
 
                 case .meals:
@@ -100,6 +98,16 @@ struct FoodLists: View {
             }
             .brandList()
             .navigationTitle(title)
+            .toolbar {
+                // a + up top for making a new one (saved meals are made from the Diary)
+                if kind == .mine || kind == .recipes {
+                    ToolbarItem(placement: .topBarTrailing) {
+                        Button(kind == .mine ? "New food" : "New recipe", systemImage: "plus") {
+                            if kind == .mine { editing = EditFood(id: "new", food: nil) } else { recipeEdit = EditFood(id: "new", food: nil) }
+                        }
+                    }
+                }
+            }
             .toolbar(.hidden, for: .tabBar)
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
@@ -253,7 +261,6 @@ struct FoodsView: View {
                         tile("My foods", "carrot.fill", Brand.ink2, count("myFoods")) { FoodLists(kind: .mine) }
                         tile("Recipes", "frying.pan.fill", Brand.ink2, count("recipes")) { FoodLists(kind: .recipes) }
                         tile("Saved meals", "takeoutbag.and.cup.and.straw.fill", Brand.ink2, count("meals")) { FoodLists(kind: .meals) }
-                        tile("Favorites", "star.fill", Brand.ink2, count("favs")) { FoodLists(kind: .favorites) }
                         tile("Repeating", "repeat", Brand.ink2, count("repeats")) { RepeatingView() }
                         tile("Saved days", "calendar.badge.checkmark", Brand.ink2, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                     }
