@@ -6,14 +6,14 @@
 name: iOS
 on:
   push:
-    branches: [main]
+    branches: [main, redesign]
     paths: ['ios/**', '.github/workflows/ios.yml']
   workflow_dispatch:
 permissions:
   contents: write
 concurrency:
   # releases and previews queue separately, so a preview never cancels a release that's building
-  group: ios-${{ (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) && 'release' || 'preview' }}
+  group: ios-${{ (github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))) && 'release' || 'preview' }}
   cancel-in-progress: true
 jobs:
   build:
@@ -21,7 +21,8 @@ jobs:
     timeout-minutes: 45
     env:
       GH_TOKEN: ${{ github.token }}
-      RELEASE: ${{ github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]') }}
+      # only main releases; other branches (a redesign waiting for approval) are always previews
+      RELEASE: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode 26
