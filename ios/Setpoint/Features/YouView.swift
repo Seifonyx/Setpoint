@@ -11,6 +11,7 @@ struct YouView: View {
     @State private var explain = false
     @State private var showPlan = UserDefaults.standard.string(forKey: "open") == "plan" // build-server screenshots
     @State private var showSettings = UserDefaults.standard.string(forKey: "open") == "settings"
+    @State private var showExport = UserDefaults.standard.string(forKey: "open") == "export"
 
     var body: some View {
         NavigationStack {
@@ -52,7 +53,7 @@ struct YouView: View {
                     Button { explain = true } label: { TileLabel("How your target works", "info", Brand.blue) }.tint(.primary)
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
-                            if CheckInBanner.due && store.entries.count >= 3 {
+                            if CheckInView.due && store.entries.count >= 3 {
                                 Text("New").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                             }
                         } label: { TileLabel("Weekly check-in", "chart.line.uptrend.xyaxis", Brand.amber) }
@@ -71,10 +72,11 @@ struct YouView: View {
                         do { shareURL = try store.exportBackup() } catch { self.error = error.localizedDescription }
                     } label: { TileLabel("Back up", "square.and.arrow.up", Brand.water) }
                     Button { importing = true } label: { TileLabel("Restore from a backup", "square.and.arrow.down", Brand.water) }
+                    NavigationLink { ExportView() } label: { TileLabel("Export to a spreadsheet", "tablecells", Brand.green) }
                 } header: {
                     Text("Your data")
                 } footer: {
-                    Text("A backup is one file with everything in it. Keep it in Files or iCloud Drive.")
+                    Text("A backup is one file with everything in it, to restore from. Keep it in Files or iCloud Drive. A spreadsheet export is for reading your data in Numbers or Excel.")
                 }
                 Section {} footer: {
                     Text(verbatim: "Setpoint \(Bundle.main.object(forInfoDictionaryKey: "CFBundleShortVersionString") as? String ?? "") · "
@@ -86,6 +88,7 @@ struct YouView: View {
             .navigationTitle("You")
             .navigationDestination(isPresented: $showPlan) { PlanView() }
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
+            .navigationDestination(isPresented: $showExport) { ExportView() }
             .sheet(isPresented: $explain) { TargetExplainer() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in
                 ShareSheet(url: f.url).presentationDetents([.medium, .large])

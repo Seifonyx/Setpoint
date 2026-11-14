@@ -97,7 +97,24 @@ struct PlanView: View {
             .padding(.vertical, 4)
             .animation(.snappy, value: p.target)
             NavigationLink("Target breakdown") { BreakdownView() }
+            // the weekly adjustment stays undoable here until the next one, not just for the few seconds of the message
+            if let t = o.tune, let label = Self.tuneText(t) {
+                HStack(spacing: 10) {
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text("This week's change").font(.brand(.subheadline, .semibold))
+                        Text(label).font(.brand(.subheadline)).foregroundStyle(.secondary)
+                    }
+                    Spacer(minLength: 8)
+                    Button("Undo") { Task { await store.undoTargetChange() } }
+                        .font(.brand(.subheadline, .semibold)).buttonStyle(.borderless).tint(Brand.green)
+                }
+            }
         }
+    }
+    static func tuneText(_ t: Overview.Tune) -> String? {
+        if t.goal == true { return String(localized: "Goal reached: your target moved to maintenance") }
+        guard t.hold != true, let c = t.change, c != 0 else { return nil }
+        return c > 0 ? String(localized: "Target raised by \(Fmt.kcal(abs(c))) kcal") : String(localized: "Target lowered by \(Fmt.kcal(abs(c))) kcal")
     }
 
     @ViewBuilder private func goalSection(_ p: Overview.Plan, _ o: Overview) -> some View {
@@ -117,7 +134,7 @@ struct PlanView: View {
                 LabeledContent("Goal weight") { Text(o.goalKg.map { "\(Fmt.weight($0, unit: o.unit)) \(o.unit)" } ?? String(localized: "Set")) }
             }
             .tint(.primary)
-            if !p.eta.isEmpty { Text(LocalizedStringKey(p.eta.prefix(1).uppercased() + p.eta.dropFirst())).font(.brand(.subheadline)).foregroundStyle(.secondary) }
+            if let d = p.etaISO { Text("Goal by \(Day.date(d).formatted(.dateTime.month(.abbreviated).day()))").font(.brand(.subheadline)).foregroundStyle(.secondary) }
         }
     }
 
@@ -175,7 +192,7 @@ struct PlanView: View {
     private func macro(_ label: LocalizedStringKey, _ g: Double, _ kcalPerG: Double, _ p: Overview.Plan, _ color: Color) -> some View {
         VStack(alignment: .leading, spacing: 2) {
             HStack(spacing: 5) { Circle().fill(color).frame(width: 7, height: 7); Text(label).font(.brand(.caption)).foregroundStyle(.secondary) }
-            Text("\(Fmt.grams(g)) g").font(.brand(.headline))
+            Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit()
             Text("\(Int((g * kcalPerG / max(p.target, 1) * 100).rounded()))%").font(.brand(.caption2)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -127,7 +127,6 @@ struct DeviceSettingsView: View {
                     ForEach(0..<7, id: \.self) { i in Text(Calendar.current.weekdaySymbols[i]).tag(i) }
                 } label: { TileLabel("Week starts on", "calendar", Brand.water) }
                 NavigationLink { MealsEditor() } label: { TileLabel("Diary sections", "list.bullet", Brand.amber) }
-                NavigationLink { RepeatingView() } label: { TileLabel("Repeating foods", "repeat", Brand.water) }
                 Button { ramadan = true } label: {
                     LabeledContent { Text(store.ramadanOn ? String(localized: "On") : String(localized: "Off")).foregroundStyle(.secondary) } label: { TileLabel("Ramadan mode", "moon.stars.fill", Brand.green) }
                 }.tint(.primary)

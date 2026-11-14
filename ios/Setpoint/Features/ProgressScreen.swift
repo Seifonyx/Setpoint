@@ -94,6 +94,7 @@ struct ProgressScreen: View {
             }
             .padding(.vertical, 4)
             if pts.count >= 2 { stats(pts) }
+            if let g = data?.goalKg { goalRow(g) }
         }
         if let w = data?.weeks.first {
             Section("This week") {
@@ -119,6 +120,21 @@ struct ProgressScreen: View {
                 }
             } header: { Text("History") }
         }
+    }
+
+    /// Your goal weight, and (when you're moving towards it) the day you reach it at your planned pace.
+    private func goalRow(_ g: Double) -> some View {
+        HStack(spacing: 10) {
+            Image(systemName: "flag.checkered").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.amber)
+            Text("Goal \(Fmt.weight(g, unit: unit)) \(NSLocalizedString(unit, comment: ""))").font(.brand(.subheadline, .semibold))
+            Spacer(minLength: 8)
+            if let d = store.overview?.plan?.etaISO {
+                Text("Around \(Day.date(d).formatted(.dateTime.month(.abbreviated).day()))").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+            } else if let now = data?.now, abs(disp(now) - disp(g)) < 0.3 {
+                Text("You're there").font(.brand(.subheadline)).foregroundStyle(Brand.green)
+            }
+        }
+        .accessibilityElement(children: .combine)
     }
 
     private func change(_ pts: [ProgressData.Point]) -> Double? {
@@ -215,14 +231,14 @@ struct ProgressScreen: View {
     }
     private func stat(_ v: String, _ l: LocalizedStringKey) -> some View {
         VStack(spacing: 2) {
-            Text(v).font(.brand(.headline)).monospacedDigit()
+            Text(v).font(Brand.num(22, .semibold)).monospacedDigit()
             Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)
     }
     private func stat(_ v: Double, _ l: LocalizedStringKey, _ f: @escaping (Double) -> String) -> some View {
         VStack(spacing: 2) {
-            CountUp(value: v, progress: reveal, format: f).font(.brand(.headline)).monospacedDigit()
+            CountUp(value: v, progress: reveal, format: f).font(Brand.num(22, .semibold)).monospacedDigit()
             Text(l).font(.brand(.caption)).foregroundStyle(.secondary)
         }
         .frame(maxWidth: .infinity)

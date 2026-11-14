@@ -19,7 +19,7 @@ struct RootView: View {
     @AppStorage(DeviceSettings.haptics) private var haptics = true
     @State private var onboarding = false
     @AppStorage("checkInSeen") private var checkInSeen = ""
-    private var weekReady: Bool { checkInSeen != CheckInView.weekKey && store.entries.count >= 3 && CheckInBanner.due }
+    private var weekReady: Bool { checkInSeen != CheckInView.weekKey && store.entries.count >= 3 && CheckInView.due }
     @State private var launching = !UIAccessibility.isReduceMotionEnabled // the dial draws itself on launch
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
@@ -27,6 +27,17 @@ struct RootView: View {
     init() {
         _store = State(initialValue: Store.shared)
         _account = State(initialValue: Account.shared)
+    }
+
+    /// Go to the diary and start an action from outside the app (a widget, a control).
+    private func open(_ a: QuickAction?) {
+        tab = .diary
+        switch a {
+        case .addFood: store.request = .addFood
+        case .scan: store.request = .scan
+        case .weight: store.request = .logWeight
+        case nil: break
+        }
     }
 
     var body: some View {
@@ -73,10 +84,12 @@ struct RootView: View {
         .task { await store.start(); WidgetBridge.publish(store); await account.pull(fresh: false) }
         .onChange(of: store.version) { WidgetBridge.publish(store) } // widgets and the Live Activity
         .onOpenURL { url in
-            // From a widget: setpoint://add opens Add food; anything else just opens the diary.
-            tab = .diary
-            if url.host == "add" { store.request = .addFood }
+            // From a widget: setpoint://add, ://scan or ://weight opens that; anything else just opens the diary.
+            open(QuickAction(rawValue: url.host ?? ""))
         }
+        // From a Control Centre control (its intent runs in the app and leaves the action in the inbox)
+        .onReceive(NotificationCenter.default.publisher(for: QuickActionInbox.posted)) { _ in if let a = QuickActionInbox.take() { open(a) } }
+        .task { if let a = QuickActionInbox.take() { open(a) } }
         .onChange(of: phase) { _, p in
             if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow() } }
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet

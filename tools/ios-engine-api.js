@@ -212,7 +212,7 @@
         profile: state.profile, age: ageNow(), goalKg: state.settings.goalKg, rates: RATES[unit()],
         energy: en ? { tdee: en.tdee, source: en.source, w: en.w == null ? null : en.w, calc: c ? c.tdee : null, level: c ? L(c.level) : null, parts: c ? burnParts(c, en) : null } : null,
         measured: m,
-        plan: pl ? { target: pl.target, protein: pl.protein, carbs: pl.carbs, fat: pl.fat, pace: pl.pace, warn: L(pl.warn), eta: L(pl.eta), ref: pl.ref, refWhy: pl.refWhy, proteinPerKg: pl.proteinPerKg, fatPerKg: pl.fatPerKg, kind: pl.kind, custom: pl.custom, ranges: macroRanges(pl.pace.kg < 0, !!state.profile.bodyFat, state.profile.training || null) } : null,
+        plan: pl ? { target: pl.target, protein: pl.protein, carbs: pl.carbs, fat: pl.fat, pace: pl.pace, warn: L(pl.warn), eta: L(pl.eta), etaISO: pl.etaISO || null, ref: pl.ref, refWhy: pl.refWhy, proteinPerKg: pl.proteinPerKg, fatPerKg: pl.fatPerKg, kind: pl.kind, custom: pl.custom, ranges: macroRanges(pl.pace.kg < 0, !!state.profile.bodyFat, state.profile.training || null) } : null,
         split: sp, flex: state.settings.flex || null
       });
     },

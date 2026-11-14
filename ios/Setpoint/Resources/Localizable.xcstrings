@@ -491,6 +491,16 @@
         }
       }
     },
+    "%lld weigh-ins and %lld days of food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld وزنة و%2$lld يوم أكل."
+          }
+        }
+      }
+    },
     "%lld%% of days logged": {
       "localizations": {
         "ar": {
@@ -717,6 +727,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "88.7 كجم"
+          }
+        }
+      }
+    },
+    "A backup is one file with everything in it, to restore from. Keep it in Files or iCloud Drive. A spreadsheet export is for reading your data in Numbers or Excel.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة الاحتياطية ملف واحد فيه كل حاجة، ترجّع منه بياناتك. خليه في Files أو iCloud Drive. التصدير لجدول بيانات عشان تقرا بياناتك في Numbers أو Excel."
           }
         }
       }
@@ -967,6 +987,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الإنجازات"
+          }
+        }
+      }
+    },
+    "Action": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الإجراء"
           }
         }
       }
@@ -1427,6 +1457,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الذراع"
+          }
+        }
+      }
+    },
+    "Around %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حوالي %@"
           }
         }
       }
@@ -2991,6 +3031,16 @@
         }
       }
     },
+    "Everything": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل حاجة"
+          }
+        }
+      }
+    },
     "Everything on this iPhone is replaced with the backup.": {
       "localizations": {
         "ar": {
@@ -3057,6 +3107,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحرق مع الوقت"
+          }
+        }
+      }
+    },
+    "Export %lld files": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صدّر %lld ملفات"
+          }
+        }
+      }
+    },
+    "Export to a spreadsheet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صدّر لجدول بيانات"
           }
         }
       }
@@ -3531,12 +3601,32 @@
         }
       }
     },
+    "Goal %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف %1$@ %2$@"
+          }
+        }
+      }
+    },
     "Goal %lld h": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "الهدف %lld ساعة"
+          }
+        }
+      }
+    },
+    "Goal by %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "توصل لهدفك يوم %@"
           }
         }
       }
@@ -3557,6 +3647,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وصلت لهدفك! هدفك دلوقتي الثبات"
+          }
+        }
+      }
+    },
+    "Goal reached: your target moved to maintenance": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصلت لهدفك: هدفك اتحوّل للثبات"
           }
         }
       }
@@ -3911,6 +4011,26 @@
         }
       }
     },
+    "Last 30 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر ٣٠ يوم"
+          }
+        }
+      }
+    },
+    "Last 90 days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر ٩٠ يوم"
+          }
+        }
+      }
+    },
     "Last week": {
       "localizations": {
         "ar": {
@@ -3927,6 +4047,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر مراجعة أسبوعية"
+          }
+        }
+      }
+    },
+    "Last year": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر سنة"
           }
         }
       }
@@ -4307,6 +4437,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نفحص طبقك…"
+          }
+        }
+      }
+    },
+    "Looking up this product…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بندوّر على المنتج ده…"
           }
         }
       }
@@ -5181,6 +5321,16 @@
         }
       }
     },
+    "Nothing logged in this range": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة متسجلة في الفترة دي"
+          }
+        }
+      }
+    },
     "Nothing logged yet": {
       "localizations": {
         "ar": {
@@ -5481,6 +5631,16 @@
         }
       }
     },
+    "One tap on your Lock Screen opens Setpoint to it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضغطة واحدة من شاشة القفل تفتحلك Setpoint عليها."
+          }
+        }
+      }
+    },
     "One to watch": {
       "localizations": {
         "ar": {
@@ -5501,12 +5661,42 @@
         }
       }
     },
+    "Open in Setpoint": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح في Setpoint"
+          }
+        }
+      }
+    },
     "Opens Setpoint ready to search for a food.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "بيفتح Setpoint جاهز تدوّر على أكل."
+          }
+        }
+      }
+    },
+    "Opens Setpoint to log today's weight.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيفتح Setpoint عشان تسجل وزن النهارده."
+          }
+        }
+      }
+    },
+    "Opens Setpoint's barcode scanner.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيفتح ماسح الباركود في Setpoint."
           }
         }
       }
@@ -6477,6 +6667,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيحفظ وزن النهارده في Setpoint بوحدة التطبيق (كجم أو رطل)."
+          }
+        }
+      }
+    },
+    "Scan a barcode": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امسح باركود"
           }
         }
       }
@@ -7561,6 +7761,26 @@
         }
       }
     },
+    "This week's change": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تغيير الأسبوع ده"
+          }
+        }
+      }
+    },
+    "Three files: your weigh-ins, your daily totals, and every food you logged. They open in Numbers, Excel or Google Sheets.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تلات ملفات: وزناتك، ومجموع كل يوم، وكل أكلة سجلتها. بيتفتحوا في Numbers أو Excel أو Google Sheets."
+          }
+        }
+      }
+    },
     "Tick the box above to continue": {
       "localizations": {
         "ar": {
@@ -7587,6 +7807,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وقت الأكل"
+          }
+        }
+      }
+    },
+    "Time period": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الفترة"
           }
         }
       }
@@ -8507,6 +8737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أنت في وضع الثبات، فتأكل ما تحرقه."
+          }
+        }
+      }
+    },
+    "You're there": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصلت"
           }
         }
       }

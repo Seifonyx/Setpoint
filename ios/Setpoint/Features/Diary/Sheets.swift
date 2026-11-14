@@ -19,7 +19,7 @@ struct WeightSheet: View {
                     HStack {
                         TextField("Weight", text: $text)
                             .keyboardType(.decimalPad)
-                            .font(Brand.display(34, .bold))
+                            .font(Brand.num(43, .bold)).monospacedDigit()
                             .focused($focused)
                         Text(LocalizedStringKey(store.unit)).font(.brand(.title3)).foregroundStyle(.secondary)
                     }

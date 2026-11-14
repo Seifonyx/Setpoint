@@ -226,6 +226,7 @@ struct Overview: Decodable, Sendable {
     struct Pace: Decodable, Sendable { let dir: String; let kg: Double; let i: Int }
     struct Plan: Decodable, Sendable {
         let target: Double; let protein: Double; let carbs: Double; let fat: Double; let pace: Pace; let warn: String; let eta: String
+        let etaISO: String?   // the day you reach your goal at this pace
         let ref: Double; let refWhy: String; let proteinPerKg: Double; let fatPerKg: Double; let kind: String; let custom: Bool
         struct Ranges: Decodable, Sendable { let protein: [Double]; let fat: [Double] }
         let ranges: Ranges?
@@ -238,6 +239,9 @@ struct Overview: Decodable, Sendable {
     let adaptive: Bool
     let adjustKcal: Double?
     let tuneWhy: String?
+    /// The last weekly adjustment, until it's undone or replaced.
+    struct Tune: Decodable, Sendable { let change: Double?; let goal: Bool?; let hold: Bool?; let at: Double? } // at: the day number it happened
+    let tune: Tune?
     let profile: Profile
     let age: Int?
     let goalKg: Double?

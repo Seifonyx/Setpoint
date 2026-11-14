@@ -8,6 +8,9 @@ struct AddFoodSheet: View {
     @Environment(\.dismiss) private var dismiss
     @State var meal: String
     let day: String
+    /// Opened from the scan control or widget: start with the barcode scanner.
+    var startScan = false
+    @State private var startedScan = false
     @State private var query = UserDefaults.standard.string(forKey: "search") ?? "" // build-server screenshots can open with a search
     @State private var tab = Tab.all
     @State private var hits: [FoodHit] = []
@@ -26,6 +29,7 @@ struct AddFoodSheet: View {
     @State private var labelValues: LabelValuesBox?
     @State private var scanMessage: String?
     @State private var notFound = false
+    @State private var lookingUp = false   // a scanned barcode is being looked up
     @State private var selecting = false
     @State private var selected: [String: FoodHit] = [:]
     @State private var startIDs: Set<String> = []
@@ -102,6 +106,20 @@ struct AddFoodSheet: View {
             .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: DescribeMealSheet.available ? { describing = true } : nil) }
             .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
+            .overlay {
+                if lookingUp {
+                    VStack(spacing: 12) {
+                        ProgressView().controlSize(.large)
+                        Text("Looking up this product…").font(.brand(.subheadline, .semibold))
+                    }
+                    .padding(24)
+                    .glassEffect(.regular, in: .rect(cornerRadius: Radius.card))
+                    .transition(.opacity.combined(with: .scale(scale: 0.95)))
+                    .accessibilityElement(children: .combine)
+                }
+            }
+            .animation(.snappy, value: lookingUp)
+            .task { if startScan && !startedScan { startedScan = true; scanning = true } }
             .alert("Product not found", isPresented: $notFound) {
                 Button("Scan the label") { labelCam = true }
                 Button("Quick add") { quickAdd = true }
@@ -457,6 +475,8 @@ struct AddFoodSheet: View {
     private func lookUp(_ code: String) async {
         let e = store.engineRef
         if let id = await e.barcodeLocal(code) { path.append(id); return }
+        lookingUp = true
+        defer { lookingUp = false }
         guard let url = URL(string: "https://world.openfoodfacts.org/api/v2/product/\(code).json?fields=code,product_name,product_name_en,product_name_ar,brands,serving_quantity,nutriments") else { return }
         var req = URLRequest(url: url); req.timeoutInterval = 12
         req.setValue("Setpoint iOS", forHTTPHeaderField: "User-Agent")

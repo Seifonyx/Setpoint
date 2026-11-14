@@ -125,10 +125,10 @@
     if (pace.kg < 0 && Math.abs(pace.kg) > kg * 0.01) warn = 'Faster than 1% of body weight a week';
     else if (o.bmr && target < o.bmr) warn = 'Below resting burn';
     else if (target < (p.sex === 'male' ? 1500 : 1200)) warn = 'Very low for getting enough nutrients';
-    let eta = '';
+    let eta = '', etaISO = null;
     if (goal && pace.kg !== 0 && (goal < kg) === (pace.kg < 0) && Math.abs(goal - kg) > 0.2) {
       const d = new Date(); d.setDate(d.getDate() + Math.round(Math.abs(goal - kg) / Math.abs(pace.kg) * 7));
-      eta = 'goal by ' + fmtFuture(d);
+      eta = 'goal by ' + fmtFuture(d); etaISO = isoOf(d);
     }
     // Protein and fat are set per kg of a reference weight. Extra body fat doesn't need extra
     // protein, so above BMI 25 we use the weight at BMI 25 for their height (unless body fat is known).
@@ -149,7 +149,7 @@
     if (m.fat == null && target - protein * 4 - fat * 9 < 200) fat = Math.max(Math.round(Math.max(ref * 0.6, target * 0.2 / 9) / 5) * 5, Math.min(fat, Math.round((target - protein * 4 - 200) / 9 / 5) * 5));
     const carbs = Math.max(0, Math.round((target - protein * 4 - fat * 9) / 4 / 5) * 5);
     if (!warn && protein * 4 + fat * 9 > target) warn = 'Protein and fat alone are more than this target';
-    return { target: target, pace: pace, warn: warn, eta: eta, protein: protein, fat: fat, carbs: carbs, ref: ref, refWhy: refWhy, proteinPerKg: proteinPerKg, fatPerKg: fatPerKg, custom: custom, kind: r.kind };
+    return { target: target, pace: pace, warn: warn, eta: eta, etaISO: etaISO, protein: protein, fat: fat, carbs: carbs, ref: ref, refWhy: refWhy, proteinPerKg: proteinPerKg, fatPerKg: fatPerKg, custom: custom, kind: r.kind };
   }
   // Self-adjusting target, checked every day you open the app (at most one change every 6 days): compare the
   // last two weeks' real trend with the chosen pace. Before blaming the formula it checks your food log: if you

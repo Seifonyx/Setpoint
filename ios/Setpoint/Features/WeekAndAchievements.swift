@@ -43,31 +43,6 @@ struct YouHighlights: View {
     }
 }
 
-struct WeekReviewView: View {
-    @Environment(Store.self) private var store
-    let review: WeekReview
-
-    var body: some View {
-        let r = review
-        List {
-            Section {
-                LabeledContent("Days logged") { Text("\(r.n)/7").monospacedDigit() }
-                LabeledContent("Average calories") { Text(Fmt.kcal(r.kcal) + (r.tg.map { " / " + Fmt.kcal($0) } ?? "")).monospacedDigit() }
-                LabeledContent("Average protein") { Text("\(Fmt.grams(r.protein)) g" + (r.pg.map { " / \(Fmt.grams($0)) g" } ?? "")).monospacedDigit() }
-                LabeledContent("Days on target") { Text("\(r.onTarget)").monospacedDigit() }
-                if let b = r.best { LabeledContent("Closest to target") { Text(Day.date(b), format: .dateTime.weekday(.wide)) } }
-                if r.trainOn { LabeledContent("Training days") { Text("\(r.train)").monospacedDigit() } }
-                if let d = r.dw {
-                    LabeledContent("Weight (weekly average)") { Text((d > 0 ? "+" : d < 0 ? "−" : "") + Fmt.weight(abs(d), unit: store.unit) + " " + store.unit).monospacedDigit() }
-                }
-            } footer: { Text("On target means within 10% of that day's calories.") }
-        }
-        .brandList()
-        .navigationTitle("Your week")
-        .navigationSubtitle(r.label)
-    }
-}
-
 struct AchievementsView: View {
     let ach: Achievements
     var body: some View {

@@ -11,6 +11,12 @@ struct SetpointWidgets: WidgetBundle {
         TodayWidget()
         WeightWidget()
         DayLiveActivity()
+        QuickLockWidget(action: .addFood)
+        QuickLockWidget(action: .scan)
+        QuickLockWidget(action: .weight)
+        AddFoodControl()
+        ScanControl()
+        WeightControl()
     }
 }
 

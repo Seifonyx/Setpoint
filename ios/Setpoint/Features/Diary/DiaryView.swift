@@ -87,15 +87,27 @@ struct DiaryView: View {
                 CopyDaySheet(items: job.items, from: day)
             }
             .sensoryFeedback(.selection, trigger: day)
-            .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day) }
+            .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day, startScan: job.scan) }
             .sheet(item: $openFood) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
             .onChange(of: store.request) { _, r in
-                if r == .addFood { day = Day.today; adding = AddJob(meal: mealNow); store.request = nil }
+                handle(r)
             }
-            .task { if store.request == .addFood { adding = AddJob(meal: mealNow); store.request = nil } }
+            .task { handle(store.request) }
             .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day); kinds = await store.engineRef.itemKinds(day) }
             .sheet(isPresented: $showScore) { if let sc = score { DayScoreSheet(score: sc) } }
             .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
+        }
+    }
+
+    /// Siri, a widget or a control asked for something: always on today.
+    private func handle(_ r: Store.AppRequest?) {
+        guard let r else { return }
+        store.request = nil
+        day = Day.today
+        switch r {
+        case .addFood: adding = AddJob(meal: mealNow)
+        case .scan: adding = AddJob(meal: mealNow, scan: true)
+        case .logWeight: weightSheet = true
         }
     }
 
@@ -147,7 +159,7 @@ struct DiaryView: View {
     private var subtitle: String { Day.date(day).formatted(.dateTime.day().month(.wide).year()) }
 }
 
-struct AddJob: Identifiable { let meal: String; var id: String { meal } }
+struct AddJob: Identifiable { let meal: String; var scan = false; var id: String { meal + (scan ? "|scan" : "") } }
 
 /// Wraps the foods being copied so a sheet can be shown for them.
 struct CopyJob: Identifiable {

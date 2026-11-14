@@ -36,7 +36,7 @@ final class Store {
     /// The Plan screens' numbers.
     private(set) var overview: Overview?
 
-    enum AppRequest: Equatable { case addFood, logWeight }
+    enum AppRequest: Equatable { case addFood, scan, logWeight }
 
     private struct Snapshot { var food: [String: [FoodItem]]; var entries: [WeighIn]; var water: [String: Double] }
 
@@ -195,6 +195,14 @@ final class Store {
             guard let self else { return }
             Task { await self.engine.undoTune(); await self.adoptEngineState() }
         }
+    }
+    /// Undo the last weekly target adjustment (from the Plan screen, any time until the next one).
+    func undoTargetChange() async {
+        await engine.undoTune()
+        await adoptEngineState()
+        await refreshOverview()
+        clearUndo()
+        changeKind = .edit
     }
     private static func tuneLabel(_ t: JSONValue) -> String? {
         if t["goal"]?.bool == true { return String(localized: "Goal reached! Your target is now maintenance") }
