@@ -79,7 +79,7 @@
           const seen = {}, out = s.meals.filter(function (m) { if (!m || typeof m.k !== 'string' || !MEAL_KEY.test(m.k) || seen[m.k] || typeof m.n !== 'string' || !m.n.trim()) return false; seen[m.k] = 1; return true; }).slice(0, 10).map(function (m) { return { k: m.k, n: m.n.trim().slice(0, 24) }; });
           return out.length ? out : null;
         })() : null,
-        highlights: Array.isArray(s.highlights) && s.highlights.length ? s.highlights.filter(function (k, i, a) { return typeof k === 'string' && /^[a-zA-Z0-9]{1,6}$/.test(k) && a.indexOf(k) === i; }).slice(0, 8) : null
+        highlights: Array.isArray(s.highlights) && s.highlights.length ? s.highlights.filter(function (k, i, a) { return typeof k === 'string' && /^[a-zA-Z0-9]{1,6}$/.test(k) && a.indexOf(k) === i; }).slice(0, 10) : null
       },
       profile: {
         sex: pick(pr.sex, ['female', 'male', 'other'], null),

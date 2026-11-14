@@ -278,6 +278,26 @@
             rec: pick(rec[n[0]]) || { goal: null, hi: null }, own: o == null ? null : (typeof o === 'number' ? { goal: o, hi: null } : { goal: o.goal === undefined ? null : o.goal, hi: o.hi === undefined ? null : o.hi }),
             use: pick(use[n[0]]) || { goal: null, hi: null } }; }) });
     },
+    // Foods richest in a nutrient, per serving or per 100 kcal: everyday foods plus ones you've logged or saved
+    // (the web app's own rules, so the list isn't organ meats and dried powders).
+    highIn: function (key, by, meal) {
+      if (!foodDB || !NUT[key]) return '[]';
+      var perKcal = by === 'kcal', res = [], mine = {}, t1 = dayNum(todayISO()), tg = nutTargets(todayISO())[key], goal = tg ? (tg.min || tg.max || null) : null;
+      for (var i = 0; i < 60; i++) eatenFor(isoFromDay(t1 - i)).forEach(function (it) { if (it.ref) mine[it.ref] = 1; });
+      state.favs.forEach(function (r) { mine[r] = 1; });
+      foodDB.list.forEach(function (f) {
+        if (!f.pop && !mine[f.id]) return;
+        var v100 = per100(f, key), kc = per100(f, 'kcal');
+        if (!v100 || v100 <= 0 || CAT_PENALTY[f.cat] >= 5 || f.cat === 'Spices and Herbs' || f.cat === 'Packaged foods' || /[A-Z]{3,}|powder|dry mix|dehydrated|freeze-dried|supplement|fortified/.test(f.name) ||
+          /mature seeds, raw|, crude|flour|\bmeal\b|\bbran\b|seaweed|, dry\b|uncooked|, unprepared/i.test(f.name)) return;
+        if (perKcal) { if (!kc || kc < 15) return; res.push({ f: f, v: v100 / kc * 100, sub: L('per 100 kcal') }); return; }
+        var sv = defaultServing(f), g = sv.qty * sv.unit.g;
+        if (g > 500 || (kc || 0) * g / 100 > 450) return;
+        res.push({ f: f, v: v100 * g / 100, sub: fmtAmt(sv.qty, sv.unit.label) });
+      });
+      res.sort(function (a, b) { return b.v - a.v || (b.f.pop || 0) - (a.f.pop || 0); });
+      return J(res.slice(0, 40).map(function (r) { return { hit: row(r.f, meal || 'snacks'), v: r.v, sub: r.sub, pct: goal ? Math.round(r.v / goal * 100) : null }; }));
+    },
     nutrients: function (d) {
       var nd = dayNutrients(d), tg = nutTargets(d);
       return J({ items: nd.items, kcal: nd.kcal, groups: NUT_GROUPS.map(function (g) { return { key: g[0], label: L(g[1]) }; }),

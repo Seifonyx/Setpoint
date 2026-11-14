@@ -167,10 +167,10 @@ struct TargetEditor: View {
     }
 }
 
-/// The nutrients on the Today page's second card (up to 8, as in your synced settings).
+/// The nutrients on the Today page's second card (up to 10, as in your synced settings).
 enum Highlights {
-    static let max = 8
-    static let defaults = ["fib", "fe", "ca", "k", "mg", "vD", "b12", "vC"]
+    static let max = 10
+    static let defaults = ["fib", "fe", "ca", "k", "mg", "vD", "b12", "vC", "zn", "na"]
     static let excluded: Set<String> = ["kcal", "p", "c", "f"]
     @MainActor static func keys(_ store: Store) -> [String] {
         let own = (store.root["settings"]?.object?["highlights"]?.array ?? []).compactMap(\.string).filter { !excluded.contains($0) }
@@ -186,7 +186,7 @@ enum Highlights {
     }
 }
 
-/// Pick what the Today page's nutrient card shows: tap to add or remove, up to 8.
+/// Pick what the Today page's nutrient card shows: tap to add or remove, up to 10.
 struct HighlightPicker: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss

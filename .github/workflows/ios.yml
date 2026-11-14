@@ -133,6 +133,8 @@ jobs:
           shot -tab you -open plan; sleep 3; xcrun simctl io "$UDID" screenshot out/plan-late-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open export; xcrun simctl io "$UDID" screenshot out/export-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open targets; xcrun simctl io "$UDID" screenshot out/targets-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -open nutrient; xcrun simctl io "$UDID" screenshot out/sources-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -open highin; sleep 2; xcrun simctl io "$UDID" screenshot out/highin-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open targets -AppleLanguages "(ar)"; xcrun simctl io "$UDID" screenshot out/targets-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -sheet food -open units; xcrun simctl io "$UDID" screenshot out/units-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab progress -AppleLanguages "(ar)"; xcrun simctl io "$UDID" screenshot out/progress-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true

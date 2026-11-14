@@ -13,6 +13,7 @@ struct DiaryView: View {
     @State private var score: DayScore?
     @State private var kinds: [String: String] = [:]
     @State private var showScore = false
+    @State private var nutrientRoute: NutrientRoute? = ["nutrient", "highin"].contains(UserDefaults.standard.string(forKey: "open") ?? "") ? .one("fe") : nil // build-server screenshots
     @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
 
@@ -32,7 +33,7 @@ struct DiaryView: View {
                     Section { RamadanBanner() }
                 }
                 Section {
-                    SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day))
+                    SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day)) { nutrientRoute = $0 }
                 }
                 Section {
                     HStack(spacing: 12) {
@@ -94,6 +95,12 @@ struct DiaryView: View {
             }
             .task { handle(store.request) }
             .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day); kinds = await store.engineRef.itemKinds(day) }
+            .navigationDestination(item: $nutrientRoute) { r in
+                switch r {
+                case .all: NutrientsView(day: day)
+                case .one(let k): NutrientSourcesView(key: k, day: day)
+                }
+            }
             .sheet(isPresented: $showScore) { if let sc = score { DayScoreSheet(score: sc) } }
             .task { let f = UserDefaults.standard.string(forKey: "sheet"); if f == "weight" { weightSheet = true } else if f == "add" { adding = AddJob(meal: "lunch") } } // build-server screenshots
         }
@@ -170,10 +177,14 @@ struct CopyJob: Identifiable {
 // MARK: - Summary
 
 /// The top of the Diary: swipe between the calorie dial and your vitamins and minerals.
+/// Where a tap on the vitamins card goes: everything, or one nutrient's sources.
+enum NutrientRoute: Hashable { case all, one(String) }
+
 struct SummaryPager: View {
     let day: String
     let totals: Totals
     let plan: DayPlan?
+    var openNutrient: (NutrientRoute) -> Void = { _ in }
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
     @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 300 // grows with the iPhone's text size
 
@@ -181,7 +192,7 @@ struct SummaryPager: View {
         VStack(spacing: 10) {
             TabView(selection: $page) {
                 SummaryCard(totals: totals, plan: plan).tag(0)
-                MicrosCard(day: day).tag(1)
+                MicrosCard(day: day, open: openNutrient).tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
             .frame(height: pagerHeight)
@@ -303,6 +314,7 @@ struct SummaryCard: View {
 struct MicrosCard: View {
     @Environment(Store.self) private var store
     let day: String
+    var open: (NutrientRoute) -> Void = { _ in }
     @State private var data: NutrientData?
     @State private var picking = false
 
@@ -314,15 +326,19 @@ struct MicrosCard: View {
                 Button("Edit") { picking = true }
                     .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).buttonStyle(.plain)
                     .padding(.trailing, 6)
-                NavigationLink { NutrientsView(day: day) } label: {
+                Button { open(.all) } label: {
                     HStack(spacing: 2) { Text("All"); Image(systemName: "chevron.right").font(.brand(.caption, .bold)) }
                         .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                 }
+                .buttonStyle(.plain)
             }
             if let d = data, d.items > 0 {
                 let rows = Highlights.keys(store).compactMap { k in d.rows.first { $0.key == k } }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 20) {
-                    ForEach(rows, id: \.key) { r in cell(r) }
+                    ForEach(rows, id: \.key) { r in
+                        // tap one: the foods it came from (and foods high in it)
+                        Button { open(.one(r.key)) } label: { cell(r).contentShape(Rectangle()) }.buttonStyle(.plain)
+                    }
                 }
             } else {
                 Spacer()

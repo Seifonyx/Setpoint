@@ -3101,6 +3101,16 @@
         }
       }
     },
+    "Everyday foods, plus ones you've logged or saved. Tap one to pick an amount.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلات يومية، وكمان اللي سجلتها أو حفظتها. اضغط على واحدة عشان تختار الكمية."
+          }
+        }
+      }
+    },
     "Everything": {
       "localizations": {
         "ar": {
@@ -3481,6 +3491,16 @@
         }
       }
     },
+    "Foods high in %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلات غنية بـ %@"
+          }
+        }
+      }
+    },
     "Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.": {
       "localizations": {
         "ar": {
@@ -3807,6 +3827,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الطول"
+          }
+        }
+      }
+    },
+    "High in %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "غني بـ %@"
           }
         }
       }
@@ -4951,6 +4981,26 @@
         }
       }
     },
+    "Most of it for the fewest calories.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكتر كمية بأقل سعرات."
+          }
+        }
+      }
+    },
+    "Most of it in one usual serving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكتر كمية في الحصة المعتادة."
+          }
+        }
+      }
+    },
     "Most recent": {
       "localizations": {
         "ar": {
@@ -5241,6 +5291,16 @@
         }
       }
     },
+    "No foods in the list have data for this.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش أكلات في القايمة عندها بيانات للعنصر ده."
+          }
+        }
+      }
+    },
     "No matches": {
       "localizations": {
         "ar": {
@@ -5467,6 +5527,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "لا شيء يتكرّر بعد"
+          }
+        }
+      }
+    },
+    "Nothing you logged this week has any of this.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة سجلتها الأسبوع ده فيها ده."
+          }
+        }
+      }
+    },
+    "Nothing you logged today has any of this yet.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة سجلتها النهارده فيها ده لسه."
           }
         }
       }
@@ -5921,6 +6001,16 @@
         }
       }
     },
+    "Per 100 kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لكل ١٠٠ سعرة"
+          }
+        }
+      }
+    },
     "Per serving": {
       "localizations": {
         "ar": {
@@ -6327,6 +6417,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الفرق"
+          }
+        }
+      }
+    },
+    "Rank by": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رتّب حسب"
           }
         }
       }
@@ -7741,6 +7841,16 @@
         }
       }
     },
+    "The richest everyday foods, per serving or per 100 kcal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أغنى الأكلات اليومية، لكل حصة أو لكل ١٠٠ سعرة"
+          }
+        }
+      }
+    },
     "Theme": {
       "localizations": {
         "ar": {
@@ -8797,6 +8907,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "متى"
+          }
+        }
+      }
+    },
+    "Where it came from this week": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جه منين الأسبوع ده"
+          }
+        }
+      }
+    },
+    "Where it came from today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جه منين النهارده"
           }
         }
       }

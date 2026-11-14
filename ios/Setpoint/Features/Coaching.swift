@@ -51,6 +51,7 @@ struct NutrientSourcesView: View {
     let day: String
     @State private var days = 1
     @State private var data: NutrientSources?
+    @State private var showHigh = UserDefaults.standard.string(forKey: "open") == "highin" // build-server screenshots
 
     var body: some View {
         List {
@@ -60,7 +61,7 @@ struct NutrientSourcesView: View {
             .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
             if let d = data {
                 Section {
-                    if d.list.isEmpty { Text("None of your logged foods have data for this.").foregroundStyle(.secondary) }
+                    if d.list.isEmpty { Text(days == 1 ? "Nothing you logged today has any of this yet." : "Nothing you logged this week has any of this.").foregroundStyle(.secondary) }
                     let top = d.list.first?.v ?? 1
                     ForEach(d.list.indices, id: \.self) { i in
                         let x = d.list[i]
@@ -78,12 +79,26 @@ struct NutrientSourcesView: View {
                         }
                         .padding(.vertical, 2)
                     }
-                } header: { Text("Top sources") }
+                } header: { Text(days == 1 ? "Where it came from today" : "Where it came from this week") }
+            }
+            // what to eat for more of it
+            Section {
+                NavigationLink { FoodsHighInView(key: key, label: data?.label ?? "", unit: data?.unit ?? "", day: day) } label: {
+                    HStack(spacing: 12) {
+                        Image(systemName: "arrow.up.forward.circle.fill").font(.title2).foregroundStyle(Brand.green)
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text("Foods high in \(data?.label ?? "")").font(.brand(.body, .semibold)).foregroundStyle(Brand.ink)
+                            Text("The richest everyday foods, per serving or per 100 kcal").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+                        }
+                    }
+                    .padding(.vertical, 4)
+                }
             }
         }
         .brandList()
         .navigationTitle(data?.label ?? "")
         .task(id: "\(days)|\(store.version)") { data = await store.engineRef.nutrientSources(key, day: day, days: days) }
+        .navigationDestination(isPresented: $showHigh) { FoodsHighInView(key: key, label: data?.label ?? "", unit: data?.unit ?? "", day: day) }
     }
     private func amount(_ v: Double, _ unit: String) -> String {
         (v >= 100 ? Int(v.rounded()).formatted() : v.formatted(.number.precision(.fractionLength(0...1)))) + " " + unit
@@ -192,5 +207,78 @@ extension CheckInView {
     /// Due when this week's check-in hasn't been opened yet (for the first 3 days of the week).
     @MainActor static var due: Bool {
         UserDefaults.standard.string(forKey: "checkInSeen") != CheckInView.weekKey && Day.number(Day.today) - Day.number(CheckInView.weekKey) < 3
+    }
+}
+
+/// The foods richest in a nutrient (everyday ones, plus anything you've logged or saved), per serving or per
+/// 100 kcal. Tap one to pick an amount and add it.
+struct FoodsHighInView: View {
+    @Environment(Store.self) private var store
+    let key: String
+    let label: String
+    let unit: String
+    let day: String
+    @State private var by = "serving"
+    @State private var rows: [HighInRow]?
+
+    var body: some View {
+        List {
+            Section {
+                Picker("Rank by", selection: $by) { Text("Per serving").tag("serving"); Text("Per 100 kcal").tag("kcal") }.pickerStyle(.segmented)
+            } footer: {
+                Text(by == "kcal" ? "Most of it for the fewest calories." : "Most of it in one usual serving.")
+            }
+            .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
+            if let rows {
+                Section {
+                    if rows.isEmpty { Text("No foods in the list have data for this.").foregroundStyle(.secondary) }
+                    ForEach(rows) { r in
+                        NavigationLink { AddFromList(foodID: r.hit.id, day: day) } label: { row(r) }
+                    }
+                } footer: { Text("Everyday foods, plus ones you've logged or saved. Tap one to pick an amount.") }
+            } else {
+                SkeletonRows(count: 6)
+            }
+        }
+        .brandList()
+        .navigationTitle(String(localized: "High in \(label)"))
+        .navigationBarTitleDisplayMode(.inline)
+        .task(id: "\(by)|\(store.foodsReady)") { rows = await store.engineRef.highIn(key, by: by, meal: Self.mealNow(store)) }
+    }
+
+    private func row(_ r: HighInRow) -> some View {
+        HStack(spacing: 12) {
+            FoodIcon(kind: r.hit.kind ?? "food", size: 32, name: r.hit.name)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(r.hit.name).font(.brand(.body)).lineLimit(2)
+                Text(r.sub).font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+            }
+            Spacer(minLength: 8)
+            VStack(alignment: .trailing, spacing: 1) {
+                Text(Self.amount(r.v, unit)).font(Brand.num(18, .semibold)).monospacedDigit()
+                if let p = r.pct { Text("\(Int(p))%").font(.brand(.caption, .semibold)).foregroundStyle(p >= 100 ? Brand.green : Brand.ink2).monospacedDigit() }
+            }
+        }
+        .accessibilityElement(children: .combine)
+    }
+    static func amount(_ v: Double, _ unit: String) -> String {
+        (v >= 100 ? Int(v.rounded()).formatted() : v.formatted(.number.precision(.fractionLength(0...1)))) + " " + unit
+    }
+    /// The meal for the time of day (your own sections: the first one).
+    @MainActor static func mealNow(_ store: Store) -> String {
+        let h = Calendar.current.component(.hour, from: Date()), keys = store.meals.map(\.key)
+        let want = h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"
+        return keys.contains(want) ? want : keys.first ?? "snacks"
+    }
+}
+
+/// A food picked from a list outside Add food: choose the amount, add it, and come back.
+struct AddFromList: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let foodID: String
+    let day: String
+    var body: some View {
+        FoodAmountView(foodID: foodID, meal: FoodsHighInView.mealNow(store), day: day, done: { dismiss() })
     }
 }
