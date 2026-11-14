@@ -61,18 +61,34 @@
   // Units as shown: readable names (no "(6\" to 6-7/8\" long)" or "(yield from 1 lb ...)"), sizes from small to large,
   // then the rest in the food's own order, then weights. The label stays the key, so logged foods keep working.
   var SIZE_RANK = { 'extra small': 1, small: 2, medium: 3, large: 4, 'extra large': 5, jumbo: 6 };
+  // Tidy a unit's name without losing what it says: `small (6" to 6-7/8" long)` → `small (6" to 6⅞")`,
+  // `large (3-1/4" dia)` → `large (3¼" across)`, `cup (4.86 large eggs)` → `cup (about 5 large eggs)`.
+  var FRAC = { '1/2': '½', '1/4': '¼', '3/4': '¾', '1/8': '⅛', '3/8': '⅜', '5/8': '⅝', '7/8': '⅞', '1/3': '⅓', '2/3': '⅔' };
   function unitText(l) {
     if (l === 'NLEA serving') return 'serving (label)';
-    var t = String(l).replace(/\s*\((?=[^)]*[\d"])[^)]*\)/g, '').replace(/^unit$/, 'piece').replace(/, bone and skin removed$/, '').trim();
+    var t = String(l)
+      .replace(/(\d+)-(\d\/\d)/g, function (a, w, f) { return FRAC[f] ? w + FRAC[f] : a; })
+      .replace(/(^|[\s(])(\d\/\d)(?=["\s)])/g, function (a, pre, f) { return FRAC[f] ? pre + FRAC[f] : a; })
+      .replace(/\(less than ([^)]*?)(?: long)?\)/, '(under $1)')
+      .replace(/(\d+)-(\d+\/\d+)/g, '$1 $2').replace(/\s+long\)/g, ')').replace(/" dia\b/g, '" across')
+      .replace(/\((\d+\.\d+) /, function (a, n) { return '(about ' + Math.round(parseFloat(n)) + ' '; })
+      .replace(/^unit\b/, 'piece').replace(/yield from /, 'from ').replace(/ready-to-cook /, 'raw ')
+      .trim();
     return t || l;
   }
+  // In Arabic: the size word translated, its description (6" to 6⅞") kept as it is.
+  function unitL(t) {
+    var i = t.indexOf(' ('); if (i < 0) return L(t);
+    var base = t.slice(0, i), tr = L(base);
+    return (tr !== base ? tr : base) + t.slice(i);
+  }
   function unitRows(us) {
-    var rows = us.map(function (u, i) { var t = unitText(u.label); return { label: u.label, g: u.g, text: t, mine: !!u.mine, i: i, size: SIZE_RANK[t.toLowerCase()] || 0 }; });
+    var rows = us.map(function (u, i) { var t = unitText(u.label); return { label: u.label, g: u.g, text: t, mine: !!u.mine, i: i, size: SIZE_RANK[t.toLowerCase().replace(/\s*\(.*$/, '')] || 0 }; });
     rows.forEach(function (r) { if (rows.some(function (o) { return o !== r && o.text === r.text; })) r.text = r.label; }); // keep both if cleaning made them the same
     var weights = ['g', 'oz', 'kg', 'lb'];
     var group = function (r) { return weights.indexOf(r.label) >= 0 ? 3 : r.size ? 1 : 2; };
     rows.sort(function (a, b) { return group(a) - group(b) || (a.size - b.size) || (group(a) === 3 ? weights.indexOf(a.label) - weights.indexOf(b.label) : a.i - b.i); });
-    return rows.map(function (r) { return { label: r.label, g: Math.round(r.g * 10) / 10, text: L(r.text), mine: r.mine, weight: weights.indexOf(r.label) >= 0 || r.label === 'ml' }; });
+    return rows.map(function (r) { return { label: r.label, g: Math.round(r.g * 10) / 10, text: unitL(r.text), mine: r.mine, weight: weights.indexOf(r.label) >= 0 || r.label === 'ml' }; });
   }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
