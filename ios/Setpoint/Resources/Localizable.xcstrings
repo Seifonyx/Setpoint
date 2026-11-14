@@ -731,6 +731,16 @@
         }
       }
     },
+    "A balanced day for your targets, built from what you eat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "يوم متوازن يناسب أهدافك، من الأطعمة التي تأكلها"
+          }
+        }
+      }
+    },
     "A balanced day for your targets, rich in vitamins, built from what you eat": {
       "localizations": {
         "ar": {

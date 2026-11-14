@@ -119,7 +119,7 @@ struct FoodDetailSheet: View {
                 if byFood {
                     TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         .font(Brand.num(22, .semibold)).monospacedDigit().frame(width: 76)
-                        .padding(.horizontal, 8).padding(.vertical, 4).background(Brand.card2, in: .rect(cornerRadius: 10))
+                        .padding(.horizontal, 8).padding(.vertical, 4).background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
                     Menu {
                         Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
                     } label: {
@@ -486,19 +486,12 @@ struct PartAmountSheet: View {
     }
 }
 
-/// A soft, blurred wash of the food's colour behind its name, fading into the card.
+/// A flat, faint tint of the food's colour behind its name: no blur, no glow.
 struct Wash: View {
     let color: Color
     @Environment(\.colorScheme) private var scheme
     var body: some View {
-        ZStack {
-            Brand.card
-            Circle().fill(color.opacity(scheme == .dark ? 0.42 : 0.38)).frame(width: 240, height: 240).blur(radius: 44)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topLeading).offset(x: -70, y: -90)
-            Circle().fill(Brand.amber.opacity(scheme == .dark ? 0.18 : 0.16)).frame(width: 180, height: 180).blur(radius: 44)
-                .frame(maxWidth: .infinity, maxHeight: .infinity, alignment: .topTrailing).offset(x: 40, y: -70)
-        }
-        .clipped()
-        .overlay(TopSheen())
+        ZStack { Brand.card; color.opacity(scheme == .dark ? 0.14 : 0.10) }
+            .overlay(TopSheen())
     }
 }

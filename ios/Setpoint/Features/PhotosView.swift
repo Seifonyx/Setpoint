@@ -107,7 +107,7 @@ struct PhotosSection: View {
                                 Text(Day.date(p.date), format: .dateTime.month(.abbreviated).day()).font(.brand(.caption2, .semibold))
                                     .padding(.horizontal, 6).padding(.vertical, 3).background(.ultraThinMaterial, in: Capsule()).padding(4)
                             }
-                            .frame(height: 130).frame(maxWidth: .infinity).clipShape(RoundedRectangle(cornerRadius: 10))
+                            .frame(height: 130).frame(maxWidth: .infinity).clipShape(RoundedRectangle(cornerRadius: Radius.chip))
                         }
                         .buttonStyle(.plain)
                     }
@@ -176,7 +176,7 @@ private struct CompareView: View {
     private func side(_ sel: Binding<String>) -> some View {
         VStack {
             if let p = photos.first(where: { $0.id == sel.wrappedValue }), let ui = PhotoLibrary.image(p.full) {
-                Image(uiImage: ui).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: 10))
+                Image(uiImage: ui).resizable().scaledToFit().clipShape(RoundedRectangle(cornerRadius: Radius.chip))
             }
             Picker("Photo", selection: sel) {
                 ForEach(photos) { p in Text(Day.date(p.date), format: .dateTime.month(.abbreviated).day().year()).tag(p.id) }

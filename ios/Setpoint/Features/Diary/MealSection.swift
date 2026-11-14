@@ -25,9 +25,6 @@ struct MealSection: View {
 
     /// Each meal has its own colour, as a thin edge down the side of its card: easy to tell apart at a glance.
     private var accent: Color { Brand.meal(meal.key) }
-    private func edge(_ fill: Color) -> some View {
-        ZStack(alignment: .leading) { fill; Rectangle().fill(accent).frame(width: 4) }
-    }
     private var foods: [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == meal.key && !$0.isDailyTotal } }
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
 
@@ -41,12 +38,14 @@ struct MealSection: View {
                 }
                 .buttonStyle(.plain)
                 .accessibilityLabel(Text("Add food to \(meal.name)"))
-                Text(meal.name).font(Brand.display(17, .bold)).foregroundStyle(Brand.ink)
+                HStack(spacing: 7) {
+                    Circle().fill(accent).frame(width: 7, height: 7).accessibilityHidden(true) // each meal's own colour
+                    Text(meal.name).font(Brand.display(17, .bold)).foregroundStyle(Brand.ink)
+                }
                 Image(systemName: "chevron.down").font(.brand(.caption2, .bold)).foregroundStyle(Brand.ink2)
                     .rotationEffect(.degrees(expanded ? 0 : -90))
                 if !expanded && !foods.isEmpty {
-                    Text("\(foods.count)").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
-                        .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.card2, in: Capsule())
+                    Text("\(foods.count)").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 }
                 Spacer()
                 if !counted.isEmpty {
@@ -72,12 +71,12 @@ struct MealSection: View {
             .accessibilityHint(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
             .padding(.vertical, 0)
             .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
-            .listRowBackground(edge(Brand.card).overlay(TopSheen()))
+            .listRowBackground(Brand.card.overlay(TopSheen()))
             if expanded {
             ForEach(foods) { food in
                 Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
                     .buttonStyle(.plain)
-                .listRowBackground(edge(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
+                .listRowBackground(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card)
                 .animation(.easeOut(duration: 0.9), value: store.justAdded.contains(food.id))
                     .swipeActions(edge: .trailing) {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }

@@ -200,8 +200,7 @@ struct DayPlannerView: View {
                         VStack(alignment: .leading, spacing: 1) {
                             HStack(spacing: 5) {
                                 Text(it.name).font(.brand(.body)).lineLimit(1)
-                                if it.usual { Text("Usual").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.green)
-                                    .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.greenSoft, in: Capsule()) }
+                                if it.usual { Text("Usual").font(.brand(.caption)).foregroundStyle(Brand.ink2) }
                             }
                             Text(it.amt).font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                         }

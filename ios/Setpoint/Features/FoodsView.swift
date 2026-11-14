@@ -275,24 +275,20 @@ struct FoodsView: View {
     @State private var shotNewFood = false   // build-server screenshots
     @State private var shotNewMeal = false
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
-    private let cols = [GridItem(.flexible(), spacing: 12), GridItem(.flexible(), spacing: 12)]
 
     var body: some View {
         NavigationStack {
-            ScrollView {
-                VStack(spacing: 12) {
-                    LazyVGrid(columns: cols, spacing: 12) {
-                        tile("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
-                        tile("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
-                        tile("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
-                        tile("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
-                        tile("Saved days", "calendar.badge.checkmark", Brand.blue, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
-                    }
-                    planCard
+            List {
+                Section {
+                    row("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
+                    row("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
+                    row("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
+                    row("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
+                    row("Saved days", "calendar.badge.checkmark", Brand.blue, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
                 }
-                .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 24)
+                Section { planRow }
             }
-            .paperPage()
+            .brandList()
             .navigationTitle("Foods")
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
@@ -307,41 +303,24 @@ struct FoodsView: View {
         }
     }
 
-    /// The day planner, up top: it's the one thing here that does the work for you.
-    private var planCard: some View {
+    /// The day planner, last: one row with a line saying what it does.
+    private var planRow: some View {
         NavigationLink { DayPlannerView() } label: {
-            HStack(spacing: 14) {
-                ZStack {
-                    RoundedRectangle(cornerRadius: 16).fill(Brand.green)
-                    Image(systemName: "wand.and.sparkles").font(.title2.weight(.semibold)).foregroundStyle(.white)
+            Label {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Plan my day").foregroundStyle(Brand.ink)
+                    Text("A balanced day for your targets, built from what you eat").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                 }
-                .frame(width: 56, height: 56)
-                VStack(alignment: .leading, spacing: 3) {
-                    Text("Plan my day").font(Brand.display(20, .bold))
-                    Text("A balanced day for your targets, rich in vitamins, built from what you eat").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                        .fixedSize(horizontal: false, vertical: true)
-                }
-                Spacer(minLength: 0)
-                Image(systemName: "chevron.forward").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.ink2)
+            } icon: {
+                Image(systemName: "calendar.day.timeline.left").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
+                    .frame(width: 28, height: 28).background(Brand.green, in: .rect(cornerRadius: Radius.icon))
             }
-            .frame(maxWidth: .infinity, alignment: .leading)
-            .brandCard()
         }
-        .buttonStyle(.plain)
     }
 
-    private func tile<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {
+    private func row<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {
         NavigationLink { dest() } label: {
-            VStack(alignment: .leading, spacing: 10) {
-                Image(systemName: icon).font(.title3.weight(.semibold)).foregroundStyle(.white)
-                    .frame(width: 44, height: 44).background(color, in: .rect(cornerRadius: 13))
-                Spacer(minLength: 6)
-                Text(title).font(Brand.display(18, .bold)).lineLimit(1).minimumScaleFactor(0.8)
-                Text(n == 1 ? String(localized: "1 item") : String(localized: "\(n) items")).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-            }
-            .frame(maxWidth: .infinity, minHeight: 132, alignment: .topLeading)
-            .brandCard()
+            LabeledContent { Text("\(n)").monospacedDigit().foregroundStyle(Brand.ink2) } label: { TileLabel(title, icon, color) }
         }
-        .buttonStyle(.plain)
     }
 }

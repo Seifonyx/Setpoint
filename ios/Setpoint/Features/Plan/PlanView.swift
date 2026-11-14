@@ -183,7 +183,7 @@ struct PlanView: View {
     private func row(_ title: LocalizedStringKey, _ sub: String, _ icon: String, _ color: Color) -> some View {
         HStack(spacing: 12) {
             Image(systemName: icon).font(.system(size: 15, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 32, height: 32).background(color, in: .rect(cornerRadius: 9))
+                .frame(width: 32, height: 32).background(color, in: .rect(cornerRadius: Radius.icon))
             VStack(alignment: .leading, spacing: 2) {
                 Text(title).font(.brand(.body, .semibold))
                 if !sub.isEmpty { Text(sub).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }

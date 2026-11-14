@@ -3,7 +3,7 @@ import SwiftUI
 /// One empty state for the whole app: an icon in a soft circle, a title, a line of help and (maybe) one action.
 struct EmptyState: View {
     var art: EmptyArt? = nil
-    var icon: String = "sparkles"
+    var icon: String = "tray"
     let title: LocalizedStringKey
     let message: LocalizedStringKey
     var color: Color = Brand.green
@@ -39,7 +39,7 @@ struct SkeletonRows: View {
         VStack(spacing: 16) {
             ForEach(0..<count, id: \.self) { i in
                 HStack(spacing: 12) {
-                    RoundedRectangle(cornerRadius: 10).fill(Brand.card2).frame(width: 38, height: 38)
+                    RoundedRectangle(cornerRadius: Radius.chip).fill(Brand.card2).frame(width: 38, height: 38)
                     VStack(alignment: .leading, spacing: 7) {
                         Capsule().fill(Brand.card2).frame(width: [170, 130, 190, 150][i % 4], height: 11)
                         Capsule().fill(Brand.card2.opacity(0.7)).frame(width: [90, 110, 70, 100][i % 4], height: 9)
@@ -178,7 +178,7 @@ struct NumberField: View {
                 .font(Brand.num(big ? 22 : 18, .semibold)).monospacedDigit()
                 .padding(.horizontal, 10).padding(.vertical, big ? 7 : 5)
                 .frame(width: big ? 110 : 92)
-                .background(Brand.card2, in: .rect(cornerRadius: 10))
+                .background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
             Text(unit ?? "").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).frame(width: 40, alignment: .leading)
         }
     }
@@ -195,7 +195,7 @@ struct WordsField: View {
             TextField(placeholder, text: $text)
                 .font(.brand(.body))
                 .padding(.horizontal, 12).padding(.vertical, 10)
-                .background(Brand.card2, in: .rect(cornerRadius: 10))
+                .background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
         }
         .padding(.vertical, 2)
     }

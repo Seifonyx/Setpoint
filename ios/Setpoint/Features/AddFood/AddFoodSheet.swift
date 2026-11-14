@@ -198,7 +198,7 @@ struct AddFoodSheet: View {
             Text(barTitle).font(.brand(.subheadline, .medium)).opacity(barCount == 0 ? 0 : 1).foregroundStyle(Brand.ink2).monospacedDigit().contentTransition(.numericText())
             Spacer()
             if !query.isEmpty {
-                FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "sparkle.magnifyingglass"), Self.recent, Self.frequentOpt])
+                FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "text.magnifyingglass"), Self.recent, Self.frequentOpt])
             } else {
                 switch tab {
                 case .all:
@@ -355,7 +355,7 @@ struct AddFoodSheet: View {
                 Menu {
                     Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
                     Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
-                    if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "sparkles") { describing = true } }
+                    if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "text.bubble") { describing = true } }
                     Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
                     Button("New food", systemImage: "carrot") { creating = "" }
                     Divider()
@@ -480,12 +480,12 @@ struct FoodHitRow: View {
                 // "Chicken breast" in bold, "baked, no skin…" under it: quick to scan, nothing hidden
                 HStack(spacing: 5) {
                     Text(head).lineLimit(1).font(.brand(.body, .semibold))
-                    if hit.verified == true { Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Verified")) }
+                    if hit.verified == true { Image(systemName: "checkmark.seal.fill").font(.caption2).foregroundStyle(Brand.ink2.opacity(0.7)).accessibilityLabel(Text("Verified")) }
                     if hit.fav == true { Image(systemName: "star.fill").font(.caption2).foregroundStyle(Brand.amber) }
                 }
                 if let rest { Text(rest).font(.brand(.footnote)).foregroundStyle(Brand.ink2).lineLimit(1) }
                 HStack(spacing: 6) {
-                    if let badge { Text(badge).font(.brand(.caption2, .semibold)).padding(.horizontal, 6).padding(.vertical, 2).background(Brand.card2, in: Capsule()).foregroundStyle(Brand.ink2) }
+                    if let badge { Text(badge).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2); Text("·").foregroundStyle(Brand.ink2) }
                     Text(detail).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(1)
                 }
             }
@@ -585,7 +585,7 @@ struct FilterPill: View {
                 Image(systemName: "arrow.up.arrow.down").font(.caption.weight(.semibold))
                 Text(options.first { $0.0 == sort }?.1 ?? options[0].1).font(.brand(.subheadline, .semibold)).lineLimit(1)
                 if verified?.wrappedValue == true {
-                    Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(.blue).accessibilityLabel(Text("Verified only"))
+                    Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(Brand.ink2).accessibilityLabel(Text("Verified only"))
                 }
                 Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
             }

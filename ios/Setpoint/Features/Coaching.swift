@@ -199,7 +199,7 @@ struct CheckInBanner: View {
         if seen != CheckInView.weekKey {
             NavigationLink { CheckInView() } label: {
                 HStack(spacing: 10) {
-                    Image(systemName: "sparkles").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.green)
+                    Image(systemName: "calendar.badge.clock").font(.subheadline.weight(.semibold)).foregroundStyle(Brand.green)
                         .frame(width: 30, height: 30).background(Brand.greenSoft, in: Circle())
                     Text("Your week is ready").font(.brand(.subheadline, .semibold))
                     Spacer(minLength: 0)

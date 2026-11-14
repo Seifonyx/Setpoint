@@ -101,7 +101,7 @@ struct ProgressScreen: View {
             }
         }
         if (data?.points.count ?? 0) >= 5 {
-            Section { NavigationLink { InsightsView() } label: { Label("Weight factors", systemImage: "sparkles") } }
+            Section { NavigationLink { InsightsView() } label: { Label("Weight factors", systemImage: "chart.dots.scatter") } }
         }
         if (data?.points.count ?? 0) >= 2 || !(store.root["phases"]?.array ?? []).isEmpty { PhasesSection() }
         if let d = data, !d.points.isEmpty {
@@ -156,8 +156,6 @@ struct ProgressScreen: View {
             if let last = pts.last {
                 PointMark(x: .value("Day", Day.date(last.date), unit: .day), y: .value("Trend", disp(last.trend)))
                     .symbolSize(110).foregroundStyle(Brand.amber)
-                PointMark(x: .value("Day", Day.date(last.date), unit: .day), y: .value("Trend", disp(last.trend)))
-                    .symbolSize(360).foregroundStyle(Brand.amber.opacity(0.22))
             }
             if let sel = nearest(pts) {
                 RuleMark(x: .value("Day", Day.date(sel.date), unit: .day))
@@ -170,7 +168,7 @@ struct ProgressScreen: View {
                             Text("Trend \(Fmt.weight(sel.trend, unit: unit))").font(.brand(.caption2)).foregroundStyle(Brand.green).monospacedDigit()
                         }
                         .padding(.horizontal, 10).padding(.vertical, 6)
-                        .background(Brand.card2, in: .rect(cornerRadius: 12))
+                        .background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
                     }
                 PointMark(x: .value("Day", Day.date(sel.date), unit: .day), y: .value("Weight", disp(sel.kg)))
                     .symbolSize(90).foregroundStyle(Brand.ink)
@@ -240,8 +238,6 @@ struct ProgressScreen: View {
     private func deltaChip(_ d: Double) -> some View {
         Text(abs(disp(d)) < 0.05 ? String(localized: "Steady") : "\(deltaText(d)) \(NSLocalizedString(unit, comment: ""))")
             .font(.brand(.subheadline, .semibold)).monospacedDigit()
-            .padding(.horizontal, 10).padding(.vertical, 4)
-            .background(Capsule().fill(good(d) ? Brand.greenSoft : Brand.card2))
             .foregroundStyle(good(d) ? Brand.green : Brand.ink2)
     }
 

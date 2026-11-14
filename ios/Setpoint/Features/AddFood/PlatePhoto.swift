@@ -64,10 +64,10 @@ struct PlateSheet: View {
                 SwiftUI.Section {
                     Image(uiImage: image).resizable().scaledToFill()
                         .frame(height: 190).frame(maxWidth: .infinity).clipped()
-                        .clipShape(.rect(cornerRadius: 22))
+                        .clipShape(.rect(cornerRadius: Radius.card))
                         .overlay(alignment: .bottomLeading) {
                             if reading {
-                                Label("Looking at your plate…", systemImage: "sparkle.magnifyingglass").font(.brand(.subheadline, .semibold))
+                                Label("Looking at your plate…", systemImage: "camera.viewfinder").font(.brand(.subheadline, .semibold))
                                     .padding(.horizontal, 12).padding(.vertical, 7).background(.ultraThinMaterial, in: Capsule()).padding(10)
                             }
                         }
@@ -114,7 +114,7 @@ struct PlateSheet: View {
                         TextField("Something missing? Add it", text: $search).submitLabel(.search).onSubmit { Task { await addSearch() } }
                     }
                     if let describe {
-                        Button { dismiss(); describe() } label: { Label("Describe it instead", systemImage: "sparkles") }
+                        Button { dismiss(); describe() } label: { Label("Describe it instead", systemImage: "text.bubble") }
                     }
                 }
             }

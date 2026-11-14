@@ -40,7 +40,7 @@ struct DescribeMealSheet: View {
                     TextField("2 eggs, a slice of toast and a coffee with milk", text: $text, axis: .vertical)
                         .lineLimit(2...5).focused($focused).font(.brand(.body))
                     Button { Task { await parse() } } label: {
-                        HStack { if working { ProgressView() } else { Image(systemName: "sparkles") }; Text("Find these foods") }
+                        HStack { if working { ProgressView() } else { Image(systemName: "magnifyingglass") }; Text("Find these foods") }
                             .font(.brand(.body, .semibold))
                     }
                     .disabled(text.trimmingCharacters(in: .whitespaces).isEmpty || working)

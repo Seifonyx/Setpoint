@@ -65,10 +65,10 @@ struct WeekStory: View {
         }
     }
 
-    private var background: LinearGradient {
+    private var background: Color {
         let pairs: [(UInt32, UInt32)] = [(0x0F5C45, 0x0A2E24), (0x8A4E12, 0x3B2208), (0x8E3A26, 0x3A160E), (0x2C5F7A, 0x10273A), (0x0F5C45, 0x16302A), (0x3F4E7A, 0x171D33), (0x1E1A14, 0x0F5C45)]
         let p = pairs[min(page, pairs.count - 1)]
-        return LinearGradient(colors: [Color(Brand.rgb(p.0)), Color(Brand.rgb(p.1))], startPoint: .topLeading, endPoint: .bottomTrailing)
+        return Color(Brand.rgb(p.0)) // one flat colour a card: no gradients
     }
 
     @ViewBuilder private func card(_ i: Int, _ r: WeekReview) -> some View {
@@ -85,8 +85,7 @@ struct WeekStory: View {
                 big(Fmt.kcal(r.kcal))
                 line(r.tg.map { String(localized: "a day on average, against a target of \(Fmt.kcal($0)).") } ?? String(localized: "a day on average."))
                 if r.n >= 5 && r.onTarget == r.n {
-                    pill("Every day on target", "sparkles")
-                        .phaseAnimator([false, true]) { v, on in v.scaleEffect(on ? 1.06 : 1).shadow(color: .white.opacity(on ? 0.5 : 0), radius: on ? 12 : 0) } animation: { _ in .easeInOut(duration: 1.1) }
+                    pill("Every day on target", "checkmark.circle.fill")
                 } else if r.n > 0 { pill("On target \(r.onTarget) of \(r.n) days", "target") }
             case 2:
                 eyebrow(String(localized: "Protein"))
@@ -117,7 +116,7 @@ struct WeekStory: View {
                 if let t = store.overview?.plan?.target { big("\(Fmt.kcal((t / 10).rounded() * 10)) kcal") }
                 line(store.overview?.tuneWhy.map { Bundle.main.localizedString(forKey: $0, value: nil, table: nil) } ?? String(localized: "Your target stays the same: it still fits how your weight is moving."))
                 Button { dismiss() } label: {
-                    Text("Let's go").font(.brand(.headline)).foregroundStyle(Brand.green).frame(maxWidth: .infinity, minHeight: 50)
+                    Text("Done").font(.brand(.headline)).foregroundStyle(Brand.green).frame(maxWidth: .infinity, minHeight: 50)
                         .background(.white, in: Capsule())
                 }
                 .padding(.top, 8)
@@ -128,7 +127,7 @@ struct WeekStory: View {
     }
 
     private func eyebrow(_ t: String) -> some View {
-        Text(t).font(.brand(.subheadline, .bold)).textCase(.uppercase).tracking(1.6).opacity(0.8)
+        Text(t).font(.brand(.headline)).opacity(0.75)
     }
     private func big(_ t: String) -> some View {
         Text(t).font(Brand.display(56, .heavy)).lineLimit(2).minimumScaleFactor(0.5).fixedSize(horizontal: false, vertical: true)
@@ -137,8 +136,7 @@ struct WeekStory: View {
         Text(t).font(.brand(.title3, .medium)).opacity(0.92).fixedSize(horizontal: false, vertical: true)
     }
     private func pill(_ t: LocalizedStringKey, _ icon: String) -> some View {
-        Label(t, systemImage: icon).font(.brand(.subheadline, .semibold))
-            .padding(.horizontal, 14).padding(.vertical, 8).background(.white.opacity(0.18), in: Capsule())
+        Label(t, systemImage: icon).font(.brand(.body, .semibold)).opacity(0.9)
     }
     private var trendText: String {
         guard let d = trend else { return "—" }

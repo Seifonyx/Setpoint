@@ -53,8 +53,7 @@ struct YouView: View {
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
                             if CheckInBanner.due && store.entries.count >= 3 {
-                                Text("New").font(.brand(.caption, .bold)).foregroundStyle(Brand.onGreen)
-                                    .padding(.horizontal, 8).padding(.vertical, 2).background(Brand.green, in: Capsule())
+                                Text("New").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                             }
                         } label: { TileLabel("Weekly check-in", "chart.line.uptrend.xyaxis", Brand.amber) }
                     }
@@ -118,7 +117,7 @@ struct TileLabel: View {
             Text(title).foregroundStyle(Brand.ink)
         } icon: {
             Image(systemName: icon).font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
-                .frame(width: 28, height: 28).background(color, in: .rect(cornerRadius: 8))
+                .frame(width: 28, height: 28).background(color, in: .rect(cornerRadius: Radius.icon))
         }
     }
 }

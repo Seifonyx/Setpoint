@@ -91,7 +91,8 @@ enum Space {
     static let xs: CGFloat = 4, s: CGFloat = 8, m: CGFloat = 12, l: CGFloat = 16, xl: CGFloat = 24, xxl: CGFloat = 32
 }
 enum Radius {
-    static let card: CGFloat = 24, tile: CGFloat = 18, chip: CGFloat = 12
+    /// Three corner sizes, nothing in between: cards, inset pieces (chips, wells, photos), and the small icon squares.
+    static let card: CGFloat = 24, tile: CGFloat = 18, chip: CGFloat = 12, icon: CGFloat = 8
 }
 enum Motion {
     static let snappy = Animation.snappy(duration: 0.3)
@@ -109,7 +110,7 @@ struct PaperBackground: View {
                 Brand.bg
                 LinearGradient(colors: [tint(ctx.date), .clear], startPoint: .top, endPoint: .center)
                 Image("Grain").resizable(resizingMode: .tile)
-                    .opacity(scheme == .dark ? 0.035 : 0.05)
+                    .opacity(scheme == .dark ? 0.02 : 0.028)
                     .blendMode(scheme == .dark ? .screen : .multiply)
             }
         }

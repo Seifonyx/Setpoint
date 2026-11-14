@@ -146,7 +146,7 @@ struct DeviceSettingsView: View {
                 if weigh { DatePicker("Time", selection: time($weighTime), displayedComponents: .hourAndMinute) }
                 Toggle(isOn: $foodOn) { TileLabel("Food log reminder", "fork.knife", Brand.amber) }
                 if foodOn { DatePicker("Time", selection: time($foodTime), displayedComponents: .hourAndMinute) }
-                Toggle(isOn: $weekReady) { TileLabel("Your week is ready", "sparkles", Brand.green) }
+                Toggle(isOn: $weekReady) { TileLabel("Your week is ready", "calendar.badge.clock", Brand.green) }
             } header: { Text("Reminders") } footer: {
                 if denied { Text("Notifications are off for Setpoint. Turn them on in the Settings app.").foregroundStyle(Brand.danger) }
             }

@@ -234,8 +234,8 @@ struct SummaryCard: View {
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
         .overlay(alignment: .top) {
             if let c = cheer {
-                Label(c, systemImage: "sparkles").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
-                    .padding(.horizontal, 14).padding(.vertical, 8).background(Brand.greenSoft, in: Capsule())
+                Text(c).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
+                    .padding(.horizontal, 14).padding(.vertical, 8).background(Brand.card, in: .rect(cornerRadius: Radius.chip))
                     .transition(.scale.combined(with: .opacity))
             }
         }
@@ -243,7 +243,6 @@ struct SummaryCard: View {
             // the logging moment: what you just added floats up out of the dial
             if let g = gained {
                 Text("+\(Fmt.kcal(g)) kcal").font(Brand.num(26, .semibold)).foregroundStyle(Brand.green).monospacedDigit()
-                    .padding(.horizontal, 14).padding(.vertical, 6).background(Brand.greenSoft, in: Capsule())
                     .offset(y: rise ? -150 : -70).opacity(rise ? 0 : 1)
                     .allowsHitTesting(false)
             }
@@ -404,7 +403,7 @@ struct WeightTile: View {
             }
             .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
             .padding(12)
-            .background(Brand.card, in: .rect(cornerRadius: 22))
+            .background(Brand.card, in: .rect(cornerRadius: Radius.card))
         }
         .buttonStyle(.plain)
     }
@@ -457,8 +456,8 @@ struct WaterTile: View {
         }
         .frame(maxWidth: .infinity, minHeight: 74, alignment: .topLeading)
         .padding(12)
-        .background(Brand.card, in: .rect(cornerRadius: 22))
-        .contentShape(.rect(cornerRadius: 22))
+        .background(Brand.card, in: .rect(cornerRadius: Radius.card))
+        .contentShape(.rect(cornerRadius: Radius.card))
         .onTapGesture(perform: open) // the tile opens Water; its + adds a glass (a button inside a button would swallow taps)
         .accessibilityAddTraits(.isButton)
         .sensoryFeedback(.increase, trigger: ml)

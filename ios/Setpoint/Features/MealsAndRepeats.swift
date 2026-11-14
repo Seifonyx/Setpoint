@@ -180,8 +180,7 @@ struct RepeatingView: View {
                     HStack(spacing: 6) {
                         Text(amount + (r["time"]?.string.map { " · " + $0 } ?? "")).font(.brand(.footnote)).foregroundStyle(Brand.ink2)
                         if paused {
-                            Text("Paused").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.amber)
-                                .padding(.horizontal, 6).padding(.vertical, 1).background(Brand.amber.opacity(0.15), in: Capsule())
+                            Text("Paused").font(.brand(.caption, .semibold)).foregroundStyle(Brand.amber)
                         }
                     }
                     // the days it runs, as a row of dots in your week's order
