@@ -831,6 +831,26 @@
         }
       }
     },
+    "A meal goes into your diary as each of its foods, to change one by one.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تدخل الوجبة إلى يومياتك كل طعام على حدة، لتغيّرها واحدًا واحدًا."
+          }
+        }
+      }
+    },
+    "A meal goes into your diary as one entry. Tap it to see and change what's in it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تدخل الوجبة إلى يومياتك كإدخال واحد. اضغط عليها لترى ما فيها وتغيّره."
+          }
+        }
+      }
+    },
     "A new day": {
       "localizations": {
         "ar": {
@@ -4156,7 +4176,7 @@
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "سجّل الوجبات كأطعمة منفصلة"
+            "value": "تسجيل الوجبات كأطعمة منفصلة"
           }
         }
       }

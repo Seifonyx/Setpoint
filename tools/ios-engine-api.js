@@ -153,9 +153,23 @@
     tr: function (s) { return L(s); },
     // A saved meal for the diary: one entry with its foods (or each food on its own with "Log meals as separate foods").
     // A meal goes into the diary as its foods, each on its own (scaled by how many servings you're having).
-    logMeal: function (mid, meal, factor) {
+    // A saved meal into the diary: as one entry holding its foods (the default), or as separate foods (a setting).
+    logMeal: function (mid, meal, factor, separate) {
       var mm = state.meals.find(function (m) { return m.id === mid; }); if (!mm) return '[]';
       var k = factor > 0 ? factor : 1;
+      if (!separate) {
+        var mi = mm.items.map(function (it) {
+          var c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan;
+          if (k !== 1) {
+            ['kcal', 'protein', 'carbs', 'fat'].forEach(function (x) { if (typeof c[x] === 'number') c[x] = Math.round(c[x] * k); });
+            ['g', 'qty'].forEach(function (x) { if (typeof c[x] === 'number') c[x] = Math.round(c[x] * k * 1000) / 1000; });
+          }
+          return c;
+        });
+        var sum = function (x) { return mi.reduce(function (a, c) { return a + (Number(c[x]) || 0); }, 0); };
+        return J([{ id: newId(), name: mm.name, meal: meal, mid: mm.id, mi: mi, kcal: Math.min(10000, Math.round(sum('kcal'))),
+          protein: Math.round(sum('protein')), carbs: Math.round(sum('carbs')), fat: Math.round(sum('fat')) }]);
+      }
       return J(mm.items.map(function (it) {
         var c = Object.assign({}, it); delete c.id; delete c.meal; delete c.t; delete c.plan;
         if (k !== 1) {

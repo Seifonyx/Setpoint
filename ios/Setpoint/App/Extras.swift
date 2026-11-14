@@ -109,6 +109,7 @@ struct DeviceSettingsView: View {
     @AppStorage(DeviceSettings.foodTime) private var foodTime = 20 * 60 + 30
     @AppStorage(DeviceSettings.weekReady) private var weekReady = true
     @AppStorage(WidgetBridge.liveKey) private var live = false
+    @AppStorage("mealsSeparate") private var mealsSeparate = false
     @State private var denied = false
     @State private var confirmErase = false
     @State private var ramadan = false
@@ -133,6 +134,12 @@ struct DeviceSettingsView: View {
                 Toggle(isOn: Binding(get: { store.root["settings"]?.object?["trackCalories"]?.bool ?? true },
                                      set: { store.setSetting("trackCalories", .bool($0)) })) { TileLabel("Track calories", "flame.fill", Brand.protein) }
             } header: { Text("Your diary") } footer: { Text("These sync with your account.") }
+
+            Section {
+                Toggle(isOn: $mealsSeparate) { TileLabel("Log meals as separate foods", "square.split.2x2", Brand.amber) }
+            } footer: {
+                Text(mealsSeparate ? "A meal goes into your diary as each of its foods, to change one by one." : "A meal goes into your diary as one entry. Tap it to see and change what's in it.")
+            }
 
             Section {
                 Toggle(isOn: $weigh) { TileLabel("Weigh-in reminder", "scalemass.fill", Brand.blue) }
