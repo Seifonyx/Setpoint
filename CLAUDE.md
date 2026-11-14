@@ -1,5 +1,11 @@
 # Setpoint
 
+**Before any suggestion, review or change to the app, follow the rules in AGENTS.md** (inspect the real app first,
+research how top apps do it, check for vibe-coding mistakes, back every recommendation with internal and external
+evidence, and verify the actual behaviour afterwards). They are imported here:
+
+@AGENTS.md
+
 Weight and food tracker PWA. Live at https://setpoint-tracker.web.app (Firebase project `setpoint-tracker`).
 
 - Code lives in `src/*.js`; `node tools/build.js` joins them into `app.js` and stamps the sw.js cache.
