@@ -219,7 +219,8 @@ struct FoodsHighInView: View {
     let unit: String
     let day: String
     @State private var by = "serving"
-    @State private var rows: [HighInRow]?
+    @State private var data: HighIn?
+    private var rows: [HighInRow]? { data?.rows }
 
     var body: some View {
         List {
@@ -241,9 +242,9 @@ struct FoodsHighInView: View {
             }
         }
         .brandList()
-        .navigationTitle(String(localized: "High in \(label)"))
+        .navigationTitle(String(localized: "High in \(data?.label ?? label)"))
         .navigationBarTitleDisplayMode(.inline)
-        .task(id: "\(by)|\(store.foodsReady)") { rows = await store.engineRef.highIn(key, by: by, meal: Self.mealNow(store)) }
+        .task(id: "\(by)|\(store.foodsReady)") { data = await store.engineRef.highIn(key, by: by, meal: Self.mealNow(store)) }
     }
 
     private func row(_ r: HighInRow) -> some View {
@@ -255,7 +256,7 @@ struct FoodsHighInView: View {
             }
             Spacer(minLength: 8)
             VStack(alignment: .trailing, spacing: 1) {
-                Text(Self.amount(r.v, unit)).font(Brand.num(18, .semibold)).monospacedDigit()
+                Text(Self.amount(r.v, data?.unit ?? unit)).font(Brand.num(18, .semibold)).monospacedDigit()
                 if let p = r.pct { Text("\(Int(p))%").font(.brand(.caption, .semibold)).foregroundStyle(p >= 100 ? Brand.green : Brand.ink2).monospacedDigit() }
             }
         }

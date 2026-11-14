@@ -281,7 +281,7 @@
     // Foods richest in a nutrient, per serving or per 100 kcal: everyday foods plus ones you've logged or saved
     // (the web app's own rules, so the list isn't organ meats and dried powders).
     highIn: function (key, by, meal) {
-      if (!foodDB || !NUT[key]) return '[]';
+      if (!foodDB || !NUT[key]) return 'null';
       var perKcal = by === 'kcal', res = [], mine = {}, t1 = dayNum(todayISO()), tg = nutTargets(todayISO())[key], goal = tg ? (tg.min || tg.max || null) : null;
       for (var i = 0; i < 60; i++) eatenFor(isoFromDay(t1 - i)).forEach(function (it) { if (it.ref) mine[it.ref] = 1; });
       state.favs.forEach(function (r) { mine[r] = 1; });
@@ -296,7 +296,7 @@
         res.push({ f: f, v: v100 * g / 100, sub: fmtAmt(sv.qty, sv.unit.label) });
       });
       res.sort(function (a, b) { return b.v - a.v || (b.f.pop || 0) - (a.f.pop || 0); });
-      return J(res.slice(0, 40).map(function (r) { return { hit: row(r.f, meal || 'snacks'), v: r.v, sub: r.sub, pct: goal ? Math.round(r.v / goal * 100) : null }; }));
+      return J({ label: L(NUT[key].label), unit: NUT[key].unit, rows: res.slice(0, 40).map(function (r) { return { hit: row(r.f, meal || 'snacks'), v: r.v, sub: r.sub, pct: goal ? Math.round(r.v / goal * 100) : null }; }) });
     },
     nutrients: function (d) {
       var nd = dayNutrients(d), tg = nutTargets(d);

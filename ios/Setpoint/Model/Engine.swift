@@ -96,7 +96,7 @@ actor Engine {
     func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
     func nutrients(_ day: String) -> NutrientData? { decode(NutrientData.self, "nutrients", [day]) }
     func targets(_ day: String) -> TargetsData? { decode(TargetsData.self, "targets", [day]) }
-    func highIn(_ key: String, by: String, meal: String) -> [HighInRow] { decode([HighInRow].self, "highIn", [key, by, meal]) ?? [] }
+    func highIn(_ key: String, by: String, meal: String) -> HighIn? { decode(HighIn.self, "highIn", [key, by, meal]) }
     func weekReview(_ start: String = "") -> WeekReview? { decode(WeekReview.self, "weekReview", [start]) }
     func achievements() -> Achievements? { decode(Achievements.self, "achievements", [false]) }
     func prayer(lat: Double, lon: Double, fa: Double) -> PrayerTimes? { decode(PrayerTimes.self, "prayer", [lat, lon, fa]) }
@@ -344,6 +344,8 @@ struct NutrientRow: Decodable, Sendable, Identifiable, Equatable {
     let key: String; let label: String; let unit: String; let v: Double; let goal: Double?; let hi: Double?
     var id: String { key }
 }
+
+struct HighIn: Decodable, Sendable { let label: String; let unit: String; let rows: [HighInRow] }
 
 /// A food rich in a nutrient: how much one serving (or 100 kcal) has, and what share of your target that is.
 struct HighInRow: Decodable, Sendable, Identifiable {
