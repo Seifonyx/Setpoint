@@ -37,16 +37,7 @@ struct TargetsView: View {
                 Text("A bar turns green once you reach the minimum, and red if you go over the maximum.")
             }
             if let d = data {
-                ForEach(order(d), id: \.key) { g in
-                    let rows = d.rows.filter { $0.group == g.key }
-                    if !rows.isEmpty {
-                        Section(g.key == "gen" ? String(localized: "Calories and macros") : g.label) {
-                            ForEach(rows) { r in
-                                Button { editing = r } label: { row(r) }.tint(.primary)
-                            }
-                        }
-                    }
-                }
+                ForEach(order(d), id: \.key) { g in section(g, d.rows.filter { r in r.group == g.key }) }
             } else {
                 SkeletonRows(count: 6)
             }
@@ -59,7 +50,18 @@ struct TargetsView: View {
     }
 
     /// Calories and macros first, then vitamins, minerals, fats, and the rest of the general ones.
-    private func order(_ d: TargetsData) -> [TargetsData.Group] { d.groups.filter { $0.key != "gen" } .reduce(into: [d.groups.first { $0.key == "gen" }].compactMap { $0 }) { $0.append($1) } }
+    private func order(_ d: TargetsData) -> [TargetsData.Group] {
+        let gen: [TargetsData.Group] = d.groups.filter { $0.key == "gen" }
+        let rest: [TargetsData.Group] = d.groups.filter { $0.key != "gen" }
+        return gen + rest
+    }
+    @ViewBuilder private func section(_ g: TargetsData.Group, _ rows: [TargetsData.Row]) -> some View {
+        if !rows.isEmpty {
+            Section(g.key == "gen" ? String(localized: "Calories and macros") : g.label) {
+                ForEach(rows) { r in Button { editing = r } label: { row(r) }.tint(.primary) }
+            }
+        }
+    }
 
     private func row(_ r: TargetsData.Row) -> some View {
         HStack(spacing: 10) {
@@ -199,28 +201,7 @@ struct HighlightPicker: View {
                     Button("Use the starting set") { withAnimation(.snappy) { picked = Highlights.defaults } }
                 }
                 if let d = data {
-                    ForEach(d.groups.filter { $0.key != "gen" } + d.groups.filter { $0.key == "gen" }, id: \.key) { g in
-                        let rows = d.rows.filter { $0.group == g.key && !Highlights.excluded.contains($0.key) }
-                        if !rows.isEmpty {
-                            Section(g.label) {
-                                ForEach(rows) { r in
-                                    let on = picked.contains(r.key)
-                                    Button {
-                                        withAnimation(.snappy) { if on { picked.removeAll { $0 == r.key } } else if picked.count < Highlights.max { picked.append(r.key) } }
-                                    } label: {
-                                        HStack {
-                                            Text(r.label).foregroundStyle(on || picked.count < Highlights.max ? Brand.ink : Brand.ink2)
-                                            Spacer()
-                                            Image(systemName: on ? "checkmark.circle.fill" : "circle").foregroundStyle(on ? Brand.green : Brand.ink2.opacity(0.5))
-                                        }
-                                        .contentShape(Rectangle())
-                                    }
-                                    .buttonStyle(.plain)
-                                    .accessibilityAddTraits(on ? .isSelected : [])
-                                }
-                            }
-                        }
-                    }
+                    ForEach(groups(d), id: \.key) { g in groupSection(g, rows: rows(d, g)) }
                 }
             }
             .brandList()
@@ -232,6 +213,38 @@ struct HighlightPicker: View {
             }
             .sensoryFeedback(.selection, trigger: picked)
             .task { picked = Highlights.keys(store); data = await store.engineRef.targets(Day.today) }
+        }
+    }
+
+    private func groups(_ d: TargetsData) -> [TargetsData.Group] {
+        let first: [TargetsData.Group] = d.groups.filter { $0.key != "gen" }
+        let last: [TargetsData.Group] = d.groups.filter { $0.key == "gen" }
+        return first + last
+    }
+    private func rows(_ d: TargetsData, _ g: TargetsData.Group) -> [TargetsData.Row] {
+        d.rows.filter { r in r.group == g.key && !Highlights.excluded.contains(r.key) }
+    }
+    @ViewBuilder private func groupSection(_ g: TargetsData.Group, rows: [TargetsData.Row]) -> some View {
+        if !rows.isEmpty {
+            Section(g.label) { ForEach(rows) { r in pickRow(r) } }
+        }
+    }
+    private func pickRow(_ r: TargetsData.Row) -> some View {
+        let on = picked.contains(r.key), full = picked.count >= Highlights.max
+        return Button { toggle(r.key, on: on) } label: {
+            HStack {
+                Text(r.label).foregroundStyle(on || !full ? Brand.ink : Brand.ink2)
+                Spacer()
+                Image(systemName: on ? "checkmark.circle.fill" : "circle").foregroundStyle(on ? Brand.green : Brand.ink2.opacity(0.5))
+            }
+            .contentShape(Rectangle())
+        }
+        .buttonStyle(.plain)
+        .accessibilityAddTraits(on ? .isSelected : [])
+    }
+    private func toggle(_ k: String, on: Bool) {
+        withAnimation(.snappy) {
+            if on { picked.removeAll { $0 == k } } else if picked.count < Highlights.max { picked.append(k) }
         }
     }
 }
