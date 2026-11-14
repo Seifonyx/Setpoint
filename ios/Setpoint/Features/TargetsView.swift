@@ -57,7 +57,7 @@ struct TargetsView: View {
     }
     @ViewBuilder private func section(_ g: TargetsData.Group, _ rows: [TargetsData.Row]) -> some View {
         if !rows.isEmpty {
-            Section(g.key == "gen" ? String(localized: "Calories and macros") : g.label) {
+            Section(g.label) {
                 ForEach(rows) { r in Button { editing = r } label: { row(r) }.tint(.primary) }
             }
         }

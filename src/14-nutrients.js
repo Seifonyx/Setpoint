@@ -35,7 +35,7 @@
     r.kcal = { goal: kcal };
     if (plan) {
       r.p = { goal: plan.protein }; r.c = { goal: plan.carbs };
-      r.f = { goal: plan.fat, hi: Math.round(kcal * 0.35 / 9) }; // at most 35% of calories
+      const fmax = Math.round(kcal * 0.35 / 9); r.f = { goal: plan.fat, hi: fmax > plan.fat ? fmax : null }; // at most 35% of calories, unless your plan already asks for more
     }
     r.fib = { goal: Math.max(25, Math.round(kcal / 1000 * 14)) };
     r.na = { hi: 2300 }; r.sat = { hi: Math.round(kcal * 0.1 / 9) }; r.caff = { hi: 400 };

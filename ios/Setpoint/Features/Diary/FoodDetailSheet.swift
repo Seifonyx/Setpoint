@@ -89,6 +89,7 @@ struct FoodDetailSheet: View {
                 Button("Delete", role: .destructive) { store.delete(food, on: day); dismiss() }
             }
             .task { await load() }
+            .onChange(of: store.foodsReady) { _, ready in if ready { Task { await loadInfo() } } }
             .task(id: "\(qtyText)|\(unit)|\(factor)|\(parts.count)|\(partsEdited)|\(parts.description.count)|\(recipe?.description.count ?? 0)") { await recalc() }
         }
         .presentationDetents([.large])
@@ -336,7 +337,11 @@ struct FoodDetailSheet: View {
         }
         parts = (food.raw["mi"]?.array ?? []).compactMap { $0.object }
         if isRecipe { await loadRecipe(saved: false) }
-        guard !isMeal, let ref = food.ref, let i = await store.engineRef.food(ref, meal: food.meal) else { return }
+        await loadInfo()
+    }
+    /// The food's units and usual amount. Tried again once the food list has loaded, if it wasn't ready yet.
+    private func loadInfo() async {
+        guard info == nil, !isMeal, let ref = food.ref, let i = await store.engineRef.food(ref, meal: food.meal) else { return }
         info = i
         qtyText = (food.qty ?? i.def.qty).formatted(.number.precision(.fractionLength(0...3)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
         unit = food.unit ?? i.def.unit
