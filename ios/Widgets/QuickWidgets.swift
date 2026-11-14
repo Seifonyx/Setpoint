@@ -46,10 +46,9 @@ struct QuickProvider: TimelineProvider {
     }
 }
 
-struct QuickLockWidget: Widget {
-    let action: QuickAction
-
-    var body: some WidgetConfiguration {
+/// The shared look: a widget has to be made with no inputs, so each action is its own small widget below.
+enum QuickLock {
+    static func configuration(_ action: QuickAction) -> some WidgetConfiguration {
         StaticConfiguration(kind: "quick-" + action.rawValue, provider: QuickProvider()) { _ in
             ZStack {
                 AccessoryWidgetBackground()
@@ -64,3 +63,7 @@ struct QuickLockWidget: Widget {
         .supportedFamilies([.accessoryCircular])
     }
 }
+
+struct AddFoodLockWidget: Widget { var body: some WidgetConfiguration { QuickLock.configuration(.addFood) } }
+struct ScanLockWidget: Widget { var body: some WidgetConfiguration { QuickLock.configuration(.scan) } }
+struct WeightLockWidget: Widget { var body: some WidgetConfiguration { QuickLock.configuration(.weight) } }
