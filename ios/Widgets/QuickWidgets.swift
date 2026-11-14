@@ -48,7 +48,7 @@ struct QuickProvider: TimelineProvider {
 
 /// The shared look: a widget has to be made with no inputs, so each action is its own small widget below.
 enum QuickLock {
-    static func configuration(_ action: QuickAction) -> some WidgetConfiguration {
+    @MainActor static func configuration(_ action: QuickAction) -> some WidgetConfiguration {
         StaticConfiguration(kind: "quick-" + action.rawValue, provider: QuickProvider()) { _ in
             ZStack {
                 AccessoryWidgetBackground()
