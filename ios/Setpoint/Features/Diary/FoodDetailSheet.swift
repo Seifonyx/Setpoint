@@ -343,8 +343,13 @@ struct FoodDetailSheet: View {
     private func loadInfo() async {
         guard info == nil, !isMeal, let ref = food.ref, let i = await store.engineRef.food(ref, meal: food.meal) else { return }
         info = i
-        qtyText = (food.qty ?? i.def.qty).formatted(.number.precision(.fractionLength(0...3)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
-        unit = food.unit ?? i.def.unit
+        if let u = food.unit, !i.units.contains(where: { $0.label == u }), let g = food.raw["g"]?.number, g > 0, i.units.contains(where: { $0.label == "g" }) {
+            // logged in a unit this food doesn't have any more: show the same weight in grams, so nothing changes by itself
+            qtyText = UnitList.text(g.rounded()); unit = "g"
+        } else {
+            qtyText = (food.qty ?? i.def.qty).formatted(.number.precision(.fractionLength(0...3)).grouping(.never).locale(Locale(identifier: "en_US_POSIX")))
+            unit = food.unit ?? i.def.unit
+        }
     }
     private func loadRecipe(saved: Bool) async {
         var raw = food.raw
