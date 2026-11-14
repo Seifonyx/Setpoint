@@ -4721,6 +4721,16 @@
         }
       }
     },
+    "Move": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نقل"
+          }
+        }
+      }
+    },
     "Move to": {
       "localizations": {
         "ar": {

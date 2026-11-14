@@ -12,6 +12,7 @@ struct MealSection: View {
     let addFood: () -> Void
     @State private var more: FoodItem?
     @State private var repeating: FoodItem?
+    @State private var moving: FoodItem?
     @AppStorage("closedMeals") private var closedMeals = ""
     private var expanded: Bool { !closedMeals.split(separator: ",").contains(Substring(meal.key)) }
     private func toggleOpen() {
@@ -82,7 +83,7 @@ struct MealSection: View {
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
                     .swipeActions(edge: .leading) {
-                        // swipe right: ⋯ with everything you can do to it
+                        // swipe right: ⋯ to move it to another meal
                         Button("More", systemImage: "ellipsis") { more = food }.tint(Brand.ink2)
                     }
                     .contextMenu {
@@ -109,15 +110,15 @@ struct MealSection: View {
         }
         .sheet(item: $repeating) { f in RepeatSheet(item: f.raw) }
         .confirmationDialog(more?.displayName ?? "", isPresented: Binding(get: { more != nil }, set: { if !$0 { more = nil } }), titleVisibility: .visible, presenting: more) { f in
-            Button("Adjust") { open = f }
-            if f.isPlanned && day <= Day.today { Button("Mark as eaten") { store.markEaten(f, on: day) } }
-            Button("Add another") { withAnimation { store.addAnother(f, on: day) } }
-            ForEach(store.meals.filter { $0.key != meal.key }) { m in
-                Button("Move to \(m.name)") { withAnimation { store.move(f, to: m.key, on: day) } }
+            Button("Move") {
+                // the ⋯ closes first, then the choice of where to move it opens
+                Task { try? await Task.sleep(for: .milliseconds(350)); moving = f }
             }
-            Button("Copy to another day") { copying = [f] }
-            Button("Repeat this food") { repeating = f }
-            Button("Delete", role: .destructive) { withAnimation { store.delete(f, on: day) } }
+        }
+        .confirmationDialog("Move to", isPresented: Binding(get: { moving != nil }, set: { if !$0 { moving = nil } }), titleVisibility: .visible, presenting: moving) { f in
+            ForEach(store.meals.filter { $0.key != meal.key }) { m in
+                Button(m.name) { withAnimation { store.move(f, to: m.key, on: day) } }
+            }
         }
         .alert("Save as meal", isPresented: $naming) {
             TextField("Name", text: $mealName)
