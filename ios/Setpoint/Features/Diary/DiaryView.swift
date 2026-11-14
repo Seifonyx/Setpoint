@@ -233,9 +233,9 @@ struct SummaryCard: View {
             .onTapGesture { if plan != nil { explain = true } } // tap the dial: how your target is worked out
             if let plan {
                 HStack(spacing: 14) {
-                    MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: Brand.protein)
-                    MacroBar(label: "Carbs", value: totals.carbs, target: plan.carbs, color: Brand.carbs)
-                    MacroBar(label: "Fat", value: totals.fat, target: plan.fat, color: Brand.fat)
+                    MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: Brand.protein, key: "p")
+                    MacroBar(label: "Carbs", value: totals.carbs, target: plan.carbs, color: Brand.carbs, key: "c")
+                    MacroBar(label: "Fat", value: totals.fat, target: plan.fat, color: Brand.fat, key: "f")
                 }
             } else {
                 Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
@@ -304,20 +304,23 @@ struct MicrosCard: View {
     @Environment(Store.self) private var store
     let day: String
     @State private var data: NutrientData?
-    private static let keys = ["fib", "fe", "ca", "k", "mg", "vD", "b12", "vC", "zn", "na"]
+    @State private var picking = false
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack(alignment: .firstTextBaseline) {
                 Text("Vitamins & minerals").font(Brand.display(20, .bold))
                 Spacer()
+                Button("Edit") { picking = true }
+                    .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).buttonStyle(.plain)
+                    .padding(.trailing, 6)
                 NavigationLink { NutrientsView(day: day) } label: {
                     HStack(spacing: 2) { Text("All"); Image(systemName: "chevron.right").font(.brand(.caption, .bold)) }
                         .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                 }
             }
             if let d = data, d.items > 0 {
-                let rows = Self.keys.compactMap { k in d.rows.first { $0.key == k } }
+                let rows = Highlights.keys(store).compactMap { k in d.rows.first { $0.key == k } }
                 LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 20) {
                     ForEach(rows, id: \.key) { r in cell(r) }
                 }
@@ -330,13 +333,13 @@ struct MicrosCard: View {
         }
         .padding(.vertical, 8)
         .task(id: "\(day)|\(store.version)|\(store.foodsReady)") { data = await store.engineRef.nutrients(day) }
+        .sheet(isPresented: $picking) { HighlightPicker() }
     }
 
     private func cell(_ r: NutrientData.Row) -> some View {
         let target = r.goal ?? r.hi ?? 0
         let pct = target > 0 ? r.v / target : 0
-        let limit = r.goal == nil && r.hi != nil // things to keep under (sodium)
-        let color = limit ? (pct > 1 ? Brand.over : Brand.ink2) : (pct >= 1 ? Brand.green : pct >= 0.5 ? Brand.amber : Brand.protein)
+        let color = TargetColor.of(r.v, goal: r.goal, hi: r.hi)
         return VStack(alignment: .leading, spacing: 5) {
             HStack {
                 Text(r.label).font(.brand(.caption, .semibold)).lineLimit(1)
@@ -356,10 +359,13 @@ struct MicrosCard: View {
 }
 
 struct MacroBar: View {
+    @Environment(Store.self) private var store
     let label: LocalizedStringKey
     let value: Double
     let target: Double
     let color: Color
+    var key: String? = nil   // p, c or f: to check your own maximum (Targets)
+    private var overMax: Bool { key.flatMap { store.macroMax($0) }.map { value > $0 } ?? false }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -369,13 +375,14 @@ struct MacroBar: View {
             }
             HStack(alignment: .firstTextBaseline, spacing: 2) {
                 Text(Fmt.grams(value)).font(Brand.num(22, .semibold)).monospacedDigit().contentTransition(.numericText())
+                    .foregroundStyle(overMax ? Brand.danger : Brand.ink)
                 Text("/ \(Fmt.grams(target)) g").font(.brand(.caption2)).foregroundStyle(Brand.ink2)
             }
             .lineLimit(1).minimumScaleFactor(0.7)
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Brand.card2)
-                    Capsule().fill(value > target * 1.1 ? Brand.over : color)
+                    Capsule().fill(overMax ? Brand.danger : value > target * 1.1 ? Brand.over : color)
                         .frame(width: g.size.width * min(1, value / max(target, 1)))
                 }
             }
@@ -385,7 +392,7 @@ struct MacroBar: View {
         .frame(maxWidth: .infinity, alignment: .leading)
         .accessibilityElement(children: .ignore)
         .accessibilityLabel(Text(label))
-        .accessibilityValue(Text("\(Fmt.grams(value)) of \(Fmt.grams(target)) grams"))
+        .accessibilityValue(overMax ? Text("\(Fmt.grams(value)) of \(Fmt.grams(target)) grams, over your maximum") : Text("\(Fmt.grams(value)) of \(Fmt.grams(target)) grams"))
     }
 }
 

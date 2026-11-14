@@ -120,12 +120,7 @@ struct FoodDetailSheet: View {
                     TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         .font(Brand.num(22, .semibold)).monospacedDigit().frame(width: 76)
                         .padding(.horizontal, 8).padding(.vertical, 4).background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
-                    Menu {
-                        Picker("Unit", selection: $unit) { ForEach(info?.units ?? [], id: \.label) { Text($0.display).tag($0.label) } }
-                    } label: {
-                        HStack(spacing: 3) { Text(info?.units.first { $0.label == unit }?.display ?? unit).lineLimit(1); Image(systemName: "chevron.up.chevron.down").font(.caption2) }
-                            .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green).frame(maxWidth: 130, alignment: .leading)
-                    }
+                    UnitButton(units: info?.units ?? [], unit: $unit, qtyText: $qtyText).fixedSize()
                 } else {
                     Stepper(value: $factor, in: 0.25...10, step: 0.25) {
                         Text(Fmt.fraction(factor) + "×").font(Brand.num(22, .semibold)).monospacedDigit().frame(maxWidth: .infinity, alignment: .trailing)
@@ -445,9 +440,10 @@ struct PartAmountSheet: View {
         NavigationStack {
             Form {
                 Section {
-                    HStack {
-                        TextField("Amount", text: $qtyText).keyboardType(.decimalPad).font(Brand.display(28, .bold)).frame(maxWidth: 120)
-                        Picker("Unit", selection: $unit) { ForEach(units, id: \.label) { Text($0.display).tag($0.label) } }.labelsHidden()
+                    HStack(spacing: 12) {
+                        TextField("Amount", text: $qtyText).keyboardType(.decimalPad).font(Brand.num(28, .semibold)).monospacedDigit().frame(maxWidth: 120)
+                        Spacer(minLength: 0)
+                        UnitButton(units: units, unit: $unit, qtyText: $qtyText)
                     }
                     if let k = kcal { LabeledContent("Calories") { Text("\(Fmt.kcal(k)) kcal").monospacedDigit().contentTransition(.numericText()) } }
                 } header: { Text(part["name"]?.string ?? "") }

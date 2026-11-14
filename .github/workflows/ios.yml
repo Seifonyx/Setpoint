@@ -132,6 +132,9 @@ jobs:
           shot -tab diary -sheet add; sleep 10; xcrun simctl io "$UDID" screenshot out/add-late-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open plan; sleep 3; xcrun simctl io "$UDID" screenshot out/plan-late-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open export; xcrun simctl io "$UDID" screenshot out/export-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open targets; xcrun simctl io "$UDID" screenshot out/targets-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open targets -AppleLanguages "(ar)"; xcrun simctl io "$UDID" screenshot out/targets-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -sheet food -open units; xcrun simctl io "$UDID" screenshot out/units-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab progress -AppleLanguages "(ar)"; xcrun simctl io "$UDID" screenshot out/progress-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open planner; sleep 3; xcrun simctl io "$UDID" screenshot out/planner-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open repeating; xcrun simctl io "$UDID" screenshot out/repeating-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true

@@ -42,8 +42,6 @@ struct NutrientsView: View {
     }
     @ViewBuilder private func row(_ r: NutrientData.Row) -> some View {
         let target = r.goal ?? r.hi
-        let pct = target.map { r.v / max($0, 0.0001) } ?? 0
-        let over = r.hi.map { r.v > $0 } ?? false
         VStack(alignment: .leading, spacing: 6) {
             HStack {
                 Text(r.label)
@@ -51,8 +49,8 @@ struct NutrientsView: View {
                 Text(amount(r.v, r.unit) + (target.map { " / " + amount($0, r.unit) } ?? "")).font(.brand(.subheadline)).monospacedDigit().foregroundStyle(.secondary)
             }
             if target != nil {
-                ProgressView(value: min(pct, 1))
-                    .tint(over ? Brand.amber : (r.goal != nil && pct >= 1 ? Brand.green : Brand.green))
+                ProgressView(value: TargetColor.fill(r.v, goal: r.goal, hi: r.hi))
+                    .tint(TargetColor.of(r.v, goal: r.goal, hi: r.hi))
             }
         }
         .opacity(r.cov < 0.5 && r.v > 0 ? 0.5 : 1)

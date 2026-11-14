@@ -58,6 +58,22 @@
     if (qty > 1) u = u.replace(/^([^,(]*?)([a-z]+)(?=\s*(,|\(|$))/i, function (all, pre, w) { return pre + (UNIT_PL[w.toLowerCase()] || w); });
     return fracQty(qty) + ' ' + u;
   }
+  // Units as shown: readable names (no "(6\" to 6-7/8\" long)" or "(yield from 1 lb ...)"), sizes from small to large,
+  // then the rest in the food's own order, then weights. The label stays the key, so logged foods keep working.
+  var SIZE_RANK = { 'extra small': 1, small: 2, medium: 3, large: 4, 'extra large': 5, jumbo: 6 };
+  function unitText(l) {
+    if (l === 'NLEA serving') return 'serving (label)';
+    var t = String(l).replace(/\s*\((?=[^)]*[\d"])[^)]*\)/g, '').replace(/^unit$/, 'piece').replace(/, bone and skin removed$/, '').trim();
+    return t || l;
+  }
+  function unitRows(us) {
+    var rows = us.map(function (u, i) { var t = unitText(u.label); return { label: u.label, g: u.g, text: t, mine: !!u.mine, i: i, size: SIZE_RANK[t.toLowerCase()] || 0 }; });
+    rows.forEach(function (r) { if (rows.some(function (o) { return o !== r && o.text === r.text; })) r.text = r.label; }); // keep both if cleaning made them the same
+    var weights = ['g', 'oz', 'kg', 'lb'];
+    var group = function (r) { return weights.indexOf(r.label) >= 0 ? 3 : r.size ? 1 : 2; };
+    rows.sort(function (a, b) { return group(a) - group(b) || (a.size - b.size) || (group(a) === 3 ? weights.indexOf(a.label) - weights.indexOf(b.label) : a.i - b.i); });
+    return rows.map(function (r) { return { label: r.label, g: Math.round(r.g * 10) / 10, text: L(r.text), mine: r.mine, weight: weights.indexOf(r.label) >= 0 || r.label === 'ml' }; });
+  }
   function itemFor(f, qty, label, meal) {
     var us = unitsFor(f), u = us.find(function (x) { return x.label === label; }) || us[0], g = qty * u.g, m = macrosFor(f, g);
     return { id: newId(), meal: meal, ref: f.id, g: Math.round(g * 10) / 10, qty: Math.round(qty * 1000) / 1000, unit: u.label,
@@ -114,7 +130,7 @@
       var f = getFood(id); if (!f) return 'null';
       var us = unitsFor(f), lp = lastPortion(f.id, meal), ds = defaultServing(f), p = function (k) { var v = per100(f, k); return v == null ? null : v; };
       var def = lp && us.some(function (u) { return u.label === lp.unit; }) ? { qty: lp.qty, unit: lp.unit } : { qty: ds.qty, unit: ds.unit.label };
-      return J({ id: f.id, name: L(f.name), cat: f.cat || null, units: us.map(function (u) { return { label: u.label, g: u.g, text: L(u.label) }; }), def: def, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom,
+      return J({ id: f.id, name: L(f.name), cat: f.cat || null, units: unitRows(us), def: def, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom,
         per100: { kcal: p('kcal'), p: p('p'), c: p('c'), f: p('f'), fib: p('fib'), sug: p('sug'), sat: p('sat'), na: p('na') } });
     },
     macros: function (id, qty, label) { var f = getFood(id); if (!f) return 'null'; var it = itemFor(f, qty, label, 'snacks'); return J({ kcal: it.kcal, protein: it.protein, carbs: it.carbs, fat: it.fat, g: it.g }); },
@@ -235,6 +251,17 @@
     },
 
     // ---- Vitamins and minerals: a day's totals against your targets, and what's often low (last 2 weeks) ----
+    // Every nutrient's targets: the recommended minimum and maximum (by age and sex, or from your plan for calories and
+    // macros), your own if you set any, and what's in use. Your own live in profile.nutT as { goal: min, hi: max }.
+    targets: function (d) {
+      var rec = nutRec(d), use = nutTargets(d), own = state.profile.nutT || {};
+      var pick = function (o) { return o ? { goal: o.goal == null ? null : o.goal, hi: o.hi == null ? null : o.hi } : null; };
+      return J({ groups: NUT_GROUPS.map(function (g) { return { key: g[0], label: L(g[1]) }; }),
+        rows: NUTS.map(function (n) { var o = own[n[0]];
+          return { key: n[0], label: L(n[1]), unit: n[2], group: n[3], plan: ['kcal', 'p', 'c', 'f'].indexOf(n[0]) >= 0,
+            rec: pick(rec[n[0]]) || { goal: null, hi: null }, own: o == null ? null : (typeof o === 'number' ? { goal: o, hi: null } : { goal: o.goal === undefined ? null : o.goal, hi: o.hi === undefined ? null : o.hi }),
+            use: pick(use[n[0]]) || { goal: null, hi: null } }; }) });
+    },
     nutrients: function (d) {
       var nd = dayNutrients(d), tg = nutTargets(d);
       return J({ items: nd.items, kcal: nd.kcal, groups: NUT_GROUPS.map(function (g) { return { key: g[0], label: L(g[1]) }; }),

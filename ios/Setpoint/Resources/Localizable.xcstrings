@@ -91,6 +91,16 @@
         }
       }
     },
+    "%@ g each": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ جم للواحدة"
+          }
+        }
+      }
+    },
     "%@ kcal": {
       "localizations": {
         "ar": {
@@ -241,6 +251,16 @@
         }
       }
     },
+    "%@ of %@ grams, over your maximum": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$@ من %2$@ جرام، فوق الحد الأقصى بتاعك"
+          }
+        }
+      }
+    },
     "%@ of %@ kcal": {
       "localizations": {
         "ar": {
@@ -277,6 +297,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ خطوة · من غير تمارين"
+          }
+        }
+      }
+    },
+    "%@ to %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من %1$@ لـ %2$@ %3$@"
           }
         }
       }
@@ -411,12 +441,32 @@
         }
       }
     },
+    "%lld of %lld": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld من %2$lld"
+          }
+        }
+      }
+    },
     "%lld of %lld covered": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "%lld من %lld مكتملة"
+          }
+        }
+      }
+    },
+    "%lld of %lld picked": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اخترت %1$lld من %2$lld"
           }
         }
       }
@@ -767,6 +817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "يوم متوازن حسب أهدافك، غني بالفيتامينات، مبني على ما تأكله"
+          }
+        }
+      }
+    },
+    "A bar turns green once you reach the minimum, and red if you go over the maximum.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الشريط بيخضرّ لما توصل للحد الأدنى، وبيحمرّ لو عدّيت الحد الأقصى."
           }
         }
       }
@@ -1777,6 +1837,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "السعرات"
+          }
+        }
+      }
+    },
+    "Calories and macros": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "السعرات والماكروز"
           }
         }
       }
@@ -4641,6 +4711,16 @@
         }
       }
     },
+    "Maximum": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحد الأقصى"
+          }
+        }
+      }
+    },
     "Meal": {
       "localizations": {
         "ar": {
@@ -4767,6 +4847,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المعادن"
+          }
+        }
+      }
+    },
+    "Minimum": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحد الأدنى"
           }
         }
       }
@@ -5191,6 +5281,16 @@
         }
       }
     },
+    "No target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش هدف"
+          }
+        }
+      }
+    },
     "No verified favorites": {
       "localizations": {
         "ar": {
@@ -5607,6 +5707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "على المسار. متبقٍ %@ سعرة، ومتوازنة."
+          }
+        }
+      }
+    },
+    "On your Today page": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في صفحة اليوم"
           }
         }
       }
@@ -6267,6 +6377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم التعرّف على هذا الآيفون. راجع الكميات: الصورة لا تزن الطعام."
+          }
+        }
+      }
+    },
+    "Recommended for you: %@. Leave a box empty for no minimum or no maximum.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المناسب ليك: %@. سيب الخانة فاضية لو مش عايز حد أدنى أو أقصى."
           }
         }
       }
@@ -7121,6 +7241,16 @@
         }
       }
     },
+    "Sizes and servings": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأحجام والحصص"
+          }
+        }
+      }
+    },
     "Skip meals that already have food": {
       "localizations": {
         "ar": {
@@ -7541,6 +7671,16 @@
         }
       }
     },
+    "Targets": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأهداف"
+          }
+        }
+      }
+    },
     "Targets, goal and expenditure": {
       "localizations": {
         "ar": {
@@ -7587,6 +7727,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوزن ده شكله مش مظبوط."
+          }
+        }
+      }
+    },
+    "The minimum comes from your plan, so it moves with your goal. Change it in Plan. You can set a maximum here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الحد الأدنى جاي من خطتك، فبيتغير مع هدفك. غيّره من الخطة. تقدر تحط حد أقصى هنا."
           }
         }
       }
@@ -8191,6 +8341,16 @@
         }
       }
     },
+    "Use the starting set": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ارجع للاختيارات الأولى"
+          }
+        }
+      }
+    },
     "Using your real numbers": {
       "localizations": {
         "ar": {
@@ -8491,6 +8651,16 @@
         }
       }
     },
+    "Weight and volume": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوزن والحجم"
+          }
+        }
+      }
+    },
     "Weight change a week": {
       "localizations": {
         "ar": {
@@ -8747,6 +8917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وصلت"
+          }
+        }
+      }
+    },
+    "Your Today page already shows %lld. Remove one to add this.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "صفحة اليوم فيها %lld خلاص. شيل واحد عشان تضيف ده."
           }
         }
       }
@@ -9151,6 +9331,16 @@
         }
       }
     },
+    "about %@ g per ml": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حوالي %@ جم لكل مل"
+          }
+        }
+      }
+    },
     "above": {
       "localizations": {
         "ar": {
@@ -9167,6 +9357,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "والأرداف"
+          }
+        }
+      }
+    },
+    "at least %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "على الأقل %1$@ %2$@"
+          }
+        }
+      }
+    },
+    "at most %@ %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بحد أقصى %1$@ %2$@"
           }
         }
       }

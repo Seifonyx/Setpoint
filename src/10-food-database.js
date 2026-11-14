@@ -702,7 +702,18 @@
       if (!out.some(function (u) { return u.label === lbl; })) out.push({ label: lbl, g: p[1] / a });
     });
     (state.portions[f.id] || []).forEach(function (p) { if (!out.some(function (u) { return u.label === p.l; })) out.push({ label: p.l, g: p.g, mine: true }); });
-    if (!f.noG) { out.push({ label: 'g', g: 1 }); out.push({ label: 'oz', g: 28.3495 }); }
+    const has = function (l) { return out.some(function (u) { return u.label === l; }); };
+    const add = function (l, g) { if (!has(l) && g > 0) out.push({ label: l, g: g }); };
+    // Spoons and millilitres from a cup or fluid-ounce measure (same volume, so the same grams per spoon).
+    const cup = out.find(function (u) { return u.label === 'cup' || /^cup \(/.test(u.label); }),
+      floz = out.find(function (u) { return u.label === 'fl oz'; }), tbsp = out.find(function (u) { return /^(tbsp|tablespoon)$/.test(u.label); });
+    const perMl = cup ? cup.g / 236.588 : floz ? floz.g / 29.5735 : tbsp ? tbsp.g / 14.787 : null;
+    if (perMl) {
+      if (!out.some(function (u) { return /^(tbsp|tablespoon)\b/.test(u.label); })) add('tbsp', perMl * 14.787);
+      if (!out.some(function (u) { return /^(tsp|teaspoon)\b/.test(u.label); })) add('tsp', perMl * 4.929);
+      if (/Beverages|Fats and Oils|Soups|Drinks/i.test(f.cat || '') || floz) add('ml', perMl);
+    }
+    if (!f.noG) { add('g', 1); add('oz', 28.3495); add('kg', 1000); add('lb', 453.592); }
     return out;
   }
   // A sensible starting amount: the food's first portion, but 100 g instead of tiny US measures like "1 oz".

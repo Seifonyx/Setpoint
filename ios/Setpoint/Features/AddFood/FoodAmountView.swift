@@ -16,7 +16,6 @@ struct FoodAmountView: View {
     @State private var fav = false
     @FocusState private var focused: Bool
 
-    @State private var base: Double = 1
     private var dayLeft: Double? {
         guard let p = store.plans[day] ?? store.plan(day) else { return nil }
         return p.kcal - store.totals(day).kcal
@@ -35,24 +34,11 @@ struct FoodAmountView: View {
                     .padding(.vertical, 2)
                 }
                 Section("Amount") {
-                    // quick servings: half, one, one and a half, two of your usual amount
-                    HStack(spacing: 8) {
-                        ForEach([0.5, 1, 1.5, 2], id: \.self) { m in
-                            let v = base * m
-                            Button { qtyText = v.formatted(.number.grouping(.never).precision(.fractionLength(0...2)).locale(Locale(identifier: "en_US_POSIX"))) } label: {
-                                Text(m == 0.5 ? "½" : m == 1.5 ? "1½" : "\(Int(m))×")
-                                    .font(.brand(.subheadline, .semibold)).frame(maxWidth: .infinity, minHeight: 34)
-                                    .background(qty == v ? Brand.green : Brand.card2, in: Capsule())
-                                    .foregroundStyle(qty == v ? Color(uiColor: .systemBackground) : Brand.ink)
-                            }
-                            .buttonStyle(.plain)
-                        }
-                    }
-                    HStack {
+                    HStack(spacing: 12) {
                         TextField("Amount", text: $qtyText).keyboardType(.decimalPad).focused($focused)
-                            .font(.brand(.title2, .semibold)).frame(maxWidth: 110)
-                        Picker("Unit", selection: $unit) { ForEach(info.units, id: \.label) { Text($0.display).tag($0.label) } }
-                            .labelsHidden()
+                            .font(Brand.num(28, .semibold)).monospacedDigit().frame(maxWidth: 110)
+                        Spacer(minLength: 0)
+                        UnitButton(units: info.units, unit: $unit, qtyText: $qtyText)
                     }
                     Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
                 }
@@ -98,7 +84,7 @@ struct FoodAmountView: View {
         }
         .task {
             info = await store.engineRef.food(foodID, meal: meal)
-            if let d = info?.def { base = d.qty; qtyText = d.qty.formatted(.number.precision(.fractionLength(0...2)).grouping(.never).locale(Locale(identifier: "en_US_POSIX"))); unit = d.unit }
+            if let d = info?.def { qtyText = d.qty.formatted(.number.precision(.fractionLength(0...2)).grouping(.never).locale(Locale(identifier: "en_US_POSIX"))); unit = d.unit }
             fav = info?.fav ?? false
         }
         .task(id: "\(qtyText)|\(unit)") {

@@ -227,6 +227,17 @@ final class Store {
     func setIos(_ change: (inout [String: JSONValue]) -> Void) {
         var o = root["ios"]?.object ?? [:]; change(&o); root["ios"] = .object(o); save()
     }
+    /// Your own minimum (goal) and maximum (hi) for a nutrient; nil goes back to the recommended ones.
+    func setNutTarget(_ key: String, _ range: TargetsData.Range?) {
+        setProfile { p in
+            var t = p["nutT"]?.object ?? [:]
+            if let r = range { t[key] = .object(["goal": r.goal.map { .number($0) } ?? .null, "hi": r.hi.map { .number($0) } ?? .null]) }
+            else { t[key] = nil }
+            p["nutT"] = .object(t)
+        }
+    }
+    /// Your own maximum for calories or a macro (kcal, p, c, f), if you set one.
+    func macroMax(_ key: String) -> Double? { root["profile"]?.object?["nutT"]?.object?[key]?.object?["hi"]?.number }
     func setProfile(_ change: (inout [String: JSONValue]) -> Void) {
         var p = root["profile"]?.object ?? [:]; change(&p); root["profile"] = .object(p); save()
     }

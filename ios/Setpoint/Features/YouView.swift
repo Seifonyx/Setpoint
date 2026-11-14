@@ -12,6 +12,7 @@ struct YouView: View {
     @State private var showPlan = UserDefaults.standard.string(forKey: "open") == "plan" // build-server screenshots
     @State private var showSettings = UserDefaults.standard.string(forKey: "open") == "settings"
     @State private var showExport = UserDefaults.standard.string(forKey: "open") == "export"
+    @State private var showTargets = UserDefaults.standard.string(forKey: "open") == "targets"
 
     var body: some View {
         NavigationStack {
@@ -50,6 +51,7 @@ struct YouView: View {
                             if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
                         } label: { TileLabel("Plan", "target", Brand.green) }
                     }
+                    NavigationLink { TargetsView() } label: { TileLabel("Targets", "slider.horizontal.3", Brand.protein) }
                     Button { explain = true } label: { TileLabel("How your target works", "info", Brand.blue) }.tint(.primary)
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
@@ -89,6 +91,7 @@ struct YouView: View {
             .navigationDestination(isPresented: $showPlan) { PlanView() }
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
             .navigationDestination(isPresented: $showExport) { ExportView() }
+            .navigationDestination(isPresented: $showTargets) { TargetsView() }
             .sheet(isPresented: $explain) { TargetExplainer() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in
                 ShareSheet(url: f.url).presentationDetents([.medium, .large])

@@ -95,6 +95,7 @@ actor Engine {
     func syncHasData(_ text: String) -> Bool { sp.invokeMethod("syncHasData", withArguments: [text])?.toBool() ?? false }
     func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
     func nutrients(_ day: String) -> NutrientData? { decode(NutrientData.self, "nutrients", [day]) }
+    func targets(_ day: String) -> TargetsData? { decode(TargetsData.self, "targets", [day]) }
     func weekReview(_ start: String = "") -> WeekReview? { decode(WeekReview.self, "weekReview", [start]) }
     func achievements() -> Achievements? { decode(Achievements.self, "achievements", [false]) }
     func prayer(lat: Double, lon: Double, fa: Double) -> PrayerTimes? { decode(PrayerTimes.self, "prayer", [lat, lon, fa]) }
@@ -193,6 +194,8 @@ struct SavedMeal: Decodable, Identifiable, Hashable, Sendable {
 
 struct FoodUnit: Decodable, Hashable, Sendable {
     let label: String; let g: Double; let text: String?
+    var mine: Bool? = nil      // a portion you saved yourself
+    var weight: Bool? = nil    // g, oz, kg, lb or ml (rather than a size or serving)
     var display: String { text ?? label }
 }
 
