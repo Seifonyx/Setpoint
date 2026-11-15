@@ -60,7 +60,7 @@ final class DiaryDragTests: XCTestCase {
                 note("\(tag) onto Dinner name: banana below Dinner = \(y(banana) > y(dinner)) (banana \(y(banana)) dinner \(y(dinner)))")
             }
         } else { note("\(tag): no Dinner name found") }
-        if extra.contains("-movableheaders") {
+        do { // picking up a meal's name moves nothing
             let d = el(app, "meal-dinner"), b = el(app, "meal-breakfast")
             drag(d, to: b, dy: 0.5)
             shot(app, "drag-\(tag)-5-header-dragged")
@@ -71,7 +71,6 @@ final class DiaryDragTests: XCTestCase {
 
     @MainActor func testDragFoods() {
         run("drag", [])
-        run("movable", ["-movableheaders"])
         // recipe ingredients: press, hold and drag the potatoes above the oil
         let r = XCUIApplication()
         r.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "recipe"]

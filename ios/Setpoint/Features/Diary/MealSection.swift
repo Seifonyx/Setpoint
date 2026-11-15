@@ -67,7 +67,8 @@ struct MealRows: View {
                     .listRowBackground(MealCard(top: true, bottom: false))
                     .listRowSeparator(.hidden, edges: .top)
                     .listRowSeparator(last ? .hidden : .visible, edges: .bottom)
-                    .moveDisabled(!ProcessInfo.processInfo.arguments.contains("-movableheaders")) // build-server experiment
+                    // not .moveDisabled: List won't drop a food where a fixed row sits, so a meal's name has to take drops
+                    // (just above it ends the meal before, just below starts this one). Picking a name up moves nothing.
             case .food(let food, let m):
                 MealFoodRow(food: food, meal: m, day: day, kind: kinds[food.id], copying: $copying, open: $open, actions: actions)
                     .listRowBackground(MealCard(top: false, bottom: false, tint: store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
@@ -77,8 +78,7 @@ struct MealRows: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(MealCard(top: false, bottom: true))
                     .listRowSeparator(.hidden)
-                    // not .moveDisabled: List won't drop a food where a fixed row sits, and this is the spot that
-                    // puts a food last in its meal (or into an empty one). It's too thin to pick up; if it ever is, nothing moves.
+                    // takes drops too (last in its meal, or into an empty one); too thin to pick up, and if it is, nothing moves
                     .accessibilityHidden(true)
             }
         }
