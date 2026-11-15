@@ -168,16 +168,8 @@ struct FoodDetailSheet: View {
             ForEach(parts.indices, id: \.self) { i in
                 let it = parts[i]
                 Button { if it["ref"]?.string != nil { editingPart = PartJob(index: i, part: it, inRecipe: false) } } label: {
-                HStack(spacing: 10) {
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(it["name"]?.string ?? String(localized: "Quick add")).lineLimit(1)
-                        if let q = it["qty"]?.number, let u = it["unit"]?.string { Text(Fmt.amount(q * factor, u)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
-                    }
-                    Spacer()
-                    Text(Fmt.kcal((it["kcal"]?.number ?? 0) * factor)).font(.brand(.body, .semibold)).monospacedDigit()
-                    if it["ref"]?.string != nil { Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Brand.ink2) }
-                }
-                .contentShape(.rect)
+                IngredientRow(name: it["name"]?.string ?? String(localized: "Quick add"), amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q * factor, $0) } },
+                              kcal: (it["kcal"]?.number ?? 0) * factor, kind: it["ref"]?.string == nil ? "quick" : "food")
                 }
                 .buttonStyle(.plain)
                 .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
@@ -190,16 +182,7 @@ struct FoodDetailSheet: View {
             ForEach(recipeItems.indices, id: \.self) { i in
                 let it = recipeItems[i]
                 Button { editingPart = PartJob(index: i, part: it, inRecipe: true) } label: {
-                    HStack(spacing: 10) {
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(it["name"]?.string ?? "").lineLimit(1)
-                            if let q = it["qty"]?.number, let u = it["unit"]?.string { Text(Fmt.amount(q, u)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
-                        }
-                        Spacer()
-                        Text(Fmt.kcal(it["kcal"]?.number ?? 0)).font(.brand(.body, .semibold)).monospacedDigit()
-                        Image(systemName: "chevron.right").font(.caption.weight(.semibold)).foregroundStyle(Brand.ink2)
-                    }
-                    .contentShape(.rect)
+                    IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0)
                 }
                 .buttonStyle(.plain)
                 .swipeActions {

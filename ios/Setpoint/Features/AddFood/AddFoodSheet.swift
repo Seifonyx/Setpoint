@@ -549,6 +549,48 @@ struct FoodHitRow: View {
 }
 
 /// A food's kind as a small drawn icon on a tinted tile (Setpoint's own set, matching the web app's).
+/// A food inside a recipe or meal: icon, the short name ("Potatoes") with the rest of it and the amount under it
+/// ("flesh and skin, raw · 750 g"), and the calories lined up on the right, the same as a row in the Diary.
+struct IngredientRow: View {
+    let name: String
+    let amount: String?
+    let kcal: Double
+    var kind = "food"
+
+    var body: some View {
+        let (head, rest) = Self.split(name)
+        HStack(spacing: 12) {
+            FoodIcon(kind: kind, size: 32, name: name)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(head).font(.brand(.body, .medium)).foregroundStyle(Brand.ink).lineLimit(1)
+                let sub = [rest, amount].compactMap { $0 }.joined(separator: " · ")
+                if !sub.isEmpty { Text(sub).font(.brand(.footnote)).foregroundStyle(Brand.ink2).lineLimit(1) }
+            }
+            Spacer(minLength: 8)
+            Text(Fmt.kcal(kcal)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
+        }
+        .padding(.vertical, 2)
+        .contentShape(.rect)
+        .accessibilityElement(children: .combine)
+    }
+
+    /// Words that only file a food under a heading ("Beverages, water, tap"): skipped so the food itself leads.
+    private static let filing: Set<String> = ["Beverages", "Spices", "Snacks", "Fast foods", "Restaurant", "Babyfood", "Soup", "Sauce"]
+    static func split(_ n: String) -> (String, String?) {
+        var name = n
+        if let r = name.range(of: ", "), filing.contains(String(name[..<r.lowerBound])) {
+            let t = String(name[r.upperBound...]); name = t.prefix(1).uppercased() + t.dropFirst()
+        }
+        for sep in [", ", " · ", " - "] {
+            if let r = name.range(of: sep), r.lowerBound > name.startIndex {
+                let rest = name[r.upperBound...].trimmingCharacters(in: .whitespaces)
+                return (String(name[..<r.lowerBound]), rest.isEmpty ? nil : rest)
+            }
+        }
+        return (name, nil)
+    }
+}
+
 struct FoodIcon: View {
     let kind: String
     var size: CGFloat = 32
@@ -562,8 +604,9 @@ struct FoodIcon: View {
     var body: some View {
         // quiet and consistent: grey glyphs on a soft tile. Saved meals and recipes have their own symbols.
         Group {
-            if kind == "meal" || kind == "recipe" {
-                Image(systemName: kind == "meal" ? "takeoutbag.and.cup.and.straw.fill" : "frying.pan.fill")
+            if kind == "meal" || kind == "recipe" || kind == "mine" {
+                // your own foods get a pencil: you wrote them
+                Image(systemName: kind == "meal" ? "takeoutbag.and.cup.and.straw.fill" : kind == "recipe" ? "frying.pan.fill" : "pencil")
                     .font(.system(size: size * 0.42, weight: .semibold))
             } else {
                 Image("food-\(key)").resizable().renderingMode(.template).scaledToFit()

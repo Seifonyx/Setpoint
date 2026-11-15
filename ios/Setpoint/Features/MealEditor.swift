@@ -37,17 +37,7 @@ struct MealEditor: View {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
                         Button { editing = Part(index: i, item: it) } label: {
-                            HStack(spacing: 12) {
-                                VStack(alignment: .leading, spacing: 2) {
-                                    Text(it["name"]?.string ?? "").lineLimit(1)
-                                    if let q = it["qty"]?.number, let u = it["unit"]?.string {
-                                        Text(Fmt.amount(q, u)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                                    }
-                                }
-                                Spacer()
-                                Text(Fmt.kcal(it["kcal"]?.number ?? 0)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
-                            }
-                            .contentShape(.rect)
+                            IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0)
                         }
                         .buttonStyle(.plain)
                         .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = items.remove(at: i) } } }
@@ -139,14 +129,7 @@ struct MealLogSheet: View {
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
-                        HStack {
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(it["name"]?.string ?? "").lineLimit(1)
-                                if let q = it["qty"]?.number, let u = it["unit"]?.string { Text(Fmt.amount(q * servings, u)).font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
-                            }
-                            Spacer()
-                            Text(Fmt.kcal((it["kcal"]?.number ?? 0) * servings)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
-                        }
+                        IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q * servings, $0) } }, kcal: (it["kcal"]?.number ?? 0) * servings)
                     }
                 } header: { Text("Foods") }
             }

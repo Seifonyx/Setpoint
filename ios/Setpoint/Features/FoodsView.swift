@@ -33,13 +33,13 @@ struct FoodLists: View {
                     ForEach(mine.indices, id: \.self) { i in
                         let f = mine[i]
                         Button { editing = EditFood(id: f["id"]?.string ?? "", food: f) } label: {
-                            LabeledContent {
-                                Text("\(Fmt.kcal(f["kcal"]?.number ?? 0)) kcal").monospacedDigit()
-                            } label: {
-                                Text(f["name"]?.string ?? "")
-                                Text("1 \(f["unit"]?.string ?? "serving")" + (f["g"]?.number.map { " · \(Fmt.grams($0)) g" } ?? "")
-                                     + " · P \(Fmt.grams(f["p"]?.number ?? 0)) · C \(Fmt.grams(f["c"]?.number ?? 0)) · F \(Fmt.grams(f["f"]?.number ?? 0))")
+                            HStack(spacing: 12) {
+                                FoodIcon(kind: "mine", size: 32)
+                                Text(f["name"]?.string ?? "").font(.brand(.body)).foregroundStyle(Brand.ink).lineLimit(2)
+                                Spacer(minLength: 8)
+                                Text(Fmt.kcal(f["kcal"]?.number ?? 0)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
                             }
+                            .contentShape(.rect)
                         }
                         .tint(.primary)
                         .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("myFoods", id: f["id"]?.string ?? "") } }

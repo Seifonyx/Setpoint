@@ -1077,7 +1077,7 @@
   function ftKind(f) {
     if (!f) return 'quick';
     if (f.recipe) return 'recipe';
-    if (f.custom) { const k = ftGuess(f.name, ''); return k || 'mine'; }
+    if (f.custom) return 'mine'; // your own foods: a pencil, so they read as yours
     if (ftKindCache[f.id]) return ftKindCache[f.id];
     const k = ftGuess(f.name, f.cat === 'Packaged foods' || f.off ? '' : (f.cat || '')) || (f.off || f.cat === 'Packaged foods' ? 'pack' : /^Restaurants/.test(f.cat || '') ? 'rest' : 'food');
     return (ftKindCache[f.id] = k);

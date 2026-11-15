@@ -28,12 +28,7 @@ struct RecipeEditor: View {
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
-                        LabeledContent {
-                            Text("\(Fmt.kcal(it["kcal"]?.number ?? 0)) kcal").monospacedDigit()
-                        } label: {
-                            Text(it["name"]?.string ?? "")
-                            Text(Fmt.amount(it["qty"]?.number ?? 1, it["unit"]?.string ?? "g"))
-                        }
+                        IngredientRow(name: it["name"]?.string ?? "", amount: Fmt.amount(it["qty"]?.number ?? 1, it["unit"]?.string ?? "g"), kcal: it["kcal"]?.number ?? 0)
                     }
                     .onDelete { items.remove(atOffsets: $0) }
                     Button("Add ingredient", systemImage: "plus") { picking = true }
