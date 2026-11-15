@@ -40,6 +40,7 @@ struct ProgressScreen: View {
                 }
             }
             .brandList()
+            .shrinksTabBar()
             .navigationTitle("Progress")
             .task(id: "\(store.version)|\(range)|\(store.foodsReady)") { await load() }
             .sheet(item: $editing) { WeightSheet(day: $0.id) }

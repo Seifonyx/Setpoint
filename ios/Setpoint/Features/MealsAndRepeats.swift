@@ -88,7 +88,7 @@ struct RepeatingView: View {
         }
         .paperPage()
         .navigationTitle("Repeating")
-        .toolbar(.hidden, for: .tabBar)
+        .hidesTabBar()
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Add a repeating food", systemImage: "plus") { picking = true } } }
         .sheet(isPresented: $picking, onDismiss: { if let p = pending { newItem = Edit(id: "new", rec: nil, item: p); pending = nil } }) {
             RepeatPicker { raw in pending = raw; picking = false }

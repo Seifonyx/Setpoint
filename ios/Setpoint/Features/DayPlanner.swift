@@ -64,7 +64,7 @@ struct DayPlannerView: View {
             }
         }
         .safeAreaInset(edge: .bottom) { bottomBar }
-        .toolbar(.hidden, for: .tabBar)
+        .hidesTabBar()
         .sheet(isPresented: $adding) { if let p = shown { AddPlanSheet(plan: p) } }
         .alert("Save this day", isPresented: $naming) {
             TextField("Name", text: $name)
@@ -394,6 +394,6 @@ struct SavedDaysView: View {
         }
         .brandList()
         .navigationTitle("Saved days")
-        .toolbar(.hidden, for: .tabBar)
+        .hidesTabBar()
     }
 }

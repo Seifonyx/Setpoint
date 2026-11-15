@@ -2,7 +2,7 @@ import SwiftUI
 import UniformTypeIdentifiers
 import UIKit
 
-/// The four main sections in the iOS 26 tab bar (real Liquid Glass, drawn by the system).
+/// The four main sections, in Setpoint's own Liquid Glass tab bar (App/BrandTabBar.swift).
 enum AppTab: String, Hashable, CaseIterable {
     case diary, progress, foods, you
 }
@@ -23,6 +23,7 @@ struct RootView: View {
     @State private var launching = !UIAccessibility.isReduceMotionEnabled // the dial draws itself on launch
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
+    @State private var tabBar = TabBarState.shared
 
     init() {
         _store = State(initialValue: Store.shared)
@@ -42,22 +43,19 @@ struct RootView: View {
 
     var body: some View {
         TabView(selection: $tab) {
-            Tab(value: AppTab.diary) {
-                DiaryView(importing: $importing)
-            } label: { TabIcon(title: "Diary", icon: tab == .diary ? "book.pages.fill" : "book.pages") }
-            // bars read the same in Arabic (the trend arrow flipped and looked like going down)
-            Tab(value: AppTab.progress) {
-                ProgressScreen()
-            } label: { TabIcon(title: "Progress", icon: tab == .progress ? "chart.bar.fill" : "chart.bar") }
-            Tab(value: AppTab.foods) {
-                FoodsView()
-            } label: { TabIcon(title: "Foods", icon: tab == .foods ? "fork.knife.circle.fill" : "fork.knife.circle") }
-            Tab(value: AppTab.you) {
-                YouView(importing: $importing)
-            } label: { TabIcon(title: "You", icon: tab == .you ? "person.crop.circle.fill" : "person.crop.circle") }
-            .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
+            // the system tab bar is hidden: Setpoint draws its own below, so it can shrink in place while you scroll
+            Tab(value: AppTab.diary) { DiaryView(importing: $importing).toolbarVisibility(.hidden, for: .tabBar) }
+            Tab(value: AppTab.progress) { ProgressScreen().toolbarVisibility(.hidden, for: .tabBar) }
+            Tab(value: AppTab.foods) { FoodsView().toolbarVisibility(.hidden, for: .tabBar) }
+            Tab(value: AppTab.you) { YouView(importing: $importing).toolbarVisibility(.hidden, for: .tabBar) }
         }
-        .tabBarMinimizeBehavior(.onScrollDown)
+        .safeAreaInset(edge: .bottom, spacing: 0) {
+            if !tabBar.hidden {
+                BrandTabBar(tab: $tab, badge: weekReady ? 1 : 0).transition(.move(edge: .bottom).combined(with: .opacity))
+            }
+        }
+        .animation(.snappy(duration: 0.3), value: tabBar.hidden)
+        .onChange(of: tab) { tabBar.compact = false }
         // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one
         .sensoryFeedback(trigger: store.changeCount) { _, _ in
             guard haptics else { return nil }
@@ -127,11 +125,3 @@ struct RootView: View {
     RootView()
 }
 
-/// A tab's icon exactly as named: filled on the tab you're on, outlined on the others (the tab bar would fill them all).
-struct TabIcon: View {
-    let title: LocalizedStringKey
-    let icon: String
-    var body: some View {
-        Label { Text(title) } icon: { Image(systemName: icon).environment(\.symbolVariants, .none) }
-    }
-}

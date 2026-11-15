@@ -152,7 +152,7 @@ struct CheckInView: View {
         }
         .brandList()
         .navigationTitle("Weekly check-in")
-        .toolbar(.hidden, for: .tabBar)
+        .hidesTabBar()
         .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Play your week", systemImage: "play.circle.fill") { story = true } } }
         .fullScreenCover(isPresented: $story) { WeekStory().environment(store) }
         .sheet(isPresented: $explain) { TargetExplainer() }

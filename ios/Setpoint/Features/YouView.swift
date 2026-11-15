@@ -87,6 +87,7 @@ struct YouView: View {
                 }
             }
             .brandList()
+            .shrinksTabBar()
             .navigationTitle("You")
             .navigationDestination(isPresented: $showPlan) { PlanView() }
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
