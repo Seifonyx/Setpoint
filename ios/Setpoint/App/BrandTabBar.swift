@@ -46,8 +46,10 @@ struct TabBarShrinker: UIViewRepresentable {
             for label in labels(bar) {
                 label.alpha = hidden ? 0 : 1
                 guard let tab = label.superview else { continue }
-                for icon in tab.subviews where !(icon is UILabel) && icon.frame.height < tab.bounds.height * 0.8 && icon.frame.maxY <= label.frame.minY + 2 {
-                    icon.transform = hidden ? CGAffineTransform(translationX: 0, y: tab.bounds.midY - icon.frame.midY) : .identity
+                for icon in tab.subviews where !(icon is UILabel) && icon.bounds.height < bar.bounds.height * 0.8 && icon.center.y < label.center.y {
+                    // centre each icon on the bar itself (not on its little icon-and-name group, which sits higher)
+                    let mid = tab.convert(icon.center, to: bar).y
+                    icon.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
                 }
             }
         }

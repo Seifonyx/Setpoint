@@ -12,6 +12,7 @@ struct FoodDetailSheet: View {
 
     @State private var info: FoodInfo?
     @State private var qtyText = ""
+    @FocusState private var amountFocused
     @State private var unit = ""
     @State private var factor = 1.0            // for quick adds and meals: how many of the logged amount
     @State private var live: Totals?
@@ -124,6 +125,8 @@ struct FoodDetailSheet: View {
                     TextField("Amount", text: $qtyText).keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                         .font(Brand.num(22, .semibold)).monospacedDigit().frame(width: 76)
                         .padding(.horizontal, 8).padding(.vertical, 4).background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
+                        .focused($amountFocused)
+                        .accessibilityIdentifier("amount-field")
                     UnitButton(units: info?.units ?? [], unit: $unit, qtyText: $qtyText).fixedSize()
                 } else {
                     Stepper(value: $factor, in: 0.25...10, step: 0.25) {
@@ -131,7 +134,11 @@ struct FoodDetailSheet: View {
                     }
                     .fixedSize()
                 }
-            } }
+            }
+            // tap anywhere on the amount's line to type it (the unit button still opens its own list)
+            .contentShape(.rect)
+            .onTapGesture { if byFood { amountFocused = true } }
+            .accessibilityIdentifier("amount-row") }
             HStack(spacing: 14) {
                 VStack(alignment: .leading, spacing: 5) {
                     Text("Calories").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2)
@@ -430,6 +437,7 @@ struct PartAmountSheet: View {
     @State private var qtyText = ""
     @State private var unit = ""
     @State private var kcal: Double?
+    @FocusState private var amountFocused
 
     private var qty: Double? { Double(qtyText.replacingOccurrences(of: ",", with: ".").replacingOccurrences(of: "٫", with: ".")).flatMap { $0 > 0 ? $0 : nil } }
 
@@ -439,9 +447,12 @@ struct PartAmountSheet: View {
                 Section {
                     HStack(spacing: 12) {
                         TextField("Amount", text: $qtyText).keyboardType(.decimalPad).font(Brand.num(28, .semibold)).monospacedDigit().frame(maxWidth: 120)
+                            .focused($amountFocused)
                         Spacer(minLength: 0)
                         UnitButton(units: units, unit: $unit, qtyText: $qtyText)
                     }
+                    .contentShape(.rect)
+                    .onTapGesture { amountFocused = true } // anywhere on the line types the amount
                     if let k = kcal { LabeledContent("Calories") { Text("\(Fmt.kcal(k)) kcal").monospacedDigit().contentTransition(.numericText()) } }
                 } header: { Text(part["name"]?.string ?? "") }
             }

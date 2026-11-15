@@ -97,5 +97,32 @@ final class DiaryDragTests: XCTestCase {
         app.swipeDown(velocity: .fast)
         sleep(1)
         shot(app, "bar-runtime-full")
+        app.terminate()
+
+        // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
+        let f = XCUIApplication()
+        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food"]
+        f.launch()
+        let row = el(f, "amount-row")
+        if row.waitForExistence(timeout: 10) {
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
+            sleep(2)
+            note("amount: keypad after tapping the middle of the line = \(f.keyboards.firstMatch.exists)")
+            shot(f, "amount-keyboard")
+        } else { note("amount: no amount line"); shot(f, "amount-missing") }
+        f.terminate()
+
+        // number fields in forms: tapping the label opens the keypad
+        let n = XCUIApplication()
+        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood"]
+        n.launch()
+        let cal = n.staticTexts["Calories"].firstMatch
+        if cal.waitForExistence(timeout: 10) {
+            cal.tap()
+            sleep(2)
+            note("form: keypad after tapping the Calories label = \(n.keyboards.firstMatch.exists)")
+            shot(n, "form-keyboard")
+        } else { note("form: no Calories label"); shot(n, "form-missing") }
+        n.terminate()
     }
 }

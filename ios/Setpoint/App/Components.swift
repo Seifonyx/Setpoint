@@ -169,11 +169,13 @@ struct NumberField: View {
     var unit: LocalizedStringKey? = nil
     var placeholder: LocalizedStringKey = "0"
     var big = false
+    @FocusState private var focused
     var body: some View {
         HStack(spacing: 10) {
             Text(label).font(big ? .brand(.body, .semibold) : .brand(.body)).foregroundStyle(Brand.ink)
             Spacer(minLength: 8)
             TextField(placeholder, text: $text)
+                .focused($focused)
                 .keyboardType(.decimalPad).multilineTextAlignment(.trailing)
                 .font(Brand.num(big ? 22 : 18, .semibold)).monospacedDigit()
                 .padding(.horizontal, 10).padding(.vertical, big ? 7 : 5)
@@ -181,6 +183,8 @@ struct NumberField: View {
                 .background(Brand.card2, in: .rect(cornerRadius: Radius.chip))
             Text(unit ?? "").font(.brand(.subheadline)).foregroundStyle(Brand.ink2).frame(width: 40, alignment: .leading)
         }
+        .contentShape(.rect)
+        .onTapGesture { focused = true } // tap anywhere on the line to type, not just the box
     }
 }
 

@@ -40,6 +40,8 @@ struct FoodAmountView: View {
                         Spacer(minLength: 0)
                         UnitButton(units: info.units, unit: $unit, qtyText: $qtyText)
                     }
+                    .contentShape(.rect)
+                    .onTapGesture { focused = true } // anywhere on the line types the amount
                     Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
                 }
                 if let m = macros, let left = dayLeft {

@@ -343,9 +343,10 @@ struct FoodsView: View {
             }
             .buttonStyle(.plain)
             Button(action: action) {
-                Label(make, systemImage: "plus").font(.brand(.subheadline, .semibold)).foregroundStyle(type.color)
+                // one colour for every New button: the app's action green (the icons carry each type's colour)
+                Label(make, systemImage: "plus").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
                     .padding(.horizontal, 16).padding(.vertical, 9)
-                    .background(type.color.opacity(0.14), in: Capsule())
+                    .background(Brand.greenSoft, in: Capsule())
             }
             .buttonStyle(.plain)
             .padding(.leading, 42)
