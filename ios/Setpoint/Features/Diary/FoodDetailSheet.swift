@@ -115,7 +115,7 @@ struct FoodDetailSheet: View {
                 }
             }
             .padding(.vertical, 6)
-            .listRowBackground(Wash(color: FoodIcon.colors[iconKind] ?? Brand.green))
+            .listRowBackground(Wash(color: FoodType(kind: iconKind).color))
             // the amount, on one line (not for meals and recipes: you change what's in them instead)
             if !isMeal && !isRecipe { HStack(spacing: 10) {
                 Text("Amount").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)

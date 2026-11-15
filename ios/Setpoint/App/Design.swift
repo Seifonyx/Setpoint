@@ -189,6 +189,8 @@ struct CalorieDial: View {
     let carbs: (Double, Double)?
     let fat: (Double, Double)?
     var lineWidth: CGFloat = 18
+    var ringWidth: CGFloat = 5   // the three macro arcs inside
+    var ringGap: CGFloat = 10
 
     private let start = 0.125, span = 0.75 // a 270° arc, open at the bottom
 
@@ -197,9 +199,9 @@ struct CalorieDial: View {
         ZStack {
             arc(1, width: lineWidth, color: Brand.card2)
             arc(p, width: lineWidth, color: over ? Brand.over : Brand.green)
-            if let protein { ring(protein, inset: lineWidth + 8, color: Brand.protein) }
-            if let carbs { ring(carbs, inset: lineWidth + 18, color: Brand.carbs) }
-            if let fat { ring(fat, inset: lineWidth + 28, color: Brand.fat) }
+            if let protein { ring(protein, inset: lineWidth + ringGap - 2, color: Brand.protein) }
+            if let carbs { ring(carbs, inset: lineWidth + 2 * ringGap - 2, color: Brand.carbs) }
+            if let fat { ring(fat, inset: lineWidth + 3 * ringGap - 2, color: Brand.fat) }
             // a dot where the arc ends: "today's point"
             GeometryReader { g in
                 let r = min(g.size.width, g.size.height) / 2 - lineWidth / 2
@@ -220,8 +222,8 @@ struct CalorieDial: View {
     }
     private func ring(_ v: (Double, Double), inset: CGFloat, color: Color) -> some View {
         ZStack {
-            arc(1, width: 5, color: Brand.card2, inset: inset)
-            arc(v.0 / max(v.1, 1), width: 5, color: color, inset: inset)
+            arc(1, width: ringWidth, color: Brand.card2, inset: inset)
+            arc(v.0 / max(v.1, 1), width: ringWidth, color: color, inset: inset)
         }
     }
 }

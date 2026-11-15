@@ -52,12 +52,16 @@ struct FoodLists: View {
                     ForEach(recipes.indices, id: \.self) { i in
                         let r = recipes[i]
                         Button { recipeEdit = EditFood(id: r["id"]?.string ?? "", food: r) } label: {
-                            LabeledContent {
+                            HStack(spacing: 12) {
+                                FoodIcon(kind: "recipe")
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text(r["name"]?.string ?? "").foregroundStyle(Brand.ink).lineLimit(2)
+                                    Text("\(Int(r["servings"]?.number ?? 1)) servings").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                                }
+                                Spacer(minLength: 8)
                                 Text("\((r["items"]?.array ?? []).count)").foregroundStyle(.secondary)
-                            } label: {
-                                Text(r["name"]?.string ?? "")
-                                Text("\(Int(r["servings"]?.number ?? 1)) servings")
                             }
+                            .contentShape(.rect)
                         }
                         .tint(.primary)
                         .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") } }
@@ -270,64 +274,118 @@ struct CustomFoodSheet: View {
     }
 }
 
-/// Foods: categories, each on its own page.
+/// Foods: your own foods, recipes and meals as cards (what each is for, how many you have, and a button to make one),
+/// then the tools that use them.
 struct FoodsView: View {
     @Environment(Store.self) private var store
     @State private var openPlanner = false
     @State private var openRepeating = false
-    @State private var shotNewFood = false   // build-server screenshots
-    @State private var shotNewMeal = false
-    @State private var shotList: FoodLists.Kind?
+    @State private var newFood = false
+    @State private var newRecipe = false
+    @State private var newMeal = false
+    @State private var shotList: FoodLists.Kind?   // build-server screenshots
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
 
     var body: some View {
         NavigationStack {
-            List {
-                Section {
-                    row("My foods", "pencil.line", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
-                    row("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
-                    row("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
-                    row("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }
-                    row("Saved days", "calendar.badge.checkmark", Brand.blue, store.ios("savedDays")?.array?.count ?? 0) { SavedDaysView() }
+            ScrollView {
+                VStack(spacing: 12) {
+                    card(.mine, FoodType.mine, "My foods", "Anything that isn't in the database, with its own serving and nutrition label.",
+                         count("myFoods"), make: "New food") { newFood = true }
+                    card(.recipes, FoodType.recipe, "Recipes", "Cook once, log a serving: every ingredient is added up for you.",
+                         count("recipes"), make: "New recipe") { newRecipe = true }
+                    card(.meals, FoodType.meal, "Meals", "Foods you often have together, logged in one tap.",
+                         count("meals"), make: "New meal") { newMeal = true }
+                    tools
                 }
-                Section { planRow }
+                .padding(.horizontal, 16)
+                .padding(.bottom, 24)
             }
-            .brandList()
+            .paperPage()
             .shrinksTabBar()
             .navigationTitle("Foods")
+            .navigationDestination(for: FoodLists.Kind.self) { FoodLists(kind: $0) }
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
             .navigationDestination(item: $shotList) { FoodLists(kind: $0) }
-            .sheet(isPresented: $shotNewFood) { CustomFoodSheet(food: nil) }
-            .sheet(isPresented: $shotNewMeal) { MealEditor(meal: nil) }
-            .task { // build-server screenshots: -open planner / -open repeating
+            .sheet(isPresented: $newFood) { CustomFoodSheet(food: nil) }
+            .sheet(isPresented: $newRecipe) { RecipeEditor(recipe: nil) }
+            .sheet(isPresented: $newMeal) { MealEditor(meal: nil) }
+            .task { // build-server screenshots: -open planner / repeating / recipe / mine / newfood / newmeal
                 SavedDays.moveOld(store)
                 let o = UserDefaults.standard.string(forKey: "open")
                 openPlanner = o == "planner"; openRepeating = o == "repeating"
                 shotList = o == "recipe" ? .recipes : o == "mine" ? .mine : nil
-                shotNewFood = o == "newfood"; shotNewMeal = o == "newmeal"
+                newFood = o == "newfood"; newMeal = o == "newmeal"
             }
         }
     }
 
-    /// The day planner, last: one row with a line saying what it does.
-    private var planRow: some View {
-        NavigationLink { DayPlannerView() } label: {
-            Label {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("Plan my day").foregroundStyle(Brand.ink)
-                    Text("A balanced day for your targets, built from what you eat").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+    /// One of your own lists: tap the card to open it, or the button to make a new one straight away.
+    private func card(_ kind: FoodLists.Kind, _ type: FoodType, _ title: LocalizedStringKey, _ about: LocalizedStringKey,
+                      _ n: Int, make: LocalizedStringKey, _ action: @escaping () -> Void) -> some View {
+        VStack(alignment: .leading, spacing: 14) {
+            NavigationLink(value: kind) {
+                HStack(alignment: .top, spacing: 14) {
+                    Image(systemName: type.icon).font(.system(size: 22, weight: .semibold)).foregroundStyle(type.color)
+                        .frame(width: 28, height: 28)
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(alignment: .firstTextBaseline, spacing: 8) {
+                            Text(title).font(Brand.display(20, .bold)).foregroundStyle(Brand.ink)
+                            if n > 0 { Text("\(n)").font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2) }
+                            Spacer(minLength: 4)
+                            Image(systemName: "chevron.forward").font(.brand(.footnote, .bold)).foregroundStyle(Brand.ink2)
+                        }
+                        Text(about).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).fixedSize(horizontal: false, vertical: true)
+                    }
                 }
-            } icon: {
-                Image(systemName: "calendar.day.timeline.left").font(.system(size: 14, weight: .semibold)).foregroundStyle(.white)
-                    .frame(width: 28, height: 28).background(Brand.green, in: .rect(cornerRadius: Radius.icon))
+                .contentShape(.rect)
             }
+            .buttonStyle(.plain)
+            Button(action: action) {
+                Label(make, systemImage: "plus").font(.brand(.subheadline, .semibold)).foregroundStyle(type.color)
+                    .padding(.horizontal, 16).padding(.vertical, 9)
+                    .background(type.color.opacity(0.14), in: Capsule())
+            }
+            .buttonStyle(.plain)
+            .padding(.leading, 42)
         }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .brandCard()
     }
 
-    private func row<D: View>(_ title: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int, @ViewBuilder dest: @escaping () -> D) -> some View {
-        NavigationLink { dest() } label: {
-            LabeledContent { Text("\(n)").monospacedDigit().foregroundStyle(Brand.ink2) } label: { TileLabel(title, icon, color) }
+    /// The tools that use your foods, together in one card.
+    private var tools: some View {
+        VStack(spacing: 0) {
+            NavigationLink { RepeatingView() } label: {
+                toolRow("Repeating", "Foods logged for you on a schedule, like a daily supplement", "repeat", Brand.blue, count("repeats"))
+            }
+            Divider().padding(.leading, 58)
+            NavigationLink { SavedDaysView() } label: {
+                toolRow("Saved days", "Whole days you kept, to log again in one go", "calendar.badge.checkmark", Brand.green, store.ios("savedDays")?.array?.count ?? 0)
+            }
+            Divider().padding(.leading, 58)
+            NavigationLink { DayPlannerView() } label: {
+                toolRow("Plan my day", "A balanced day for your targets, built from what you eat", "calendar.day.timeline.left", Brand.amber, 0)
+            }
         }
+        .buttonStyle(.plain)
+        .padding(.vertical, 4)
+        .brandCard(padding: 0)
+    }
+
+    private func toolRow(_ title: LocalizedStringKey, _ about: LocalizedStringKey, _ icon: String, _ color: Color, _ n: Int) -> some View {
+        HStack(spacing: 14) {
+            Image(systemName: icon).font(.system(size: 19, weight: .semibold)).foregroundStyle(color).frame(width: 28)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(title).font(.brand(.body, .semibold)).foregroundStyle(Brand.ink)
+                Text(about).font(.brand(.footnote)).foregroundStyle(Brand.ink2).fixedSize(horizontal: false, vertical: true)
+            }
+            Spacer(minLength: 8)
+            if n > 0 { Text("\(n)").font(Brand.num(17, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2) }
+            Image(systemName: "chevron.forward").font(.brand(.footnote, .bold)).foregroundStyle(Brand.ink2)
+        }
+        .padding(.horizontal, 16).padding(.vertical, 12)
+        .contentShape(.rect)
     }
 }

@@ -1481,6 +1481,16 @@
         }
       }
     },
+    "Anything that isn't in the database, with its own serving and nutrition label.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أي أكل مش موجود في قاعدة البيانات، بحصته وقيمه الغذائية."
+          }
+        }
+      }
+    },
     "App": {
       "localizations": {
         "ar": {
@@ -2207,6 +2217,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المتابعة بجوجل"
+          }
+        }
+      }
+    },
+    "Cook once, log a serving: every ingredient is added up for you.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اطبخ مرة وسجّل حصة: كل المكونات بتتحسب لوحدها."
           }
         }
       }
@@ -3501,6 +3521,16 @@
         }
       }
     },
+    "Foods logged for you on a schedule, like a daily supplement": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكل بيتسجل لوحده في مواعيده، زي مكمل يومي"
+          }
+        }
+      }
+    },
     "Foods you log by name only (quick adds) don't count here. Faded rows have little data for the day.": {
       "localizations": {
         "ar": {
@@ -3517,6 +3547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأكلات اللي بتعملها بتظهر هنا، زي شيك البروتين أو مكرونة مامتك."
+          }
+        }
+      }
+    },
+    "Foods you often have together, logged in one tap.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلات بتاكلها مع بعض كتير، تتسجل بضغطة واحدة."
           }
         }
       }
@@ -8957,6 +8997,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أي يوم"
+          }
+        }
+      }
+    },
+    "Whole days you kept, to log again in one go": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أيام كاملة حفظتها، تسجلها تاني مرة واحدة"
           }
         }
       }

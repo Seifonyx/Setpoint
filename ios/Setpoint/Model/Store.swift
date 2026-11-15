@@ -440,7 +440,9 @@ final class Store {
     /// Dragged in the Diary: put a food in a meal, just before another food (or at the end of the meal).
     func place(_ id: String, meal: String, before target: String?, on day: String) {
         guard id != target, var list = food[day], let i = list.firstIndex(where: { $0.id == id }) else { return }
-        remember(String(localized: "Moved \(list[i].displayName)"), .edit)
+        // no undo toast for a drag: dragging it back is the undo. Still a change, for the light haptic tap.
+        changeKind = .edit
+        changeCount += 1
         var item = list.remove(at: i)
         item.meal = meal; stamp(&item)
         if let t = target, let j = list.firstIndex(where: { $0.id == t }) { list.insert(item, at: j) }

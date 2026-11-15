@@ -193,7 +193,7 @@ struct SummaryPager: View {
     let plan: DayPlan?
     var openNutrient: (NutrientRoute) -> Void = { _ in }
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
-    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 300 // grows with the iPhone's text size
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 208 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -220,53 +220,59 @@ struct SummaryCard: View {
     let totals: Totals
     let plan: DayPlan?
 
+    /// The dial and its numbers, sized together: 184pt with slimmer rings keeps the number as big as before.
+    static let dial: CGFloat = 184
+
     var body: some View {
-        VStack(spacing: 8) {
+        // side by side: the dial on one side, the three macros stacked on the other (about 100pt shorter than stacked)
+        HStack(spacing: 18) {
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
-                            protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
-                    .frame(width: 228, height: 228)
+                            protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) },
+                            lineWidth: 15, ringWidth: 4, ringGap: 7)
+                    .frame(width: Self.dial, height: Self.dial)
                 // inside the rings: what's left. The number sits on the ring's exact centre; its small label rides above it.
                 Group {
                     if let plan {
                         let left = plan.kcal - totals.kcal
-                        Text(Fmt.kcal(abs(left))).font(Brand.num(46, .bold)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
+                        Text(Fmt.kcal(abs(left))).font(Brand.num(42, .bold)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                             .overlay(alignment: .top) {
                                 Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
-                                    .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
+                                    .font(.brand(.caption2, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.3)
                                     .fixedSize().alignmentGuide(.top) { $0[.bottom] }
                             }
                     } else {
-                        Text(Fmt.kcal(totals.kcal)).font(Brand.num(46, .bold)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                        Text(Fmt.kcal(totals.kcal)).font(Brand.num(42, .bold)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
                             .overlay(alignment: .top) {
-                                Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
+                                Text("eaten").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.3)
                                     .fixedSize().alignmentGuide(.top) { $0[.bottom] }
                             }
                     }
                 }
-                .frame(maxWidth: 124)
+                .frame(maxWidth: 100)
                 // in the opening at the bottom of the dial: eaten of target
                 Text(plan.map { "\(Fmt.kcal(totals.kcal)) / \(Fmt.kcal($0.kcal)) kcal" } ?? String(localized: "kcal"))
-                    .font(.brand(.footnote, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
-                    .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 140)
-                    .offset(y: 100)
+                    .font(.brand(.caption, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
+                    .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 116)
+                    .offset(y: Self.dial * 0.43)
             }
-            .frame(maxWidth: .infinity)
+            .frame(width: Self.dial, height: Self.dial)
             .contentShape(Rectangle())
             .onTapGesture { if plan != nil { explain = true } } // tap the dial: how your target is worked out
             if let plan {
-                HStack(spacing: 14) {
+                VStack(alignment: .leading, spacing: 10) {
                     MacroBar(label: "Protein", value: totals.protein, target: plan.protein, color: Brand.protein, key: "p")
                     MacroBar(label: "Carbs", value: totals.carbs, target: plan.carbs, color: Brand.carbs, key: "c")
                     MacroBar(label: "Fat", value: totals.fat, target: plan.fat, color: Brand.fat, key: "f")
                 }
+                .frame(maxWidth: .infinity)
             } else {
-                Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
+                Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+                    .frame(maxWidth: .infinity, alignment: .leading)
             }
         }
-        .padding(.top, 2)
-        .frame(maxHeight: .infinity, alignment: .top)
+        .frame(maxHeight: .infinity)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
         .overlay(alignment: .top) {
@@ -280,7 +286,7 @@ struct SummaryCard: View {
             // the logging moment: what you just added floats up out of the dial
             if let g = gained {
                 Text("+\(Fmt.kcal(g)) kcal").font(Brand.num(26, .semibold)).foregroundStyle(Brand.green).monospacedDigit()
-                    .offset(y: rise ? -150 : -70).opacity(rise ? 0 : 1)
+                    .offset(y: rise ? -90 : -10).opacity(rise ? 0 : 1)
                     .allowsHitTesting(false)
             }
         }
@@ -333,9 +339,9 @@ struct MicrosCard: View {
     @State private var picking = false
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack(alignment: .firstTextBaseline) {
-                Text("Vitamins & minerals").font(Brand.display(20, .bold))
+                Text("Vitamins & minerals").font(Brand.display(18, .bold))
                 Spacer()
                 Button("Edit") { picking = true }
                     .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).buttonStyle(.plain)
@@ -348,7 +354,7 @@ struct MicrosCard: View {
             }
             if let d = data, d.items > 0 {
                 let rows = Highlights.keys(store).compactMap { k in d.rows.first { $0.key == k } }
-                LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 20) {
+                LazyVGrid(columns: [GridItem(.flexible(), spacing: 18), GridItem(.flexible(), spacing: 18)], spacing: 9) {
                     ForEach(rows, id: \.key) { r in
                         // tap one: the foods it came from (and foods high in it)
                         Button { open(.one(r.key)) } label: { cell(r).contentShape(Rectangle()) }.buttonStyle(.plain)
@@ -361,7 +367,7 @@ struct MicrosCard: View {
             }
             Spacer(minLength: 0)
         }
-        .padding(.vertical, 8)
+        .padding(.vertical, 4)
         .task(id: "\(day)|\(store.version)|\(store.foodsReady)") { data = await store.engineRef.nutrients(day) }
         .sheet(isPresented: $picking) { HighlightPicker() }
     }

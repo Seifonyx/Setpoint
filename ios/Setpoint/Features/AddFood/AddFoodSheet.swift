@@ -594,35 +594,30 @@ struct FoodIcon: View {
     var size: CGFloat = 32
     var name: String? = nil
 
-    private var key: String {
-        // rice gets its own bowl rather than bread
-        if kind == "grain", let n = name?.lowercased(), n.contains("rice") || n.contains("أرز") || n.contains("رز") { return "rice" }
-        return Self.colors[kind] == nil ? "food" : kind
-    }
     var body: some View {
-        // quiet and consistent: grey glyphs on a soft tile. Saved meals and recipes have their own symbols.
-        Group {
-            if kind == "meal" || kind == "recipe" || kind == "mine" {
-                // your own foods get a pencil: you wrote them
-                Image(systemName: kind == "meal" ? "takeoutbag.and.cup.and.straw.fill" : kind == "recipe" ? "frying.pan.fill" : "pencil.line")
-                    .font(.system(size: size * (kind == "mine" ? 0.46 : 0.42), weight: kind == "mine" ? .bold : .semibold))
-            } else {
-                Image("food-\(key)").resizable().renderingMode(.template).scaledToFit()
-                    .frame(width: size * 0.56, height: size * 0.56)
-            }
-        }
-        .foregroundStyle(Brand.ink2)
-        .frame(width: size, height: size)
-        .background(Brand.card2, in: .rect(cornerRadius: size * 0.3))
-        .accessibilityHidden(true)
+        // one fixed icon per type (foods, meals, recipes, your own foods), each in its own colour, no tile behind it
+        let style = FoodType(kind: kind)
+        Image(systemName: style.icon)
+            .font(.system(size: size * 0.6, weight: .semibold))
+            .foregroundStyle(style.color)
+            .frame(width: size, height: size)
+            .accessibilityHidden(true)
     }
-    static let colors: [String: Color] = [
-        "fruit": Brand.protein, "veg": Brand.green, "meat": Brand.over, "poultry": Brand.amber, "fish": Brand.water, "dairy": Brand.blue,
-        "egg": Brand.amber, "grain": Brand.dyn(0xA8722F, 0xD6A15E), "rice": Brand.dyn(0xA8722F, 0xD6A15E), "drink": Brand.water,
-        "sweet": Brand.dyn(0xB9507F, 0xDC86AB), "nut": Brand.dyn(0x8C6239, 0xC4986A), "legume": Brand.dyn(0x6E7F2E, 0xA9BA62),
-        "oil": Brand.dyn(0x7D7A26, 0xBDB85E), "dish": Brand.green, "soup": Brand.protein, "snack": Brand.amber, "spice": Brand.over,
-        "recipe": Brand.protein, "meal": Brand.green, "mine": Brand.green, "pack": Brand.ink2, "rest": Brand.ink2, "quick": Brand.amber, "food": Brand.green
-    ]
+}
+
+/// The four kinds of thing you log, each with one icon and colour used everywhere (Diary, Add food, the Foods tab).
+struct FoodType {
+    let icon: String
+    let color: Color
+    init(kind: String) {
+        switch kind {
+        case "meal": icon = "takeoutbag.and.cup.and.straw.fill"; color = Brand.water
+        case "recipe": icon = "frying.pan.fill"; color = Brand.protein
+        case "mine": icon = "pencil"; color = Brand.fat          // your own foods: you wrote them
+        default: icon = "carrot.fill"; color = Brand.amber         // every food from the database (and quick adds)
+        }
+    }
+    static let food = FoodType(kind: "food"), meal = FoodType(kind: "meal"), recipe = FoodType(kind: "recipe"), mine = FoodType(kind: "mine")
 }
 
 /// The filter pill used on every tab of Add food: how the list is sorted, and (where it applies) Verified only.
