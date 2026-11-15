@@ -54,14 +54,13 @@ struct TabBarShrinker: UIViewRepresentable {
             }
             for label in labels(bar) {
                 label.alpha = hidden ? 0 : 1
-                // the smallest view holding both this name and its icon: move it so the icon sits on the bar's middle
-                // (the name inside it is invisible while compact, so it can move along)
+                // this name's icon (in the smallest view holding both): move just the icon onto the bar's middle,
+                // so the highlight behind the open tab stays where it is
                 var up = label.superview
                 while let box = up, box !== bar {
                     if let i = icon(in: box) {
-                        box.transform = .identity
-                        let mid = i.superview?.convert(i.center, to: bar).y ?? bar.bounds.midY
-                        box.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
+                        let mid = i.superview?.convert(i.center, to: bar).y ?? bar.bounds.midY // center ignores the transform
+                        i.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
                         break
                     }
                     up = box.superview
