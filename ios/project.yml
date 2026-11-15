@@ -34,6 +34,8 @@ targets:
         CODE_SIGN_STYLE: Manual
     dependencies:
       - target: SetpointWidgets # embedded in the app (PlugIns/SetpointWidgets.appex)
+    scheme:
+      testTargets: [SetpointUITests]
     info:
       path: Setpoint/Info.plist
       properties:
@@ -85,3 +87,17 @@ targets:
         NSExtension:
           NSExtensionPointIdentifier: com.apple.widgetkit-extension
         UIAppFonts: [BricolageGrotesque-SemiBold.ttf, BricolageGrotesque-Bold.ttf, BricolageGrotesque-ExtraBold.ttf, Figtree-Regular.ttf, Figtree-Medium.ttf, Figtree-SemiBold.ttf, Figtree-Bold.ttf, IBMPlexSansArabic-Regular.ttf, IBMPlexSansArabic-Medium.ttf, IBMPlexSansArabic-SemiBold.ttf, IBMPlexSansArabic-Bold.ttf, BarlowCondensed-Medium.ttf, BarlowCondensed-SemiBold.ttf, BarlowCondensed-Bold.ttf]
+  SetpointUITests: # build server only: drags foods in the simulator (DiaryDragTests)
+    type: bundle.ui-testing
+    platform: iOS
+    sources:
+      - path: UITests
+    dependencies:
+      - target: Setpoint
+    settings:
+      base:
+        PRODUCT_BUNDLE_IDENTIFIER: app.setpoint.ios.uitests
+        GENERATE_INFOPLIST_FILE: YES
+        TEST_TARGET_NAME: Setpoint
+        DEVELOPMENT_TEAM: ""
+        CODE_SIGN_STYLE: Manual

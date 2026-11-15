@@ -35,9 +35,20 @@ struct TabBarShrinker: UIViewRepresentable {
             let scale: CGFloat = compact ? 0.82 : 1
             let drop = bar.bounds.height * (1 - scale) / 2   // keep its bottom edge where it was
             let t = compact ? CGAffineTransform(translationX: 0, y: drop).scaledBy(x: scale, y: scale) : .identity
-            if UIAccessibility.isReduceMotionEnabled || window == nil { bar.transform = t; return }
-            UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
-                bar.transform = t
+            let change = { bar.transform = t; Self.names(in: bar, hidden: compact) }
+            if UIAccessibility.isReduceMotionEnabled || window == nil { change(); return }
+            UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState], animations: change)
+        }
+        /// The tab names fade out while the bar is compact, and each icon moves down to the middle of its tab.
+        /// (The system bar doesn't redraw its labels when SwiftUI changes them while it's on screen, so this is done here.)
+        private static func names(in bar: UIView, hidden: Bool) {
+            func labels(_ v: UIView) -> [UILabel] { (v as? UILabel).map { [$0] } ?? v.subviews.flatMap(labels) }
+            for label in labels(bar) {
+                label.alpha = hidden ? 0 : 1
+                guard let tab = label.superview else { continue }
+                for icon in tab.subviews where !(icon is UILabel) && icon.frame.height < tab.bounds.height * 0.8 && icon.frame.maxY <= label.frame.minY + 2 {
+                    icon.transform = hidden ? CGAffineTransform(translationX: 0, y: tab.bounds.midY - icon.frame.midY) : .identity
+                }
             }
         }
         /// On iOS 26 the glass and the tabs live in the bar's "platter" view (360×62 inside the 402×83 bar):

@@ -41,9 +41,9 @@ struct RootView: View {
         }
     }
 
-    /// A tab's icon (filled on the open tab) and name; the name steps aside while the bar is compact.
+    /// A tab's icon (filled on the open tab) and name; the name fades out while the bar is compact (TabBarShrinker).
     private func tabLabel(_ title: LocalizedStringKey, _ icon: String, _ t: AppTab) -> some View {
-        Label { if !tabBar.compact { Text(title) } } icon: {
+        Label { Text(title) } icon: {
             Image(systemName: tab == t ? icon + ".fill" : icon).environment(\.symbolVariants, .none)
         }
         .accessibilityLabel(Text(title))

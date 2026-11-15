@@ -1,4 +1,5 @@
 import SwiftUI
+import UniformTypeIdentifiers
 
 /// One meal in the Diary: its foods, with iOS swipe actions and a long-press menu on each, and a ⋯ menu for the meal.
 struct MealSection: View {
@@ -72,18 +73,23 @@ struct MealSection: View {
             .padding(.vertical, 0)
             .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
             .listRowBackground(Brand.card.overlay(TopSheen()))
+            .accessibilityIdentifier("meal-\(meal.key)")
             // drop a dragged food on a meal's name: it goes to the end of that meal (works for empty or folded meals)
-            .dropDestination(for: String.self) { ids, _ in
-                guard let id = ids.first, store.items(day).contains(where: { $0.id == id }) else { return false }
+            .onDrop(of: FoodDrag.types, isTargeted: nil) { _ in
+                guard let id = FoodDrag.take(), store.items(day).contains(where: { $0.id == id }) else { return false }
                 withAnimation(.snappy) { store.place(id, meal: meal.key, before: nil, on: day) }
-                if !expanded { withAnimation(.snappy) { toggleOpen() } }
+                if !expanded { toggleOpen() }
                 return true
             }
             if expanded {
             ForEach(foods) { food in
                 Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
                     .buttonStyle(.plain)
-                    .draggable(food.id) { FoodRow(food: food, day: day, kind: kinds[food.id]).padding(10).frame(width: 320).background(Brand.card, in: .rect(cornerRadius: Radius.chip)) }
+                    .accessibilityIdentifier("food-\(food.id)")
+                    // press, hold and drag (List's own drag, so the list makes room and scrolls while you drag)
+                    .onDrag { FoodDrag.start(food.id) } preview: {
+                        FoodRow(food: food, day: day, kind: kinds[food.id]).padding(10).frame(width: 320).background(Brand.card, in: .rect(cornerRadius: Radius.chip))
+                    }
                 .listRowBackground(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card)
                 .animation(.easeOut(duration: 0.9), value: store.justAdded.contains(food.id))
                     .swipeActions(edge: .trailing) {
@@ -114,8 +120,8 @@ struct MealSection: View {
                     }
             }
             // press, hold and drag a food: drop it between foods here, from this meal or another one
-            .dropDestination(for: String.self) { ids, index in
-                guard let id = ids.first, store.items(day).contains(where: { $0.id == id }) else { return }
+            .onInsert(of: FoodDrag.types) { index, _ in
+                guard let id = FoodDrag.take(), store.items(day).contains(where: { $0.id == id }) else { return }
                 let list = foods
                 let target = index < list.count ? list[index].id : nil
                 withAnimation(.snappy) { store.place(id, meal: meal.key, before: target, on: day) }
@@ -154,6 +160,15 @@ struct MealSection: View {
             if f == "food" { open = foods.first }
         } // build-server screenshots
     }
+}
+
+/// The food being dragged in the Diary. Drags stay inside the app, so the drop reads it from here instead of
+/// unpacking the dragged text (which arrives later, off the main thread).
+@MainActor enum FoodDrag {
+    static let types: [UTType] = [.utf8PlainText, .plainText, .text]
+    private static var current: String?
+    static func start(_ id: String) -> NSItemProvider { current = id; return NSItemProvider(object: id as NSString) }
+    static func take() -> String? { defer { current = nil }; return current }
 }
 
 struct FoodRow: View {
