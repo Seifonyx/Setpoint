@@ -552,15 +552,18 @@ struct FoodHitRow: View {
 /// A food inside a recipe or meal: icon, the short name ("Potatoes") with the rest of it and the amount under it
 /// ("flesh and skin, raw · 750 g"), and the calories lined up on the right, the same as a row in the Diary.
 struct IngredientRow: View {
+    @Environment(Store.self) private var store
     let name: String
     let amount: String?
     let kcal: Double
     var kind = "food"
+    var ref: String? = nil          // the food's id: its icon is looked up from the food list
+    @State private var found: String?
 
     var body: some View {
         let (head, rest) = Self.split(name)
         HStack(spacing: 12) {
-            FoodIcon(kind: kind, size: 32, name: name)
+            FoodIcon(kind: found ?? kind, size: 32, name: name)
             VStack(alignment: .leading, spacing: 2) {
                 Text(head).font(.brand(.body, .medium)).foregroundStyle(Brand.ink).lineLimit(1)
                 let sub = [rest, amount].compactMap { $0 }.joined(separator: " · ")
@@ -572,6 +575,10 @@ struct IngredientRow: View {
         .padding(.vertical, 2)
         .contentShape(.rect)
         .accessibilityElement(children: .combine)
+        .task(id: "\(ref ?? "")|\(store.foodsReady)") {
+            guard let ref, store.foodsReady else { return }
+            found = await store.engineRef.kinds(of: [ref])[ref]
+        }
     }
 
     /// Words that only file a food under a heading ("Beverages, water, tap"): skipped so the food itself leads.

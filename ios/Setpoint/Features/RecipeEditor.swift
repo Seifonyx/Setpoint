@@ -10,6 +10,7 @@ struct RecipeEditor: View {
     @State private var servings = 4
     @State private var cooked = ""
     @State private var items: [[String: JSONValue]] = []
+    @State private var kinds: [String: String] = [:]
     @State private var picking = false
     @State private var error: String?
 
@@ -28,7 +29,7 @@ struct RecipeEditor: View {
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
-                        IngredientRow(name: it["name"]?.string ?? "", amount: Fmt.amount(it["qty"]?.number ?? 1, it["unit"]?.string ?? "g"), kcal: it["kcal"]?.number ?? 0)
+                        IngredientRow(name: it["name"]?.string ?? "", amount: Fmt.amount(it["qty"]?.number ?? 1, it["unit"]?.string ?? "g"), kcal: it["kcal"]?.number ?? 0, ref: it["ref"]?.string)
                     }
                     .onDelete { items.remove(atOffsets: $0) }
                     Button("Add ingredient", systemImage: "plus") { picking = true }
@@ -52,17 +53,25 @@ struct RecipeEditor: View {
                 guard let r = recipe else { return }
                 name = r["name"]?.string ?? ""; servings = Int(r["servings"]?.number ?? 1)
                 cooked = r["cookedG"]?.number.map { String(Int($0)) } ?? ""
-                // Work out each ingredient's calories for the list (recipes only store the amounts).
-                var out: [[String: JSONValue]] = []
-                for it in (r["items"]?.array ?? []).compactMap({ $0.object }) {
-                    var x = it
-                    if let ref = it["ref"]?.string, let q = it["qty"]?.number, let u = it["unit"]?.string,
-                       let m = await store.engineRef.macros(ref, qty: q, unit: u) { x["kcal"] = .number(m.kcal) }
-                    out.append(x)
-                }
-                items = out
+                items = (r["items"]?.array ?? []).compactMap { $0.object }
             }
+            // Each ingredient's calories and icon (recipes only store the amounts); again once the food list has
+            // loaded, so opening a recipe straight after launch never shows 0 kcal.
+            .task(id: "\(store.foodsReady)|\(items.count)") { await fillIn() }
         }
+    }
+
+    private func fillIn() async {
+        guard store.foodsReady else { return }
+        let refs = items.compactMap { $0["ref"]?.string }
+        kinds = await store.engineRef.kinds(of: refs)
+        var out = items, changed = false
+        for i in out.indices where out[i]["kcal"] == nil {
+            let it = out[i]
+            if let ref = it["ref"]?.string, let q = it["qty"]?.number, let u = it["unit"]?.string,
+               let m = await store.engineRef.macros(ref, qty: q, unit: u) { out[i]["kcal"] = .number(m.kcal); changed = true }
+        }
+        if changed { items = out }
     }
 
     private func save() {

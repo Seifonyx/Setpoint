@@ -89,7 +89,10 @@ struct FoodDetailSheet: View {
                 Button("Delete", role: .destructive) { store.delete(food, on: day); dismiss() }
             }
             .task { await load() }
-            .onChange(of: store.foodsReady) { _, ready in if ready { Task { await loadInfo() } } }
+            .onChange(of: store.foodsReady) { _, ready in
+                guard ready else { return }
+                Task { await loadInfo(); if isRecipe && !recipeEdited { await loadRecipe(saved: false) } } // calories need the food list
+            }
             .task(id: "\(qtyText)|\(unit)|\(factor)|\(parts.count)|\(partsEdited)|\(parts.description.count)|\(recipe?.description.count ?? 0)") { await recalc() }
         }
         .presentationDetents([.large])
@@ -169,7 +172,7 @@ struct FoodDetailSheet: View {
                 let it = parts[i]
                 Button { if it["ref"]?.string != nil { editingPart = PartJob(index: i, part: it, inRecipe: false) } } label: {
                 IngredientRow(name: it["name"]?.string ?? String(localized: "Quick add"), amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q * factor, $0) } },
-                              kcal: (it["kcal"]?.number ?? 0) * factor, kind: it["ref"]?.string == nil ? "quick" : "food")
+                              kcal: (it["kcal"]?.number ?? 0) * factor, kind: it["ref"]?.string == nil ? "quick" : "food", ref: it["ref"]?.string)
                 }
                 .buttonStyle(.plain)
                 .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
@@ -182,7 +185,7 @@ struct FoodDetailSheet: View {
             ForEach(recipeItems.indices, id: \.self) { i in
                 let it = recipeItems[i]
                 Button { editingPart = PartJob(index: i, part: it, inRecipe: true) } label: {
-                    IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0)
+                    IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0, ref: it["ref"]?.string)
                 }
                 .buttonStyle(.plain)
                 .swipeActions {

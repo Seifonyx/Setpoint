@@ -298,6 +298,8 @@
       res.sort(function (a, b) { return b.v - a.v || (b.f.pop || 0) - (a.f.pop || 0); });
       return J({ label: L(NUT[key].label), unit: NUT[key].unit, rows: res.slice(0, 40).map(function (r) { return { hit: row(r.f, meal || 'snacks'), v: r.v, sub: r.sub, pct: goal ? Math.round(r.v / goal * 100) : null }; }) });
     },
+    // The icon kind for each food id (fruit, grain, drink, mine…), for lists of ingredients.
+    kindsOf: function (txt) { var o = {}; JSON.parse(txt).forEach(function (r) { var f = getFood(r); o[r] = f ? ftKind(f) : 'quick'; }); return J(o); },
     nutrients: function (d) {
       var nd = dayNutrients(d), tg = nutTargets(d);
       return J({ items: nd.items, kcal: nd.kcal, groups: NUT_GROUPS.map(function (g) { return { key: g[0], label: L(g[1]) }; }),

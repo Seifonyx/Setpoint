@@ -37,7 +37,7 @@ struct MealEditor: View {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
                         Button { editing = Part(index: i, item: it) } label: {
-                            IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0)
+                            IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0, ref: it["ref"]?.string)
                         }
                         .buttonStyle(.plain)
                         .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = items.remove(at: i) } } }
@@ -129,7 +129,7 @@ struct MealLogSheet: View {
                 Section {
                     ForEach(items.indices, id: \.self) { i in
                         let it = items[i]
-                        IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q * servings, $0) } }, kcal: (it["kcal"]?.number ?? 0) * servings)
+                        IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q * servings, $0) } }, kcal: (it["kcal"]?.number ?? 0) * servings, ref: it["ref"]?.string)
                     }
                 } header: { Text("Foods") }
             }

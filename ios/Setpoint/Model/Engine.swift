@@ -96,6 +96,10 @@ actor Engine {
     func syncMerge(local: String, cloud: String, cloudNewer: Bool) -> String { call("syncMerge", [local, cloud, cloudNewer]) ?? local }
     func nutrients(_ day: String) -> NutrientData? { decode(NutrientData.self, "nutrients", [day]) }
     func targets(_ day: String) -> TargetsData? { decode(TargetsData.self, "targets", [day]) }
+    func kinds(of refs: [String]) -> [String: String] {
+        guard let d = try? JSONEncoder().encode(refs), let t = String(data: d, encoding: .utf8) else { return [:] }
+        return decode([String: String].self, "kindsOf", [t]) ?? [:]
+    }
     func highIn(_ key: String, by: String, meal: String) -> HighIn? { decode(HighIn.self, "highIn", [key, by, meal]) }
     func weekReview(_ start: String = "") -> WeekReview? { decode(WeekReview.self, "weekReview", [start]) }
     func achievements() -> Achievements? { decode(Achievements.self, "achievements", [false]) }
