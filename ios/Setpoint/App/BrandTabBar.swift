@@ -35,37 +35,32 @@ struct TabBarShrinker: UIViewRepresentable {
             let scale: CGFloat = compact ? 0.82 : 1
             let drop = bar.bounds.height * (1 - scale) / 2   // keep its bottom edge where it was
             let t = compact ? CGAffineTransform(translationX: 0, y: drop).scaledBy(x: scale, y: scale) : .identity
-            let change = { bar.transform = t; Self.names(in: bar, hidden: compact) }
+            let items = tabBar()?.items ?? []
+            let change = {
+                bar.transform = t
+                self.titles(items, hidden: compact)
+                Self.fade(in: bar, hidden: compact)
+                bar.setNeedsLayout(); bar.layoutIfNeeded() // the icons slide to the middle of their (now icon-only) tabs
+            }
             if UIAccessibility.isReduceMotionEnabled || window == nil { change(); return }
             UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState], animations: change)
         }
-        /// The tab names fade out while the bar is compact, and each icon moves down to the middle of its tab.
-        /// (The system bar doesn't redraw its labels when SwiftUI changes them while it's on screen, so this is done here.)
-        private static func names(in bar: UIView, hidden: Bool) {
+        /// While compact the tabs have no titles, so the system lays them out icon-only, each icon in the middle of
+        /// its tab (moving the icons ourselves doesn't stick: the bar puts them back). VoiceOver keeps the names.
+        private var saved: [String?] = []
+        private func titles(_ items: [UITabBarItem], hidden: Bool) {
+            if hidden {
+                if saved.isEmpty || saved.count != items.count { saved = items.map(\.title) }
+                for (item, title) in zip(items, saved) { item.accessibilityLabel = title; item.title = nil }
+            } else if !saved.isEmpty {
+                for (item, title) in zip(items, saved) { item.title = title; item.accessibilityLabel = nil }
+                saved = []
+            }
+        }
+        /// The names fade as they go (and stay invisible if the system redraws one while the bar is compact).
+        private static func fade(in bar: UIView, hidden: Bool) {
             func labels(_ v: UIView) -> [UILabel] { (v as? UILabel).map { [$0] } ?? v.subviews.flatMap(labels) }
-            /// The tab's icon: the first image-like view in `v` (the system draws symbols in image or symbol views).
-            func icon(in v: UIView) -> UIView? {
-                for c in v.subviews where !(c is UILabel) {
-                    let name = String(describing: type(of: c))
-                    if c is UIImageView || name.contains("Image") || name.contains("Symbol") { return c }
-                    if let i = icon(in: c) { return i }
-                }
-                return nil
-            }
-            for label in labels(bar) {
-                label.alpha = hidden ? 0 : 1
-                // this name's icon (in the smallest view holding both): move just the icon onto the bar's middle,
-                // so the highlight behind the open tab stays where it is
-                var up = label.superview
-                while let box = up, box !== bar {
-                    if let i = icon(in: box) {
-                        let mid = i.superview?.convert(i.center, to: bar).y ?? bar.bounds.midY // center ignores the transform
-                        i.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
-                        break
-                    }
-                    up = box.superview
-                }
-            }
+            for label in labels(bar) { label.alpha = hidden ? 0 : 1 }
         }
         /// On iOS 26 the glass and the tabs live in the bar's "platter" view (360×62 inside the 402×83 bar):
         /// scale that, so glass and icons shrink together.
