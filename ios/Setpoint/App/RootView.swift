@@ -24,7 +24,6 @@ struct RootView: View {
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
     @State private var tabBar = TabBarState.shared
-    @State private var debugBar = "…"
 
     init() {
         _store = State(initialValue: Store.shared)
@@ -60,13 +59,6 @@ struct RootView: View {
                 .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
         }
         .background(TabBarShrinker(compact: tabBar.compact))
-        .overlay(alignment: .top) {
-            if ProcessInfo.processInfo.arguments.contains("-debugbar") {
-                Text(debugBar).font(.system(size: 10, design: .monospaced)).foregroundStyle(.yellow).padding(6)
-                    .background(.black.opacity(0.85)).padding(.top, 60).allowsHitTesting(false)
-            }
-        }
-        .background { if ProcessInfo.processInfo.arguments.contains("-debugbar") { TabBarDebug(text: $debugBar) } }
         .onChange(of: tab) { tabBar.compact = false }
         // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one
         .sensoryFeedback(trigger: store.changeCount) { _, _ in
