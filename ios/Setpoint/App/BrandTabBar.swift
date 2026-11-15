@@ -40,12 +40,10 @@ struct TabBarShrinker: UIViewRepresentable {
                 bar.transform = t
             }
         }
-        /// On iOS 26 the glass is drawn by a container around the bar: scale that, so glass and icons shrink together.
-        /// The highest view above the bar that's still just a bar (short, not the whole screen).
+        /// On iOS 26 the glass and the tabs live in the bar's "platter" view (360×62 inside the 402×83 bar):
+        /// scale that, so glass and icons shrink together.
         private static func platter(_ bar: UITabBar) -> UIView {
-            var v: UIView = bar
-            while let up = v.superview, up.bounds.height < 160, up.bounds.height > 0 { v = up }
-            return v
+            bar.subviews.first { String(describing: type(of: $0)).contains("Platter") } ?? bar
         }
         private func tabBar() -> UITabBar? {
             func find(_ vc: UIViewController?) -> UITabBarController? {
@@ -103,7 +101,7 @@ struct TabBarDebug: UIViewRepresentable {
             var lines: [String] = []
             var a: UIView? = bar
             for _ in 0..<6 { guard let x = a else { break }; lines.append("^ \(type(of: x)) \(Int(x.frame.width))x\(Int(x.frame.height)) @\(Int(x.frame.minY))"); a = x.superview }
-            for c in bar.subviews { lines.append("  - \(type(of: c)) \(Int(c.frame.width))x\(Int(c.frame.height))") }
+            for c in bar.subviews { lines.append("  - \(type(of: c)) \(Int(c.frame.width))x\(Int(c.frame.height)) t=\(c.transform.a)") }
             if let sup = bar.superview { for c in sup.subviews where c !== bar { lines.append("  ~ sib \(type(of: c)) \(Int(c.frame.width))x\(Int(c.frame.height)) @\(Int(c.frame.minY))") } }
             text = lines.joined(separator: "\n")
         }
