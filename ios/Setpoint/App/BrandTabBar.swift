@@ -43,13 +43,28 @@ struct TabBarShrinker: UIViewRepresentable {
         /// (The system bar doesn't redraw its labels when SwiftUI changes them while it's on screen, so this is done here.)
         private static func names(in bar: UIView, hidden: Bool) {
             func labels(_ v: UIView) -> [UILabel] { (v as? UILabel).map { [$0] } ?? v.subviews.flatMap(labels) }
+            /// The tab's icon: the first image-like view in `v` (the system draws symbols in image or symbol views).
+            func icon(in v: UIView) -> UIView? {
+                for c in v.subviews where !(c is UILabel) {
+                    let name = String(describing: type(of: c))
+                    if c is UIImageView || name.contains("Image") || name.contains("Symbol") { return c }
+                    if let i = icon(in: c) { return i }
+                }
+                return nil
+            }
             for label in labels(bar) {
                 label.alpha = hidden ? 0 : 1
-                guard let tab = label.superview else { continue }
-                for icon in tab.subviews where !(icon is UILabel) && icon.bounds.height < bar.bounds.height * 0.8 && icon.center.y < label.center.y {
-                    // centre each icon on the bar itself (not on its little icon-and-name group, which sits higher)
-                    let mid = tab.convert(icon.center, to: bar).y
-                    icon.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
+                // the smallest view holding both this name and its icon: move it so the icon sits on the bar's middle
+                // (the name inside it is invisible while compact, so it can move along)
+                var up = label.superview
+                while let box = up, box !== bar {
+                    if let i = icon(in: box) {
+                        box.transform = .identity
+                        let mid = i.superview?.convert(i.center, to: bar).y ?? bar.bounds.midY
+                        box.transform = hidden ? CGAffineTransform(translationX: 0, y: bar.bounds.midY - mid) : .identity
+                        break
+                    }
+                    up = box.superview
                 }
             }
         }
