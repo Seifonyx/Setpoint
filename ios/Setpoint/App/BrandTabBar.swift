@@ -26,7 +26,7 @@ struct TabBarShrinker: UIViewRepresentable {
         /// Bring the bar to the wanted size; if the system hasn't made the bar yet (at launch), try again shortly.
         private func settle() {
             guard want != shown else { return }
-            guard let bar = tabBar() else {
+            guard let bar = tabBar().map(Self.platter) else {
                 if tries < 20 { tries += 1; DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.settle() } }
                 return
             }
@@ -39,6 +39,13 @@ struct TabBarShrinker: UIViewRepresentable {
             UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
                 bar.transform = t
             }
+        }
+        /// On iOS 26 the glass is drawn by a container around the bar: scale that, so glass and icons shrink together.
+        /// The highest view above the bar that's still just a bar (short, not the whole screen).
+        private static func platter(_ bar: UITabBar) -> UIView {
+            var v: UIView = bar
+            while let up = v.superview, up.bounds.height < 160, up.bounds.height > 0 { v = up }
+            return v
         }
         private func tabBar() -> UITabBar? {
             func find(_ vc: UIViewController?) -> UITabBarController? {
