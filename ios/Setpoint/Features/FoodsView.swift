@@ -130,6 +130,9 @@ struct FoodLists: View {
             .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
             .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }
+            .task { // build-server screenshots: -open recipe opens the first recipe
+                if kind == .recipes, UserDefaults.standard.string(forKey: "open") == "recipe", let r = list("recipes").first { recipeEdit = EditFood(id: r["id"]?.string ?? "", food: r) }
+            }
             .sheet(item: $mealEdit) { j in MealEditor(meal: j.meal) }
         }
     }
@@ -274,6 +277,7 @@ struct FoodsView: View {
     @State private var openRepeating = false
     @State private var shotNewFood = false   // build-server screenshots
     @State private var shotNewMeal = false
+    @State private var shotList: FoodLists.Kind?
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
 
     var body: some View {
@@ -293,12 +297,14 @@ struct FoodsView: View {
             .navigationTitle("Foods")
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
+            .navigationDestination(item: $shotList) { FoodLists(kind: $0) }
             .sheet(isPresented: $shotNewFood) { CustomFoodSheet(food: nil) }
             .sheet(isPresented: $shotNewMeal) { MealEditor(meal: nil) }
             .task { // build-server screenshots: -open planner / -open repeating
                 SavedDays.moveOld(store)
                 let o = UserDefaults.standard.string(forKey: "open")
                 openPlanner = o == "planner"; openRepeating = o == "repeating"
+                shotList = o == "recipe" ? .recipes : o == "mine" ? .mine : nil
                 shotNewFood = o == "newfood"; shotNewMeal = o == "newmeal"
             }
         }
