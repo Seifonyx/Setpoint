@@ -134,6 +134,7 @@ jobs:
           shot -tab you -open export; xcrun simctl io "$UDID" screenshot out/export-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab you -open targets; xcrun simctl io "$UDID" screenshot out/targets-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -bar compact; xcrun simctl io "$UDID" screenshot out/bar-compact-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -debugbar YES; xcrun simctl io "$UDID" screenshot out/bar-debug-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open recipe; sleep 2; xcrun simctl io "$UDID" screenshot out/recipe-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open mine; xcrun simctl io "$UDID" screenshot out/mine-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab diary -open nutrient; xcrun simctl io "$UDID" screenshot out/sources-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true

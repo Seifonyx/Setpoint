@@ -90,3 +90,24 @@ private struct ShrinksTabBar: ViewModifier {
 private struct HidesTabBar: ViewModifier {
     func body(content: Content) -> some View { content.toolbar(.hidden, for: .tabBar) }
 }
+
+/// Build-server diagnosis only (-debugbar YES): the views around the system tab bar, written on screen.
+struct TabBarDebug: UIViewRepresentable {
+    @Binding var text: String
+    func makeUIView(context: Context) -> UIView {
+        let v = UIView()
+        DispatchQueue.main.asyncAfter(deadline: .now() + 2.5) {
+            guard let w = v.window else { text = "no window"; return }
+            func scan(_ x: UIView) -> UITabBar? { if let b = x as? UITabBar { return b }; for c in x.subviews { if let b = scan(c) { return b } }; return nil }
+            guard let bar = scan(w) else { text = "no UITabBar"; return }
+            var lines: [String] = []
+            var a: UIView? = bar
+            for _ in 0..<6 { guard let x = a else { break }; lines.append("^ \(type(of: x)) \(Int(x.frame.width))x\(Int(x.frame.height)) @\(Int(x.frame.minY))"); a = x.superview }
+            for c in bar.subviews { lines.append("  - \(type(of: c)) \(Int(c.frame.width))x\(Int(c.frame.height))") }
+            if let sup = bar.superview { for c in sup.subviews where c !== bar { lines.append("  ~ sib \(type(of: c)) \(Int(c.frame.width))x\(Int(c.frame.height)) @\(Int(c.frame.minY))") } }
+            text = lines.joined(separator: "\n")
+        }
+        return v
+    }
+    func updateUIView(_ v: UIView, context: Context) {}
+}
