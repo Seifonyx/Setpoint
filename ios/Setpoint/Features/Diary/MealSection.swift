@@ -67,7 +67,7 @@ struct MealRows: View {
                     .listRowBackground(MealCard(top: true, bottom: false))
                     .listRowSeparator(.hidden, edges: .top)
                     .listRowSeparator(last ? .hidden : .visible, edges: .bottom)
-                    .moveDisabled(true)
+                    .moveDisabled(!ProcessInfo.processInfo.arguments.contains("-movableheaders")) // build-server experiment
             case .food(let food, let m):
                 MealFoodRow(food: food, meal: m, day: day, kind: kinds[food.id], copying: $copying, open: $open, actions: actions)
                     .listRowBackground(MealCard(top: false, bottom: false, tint: store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
