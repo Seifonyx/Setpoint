@@ -18,15 +18,24 @@ struct TabBarShrinker: UIViewRepresentable {
     func updateUIView(_ v: Probe, context: Context) { v.apply(compact) }
 
     final class Probe: UIView {
-        private var last: Bool?
-        override func didMoveToWindow() { super.didMoveToWindow(); if let l = last { last = nil; apply(l) } }
-        func apply(_ compact: Bool) {
-            guard compact != last, let bar = tabBar() else { return }
-            last = compact
+        private var want = false        // what the bar should be
+        private var shown: Bool?        // what it is now
+        private var tries = 0
+        override func didMoveToWindow() { super.didMoveToWindow(); shown = nil; tries = 0; settle() }
+        func apply(_ compact: Bool) { want = compact; tries = 0; settle() }
+        /// Bring the bar to the wanted size; if the system hasn't made the bar yet (at launch), try again shortly.
+        private func settle() {
+            guard want != shown else { return }
+            guard let bar = tabBar() else {
+                if tries < 20 { tries += 1; DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { [weak self] in self?.settle() } }
+                return
+            }
+            let compact = want
+            shown = compact
             let scale: CGFloat = compact ? 0.82 : 1
             let drop = bar.bounds.height * (1 - scale) / 2   // keep its bottom edge where it was
             let t = compact ? CGAffineTransform(translationX: 0, y: drop).scaledBy(x: scale, y: scale) : .identity
-            if UIAccessibility.isReduceMotionEnabled { bar.transform = t; return }
+            if UIAccessibility.isReduceMotionEnabled || window == nil { bar.transform = t; return }
             UIView.animate(withDuration: 0.42, delay: 0, usingSpringWithDamping: 0.82, initialSpringVelocity: 0, options: [.allowUserInteraction, .beginFromCurrentState]) {
                 bar.transform = t
             }
@@ -38,7 +47,14 @@ struct TabBarShrinker: UIViewRepresentable {
                 for c in vc.children { if let t = find(c) { return t } }
                 return nil
             }
-            return find(window?.rootViewController)?.tabBar
+            if let bar = find(window?.rootViewController)?.tabBar { return bar }
+            // otherwise look through the window's views for the bar the system drew
+            func scan(_ v: UIView) -> UITabBar? {
+                if let b = v as? UITabBar { return b }
+                for c in v.subviews { if let b = scan(c) { return b } }
+                return nil
+            }
+            return window.flatMap(scan)
         }
     }
 }
