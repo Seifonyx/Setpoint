@@ -65,6 +65,7 @@ struct DiaryView: View {
             }
             .modifier(MealDialogs(day: day, copying: $copying, open: $openFood, actions: mealActions))
             .listSectionSpacing(10)
+            .environment(\.defaultMinListRowHeight, 1) // the thin row closing each meal's card
             .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
             .brandList()
             .shrinksTabBar()

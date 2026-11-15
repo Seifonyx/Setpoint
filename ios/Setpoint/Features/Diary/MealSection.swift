@@ -27,8 +27,10 @@ struct MealRows: View {
     enum Row: Identifiable {
         case header(MealCategory)
         case food(FoodItem, MealCategory)
+        /// The bottom of a meal's card: a thin row that stays put, so a food can be dropped into an empty or folded meal.
+        case end(MealCategory)
         var id: String {
-            switch self { case .header(let m): "meal-" + m.key; case .food(let f, _): "food-" + f.id }
+            switch self { case .header(let m): "meal-" + m.key; case .food(let f, _): "food-" + f.id; case .end(let m): "end-" + m.key }
         }
     }
 
@@ -42,27 +44,34 @@ struct MealRows: View {
 
     private var rows: [Row] {
         store.meals.flatMap { m -> [Row] in
-            [.header(m)] + (isOpen(m.key) ? foods(m.key).map { .food($0, m) } : [])
+            [.header(m)] + (isOpen(m.key) ? foods(m.key).map { .food($0, m) } : []) + [.end(m)]
         }
     }
 
     var body: some View {
         let rows = rows
         ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
-            let last = i == rows.count - 1 || { if case .header = rows[i + 1] { return true }; return false }()
+            let last = i == rows.count - 1 || { if case .end = rows[i + 1] { return true }; return false }()
             switch row {
             case .header(let m):
                 MealHeader(meal: m, day: day, foods: foods(m.key), expanded: isOpen(m.key), copying: $copying, actions: actions,
                            toggle: { setOpen(m.key, !isOpen(m.key)) }, addFood: { addFood(m.key) })
                     .padding(.top, MealCard.gap)
-                    .listRowBackground(MealCard(top: true, bottom: last))
+                    .listRowBackground(MealCard(top: true, bottom: false))
                     .listRowSeparator(.hidden, edges: .top)
                     .listRowSeparator(last ? .hidden : .visible, edges: .bottom)
                     .moveDisabled(true)
             case .food(let food, let m):
                 MealFoodRow(food: food, meal: m, day: day, kind: kinds[food.id], copying: $copying, open: $open, actions: actions)
-                    .listRowBackground(MealCard(top: false, bottom: last, tint: store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
+                    .listRowBackground(MealCard(top: false, bottom: false, tint: store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
                     .listRowSeparator(last ? .hidden : .visible, edges: .bottom)
+            case .end:
+                Color.clear.frame(height: 6)
+                    .listRowInsets(EdgeInsets())
+                    .listRowBackground(MealCard(top: false, bottom: true))
+                    .listRowSeparator(.hidden)
+                    .moveDisabled(true)
+                    .accessibilityHidden(true)
             }
         }
         // press, hold and drag a food: it lands in the meal whose name is above where you let go, before the food below
@@ -76,6 +85,7 @@ struct MealRows: View {
             var before: String?
             if at + 1 < moved.count, case .food(let next, _) = moved[at + 1] { before = next.id }
             withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) }
+            if !isOpen(meal) { setOpen(meal, true) } // dropped into a folded meal: open it so you see where it went
         }
         .task {
             if UserDefaults.standard.string(forKey: "sheet") == "food", let m = store.meals.first { open = foods(m.key).first }
@@ -157,7 +167,8 @@ struct MealHeader: View {
     }
 }
 
-/// One food in a meal: tap to edit, swipe left to delete, swipe right for ⋯, press and hold for the menu or to drag it.
+/// One food in a meal: tap to edit, swipe left to delete, swipe right for ⋯ (everything you can do to it),
+/// press and hold to drag it. (No long-press menu: it would take the press that starts a drag, and ⋯ has it all.)
 struct MealFoodRow: View {
     @Environment(Store.self) private var store
     let food: FoodItem
@@ -167,7 +178,6 @@ struct MealFoodRow: View {
     @Binding var copying: [FoodItem]?
     @Binding var open: FoodItem?
     let actions: MealActions
-    private let menus = !ProcessInfo.processInfo.arguments.contains("-nomenu") // build-server drag test without the menu
 
     var body: some View {
         Button { open = food } label: { FoodRow(food: food, day: day, kind: kind) }
@@ -179,27 +189,6 @@ struct MealFoodRow: View {
             .swipeActions(edge: .leading) {
                 // swipe right: ⋯ with everything you can do to it
                 Button("More", systemImage: "ellipsis") { actions.more = food }.tint(Brand.ink2)
-            }
-            .contextMenu {
-                if menus {
-                    if food.isPlanned && day <= Day.today {
-                        Button("Mark as eaten", systemImage: "checkmark.circle") { store.markEaten(food, on: day) }
-                    }
-                    Button("Add another", systemImage: "plus") { store.addAnother(food, on: day) }
-                    Menu("Move to", systemImage: "arrow.right") {
-                        ForEach(store.meals.filter { $0.key != meal.key }) { m in
-                            Button(m.name) { withAnimation { store.move(food, to: m.key, on: day) } }
-                        }
-                    }
-                    Menu("Copy to", systemImage: "plus.square.on.square") {
-                        ForEach(store.meals.filter { $0.key != meal.key }) { m in
-                            Button(m.name) { withAnimation { store.copyToMeal(food, meal: m.key, on: day) } }
-                        }
-                    }
-                    Button("Copy to another day", systemImage: "doc.on.doc") { copying = [food] }
-                    Divider()
-                    Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
-                }
             }
     }
 }

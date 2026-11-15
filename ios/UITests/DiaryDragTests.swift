@@ -57,8 +57,21 @@ final class DiaryDragTests: XCTestCase {
     }
 
     @MainActor func testDragFoods() {
-        run("menu", [])
-        run("nomenu", ["-nomenu"])
+        run("drag", [])
+        // recipe ingredients: press, hold and drag the potatoes above the oil
+        let r = XCUIApplication()
+        r.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "recipe"]
+        r.launch()
+        let oil = r.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Sunflower'")).firstMatch
+        let potato = r.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'Potato'")).firstMatch
+        if oil.waitForExistence(timeout: 10), potato.exists {
+            if potato.frame.minY > r.frame.height - 200 { r.swipeUp(velocity: .slow); sleep(1) }
+            shot(r, "recipe-0-start")
+            drag(potato, to: oil, dy: 0.0)
+            shot(r, "recipe-1-reorder")
+            note("recipe reorder: potatoes above oil = \(y(potato) < y(oil)) (potato \(y(potato)) oil \(y(oil)))")
+        } else { note("recipe: ingredients not found"); shot(r, "recipe-missing") }
+        r.terminate()
         // the tab bar shrinking while the app is open (names should fade)
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "YES", "-tab", "diary"]
