@@ -231,6 +231,7 @@ struct SummaryCard: View {
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) },
                             lineWidth: 15, ringWidth: 4, ringGap: 7)
                     .frame(width: Self.dial, height: Self.dial)
+                    .environment(\.layoutDirection, .leftToRight) // a gauge fills the same way in Arabic (and keeps its end dot on the arc)
                 // inside the rings: what's left. The number sits on the ring's exact centre; its small label rides above it.
                 Group {
                     if let plan {
@@ -254,8 +255,8 @@ struct SummaryCard: View {
                 // in the opening at the bottom of the dial: eaten of target
                 Text(plan.map { "\(Fmt.kcal(totals.kcal)) / \(Fmt.kcal($0.kcal)) kcal" } ?? String(localized: "kcal"))
                     .font(.brand(.caption, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
-                    .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 116)
-                    .offset(y: Self.dial * 0.43)
+                    .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 104)
+                    .offset(y: Self.dial * 0.45) // in the opening, clear of the arc's two ends
             }
             .frame(width: Self.dial, height: Self.dial)
             .contentShape(Rectangle())
