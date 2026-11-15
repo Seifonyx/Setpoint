@@ -70,7 +70,8 @@ struct MealRows: View {
                     .listRowInsets(EdgeInsets())
                     .listRowBackground(MealCard(top: false, bottom: true))
                     .listRowSeparator(.hidden)
-                    .moveDisabled(true)
+                    // not .moveDisabled: List won't drop a food where a fixed row sits, and this is the spot that
+                    // puts a food last in its meal (or into an empty one). It's too thin to pick up; if it ever is, nothing moves.
                     .accessibilityHidden(true)
             }
         }
