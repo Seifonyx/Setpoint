@@ -10,6 +10,7 @@ struct DiaryView: View {
     @State private var copying: [FoodItem]?
     @State private var adding: AddJob?
     @State private var openFood: FoodItem?
+    @State private var mealActions = MealActions()
     @State private var score: DayScore?
     @State private var kinds: [String: String] = [:]
     @State private var showScore = false
@@ -58,10 +59,11 @@ struct DiaryView: View {
                         }
                     }
                 }
-                ForEach(store.meals) { meal in
-                    MealSection(meal: meal, day: day, copying: $copying, kinds: kinds, open: $openFood) { adding = AddJob(meal: meal.key) }
+                Section {
+                    MealRows(day: day, copying: $copying, kinds: kinds, open: $openFood, actions: mealActions) { adding = AddJob(meal: $0) }
                 }
             }
+            .modifier(MealDialogs(day: day, copying: $copying, open: $openFood, actions: mealActions))
             .listSectionSpacing(10)
             .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
             .brandList()

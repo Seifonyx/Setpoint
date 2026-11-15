@@ -13,50 +13,62 @@ final class DiaryDragTests: XCTestCase {
         log.append(s)
         try? log.joined(separator: "\n").write(to: out.appendingPathComponent("drag-results.txt"), atomically: true, encoding: .utf8)
     }
-    private func y(_ e: XCUIElement) -> CGFloat { e.exists ? e.frame.midY : -1 }
+    private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
+    private func y(_ e: XCUIElement) -> Int { e.exists ? Int(e.frame.midY) : -1 }
+    /// Press and hold `what`, then drag it to a point inside `to` (dy: 0 = its top edge, 1 = its bottom edge).
+    private func drag(_ what: XCUIElement, to: XCUIElement, dy: CGFloat) {
+        let a = what.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+        let b = to.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy))
+        a.press(forDuration: 0.8, thenDragTo: b, withVelocity: .slow, thenHoldForDuration: 0.8)
+        sleep(1)
+    }
+
+    @MainActor func run(_ tag: String, _ extra: [String]) {
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "YES", "-tab", "diary"] + extra
+        app.launch()
+        let oats = el(app, "food-a0"), banana = el(app, "food-b0"), chicken = el(app, "food-c0")
+        guard oats.waitForExistence(timeout: 10) else { note("\(tag): no food rows found"); shot(app, "drag-\(tag)-missing"); return }
+        app.swipeUp(velocity: .slow)
+        sleep(1)
+        shot(app, "drag-\(tag)-0-start")
+        note("\(tag) start: oats \(y(oats)) banana \(y(banana)) chicken \(y(chicken))")
+
+        // 1. reorder inside Breakfast: banana above oats
+        drag(banana, to: oats, dy: 0.15)
+        shot(app, "drag-\(tag)-1-reorder")
+        note("\(tag) reorder: banana above oats = \(y(banana) < y(oats)) (banana \(y(banana)) oats \(y(oats)))")
+
+        // 2. into another meal, between its foods: oats just above the chicken in Lunch
+        let lunch = el(app, "meal-lunch")
+        drag(oats, to: chicken, dy: 0.15)
+        shot(app, "drag-\(tag)-2-into-lunch")
+        note("\(tag) into Lunch: oats below Lunch name = \(y(oats) > y(lunch)) (oats \(y(oats)) lunch \(y(lunch)))")
+
+        // 3. into an empty meal: banana just below Dinner's name
+        let dinner = el(app, "meal-dinner")
+        if dinner.exists {
+            drag(banana, to: dinner, dy: 1.0)
+            shot(app, "drag-\(tag)-3-into-dinner")
+            let next = el(app, "meal-snacks")
+            note("\(tag) into Dinner: banana between Dinner and Snacks = \(y(banana) > y(dinner) && (y(next) < 0 || y(banana) < y(next))) (banana \(y(banana)) dinner \(y(dinner)) snacks \(y(next)))")
+        } else { note("\(tag): no Dinner name found") }
+        app.terminate()
+    }
 
     @MainActor func testDragFoods() {
+        run("menu", [])
+        run("nomenu", ["-nomenu"])
+        // the tab bar shrinking while the app is open (names should fade)
         let app = XCUIApplication()
         app.launchArguments = ["-demo", "YES", "-tab", "diary"]
         app.launch()
-        let oats = app.descendants(matching: .any)["food-a0"], banana = app.descendants(matching: .any)["food-b0"]
-        guard oats.waitForExistence(timeout: 10) else { note("no food rows found"); shot(app, "drag-0-missing"); return }
-        // bring Breakfast up the screen so the meals below are on show
-        app.swipeUp(velocity: .slow)
-        sleep(1)
-        shot(app, "drag-0-start")
-        note("start: oats y=\(y(oats)) banana y=\(y(banana))")
-
-        // 1. reorder inside Breakfast: banana above oats
-        banana.press(forDuration: 1.0, thenDragTo: oats, withVelocity: .slow, thenHoldForDuration: 0.6)
-        sleep(1)
-        shot(app, "drag-1-reorder")
-        note("reorder: banana above oats = \(y(banana) < y(oats)) (banana y=\(y(banana)) oats y=\(y(oats)))")
-
-        // 2. onto another meal's name (Dinner is empty)
-        let dinner = app.descendants(matching: .any)["meal-dinner"]
-        if dinner.exists {
-            oats.press(forDuration: 1.0, thenDragTo: dinner, withVelocity: .slow, thenHoldForDuration: 0.6)
-            sleep(1)
-            shot(app, "drag-2-to-dinner")
-            note("to Dinner header: oats below Dinner = \(y(oats) > y(dinner)) (oats y=\(y(oats)) dinner y=\(y(dinner)))")
-        } else { note("no Dinner header on screen") }
-
-        // 3. between foods of another meal (Lunch has foods)
-        let chicken = app.descendants(matching: .any)["food-c0"]
-        if chicken.exists, banana.exists {
-            banana.press(forDuration: 1.0, thenDragTo: chicken, withVelocity: .slow, thenHoldForDuration: 0.6)
-            sleep(1)
-            shot(app, "drag-3-into-lunch")
-            let lunch = app.descendants(matching: .any)["meal-lunch"]
-            note("into Lunch: banana below Lunch header = \(y(banana) > y(lunch)) (banana y=\(y(banana)) lunch y=\(y(lunch)))")
-        }
-
-        // 4. the tab bar shrinking while the app is open (names should fade)
+        sleep(3)
         app.swipeUp(velocity: .slow)
         sleep(1)
         shot(app, "bar-runtime-compact")
         app.swipeDown(velocity: .slow)
+        app.swipeDown(velocity: .fast)
         sleep(1)
         shot(app, "bar-runtime-full")
     }
