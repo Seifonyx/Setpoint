@@ -284,7 +284,7 @@ struct FoodsView: View {
         NavigationStack {
             List {
                 Section {
-                    row("My foods", "carrot.fill", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
+                    row("My foods", "pencil.line", Brand.green, count("myFoods")) { FoodLists(kind: .mine) }
                     row("Recipes", "frying.pan.fill", Brand.protein, count("recipes")) { FoodLists(kind: .recipes) }
                     row("Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count("meals")) { FoodLists(kind: .meals) }
                     row("Repeating", "repeat", Brand.water, count("repeats")) { RepeatingView() }

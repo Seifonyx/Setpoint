@@ -177,6 +177,7 @@ struct FoodDetailSheet: View {
                 .buttonStyle(.plain)
                 .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
             }
+            .onMove { parts.move(fromOffsets: $0, toOffset: $1); partsEdited = true }
         } header: { Text("In this meal") } footer: { Text("Tap a food to change it, swipe to remove. For this day only.") }
     }
 

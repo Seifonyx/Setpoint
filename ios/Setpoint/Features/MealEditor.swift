@@ -42,9 +42,10 @@ struct MealEditor: View {
                         .buttonStyle(.plain)
                         .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = items.remove(at: i) } } }
                     }
+                    .onMove { items.move(fromOffsets: $0, toOffset: $1) } // press, hold and drag to reorder
                     Button { picking = true } label: { Label("Add a food", systemImage: "plus") }
                 } header: { Text("Foods") } footer: {
-                    Text("Tap a food to change its amount, swipe to remove it. Logging the meal adds each food to your diary.")
+                    Text("Tap a food to change its amount, swipe to remove it, or hold and drag to reorder.")
                 }
                 if meal != nil {
                     Section { Button("Delete meal", role: .destructive) { confirmDelete = true }.foregroundStyle(Brand.danger) }

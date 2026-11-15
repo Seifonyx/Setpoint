@@ -5041,6 +5041,16 @@
         }
       }
     },
+    "Moved %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتنقلت %@"
+          }
+        }
+      }
+    },
     "Movement": {
       "localizations": {
         "ar": {
@@ -7697,6 +7707,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اضغط على طعام لتغييره، واسحب لإزالته. لهذا اليوم فقط."
+          }
+        }
+      }
+    },
+    "Tap a food to change its amount, swipe to remove it, or hold and drag to reorder.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اضغط على أكلة عشان تغيّر كميتها، اسحبها عشان تشيلها، أو دوس عليها كتير واسحبها عشان ترتّب."
           }
         }
       }

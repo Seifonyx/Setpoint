@@ -32,6 +32,7 @@ struct RecipeEditor: View {
                         IngredientRow(name: it["name"]?.string ?? "", amount: Fmt.amount(it["qty"]?.number ?? 1, it["unit"]?.string ?? "g"), kcal: it["kcal"]?.number ?? 0, ref: it["ref"]?.string)
                     }
                     .onDelete { items.remove(atOffsets: $0) }
+                    .onMove { items.move(fromOffsets: $0, toOffset: $1) } // press, hold and drag to reorder
                     Button("Add ingredient", systemImage: "plus") { picking = true }
                 } header: { Text("Ingredients") } footer: {
                     if let error { Text(error).foregroundStyle(Brand.danger) }

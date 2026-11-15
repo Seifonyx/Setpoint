@@ -437,6 +437,18 @@ final class Store {
     func move(_ item: FoodItem, to meal: String, on day: String) {
         edit(day, item.id) { $0.meal = meal }
     }
+    /// Dragged in the Diary: put a food in a meal, just before another food (or at the end of the meal).
+    func place(_ id: String, meal: String, before target: String?, on day: String) {
+        guard id != target, var list = food[day], let i = list.firstIndex(where: { $0.id == id }) else { return }
+        remember(String(localized: "Moved \(list[i].displayName)"), .edit)
+        var item = list.remove(at: i)
+        item.meal = meal; stamp(&item)
+        if let t = target, let j = list.firstIndex(where: { $0.id == t }) { list.insert(item, at: j) }
+        else if let last = list.lastIndex(where: { mealKey(of: $0) == meal }) { list.insert(item, at: last + 1) }
+        else { list.append(item) }
+        food[day] = list
+        save()
+    }
     func markEaten(_ item: FoodItem, on day: String) {
         edit(day, item.id) { f in
             f.isPlanned = false

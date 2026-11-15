@@ -72,10 +72,18 @@ struct MealSection: View {
             .padding(.vertical, 0)
             .listRowSeparator(expanded && !foods.isEmpty ? .visible : .hidden, edges: .bottom)
             .listRowBackground(Brand.card.overlay(TopSheen()))
+            // drop a dragged food on a meal's name: it goes to the end of that meal (works for empty or folded meals)
+            .dropDestination(for: String.self) { ids, _ in
+                guard let id = ids.first, store.items(day).contains(where: { $0.id == id }) else { return false }
+                withAnimation(.snappy) { store.place(id, meal: meal.key, before: nil, on: day) }
+                if !expanded { withAnimation(.snappy) { toggleOpen() } }
+                return true
+            }
             if expanded {
             ForEach(foods) { food in
                 Button { open = food } label: { FoodRow(food: food, day: day, kind: kinds[food.id]) }
                     .buttonStyle(.plain)
+                    .draggable(food.id) { FoodRow(food: food, day: day, kind: kinds[food.id]).padding(10).frame(width: 320).background(Brand.card, in: .rect(cornerRadius: Radius.chip)) }
                 .listRowBackground(store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card)
                 .animation(.easeOut(duration: 0.9), value: store.justAdded.contains(food.id))
                     .swipeActions(edge: .trailing) {
@@ -104,6 +112,13 @@ struct MealSection: View {
                         Divider()
                         Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
                     }
+            }
+            // press, hold and drag a food: drop it between foods here, from this meal or another one
+            .dropDestination(for: String.self) { ids, index in
+                guard let id = ids.first, store.items(day).contains(where: { $0.id == id }) else { return }
+                let list = foods
+                let target = index < list.count ? list[index].id : nil
+                withAnimation(.snappy) { store.place(id, meal: meal.key, before: target, on: day) }
             }
             }
         }

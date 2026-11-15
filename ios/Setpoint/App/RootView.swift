@@ -41,20 +41,24 @@ struct RootView: View {
         }
     }
 
+    /// A tab's icon (filled on the open tab) and name; the name steps aside while the bar is compact.
+    private func tabLabel(_ title: LocalizedStringKey, _ icon: String, _ t: AppTab) -> some View {
+        Label { if !tabBar.compact { Text(title) } } icon: {
+            Image(systemName: tab == t ? icon + ".fill" : icon).environment(\.symbolVariants, .none)
+        }
+        .accessibilityLabel(Text(title))
+    }
+
     var body: some View {
         TabView(selection: $tab) {
-            // the system tab bar is hidden: Setpoint draws its own below, so it can shrink in place while you scroll
-            Tab(value: AppTab.diary) { DiaryView(importing: $importing).modifier(TabPage()) }
-            Tab(value: AppTab.progress) { ProgressScreen().modifier(TabPage()) }
-            Tab(value: AppTab.foods) { FoodsView().modifier(TabPage()) }
-            Tab(value: AppTab.you) { YouView(importing: $importing).modifier(TabPage()) }
+            // the system's own Liquid Glass tab bar; while you scroll down a page it shrinks in place (TabBarShrinker)
+            Tab(value: AppTab.diary) { DiaryView(importing: $importing) } label: { tabLabel("Diary", "book.pages", .diary) }
+            Tab(value: AppTab.progress) { ProgressScreen() } label: { tabLabel("Progress", "chart.bar", .progress) }
+            Tab(value: AppTab.foods) { FoodsView() } label: { tabLabel("Foods", "fork.knife.circle", .foods) }
+            Tab(value: AppTab.you) { YouView(importing: $importing) } label: { tabLabel("You", "person.crop.circle", .you) }
+                .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
         }
-        .overlay(alignment: .bottom) {
-            if !tabBar.hidden {
-                BrandTabBar(tab: $tab, badge: weekReady ? 1 : 0).transition(.move(edge: .bottom).combined(with: .opacity))
-            }
-        }
-        .animation(.snappy(duration: 0.3), value: tabBar.hidden)
+        .background(TabBarShrinker(compact: tabBar.compact))
         .onChange(of: tab) { tabBar.compact = false }
         // one rule for haptics: logging something is a success, removing is a firm tap, changing is a light one
         .sensoryFeedback(trigger: store.changeCount) { _, _ in
@@ -123,16 +127,4 @@ struct RootView: View {
 
 #Preview {
     RootView()
-}
-
-
-/// A tab's page: the system tab bar hidden, and room kept at the bottom for Setpoint's own bar, so the last thing
-/// on a page can always scroll clear of it (none on screens that hide the bar, like the planner).
-private struct TabPage: ViewModifier {
-    @State private var bar = TabBarState.shared
-    func body(content: Content) -> some View {
-        content
-            .toolbarVisibility(.hidden, for: .tabBar)
-            .safeAreaPadding(.bottom, bar.hidden ? 0 : 70)
-    }
 }
