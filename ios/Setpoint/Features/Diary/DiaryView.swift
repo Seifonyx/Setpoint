@@ -187,7 +187,7 @@ struct SummaryPager: View {
     let plan: DayPlan?
     var openNutrient: (NutrientRoute) -> Void = { _ in }
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
-    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 334 // grows with the iPhone's text size
+    @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 300 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
@@ -215,22 +215,28 @@ struct SummaryCard: View {
     let plan: DayPlan?
 
     var body: some View {
-        VStack(spacing: 14) {
+        VStack(spacing: 8) {
             ZStack {
                 CalorieDial(eaten: totals.kcal, target: plan?.kcal,
                             protein: plan.map { (totals.protein, $0.protein) }, carbs: plan.map { (totals.carbs, $0.carbs) }, fat: plan.map { (totals.fat, $0.fat) })
                     .frame(width: 228, height: 228)
-                // inside the rings: what's left (the ring is big enough that even four digits clear the inner ring)
-                VStack(spacing: 0) {
+                // inside the rings: what's left. The number sits on the ring's exact centre; its small label rides above it.
+                Group {
                     if let plan {
                         let left = plan.kcal - totals.kcal
-                        Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
-                            .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
                         Text(Fmt.kcal(abs(left))).font(Brand.num(46, .bold)).foregroundStyle(left >= 0 ? Brand.ink : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                            .overlay(alignment: .top) {
+                                Text(left >= 0 ? LocalizedStringKey("left") : LocalizedStringKey("over"))
+                                    .font(.brand(.caption, .semibold)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over).textCase(.uppercase).tracking(1.4)
+                                    .fixedSize().alignmentGuide(.top) { $0[.bottom] }
+                            }
                     } else {
-                        Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
                         Text(Fmt.kcal(totals.kcal)).font(Brand.num(46, .bold)).contentTransition(.numericText()).monospacedDigit().minimumScaleFactor(0.5).lineLimit(1)
+                            .overlay(alignment: .top) {
+                                Text("eaten").font(.brand(.caption, .semibold)).foregroundStyle(Brand.ink2).textCase(.uppercase).tracking(1.4)
+                                    .fixedSize().alignmentGuide(.top) { $0[.bottom] }
+                            }
                     }
                 }
                 .frame(maxWidth: 124)
@@ -253,7 +259,8 @@ struct SummaryCard: View {
                 Text("Set up your plan in You › Plan to see your targets here.").font(.brand(.footnote)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
             }
         }
-        .padding(.vertical, 8)
+        .padding(.top, 2)
+        .frame(maxHeight: .infinity, alignment: .top)
         .dynamicTypeSize(...DynamicTypeSize.xxxLarge)
         .animation(.spring(response: 0.5, dampingFraction: 0.8), value: totals)
         .overlay(alignment: .top) {
