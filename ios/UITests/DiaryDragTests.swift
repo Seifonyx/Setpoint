@@ -21,16 +21,18 @@ final class DiaryDragTests: XCTestCase {
         let b = to.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy))
         a.press(forDuration: 0.8, thenDragTo: b, withVelocity: .slow, thenHoldForDuration: 0.8)
         sleep(1)
+        let mv = XCUIApplication().staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'mv'")).firstMatch
+        note("   list said: \(mv.exists ? mv.label : "(no log)")")
     }
 
     @MainActor func run(_ tag: String, _ extra: [String]) {
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "YES", "-tab", "diary"] + extra
+        app.launchArguments = ["-demo", "YES", "-tab", "diary", "-movelog"] + extra
         app.launch()
         let oats = el(app, "food-a0"), banana = el(app, "food-b0"), chicken = el(app, "food-c0")
         guard oats.waitForExistence(timeout: 10) else { note("\(tag): no food rows found"); shot(app, "drag-\(tag)-missing"); return }
         app.swipeUp(velocity: .slow)
-        sleep(1)
+        sleep(3) // let the list stop coasting before pressing
         shot(app, "drag-\(tag)-0-start")
         note("\(tag) start: oats \(y(oats)) banana \(y(banana)) chicken \(y(chicken))")
 
@@ -52,6 +54,11 @@ final class DiaryDragTests: XCTestCase {
             shot(app, "drag-\(tag)-3-into-dinner")
             let next = el(app, "meal-snacks")
             note("\(tag) into Dinner: banana between Dinner and Snacks = \(y(banana) > y(dinner) && (y(next) < 0 || y(banana) < y(next))) (banana \(y(banana)) dinner \(y(dinner)) snacks \(y(next)))")
+            if !(y(banana) > y(dinner)) {
+                drag(banana, to: dinner, dy: 0.5)
+                shot(app, "drag-\(tag)-4-onto-dinner-name")
+                note("\(tag) onto Dinner name: banana below Dinner = \(y(banana) > y(dinner)) (banana \(y(banana)) dinner \(y(dinner)))")
+            }
         } else { note("\(tag): no Dinner name found") }
         app.terminate()
     }

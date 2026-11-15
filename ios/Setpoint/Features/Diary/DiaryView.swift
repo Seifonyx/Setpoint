@@ -167,7 +167,10 @@ struct DiaryView: View {
         let guess = h < 11 ? "breakfast" : h < 16 ? "lunch" : h < 21 ? "dinner" : "snacks"
         return keys.contains(guess) ? guess : (keys.first ?? "snacks")
     }
-    private var subtitle: String { Day.date(day).formatted(.dateTime.day().month(.wide).year()) }
+    private var subtitle: String {
+        if ProcessInfo.processInfo.arguments.contains("-movelog") { return MoveLog.shared.text } // build-server drag test
+        return Day.date(day).formatted(.dateTime.day().month(.wide).year())
+    }
 }
 
 struct AddJob: Identifiable { let meal: String; var scan = false; var id: String { meal + (scan ? "|scan" : "") } }

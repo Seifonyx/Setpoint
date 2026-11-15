@@ -1,5 +1,12 @@
 import SwiftUI
 
+/// Build-server drag test only (-movelog): the last move List reported, shown as the Diary's subtitle.
+@MainActor @Observable
+final class MoveLog {
+    static let shared = MoveLog()
+    var text = "mv none"
+}
+
 /// What the Diary's food menus have open: one place for all meals, so each dialog is shown once (not once per row).
 @MainActor @Observable
 final class MealActions {
@@ -77,6 +84,7 @@ struct MealRows: View {
         }
         // press, hold and drag a food: it lands in the meal whose name is above where you let go, before the food below
         .onMove { from, to in
+            MoveLog.shared.text = "mv \(from.first ?? -1)>\(to) of \(rows.count)"
             guard let i = from.first, case .food(let food, _) = rows[i] else { return }
             var moved = rows
             moved.move(fromOffsets: from, toOffset: to)
