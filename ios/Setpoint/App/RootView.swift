@@ -25,6 +25,17 @@ struct RootView: View {
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
     @State private var tabBar = TabBarState.shared
 
+    /// Nobody is signed in (screenshots use demo data without an account; -auth shows the sign-in screens anyway).
+    private var needsAccount: Bool {
+        let args = ProcessInfo.processInfo.arguments
+        return args.contains("-auth") || (!args.contains("-demo") && !account.signedIn)
+    }
+    /// A signed-in account with nothing logged and no plan yet: it's new, so it sets up its plan first.
+    private var needsPlan: Bool {
+        !ProcessInfo.processInfo.arguments.contains("-demo") && account.signedIn && store.food.isEmpty
+            && store.root["profile"]?.object?["heightCm"] == nil
+    }
+
     init() {
         _store = State(initialValue: Store.shared)
         _account = State(initialValue: Account.shared)
@@ -68,14 +79,22 @@ struct RootView: View {
         .onChange(of: store.changeCount) { if store.changeKind == .add { Sounds.play(.tick) } }
         .onChange(of: store.request) { _, r in if r != nil { tab = .diary } }
         .modifier(LockCover())
+        // Setpoint needs an account: nobody signed in means the welcome and sign-in screens, over everything
+        .overlay { if needsAccount { AuthFlow().environment(account).transition(.opacity) } }
+        .animation(.easeInOut(duration: 0.35), value: needsAccount)
         .overlay { if launching { LaunchDial { launching = false } } }
         .fullScreenCover(isPresented: $shotStory) { WeekStory().environment(store) } // build-server screenshots
         .sheet(isPresented: $shotTarget) { TargetExplainer().environment(store) }
         .fullScreenCover(isPresented: $onboarding) { OnboardingView { onboarding = false }.environment(store).environment(account) }
         .onAppear {
-            // First launch on a fresh install (or the build server's -onboarding screenshot).
-            let args = ProcessInfo.processInfo.arguments
-            if args.contains("-onboarding") || (!args.contains("-demo") && store.isEmpty && !account.signedIn && !UserDefaults.standard.bool(forKey: "onboarded")) { onboarding = true }
+            // the build server's -onboarding screenshot, or an account that never finished setting up its plan
+            if ProcessInfo.processInfo.arguments.contains("-onboarding") || needsPlan { onboarding = true }
+        }
+        // just signed in (its data has arrived by now): a new account goes on to set up its plan
+        .onChange(of: account.signedIn) { _, signedIn in
+            guard signedIn else { return }
+            tab = .diary
+            if needsPlan { onboarding = true }
         }
         .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the main actions
         .toggleStyle(SwitchToggleStyle(tint: Brand.green)) // switches stay green, as on the iPhone itself

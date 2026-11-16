@@ -1421,6 +1421,16 @@
         }
       }
     },
+    "Already have an account?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عندك حساب؟"
+          }
+        }
+      }
+    },
     "Amount": {
       "localizations": {
         "ar": {
@@ -1537,6 +1547,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حوالي %@"
+          }
+        }
+      }
+    },
+    "At least 6 characters": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٦ حروف على الأقل"
           }
         }
       }
@@ -1797,6 +1817,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابنِ وجبة من الأطعمة التي تأكلها معًا عادةً، ثم سجّلها بضغطة واحدة. اضغط + لإنشاء واحدة، أو احفظها من اليوميات (⋯ في الوجبة › حفظ كوجبة)."
+          }
+        }
+      }
+    },
+    "By continuing you agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لما تكمّل تبقى موافق على [الشروط](https://setpoint-tracker.web.app/terms.html) و[سياسة الخصوصية](https://setpoint-tracker.web.app/privacy.html)."
           }
         }
       }
@@ -2451,6 +2481,16 @@
         }
       }
     },
+    "Create your account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اعمل حسابك"
+          }
+        }
+      }
+    },
     "Create “%@”": {
       "localizations": {
         "ar": {
@@ -2737,6 +2777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تمسح حسابك؟"
+          }
+        }
+      }
+    },
+    "Deletes your account and everything saved in it, for good. What's on this iPhone stays, and joins the next account you sign in with.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بيمسح حسابك وكل اللي محفوظ فيه نهائي. اللي على الآيفون ده هيفضل، وهينضم لأول حساب تسجّل بيه بعد كده."
           }
         }
       }
@@ -3867,6 +3917,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الطول"
+          }
+        }
+      }
+    },
+    "Hide password": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اخفي كلمة السر"
           }
         }
       }
@@ -5247,6 +5307,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وصفة جديدة"
+          }
+        }
+      }
+    },
+    "New to Setpoint?": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جديد على Setpoint؟"
           }
         }
       }
@@ -7291,6 +7361,16 @@
         }
       }
     },
+    "Show password": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اظهر كلمة السر"
+          }
+        }
+      }
+    },
     "Shows today's calories left on the Lock Screen and in the Dynamic Island, and updates as you log. For widgets, touch and hold your Home Screen and tap Edit.": {
       "localizations": {
         "ar": {
@@ -7317,6 +7397,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Sign in to pick up where you left off.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل دخولك وكمّل من مكان ما وقفت."
           }
         }
       }
@@ -8931,6 +9021,16 @@
         }
       }
     },
+    "Welcome back": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أهلاً بيك تاني"
+          }
+        }
+      }
+    },
     "What you ate vs how your weight moved, last 4 weeks.": {
       "localizations": {
         "ar": {
@@ -9227,6 +9327,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "آخر وزن سجّلته واتجاهه."
+          }
+        }
+      }
+    },
+    "Your log is saved in your account. Sign in again to get back to it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجلّك محفوظ في حسابك. سجّل دخولك تاني عشان ترجعله."
+          }
+        }
+      }
+    },
+    "Your log is saved to your account, so it's safe if you change phones.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجلّك بيتحفظ في حسابك، فهيفضل معاك حتى لو غيّرت موبايلك."
           }
         }
       }
@@ -9817,6 +9937,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من الوجبة دي"
+          }
+        }
+      }
+    },
+    "or": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو"
           }
         }
       }

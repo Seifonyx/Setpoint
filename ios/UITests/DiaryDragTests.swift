@@ -124,5 +124,32 @@ final class DiaryDragTests: XCTestCase {
             shot(n, "form-keyboard")
         } else { note("form: no Calories label"); shot(n, "form-missing") }
         n.terminate()
+
+        // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
+        let a = XCUIApplication()
+        a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
+        a.launch()
+        let toSignIn = el(a, "auth-signin")
+        if toSignIn.waitForExistence(timeout: 10) {
+            sleep(2)
+            toSignIn.tap()
+            let submit = el(a, "auth-submit"), err = el(a, "auth-error")
+            _ = submit.waitForExistence(timeout: 5)
+            submit.tap()
+            note("auth: empty form says: \(err.waitForExistence(timeout: 3) ? err.label : "(nothing)")")
+            let mail = a.textFields["auth-email"].firstMatch
+            mail.tap(); mail.typeText("not-an-email")
+            submit.tap(); sleep(1)
+            note("auth: bad email says: \(err.exists ? err.label : "(nothing)")")
+            mail.tap(); mail.typeText("@example.com")
+            let pw = a.secureTextFields["auth-password"].firstMatch
+            pw.tap(); pw.typeText("wrong-password-1")
+            shot(a, "auth-filled")
+            submit.tap()
+            sleep(6)
+            note("auth: refused sign-in says: \(err.exists ? err.label : "(nothing)") · still on the form = \(submit.exists)")
+            shot(a, "auth-refused")
+        } else { note("auth: no welcome screen"); shot(a, "auth-missing") }
+        a.terminate()
     }
 }

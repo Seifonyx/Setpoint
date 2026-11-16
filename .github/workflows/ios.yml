@@ -163,6 +163,12 @@ jobs:
           shot -tab diary -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/diary-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           xcrun simctl ui "$UDID" appearance light
           xcrun simctl launch "$UDID" app.setpoint.ios -tab diary; sleep 5; xcrun simctl io "$UDID" screenshot out/empty-light.png
+          # the front door: welcome, create account, sign in
+          xcrun simctl ui "$UDID" appearance dark
+          for m in welcome signup signin; do shot -auth $m; xcrun simctl io "$UDID" screenshot out/auth-$m-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true; done
+          shot -auth signup -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$UDID" screenshot out/auth-signup-dark-ar.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          xcrun simctl ui "$UDID" appearance light
+          for m in welcome signin; do shot -auth $m; xcrun simctl io "$UDID" screenshot out/auth-$m-light.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true; done
           # real presses and drags in the Diary (and the tab bar shrinking while the app is open)
           xcrun simctl ui "$UDID" appearance dark
           TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$UDID" \

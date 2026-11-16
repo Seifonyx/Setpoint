@@ -73,6 +73,8 @@ final class Account {
         try await begin(Session(uid: t.uid, email: info.email, idToken: t.idToken, refreshToken: t.refreshToken, expires: t.expires, verified: info.verified, password: info.password))
     }
 
+    static let lastUser = "lastAccount"
+
     func signOut() {
         pushTask?.cancel()
         Keychain.save(nil)
@@ -89,6 +91,11 @@ final class Account {
     }
     private func begin(_ s: Session) async throws {
         guard let store else { return }
+        // The data on this iPhone belongs to the last account that used it. A different account starts clean
+        // (the other one's log is in its own account), so two people's data never mix. Data from before accounts
+        // were needed (no last account) is kept and joins the account that signs in.
+        if let last = UserDefaults.standard.string(forKey: Self.lastUser), last != s.uid { store.eraseAll() }
+        UserDefaults.standard.set(s.uid, forKey: Self.lastUser)
         let fresh = store.syncValue("uid")?.string != s.uid // first time this account syncs on this iPhone
         session = s
         Keychain.save(s)
@@ -225,6 +232,7 @@ final class Account {
             try await fs.run(chunk.map { .delete($0) })
         }
         _ = try await Auth.post("accounts:delete", ["idToken": s.idToken])
+        UserDefaults.standard.removeObject(forKey: Self.lastUser) // the copy on this iPhone stays, and joins the next account
         signOut()
     }
 

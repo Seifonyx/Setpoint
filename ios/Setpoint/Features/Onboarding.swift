@@ -5,8 +5,7 @@ struct OnboardingView: View {
     @Environment(Store.self) private var store
     @Environment(Account.self) private var account
     let finish: () -> Void
-    @State private var step = 0
-    @State private var signingIn = false
+    @State private var step = 1 // 1…5: the welcome is the sign-in screen now (AuthFlow)
 
     // answers
     @State private var unit = Locale.current.measurementSystem == .us ? "lb" : "kg"
@@ -20,23 +19,20 @@ struct OnboardingView: View {
     @State private var steps = 6000.0
     @State private var workouts = 3
     @State private var shown = 0.0
-    @State private var arrived = false
 
     private let steps_ = 6
 
     var body: some View {
         VStack(spacing: 0) {
-            if step > 0 {
-                HStack {
-                    Button { withAnimation(.snappy) { step -= 1 } } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)) }
-                        .buttonStyle(.glass).buttonBorderShape(.circle)
-                    ProgressView(value: Double(step), total: Double(steps_ - 1)).tint(Brand.green).padding(.horizontal, 8)
-                }
-                .padding(.horizontal, 20).padding(.top, 8)
+            HStack {
+                Button { withAnimation(.snappy) { step -= 1 } } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)) }
+                    .buttonStyle(.glass).buttonBorderShape(.circle)
+                    .opacity(step > 1 ? 1 : 0).disabled(step <= 1).accessibilityHidden(step <= 1)
+                ProgressView(value: Double(step), total: Double(steps_ - 1)).tint(Brand.green).padding(.horizontal, 8)
             }
+            .padding(.horizontal, 20).padding(.top, 8)
             ZStack {
                 switch step {
-                case 0: welcome
                 case 1: aboutYou
                 case 2: weight
                 case 3: goal
@@ -49,38 +45,10 @@ struct OnboardingView: View {
             .id(step)
         }
         .paperPage()
-        .sheet(isPresented: $signingIn, onDismiss: { if account.signedIn { finish() } }) { NavigationStack { AccountView() } }
         .sensoryFeedback(.selection, trigger: step)
     }
 
     // MARK: Pages
-
-    private var welcome: some View {
-        VStack(spacing: 22) {
-            Spacer()
-            ZStack {
-                CalorieDial(eaten: shown, target: 100, protein: (shown * 0.8, 100), carbs: (shown * 0.95, 100), fat: (shown * 0.6, 100))
-                    .frame(width: 220, height: 220)
-            }
-            .onAppear {
-                withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 }
-                withAnimation(.spring(response: 0.8, dampingFraction: 0.85).delay(0.55)) { arrived = true }
-            }
-            VStack(spacing: 8) {
-                Text("Setpoint").font(Brand.display(46, .heavy))
-                Text("Eat to your target. Watch your weight trend settle where you want it.")
-                    .font(.brand(.title3)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center).padding(.horizontal, 30)
-            }
-            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 18)
-            Spacer()
-            VStack(spacing: 12) {
-                primary("Get started") { next() }
-                Button("I already have an account") { signingIn = true }.font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
-            }
-            .padding(.horizontal, 24).padding(.bottom, 20)
-            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 24)
-        }
-    }
 
     private var aboutYou: some View {
         page("About you", "This sets how much you burn at rest.") {
