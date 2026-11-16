@@ -114,7 +114,7 @@ struct AuthFlow: View {
                     box("lock", focused: field == .password) {
                         Group {
                             if reveal { TextField("Password", text: $password).textInputAutocapitalization(.never).autocorrectionDisabled() }
-                            else { SecureField("Password", text: $password).font(.body) } // the system font: the app's has no dots for hidden text
+                            else { SecureField("Password", text: $password) } // (iOS leaves hidden text out of screenshots: it looks empty there)
                         }
                         .textContentType(creating ? .newPassword : .password)
                         .focused($field, equals: .password).submitLabel(.go).onSubmit(submit)
