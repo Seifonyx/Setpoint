@@ -114,7 +114,7 @@ struct AuthFlow: View {
                     box("lock", focused: field == .password) {
                         Group {
                             if reveal { TextField("Password", text: $password).textInputAutocapitalization(.never).autocorrectionDisabled() }
-                            else { SecureField("Password", text: $password) }
+                            else { SecureField("Password", text: $password).font(.body) } // the system font: the app's has no dots for hidden text
                         }
                         .textContentType(creating ? .newPassword : .password)
                         .focused($field, equals: .password).submitLabel(.go).onSubmit(submit)
@@ -168,6 +168,8 @@ struct AuthFlow: View {
             }
             .padding(.horizontal, 24).padding(.bottom, 24)
         }
+        .onChange(of: email) { if error != nil { withAnimation(.snappy) { error = nil } } } // fixing it clears the complaint
+        .onChange(of: password) { if error != nil { withAnimation(.snappy) { error = nil } } }
         .scrollDismissesKeyboard(.interactively)
         .scrollBounceBehavior(.basedOnSize)
     }
