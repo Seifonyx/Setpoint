@@ -187,7 +187,12 @@ struct AddFoodSheet: View {
                     FoodIcon(kind: "meal")
                     VStack(alignment: .leading, spacing: 2) {
                         Text(m.name).lineLimit(1)
-                        Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                        HStack(spacing: 5) { // like the other rows: what it is, then its size
+                            Text("Meal").font(.brand(.subheadline, .semibold))
+                            Text("·")
+                            Text("\(m.n) foods").font(.brand(.subheadline))
+                        }
+                        .foregroundStyle(Brand.ink2)
                     }
                     Spacer()
                 }
