@@ -1831,6 +1831,16 @@
         }
       }
     },
+    "By continuing you agree to the [Terms](setpoint-legal://terms) and [Privacy Policy](setpoint-legal://privacy).": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لما تكمّل تبقى موافق على [الشروط](setpoint-legal://terms) و[سياسة الخصوصية](setpoint-legal://privacy)."
+          }
+        }
+      }
+    },
     "C": {
       "localizations": {
         "ar": {
@@ -3527,6 +3537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تذكير تسجيل الأكل"
+          }
+        }
+      }
+    },
+    "Food logged in a meal you remove shows in the last meal. These are saved in your account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكل المسجّل في وجبة بتشيلها بيظهر في آخر وجبة. ده كله بيتحفظ في حسابك."
           }
         }
       }
@@ -5531,6 +5551,16 @@
         }
       }
     },
+    "Not available": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مش متاحة"
+          }
+        }
+      }
+    },
     "Not fasting": {
       "localizations": {
         "ar": {
@@ -6347,6 +6377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم السابق"
+          }
+        }
+      }
+    },
+    "Privacy Policy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سياسة الخصوصية"
           }
         }
       }
@@ -7937,6 +7977,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأهداف والهدف والحرق"
+          }
+        }
+      }
+    },
+    "Terms of Use": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "شروط الاستخدام"
           }
         }
       }
@@ -9567,6 +9617,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أوزانك وسجل الأكل والأكلات والوصفات والخطة والإعدادات بتتزامن مع تطبيق الويب. الصور بتفضل على الآيفون ده دلوقتي."
+          }
+        }
+      }
+    },
+    "Your weigh-ins, food log, foods, recipes, plan, settings and progress photos are saved in your account.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وزنك، وسجل أكلك، وأطعمتك، ووصفاتك، وخطتك، وإعداداتك، وصور تقدّمك بتتحفظ في حسابك."
           }
         }
       }

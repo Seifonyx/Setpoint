@@ -1,0 +1,328 @@
+{
+ "pages": [
+  {
+   "id": "privacy",
+   "title": "Privacy Policy",
+   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "sections": [
+    {
+     "heading": "Who we are",
+     "blocks": [
+      {
+       "p": "Setpoint is a food, nutrition and weight tracking app at setpoint-tracker.web.app. It is run by an individual based in Egypt under the name **Setpoint** (\"we\", \"us\"). We are the controller of the personal data described here."
+      },
+      {
+       "p": "Contact for anything about your data: [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com)."
+      }
+     ]
+    },
+    {
+     "heading": "The short version",
+     "blocks": [
+      {
+       "list": [
+        "Setpoint works without an account. Without one, everything you enter stays **on your device** and we never receive it.",
+        "If you create an account, a copy of your data is stored in your account so you can sync and restore it. We use it only to run the app for you.",
+        "We don't show ads, don't use analytics or tracking, and don't sell or rent your data.",
+        "You can download everything (Settings → Back up & restore) and delete your account and cloud data at any time (You → Account → Delete account)."
+       ]
+      }
+     ]
+    },
+    {
+     "heading": "What we collect and why",
+     "blocks": [
+      {
+       "p": "**1. What you enter in the app.** Your profile (sex, birth year, height and, if you add it, body fat), weigh-ins, food diary, recipes and meals, water, fasting, body measurements, progress photos, notes, targets and settings. This is used to show your diary, targets, trends and insights."
+      },
+      {
+       "p": "Without an account this is kept only in your browser's storage on your device. With an account, a copy is also stored in your account (see \"Where your data is stored\")."
+      },
+      {
+       "p": "**2. Health data.** Weight, food intake, body measurements and photos are health data, which the law treats as sensitive. We only store it in the cloud with your explicit consent, which you give when you sign in or create an account. You can withdraw that consent at any time by deleting your account."
+      },
+      {
+       "p": "**3. Account details.** If you create an account: your email address and an account ID. Passwords are handled by Google Firebase Authentication; we never see or store your password. If you sign in with Google, Google shares your name, email address and profile picture with the sign-in service; Setpoint keeps only your email address and account ID."
+      },
+      {
+       "p": "**4. Food lookups.** When you scan a barcode or search for packaged foods, the barcode or search words are sent to **Open Food Facts**, a public food database. Like any website, they can see your IP address. They don't receive your diary or account details."
+      },
+      {
+       "p": "**5. Camera and microphone.** Used only when you choose to scan a barcode or label, take a progress photo or speak a food. Barcode and label reading happen on your device. Progress photos are stored on your device and, if you have an account, in your account. Voice input uses your browser's own speech recognition; on some browsers (for example Chrome and Safari) the browser maker (Google or Apple) processes the audio to turn it into text, under their own privacy terms."
+      },
+      {
+       "p": "**6. Technical data.** Our hosting provider (Google Firebase Hosting) automatically records standard request information such as IP address, browser type and time of request, to deliver the app and keep it secure. The label-reading engine (Tesseract.js) is downloaded from the jsDelivr network the first time you scan a label, so jsDelivr also sees your IP address then."
+      }
+     ]
+    },
+    {
+     "heading": "Legal bases",
+     "blocks": [
+      {
+       "p": "We rely on your **explicit consent** for storing your health data in your account; on **providing the service you asked for** for your account and app features; and on our **legitimate interest** in keeping the app secure. This follows Egypt's Personal Data Protection Law (Law No. 151 of 2020) and, for people in the European Economic Area or the UK, the GDPR."
+      }
+     ]
+    },
+    {
+     "heading": "Where your data is stored",
+     "blocks": [
+      {
+       "p": "Account data is stored with **Google Cloud Firestore** and **Firebase Authentication**, provided by Google, which act as our service providers (processors). Google's servers may be located outside Egypt, including in the United States and the European Union. By giving consent at sign-in you agree to this transfer. Google protects data with encryption in transit and at rest, and our security rules let only you read or change your account's data."
+      },
+      {
+       "p": "Setpoint uses the same sign-in service as our Study Planner app, so one account works in both."
+      }
+     ]
+    },
+    {
+     "heading": "Who we share it with",
+     "blocks": [
+      {
+       "list": [
+        "Google (Firebase Authentication, Firestore and Hosting), only to run the app.",
+        "Open Food Facts, only the barcodes and search words you look up.",
+        "Authorities, only if the law requires it."
+       ]
+      },
+      {
+       "p": "We never sell your data, and we don't share it with advertisers or data brokers."
+      }
+     ]
+    },
+    {
+     "heading": "How long we keep it",
+     "blocks": [
+      {
+       "list": [
+        "Data on your device: until you delete it (Settings → Erase all data) or clear your browser's data.",
+        "Account data: until you delete your account. Deleting it removes your synced data and photos from our database straight away; Google may keep encrypted backups for a short time before they are overwritten.",
+        "Hosting logs: kept by Google for a limited period under its own retention rules."
+       ]
+      }
+     ]
+    },
+    {
+     "heading": "Your rights",
+     "blocks": [
+      {
+       "p": "You can ask to **see**, **correct**, **download** or **delete** your personal data, **withdraw consent**, or **object** to how it is used. Most of this you can do yourself in the app: edit anything you logged, download it all (Settings → Back up & restore), and delete your account (You → Account → Delete account). For anything else, email [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com) and we'll reply within 30 days."
+      },
+      {
+       "p": "If you're unhappy with how we handle your data, you can complain to Egypt's **Personal Data Protection Center**, or, in the EU/UK, to your local data protection authority."
+      }
+     ]
+    },
+    {
+     "heading": "Children",
+     "blocks": [
+      {
+       "p": "Setpoint is not meant for children under 13, and we don't knowingly collect their data. Under Egyptian law anyone under 18 is a child: if you're under 18, you need a parent's or guardian's permission to create an account. If you believe a child has given us data without permission, contact us and we'll delete it."
+      }
+     ]
+    },
+    {
+     "heading": "Security",
+     "blocks": [
+      {
+       "p": "Connections are encrypted (HTTPS), account data can only be read by its owner, and you can add an app lock (Face ID or your passcode) in Settings. No system is perfectly secure, so please use a strong password and keep your device locked."
+      }
+     ]
+    },
+    {
+     "heading": "Changes",
+     "blocks": [
+      {
+       "p": "If we change this policy we'll update the date at the top and, for important changes, tell you in the app. Using Setpoint after a change means you accept the updated policy."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "terms",
+   "title": "Terms of Use",
+   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "sections": [
+    {
+     "heading": "Agreement",
+     "blocks": [
+      {
+       "p": "These terms apply to your use of Setpoint (setpoint-tracker.web.app), run by an individual based in Egypt under the name Setpoint. By using the app you agree to them. If you don't agree, please don't use Setpoint."
+      }
+     ]
+    },
+    {
+     "heading": "Not medical advice",
+     "blocks": [
+      {
+       "p": "**Setpoint is a tracking tool, not a doctor.** Calorie and nutrient targets, burn estimates, refeeds, diet breaks, fasting timers and every other number in the app are general estimates based on formulas and what you log. They are not medical, nutritional or health advice and are not a diagnosis or treatment."
+      },
+      {
+       "list": [
+        "Talk to a doctor or registered dietitian before changing your diet, especially if you are pregnant or breastfeeding, under 18, have diabetes, heart, kidney or other medical conditions, take medication, or have or had an eating disorder.",
+        "Stop and get help if tracking makes you anxious or affects your eating in a harmful way.",
+        "In an emergency, contact your local emergency number straight away."
+       ]
+      }
+     ]
+    },
+    {
+     "heading": "Food information",
+     "blocks": [
+      {
+       "p": "Food data comes from the US Department of Agriculture (FoodData Central), from Open Food Facts (a community database that anyone can edit), from estimates and from what users enter. It may contain mistakes or be out of date. Always check product labels, especially for **allergies** and intolerances. Brand and restaurant names are used only to identify foods; they belong to their owners, who are not connected with or endorsing Setpoint."
+      }
+     ]
+    },
+    {
+     "heading": "Who can use Setpoint",
+     "blocks": [
+      {
+       "p": "You must be 18 or older, or have permission from a parent or guardian. Setpoint is not for children under 13."
+      }
+     ]
+    },
+    {
+     "heading": "Your account and your data",
+     "blocks": [
+      {
+       "list": [
+        "You're responsible for keeping your login details safe and for what happens in your account.",
+        "Your data belongs to you. You give us permission to store and process it only so we can run the app for you, as described in our [Privacy Policy](setpoint-legal://privacy).",
+        "You can delete your account at any time in the app."
+       ]
+      }
+     ]
+    },
+    {
+     "heading": "Fair use",
+     "blocks": [
+      {
+       "p": "Don't misuse Setpoint: no attempts to break into accounts or systems, overload the service, copy or resell the app or its food database, or use it for anything illegal."
+      }
+     ]
+    },
+    {
+     "heading": "Our app",
+     "blocks": [
+      {
+       "p": "The Setpoint app, its design and its code belong to Setpoint. You may use it for your own personal, non-commercial use. Parts of it come from others under their own licences: food data from USDA FoodData Central (public domain) and Open Food Facts (Open Database License); fonts Bricolage Grotesque, Figtree and IBM Plex Sans Arabic (SIL Open Font License); and Tesseract.js for reading labels (Apache License 2.0)."
+      }
+     ]
+    },
+    {
+     "heading": "Paid features",
+     "blocks": [
+      {
+       "p": "Setpoint is free today. If we add paid features, the price and what you get will be shown clearly before you pay, and our [Refund Policy](setpoint-legal://refunds) will apply. Nothing will ever be charged without you confirming it."
+      }
+     ]
+    },
+    {
+     "heading": "Changes and availability",
+     "blocks": [
+      {
+       "p": "We may improve, change or stop parts of the app. We try to keep it running and your data safe, but we can't promise it will always be available or free of errors. Keep a backup (Settings → Back up & restore). We may suspend accounts that break these terms."
+      }
+     ]
+    },
+    {
+     "heading": "Responsibility",
+     "blocks": [
+      {
+       "p": "Setpoint is provided \"as is\". To the extent the law allows, we are not responsible for decisions you make based on the app, or for indirect losses. Nothing in these terms limits rights you have that the law doesn't allow us to limit, including your rights under Egypt's Consumer Protection Law (Law No. 181 of 2018)."
+      }
+     ]
+    },
+    {
+     "heading": "Law",
+     "blocks": [
+      {
+       "p": "These terms are governed by the laws of the Arab Republic of Egypt. If you live in another country, you also keep any protections your local law gives you. If there's a disagreement, please contact us first at [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com) so we can try to solve it."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "cookies",
+   "title": "Cookies & Storage",
+   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "sections": [
+    {
+     "heading": "Do we use cookies?",
+     "blocks": [
+      {
+       "p": "**Setpoint itself doesn't set any cookies.** We don't use advertising, analytics or tracking cookies, or any other trackers, and we don't embed third-party content such as social media buttons or videos."
+      },
+      {
+       "p": "Because nothing optional is stored, we don't show a cookie consent banner: the law only requires consent for storage that isn't needed to provide what you asked for."
+      }
+     ]
+    },
+    {
+     "heading": "What the app stores on your device",
+     "blocks": [
+      {
+       "list": [
+        "**Local storage and IndexedDB**: your diary, weigh-ins, settings and photos, so the app works and keeps your data between visits. Strictly necessary.",
+        "**App cache** (service worker): a copy of the app and food database, so Setpoint opens fast and works offline. Strictly necessary.",
+        "**Sign-in**: if you sign in, Firebase Authentication keeps you signed in using your browser's storage. Strictly necessary."
+       ]
+      }
+     ]
+    },
+    {
+     "heading": "Other sites",
+     "blocks": [
+      {
+       "p": "If you choose \"Continue with Google\", Google's sign-in page may set its own cookies on Google's domain, under [Google's cookie policy](https://policies.google.com/technologies/cookies)."
+      }
+     ]
+    },
+    {
+     "heading": "How to clear it",
+     "blocks": [
+      {
+       "p": "In the app: Settings → Erase all data. In your browser: clear site data for setpoint-tracker.web.app. If you clear it without a backup or an account, your data on that device is gone."
+      }
+     ]
+    }
+   ]
+  },
+  {
+   "id": "refunds",
+   "title": "Refund Policy",
+   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "sections": [
+    {
+     "heading": "Today",
+     "blocks": [
+      {
+       "p": "**Setpoint is free.** There are no purchases or subscriptions, so nothing can be charged and there's nothing to refund."
+      }
+     ]
+    },
+    {
+     "heading": "When paid features arrive",
+     "blocks": [
+      {
+       "p": "This policy will apply to any purchase made in Setpoint:"
+      },
+      {
+       "list": [
+        "**14-day refund.** If you're not happy with a purchase, ask for a full refund within 14 days of buying it. No reason needed.",
+        "**Subscriptions.** You can cancel any time. You keep access until the end of the period you paid for, and you won't be charged again.",
+        "**Problems.** If a paid feature doesn't work as described and we can't fix it, we'll refund you, even after 14 days.",
+        "**App stores.** If you bought through the Apple App Store or Google Play, refunds go through them, under their rules; we'll help where we can."
+       ]
+      },
+      {
+       "p": "To ask for a refund, email [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com) with the email address on your account and the date of purchase. Refunds go back to the original payment method, normally within 14 days. This doesn't affect your rights under Egypt's Consumer Protection Law (Law No. 181 of 2018) or the law where you live."
+      }
+     ]
+    }
+   ]
+  }
+ ]
+}

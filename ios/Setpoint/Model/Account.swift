@@ -56,21 +56,22 @@ final class Account {
         guard let s = try await validSession() else { return }
         _ = try await Auth.post("accounts:sendOobCode", ["requestType": "VERIFY_EMAIL", "idToken": s.idToken])
     }
-    /// Google: a small page on the Setpoint site signs in with Google and hands back a token (ios-signin.html).
-    /// The screen opens it with SwiftUI's web sign-in session and passes back where it ended up.
-    static let googleURL = URL(string: "https://setpoint-tracker.web.app/ios-signin.html")!
-    func finishGoogle(_ back: URL) async throws {
-        let q = Dictionary(uniqueKeysWithValues: (back.fragment ?? "").split(separator: "&").compactMap { part -> (String, String)? in
-            let kv = part.split(separator: "=", maxSplits: 1).map(String.init)
-            return kv.count == 2 ? (kv[0], kv[1].removingPercentEncoding ?? kv[1]) : nil
-        })
-        guard let token = q["token"] else {
-            if q["error"] == "cancelled" { throw AuthError.message(String(localized: "Sign-in was cancelled.")) }
+    /// Google, entirely inside the app: Google's own sign-in page in a secure sheet, the way Google's iPhone sign-in
+    /// works (OAuth with PKCE, the iPhone app's own Google client), then Firebase signs you in with Google's answer.
+    func finishGoogle(_ back: URL, _ req: Google.Request) async throws {
+        let q = URLComponents(url: back, resolvingAgainstBaseURL: false)?.queryItems ?? []
+        func item(_ k: String) -> String? { q.first { $0.name == k }?.value }
+        if let e = item("error") {
+            if e == "access_denied" { throw AuthError.message(String(localized: "Sign-in was cancelled.")) }
             throw AuthError.message(String(localized: "Couldn't sign in with Google. Try again."))
         }
-        let t = try await Auth.refresh(token)
-        let info = try await Auth.lookup(t.idToken)
-        try await begin(Session(uid: t.uid, email: info.email, idToken: t.idToken, refreshToken: t.refreshToken, expires: t.expires, verified: info.verified, password: info.password))
+        guard item("state") == req.state, let code = item("code") else { throw AuthError.message(String(localized: "Couldn't sign in with Google. Try again.")) }
+        let idToken = try await Google.exchange(code, verifier: req.verifier)
+        let r = try await Auth.post("accounts:signInWithIdp", [
+            "postBody": "id_token=\(idToken)&providerId=google.com", "requestUri": "http://localhost",
+            "returnSecureToken": true, "returnIdpCredential": true,
+        ])
+        try await adopt(r)
     }
 
     static let lastUser = "lastAccount"
@@ -308,14 +309,15 @@ enum AuthError: LocalizedError {
     }
 }
 
-private enum Auth {
-    static let key = "AIzaSyAYXoxTt8Bhb2A-oCrQzpKO71GL1D892_o"
+enum Auth {
+    /// The iPhone app's own key in the Firebase project ("Setpoint for iPhone"), not the website's.
+    static let key = "AIzaSyClwp-Fb_6PDFDNJOdORcZ_ZatY6jkwXSY"
 
     static func request(_ url: URL, body: Data, type: String) -> URLRequest {
         var r = URLRequest(url: url)
         r.httpMethod = "POST"; r.httpBody = body
         r.setValue(type, forHTTPHeaderField: "Content-Type")
-        r.setValue("https://setpoint-tracker.web.app/", forHTTPHeaderField: "Referer")
+        r.setValue("app.setpoint.ios", forHTTPHeaderField: "X-Ios-Bundle-Identifier") // the id it was registered with (SideStore may rename the app)
         r.timeoutInterval = 20
         return r
     }
@@ -361,6 +363,52 @@ private enum Auth {
         case "USER_DISABLED": return String(localized: "This account has been turned off.")
         default: return String(localized: "Couldn't sign in. Try again.")
         }
+    }
+}
+
+/// Google sign-in without the website: the iPhone app's own Google client (made for it in the Firebase project).
+enum Google {
+    static let client = "813690688684-gn1dobqsnfc2qbo87svefqqei6l4u6bc.apps.googleusercontent.com"
+    static let scheme = "com.googleusercontent.apps.813690688684-gn1dobqsnfc2qbo87svefqqei6l4u6bc"
+    static var redirect: String { scheme + ":/oauth2redirect" }
+
+    struct Request: Sendable { let url: URL; let verifier: String; let state: String }
+    /// A fresh sign-in: the page to open, plus the secret it's tied to (PKCE) and a check that the answer is ours.
+    static func request() -> Request {
+        let verifier = random(48), state = random(16)
+        let challenge = base64url(Data(SHA256.hash(data: Data(verifier.utf8))))
+        var c = URLComponents(string: "https://accounts.google.com/o/oauth2/v2/auth")!
+        c.queryItems = [
+            .init(name: "client_id", value: client), .init(name: "redirect_uri", value: redirect),
+            .init(name: "response_type", value: "code"), .init(name: "scope", value: "openid email profile"),
+            .init(name: "code_challenge", value: challenge), .init(name: "code_challenge_method", value: "S256"),
+            .init(name: "state", value: state), .init(name: "prompt", value: "select_account"),
+        ]
+        return Request(url: c.url!, verifier: verifier, state: state)
+    }
+    /// Google's answer (a one-time code) for the sign-in token Firebase takes.
+    static func exchange(_ code: String, verifier: String) async throws -> String {
+        var r = URLRequest(url: URL(string: "https://oauth2.googleapis.com/token")!)
+        r.httpMethod = "POST"; r.timeoutInterval = 20
+        r.setValue("application/x-www-form-urlencoded", forHTTPHeaderField: "Content-Type")
+        let form: [(String, String)] = [("code", code), ("client_id", client), ("redirect_uri", redirect),
+                                        ("grant_type", "authorization_code"), ("code_verifier", verifier)]
+        let allowed = CharacterSet.alphanumerics.union(CharacterSet(charactersIn: "-._~"))
+        r.httpBody = Data(form.map { "\($0.0)=\($0.1.addingPercentEncoding(withAllowedCharacters: allowed) ?? $0.1)" }.joined(separator: "&").utf8)
+        let (data, resp) = try await Auth.send(r)
+        let o = (try? JSONSerialization.jsonObject(with: data)) as? [String: Any] ?? [:]
+        guard (resp as? HTTPURLResponse)?.statusCode ?? 0 < 400, let token = o["id_token"] as? String else {
+            throw AuthError.message(String(localized: "Couldn't sign in with Google. Try again."))
+        }
+        return token
+    }
+    private static func random(_ n: Int) -> String {
+        var b = [UInt8](repeating: 0, count: n)
+        _ = SecRandomCopyBytes(kSecRandomDefault, n, &b)
+        return base64url(Data(b))
+    }
+    private static func base64url(_ d: Data) -> String {
+        d.base64EncodedString().replacingOccurrences(of: "+", with: "-").replacingOccurrences(of: "/", with: "_").replacingOccurrences(of: "=", with: "")
     }
 }
 

@@ -21,7 +21,7 @@ struct MealsEditor: View {
                     meals.remove(atOffsets: idx); save()
                 }
                 Button("Add a meal", systemImage: "plus") { newName = ""; adding = true }
-            } footer: { Text("Food logged in a meal you remove shows in the last meal. These sync with the web app.") }
+            } footer: { Text("Food logged in a meal you remove shows in the last meal. These are saved in your account.") }
             Section {
                 Button("Use the standard four") { store.setSetting("meals", nil); load() }
             }

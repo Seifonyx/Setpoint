@@ -48,7 +48,11 @@ struct AccountView: View {
             Button("Sync now", systemImage: "arrow.triangle.2.circlepath") { Task { await account.syncNow() } }
                 .disabled(account.busy)
         } footer: {
-            Text("Your weigh-ins, food log, foods, recipes, plan, settings and progress photos sync with the web app.")
+            Text("Your weigh-ins, food log, foods, recipes, plan, settings and progress photos are saved in your account.")
+        }
+        Section {
+            NavigationLink { LegalView(id: "privacy") } label: { Text("Privacy Policy") }
+            NavigationLink { LegalView(id: "terms") } label: { Text("Terms of Use") }
         }
         Section {
             Button("Sign out", role: .destructive) { confirmOut = true }.foregroundStyle(Brand.danger)

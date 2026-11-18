@@ -19,6 +19,7 @@ struct AuthFlow: View {
     @State private var google = false
     @State private var error: String?
     @State private var note: String?
+    @State private var legal: String?   // a legal page open over the sign-in (the app's own copy)
     @State private var shown = 0.0
     @State private var arrived = false
     @FocusState private var field: Field?
@@ -38,6 +39,11 @@ struct AuthFlow: View {
         .foregroundStyle(Brand.ink)
         .sensoryFeedback(.selection, trigger: mode)
         .sensoryFeedback(.error, trigger: error) { _, new in new != nil }
+        .environment(\.openURL, OpenURLAction { url in
+            if let id = LegalLink.page(url) { legal = id; return .handled }
+            return .systemAction
+        })
+        .sheet(item: Binding(get: { legal.map(LegalJob.init) }, set: { legal = $0?.id })) { LegalSheet(page: $0.id) }
         .alert(note ?? "", isPresented: Binding(get: { note != nil }, set: { if !$0 { note = nil } })) { Button("OK", role: .cancel) {} }
     }
 
@@ -221,7 +227,7 @@ struct AuthFlow: View {
     }
 
     private var terms: some View {
-        Text("By continuing you agree to the [Terms](https://setpoint-tracker.web.app/terms.html) and [Privacy Policy](https://setpoint-tracker.web.app/privacy.html).")
+        Text("By continuing you agree to the [Terms](setpoint-legal://terms) and [Privacy Policy](setpoint-legal://privacy).")
             .font(.brand(.caption)).foregroundStyle(Brand.ink2).tint(Brand.ink).multilineTextAlignment(.center)
             .frame(maxWidth: .infinity).padding(.top, 2)
     }
@@ -259,8 +265,9 @@ struct AuthFlow: View {
     private func withGoogle() {
         google = true
         act {
-            let back = try await webAuth.authenticate(using: Account.googleURL, callback: .customScheme("setpoint"), preferredBrowserSession: .shared, additionalHeaderFields: [:])
-            try await account.finishGoogle(back)
+            let req = Google.request()
+            let back = try await webAuth.authenticate(using: req.url, callback: .customScheme(Google.scheme), preferredBrowserSession: .shared, additionalHeaderFields: [:])
+            try await account.finishGoogle(back, req)
         }
     }
     private func fail(_ text: String, _ f: Field) {
@@ -278,3 +285,5 @@ struct AuthFlow: View {
         }
     }
 }
+
+private struct LegalJob: Identifiable { let id: String }

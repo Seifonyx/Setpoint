@@ -13,6 +13,7 @@ struct YouView: View {
     @State private var showSettings = UserDefaults.standard.string(forKey: "open") == "settings"
     @State private var showExport = UserDefaults.standard.string(forKey: "open") == "export"
     @State private var showTargets = UserDefaults.standard.string(forKey: "open") == "targets"
+    @State private var showLegal = UserDefaults.standard.string(forKey: "open") == "legal"
 
     var body: some View {
         NavigationStack {
@@ -93,6 +94,7 @@ struct YouView: View {
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
             .navigationDestination(isPresented: $showExport) { ExportView() }
             .navigationDestination(isPresented: $showTargets) { TargetsView() }
+            .navigationDestination(isPresented: $showLegal) { LegalView(id: "privacy") }
             .sheet(isPresented: $explain) { TargetExplainer() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in
                 ShareSheet(url: f.url).presentationDetents([.medium, .large])
