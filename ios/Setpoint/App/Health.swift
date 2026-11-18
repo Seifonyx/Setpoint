@@ -1,7 +1,8 @@
 import Foundation
 import HealthKit
 
-/// Apple Health: weigh-ins from your smart scale, and your average steps for your activity.
+/// Apple Health: weigh-ins from your smart scale, your average steps for your activity, and (if you turn it on)
+/// your weigh-ins saved to Health.
 /// Needs the HealthKit permission, which only the "health" test build carries (a free Apple ID may not allow it);
 /// everywhere else this reports that Health isn't available, and nothing else changes.
 @MainActor
@@ -23,7 +24,7 @@ enum Health {
             predicates: [.quantitySample(type: mass, predicate: HKQuery.predicateForSamples(withStart: start, end: Date()))],
             sortDescriptors: [SortDescriptor(\.startDate)]).result(for: store)) ?? []
         var byDay: [String: Double] = [:]
-        for s in samples {
+        for s in samples where !mine(s) { // not the weigh-ins Setpoint saved there itself
             let d = Day.iso(s.startDate)
             if byDay[d] == nil { byDay[d] = s.quantity.doubleValue(for: .gramUnit(with: .kilo)) }
         }
@@ -40,6 +41,51 @@ enum Health {
         let avg = total.map { Int(($0 / 14 / 100).rounded() * 100) }
         if let a = avg, a > 500 { app.setProfile { $0["steps"] = .number(Double(a)) } }
         return .imported(weights: added, steps: avg)
+    }
+
+    // MARK: Saving weigh-ins to Health
+
+    /// Settings › Apple Health › Save weigh-ins to Apple Health.
+    static let writeKey = "healthWrite"
+    static var writing: Bool { UserDefaults.standard.bool(forKey: writeKey) }
+    private static let tag = "setpoint-weight-"
+    /// A weigh-in Setpoint saved (tagged with its day), so importing never brings it back as a new one.
+    private static func mine(_ s: HKSample) -> Bool { (s.metadata?[HKMetadataKeyExternalUUID] as? String)?.hasPrefix(tag) == true }
+
+    /// Asks for permission to save weigh-ins. Returns why it can't, or nil when it can.
+    static func enableWriting() async -> String? {
+        guard HKHealthStore.isHealthDataAvailable() else { return String(localized: "Apple Health isn't available on this device.") }
+        let mass = HKQuantityType(.bodyMass)
+        do { try await store.requestAuthorization(toShare: [mass], read: [mass, HKQuantityType(.stepCount)]) }
+        catch { return String(localized: "This install of Setpoint can't use Apple Health. It needs the Health test build (and an Apple ID that allows it).") }
+        guard store.authorizationStatus(for: mass) == .sharingAuthorized else {
+            return String(localized: "Allow Setpoint to write Weight in the Health app (Profile › Apps › Setpoint), then try again.")
+        }
+        return nil
+    }
+
+    /// Brings Health in line with your weigh-ins for the days that changed (day → kg, or nil when deleted):
+    /// Setpoint's own entry for that day is replaced or removed. A day that already has the same weight in Health
+    /// from somewhere else (your smart scale, say) gets nothing, so nothing is doubled.
+    static func mirror(_ changes: [String: Double?]) async {
+        guard writing, HKHealthStore.isHealthDataAvailable() else { return }
+        let mass = HKQuantityType(.bodyMass), kgUnit = HKUnit.gramUnit(with: .kilo)
+        guard store.authorizationStatus(for: mass) == .sharingAuthorized else { return }
+        for (day, kg) in changes {
+            let id = tag + day
+            let ours = HKQuery.predicateForObjects(withMetadataKey: HKMetadataKeyExternalUUID, allowedValues: [id])
+            _ = try? await store.deleteObjects(of: mass, predicate: ours)
+            guard let kg, (20...400).contains(kg) else { continue }
+            let start = Day.date(day), end = Calendar.current.date(byAdding: .day, value: 1, to: start)!
+            let that = (try? await HKSampleQueryDescriptor(
+                predicates: [.quantitySample(type: mass, predicate: HKQuery.predicateForSamples(withStart: start, end: end))],
+                sortDescriptors: []).result(for: store)) ?? []
+            if that.contains(where: { abs($0.quantity.doubleValue(for: kgUnit) - kg) < 0.05 }) { continue }
+            let when = day == Day.today ? Date() : Calendar.current.date(byAdding: .hour, value: 8, to: start)!
+            let sample = HKQuantitySample(type: mass, quantity: HKQuantity(unit: kgUnit, doubleValue: kg), start: when, end: when,
+                                          metadata: [HKMetadataKeyExternalUUID: id, HKMetadataKeyWasUserEntered: true])
+            try? await store.save(sample)
+        }
     }
 
     /// What went wrong, for working out whether SideStore kept the Health permission: the app version, whether the

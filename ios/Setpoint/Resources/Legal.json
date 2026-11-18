@@ -42,7 +42,7 @@
        "p": "**3. Health data.** Weight, food intake, body measurements and photos are health data, which the law treats as sensitive. We store it in your account only with your explicit consent, which you give when you create an account or sign in. You can withdraw that consent at any time by deleting your account."
       },
       {
-       "p": "**4. Apple Health.** Only if you turn it on: Setpoint reads your **weight** and **steps** from Apple Health to fill in your weigh-ins and estimate what you burn. Setpoint doesn't write anything to Apple Health. What it reads is treated like anything else you log (kept on your iPhone and in your account) and is never used for advertising or shared with anyone else."
+       "p": "**4. Apple Health.** Only if you turn it on (You → Settings → Apple Health): Setpoint reads your **weight** and **steps** from Apple Health to fill in your weigh-ins and estimate what you burn, and, if you choose \"Save weigh-ins to Apple Health\", saves your weigh-ins there. What it reads is treated like anything else you log (kept on your iPhone and in your account). Health data is never used for advertising or shared with anyone else. You can change what Setpoint may read or save at any time in the Health app."
       },
       {
        "p": "**5. Camera and photos.** Used only when you choose to: scan a barcode, photograph a nutrition label or your plate, or add a progress photo. Barcodes, labels and food photos are read on your iPhone by Apple's built-in tools. A food photo isn't stored. Progress photos are kept on your iPhone and in your account."
@@ -143,13 +143,13 @@
   {
    "id": "terms",
    "title": "Terms of Use",
-   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "meta": "Setpoint for iPhone · Effective 18 November 2026 · Setpoint, Egypt",
    "sections": [
     {
      "heading": "Agreement",
      "blocks": [
       {
-       "p": "These terms apply to your use of Setpoint (setpoint-tracker.web.app), run by an individual based in Egypt under the name Setpoint. By using the app you agree to them. If you don't agree, please don't use Setpoint."
+       "p": "These terms apply to your use of the Setpoint app for iPhone, run by an individual based in Egypt under the name Setpoint. By creating an account or using the app you agree to them. If you don't agree, please don't use Setpoint."
       }
      ]
     },
@@ -172,7 +172,7 @@
      "heading": "Food information",
      "blocks": [
       {
-       "p": "Food data comes from the US Department of Agriculture (FoodData Central), from Open Food Facts (a community database that anyone can edit), from estimates and from what users enter. It may contain mistakes or be out of date. Always check product labels, especially for **allergies** and intolerances. Brand and restaurant names are used only to identify foods; they belong to their owners, who are not connected with or endorsing Setpoint."
+       "p": "Food data comes from the US Department of Agriculture (FoodData Central), from Open Food Facts (a community database that anyone can edit), from estimates and from what you enter. Foods recognised from a photo or a description, and numbers read from a label, are the app's best guess. Any of it may contain mistakes or be out of date. Always check product labels, especially for **allergies** and intolerances. Brand and restaurant names are used only to identify foods; they belong to their owners, who are not connected with or endorsing Setpoint."
       }
      ]
     },
@@ -189,9 +189,10 @@
      "blocks": [
       {
        "list": [
-        "You're responsible for keeping your login details safe and for what happens in your account.",
+        "Setpoint needs an account. You're responsible for keeping your login details safe and for what happens in your account.",
         "Your data belongs to you. You give us permission to store and process it only so we can run the app for you, as described in our [Privacy Policy](setpoint-legal://privacy).",
-        "You can delete your account at any time in the app."
+        "If you connect Apple Health, what Setpoint reads from or saves to it is also covered by Apple's terms, and you can change that access at any time in the Health app.",
+        "You can delete your account at any time in the app (You → Account → Delete account)."
        ]
       }
      ]
@@ -208,7 +209,7 @@
      "heading": "Our app",
      "blocks": [
       {
-       "p": "The Setpoint app, its design and its code belong to Setpoint. You may use it for your own personal, non-commercial use. Parts of it come from others under their own licences: food data from USDA FoodData Central (public domain) and Open Food Facts (Open Database License); fonts Bricolage Grotesque, Figtree and IBM Plex Sans Arabic (SIL Open Font License); and Tesseract.js for reading labels (Apache License 2.0)."
+       "p": "The Setpoint app, its design and its code belong to Setpoint. You may use it for your own personal, non-commercial use. Parts of it come from others under their own licences: food data from USDA FoodData Central (public domain) and Open Food Facts (Open Database License); and the fonts Bricolage Grotesque, Figtree, IBM Plex Sans Arabic and Barlow Condensed (SIL Open Font License). Barcode scanning, label reading and photo recognition use Apple's built-in tools on your iPhone."
       }
      ]
     },
@@ -224,7 +225,7 @@
      "heading": "Changes and availability",
      "blocks": [
       {
-       "p": "We may improve, change or stop parts of the app. We try to keep it running and your data safe, but we can't promise it will always be available or free of errors. Keep a backup (Settings → Back up & restore). We may suspend accounts that break these terms."
+       "p": "We may improve, change or stop parts of the app. We try to keep it running and your data safe, but we can't promise it will always be available or free of errors. You can keep your own copy at any time (You → Back up). We may suspend accounts that break these terms."
       }
      ]
     },

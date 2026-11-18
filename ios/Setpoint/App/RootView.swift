@@ -102,7 +102,10 @@ struct RootView: View {
         .foregroundStyle(Brand.ink)
         .environment(store)
         .environment(account)
-        .task { await store.start(); WidgetBridge.publish(store); await account.pull(fresh: false) }
+        .task {
+            store.onWeighIns = { changes in Task { await Health.mirror(changes) } } // Settings › Save weigh-ins to Apple Health
+            await store.start(); WidgetBridge.publish(store); await account.pull(fresh: false)
+        }
         .onChange(of: store.version) { WidgetBridge.publish(store) } // widgets and the Live Activity
         .onOpenURL { url in
             // From a widget: setpoint://add, ://scan or ://weight opens that; anything else just opens the diary.

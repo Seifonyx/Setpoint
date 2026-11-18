@@ -94,7 +94,7 @@ struct YouView: View {
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
             .navigationDestination(isPresented: $showExport) { ExportView() }
             .navigationDestination(isPresented: $showTargets) { TargetsView() }
-            .navigationDestination(isPresented: $showLegal) { LegalView(id: "privacy") }
+            .navigationDestination(isPresented: $showLegal) { LegalView(id: UserDefaults.standard.string(forKey: "legal") ?? "privacy") }
             .sheet(isPresented: $explain) { TargetExplainer() }
             .sheet(item: Binding(get: { shareURL.map(SharedFile.init) }, set: { shareURL = $0?.url })) { f in
                 ShareSheet(url: f.url).presentationDetents([.medium, .large])

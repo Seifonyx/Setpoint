@@ -82,6 +82,18 @@ final class Store {
         food = (o["food"]?.object ?? [:]).mapValues { ($0.array ?? []).compactMap { $0.object }.map(FoodItem.init(raw:)) }
         entries = (o["entries"]?.array ?? []).compactMap { $0.object }.map(WeighIn.init(raw:)).sorted { $0.date < $1.date }
         water = (o["water"]?.object ?? [:]).compactMapValues { $0.number }
+        reportedWeights = weightsByDay
+    }
+    private var weightsByDay: [String: Double] { Dictionary(entries.map { ($0.date, $0.kg) }, uniquingKeysWith: { a, _ in a }) }
+    /// Tells Health what changed in the last 14 days: logged, edited, deleted or undone, from here or another device.
+    private func reportWeights() {
+        let now = weightsByDay
+        guard now != reportedWeights else { return }
+        let from = Day.number(Day.today) - 14
+        var changes: [String: Double?] = [:]
+        for d in Set(now.keys).union(reportedWeights.keys) where now[d] != reportedWeights[d] && Day.number(d) >= from { changes[d] = now[d] }
+        reportedWeights = now
+        if !changes.isEmpty { onWeighIns?(changes) }
     }
 
     private func save(quiet: Bool = false) {
@@ -101,6 +113,7 @@ final class Store {
             lastSig = sig
         }
         version += 1
+        reportWeights()
         guard let data = try? JSONEncoder().encode(JSONValue.object(root)) else { return }
         if !demo { try? data.write(to: Self.fileURL, options: .atomic) }
         let v = version, text = String(decoding: data, as: UTF8.self)
@@ -116,6 +129,10 @@ final class Store {
     /// Signed in to a Setpoint account: changes are stamped and uploaded.
     var signedIn = false { didSet { if signedIn != oldValue { lastSig = nil; itemSigs = nil } } }
     @ObservationIgnored var onDirty: (() -> Void)?
+    /// Weigh-ins that changed (day → kg, or nil when deleted), for Apple Health (Health.mirror). Recent days only.
+    @ObservationIgnored var onWeighIns: (([String: Double?]) -> Void)?
+    /// The weigh-ins as last reported (day → kg). Loading data sets it without reporting, so only changes count.
+    @ObservationIgnored private var reportedWeights: [String: Double] = [:]
     @ObservationIgnored private var lastSig: String?
     @ObservationIgnored private var itemSigs: [String: String]?
     static var nowMs: Double { (Date().timeIntervalSince1970 * 1000).rounded() }

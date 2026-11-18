@@ -1411,6 +1411,16 @@
         }
       }
     },
+    "Allow Setpoint to write Weight in the Health app (Profile › Apps › Setpoint), then try again.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسمح لـ Setpoint يكتب الوزن من تطبيق Health (الملف الشخصي › التطبيقات › Setpoint)، وبعدين جرّب تاني."
+          }
+        }
+      }
+    },
     "Allow camera access in Settings, or type the number.": {
       "localizations": {
         "ar": {
@@ -5301,6 +5311,16 @@
         }
       }
     },
+    "New and changed weigh-ins are saved to Apple Health.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأوزان الجديدة واللي بتعدّلها بتتحفظ في Apple Health."
+          }
+        }
+      }
+    },
     "New food": {
       "localizations": {
         "ar": {
@@ -7007,6 +7027,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "احفظ هذا اليوم"
+          }
+        }
+      }
+    },
+    "Save weigh-ins to Apple Health": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "احفظ أوزانك في Apple Health"
           }
         }
       }

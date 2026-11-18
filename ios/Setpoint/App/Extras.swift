@@ -112,6 +112,7 @@ struct DeviceSettingsView: View {
     @AppStorage("mealsSeparate") private var mealsSeparate = false
     @State private var denied = false
     @State private var confirmErase = false
+    @AppStorage(Health.writeKey) private var healthWrite = false
     @State private var ramadan = false
     @State private var healthBusy = false
     @State private var healthNote: String?
@@ -164,6 +165,13 @@ struct DeviceSettingsView: View {
                     HStack { TileLabel("Import from Apple Health", "heart.fill", Brand.danger); Spacer(); if healthBusy { ProgressView() } }
                 }
                 .disabled(healthBusy)
+                Toggle(isOn: Binding(get: { healthWrite }, set: { on in
+                    guard on else { healthWrite = false; return }
+                    Task {
+                        if let why = await Health.enableWriting() { healthNote = why; healthWrite = false }
+                        else { healthWrite = true; healthNote = String(localized: "New and changed weigh-ins are saved to Apple Health.") }
+                    }
+                })) { TileLabel("Save weigh-ins to Apple Health", "heart.text.square.fill", Brand.danger) }
             } header: { Text("Apple Health") } footer: {
                 Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
             } }
