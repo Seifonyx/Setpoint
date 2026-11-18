@@ -1,5 +1,6 @@
 // The iPhone app's own copy of the legal pages, so it never needs the website to show them.
-// Reads terms.html, privacy.html, cookies.html and refunds.html and writes ios/Setpoint/Resources/Legal.json:
+// Reads terms.html, privacy.html, cookies.html and refunds.html (or the app's own version of a page in ios/legal/,
+// e.g. ios/legal/privacy.html, which wins) and writes ios/Setpoint/Resources/Legal.json:
 // { pages: [{ id, title, meta, sections: [{ heading, blocks: [{ p: "markdown" } | { list: ["markdown", …] }] }] }] }
 // Run after changing a legal page: node tools/ios-legal.js
 const fs = require('fs');
@@ -32,7 +33,8 @@ function inline(html) {
 }
 
 function page(id) {
-  const html = fs.readFileSync(path.join(ROOT, `${id}.html`), 'utf8');
+  const own = path.join(ROOT, 'ios/legal', `${id}.html`);
+  const html = fs.readFileSync(fs.existsSync(own) ? own : path.join(ROOT, `${id}.html`), 'utf8');
   const main = (html.match(/<main[^>]*>([\s\S]*?)<\/main>/i) || [, html])[1];
   const title = inline((main.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [, id])[1]);
   const meta = inline((main.match(/<p class="meta"[^>]*>([\s\S]*?)<\/p>/i) || [, ''])[1]);

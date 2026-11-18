@@ -140,6 +140,30 @@
     favorites: function (meal) { return J(state.favs.map(getFood).filter(Boolean).map(function (f) { return row(f, meal); })); },
     myFoods: function (meal) { return J(state.myFoods.map(customFood).map(function (f) { return row(f, meal); })); },
     recipes: function (meal) { return J(state.recipes.map(recipeFood).filter(Boolean).map(function (f) { return row(f, meal); })); },
+    // My foods as one list (like Cronometer's Custom tab): your own foods, recipes and saved meals together, sorted
+    // by one rule. Usage comes from foodUse() (last 120 days); a logged meal counts as its meal ("m:<id>").
+    // sort: 'recent' (last logged first), 'frequent' (most logged first, ties by recency), 'az', 'kcal'.
+    // Never-logged items go after logged ones in A to Z order, so every sort gives a sensible, stable list.
+    mineAll: function (meal, sort) {
+      var fu = foodUse(), rec = {}, use = fu.allUse, out = [];
+      fu.all.forEach(function (o, i) { if (rec[o.key] == null) rec[o.key] = i; });
+      state.myFoods.map(customFood).forEach(function (f) { out.push(Object.assign(row(f, meal), { type: 'mine' })); });
+      state.recipes.map(recipeFood).filter(Boolean).forEach(function (f) { out.push(Object.assign(row(f, meal), { type: 'recipe' })); });
+      state.meals.forEach(function (m) {
+        out.push({ id: 'm:' + m.id, mealId: m.id, type: 'meal', kind: 'meal', name: m.name, kcal: mealTotal(m.items), count: m.items.length });
+      });
+      out.forEach(function (r) { r.uses = use[r.id] || 0; r.last = rec[r.id] == null ? null : rec[r.id]; });
+      var az = function (a, b) { return String(a.name).localeCompare(String(b.name)); };
+      var recent = function (a, b) {
+        if (a.last == null || b.last == null) return a.last == null && b.last == null ? 0 : a.last == null ? 1 : -1;
+        return a.last - b.last;
+      };
+      var cmp = sort === 'az' ? az
+        : sort === 'kcal' ? function (a, b) { return (a.kcal || 0) - (b.kcal || 0) || az(a, b); }
+        : sort === 'frequent' ? function (a, b) { return (b.uses - a.uses) || recent(a, b) || az(a, b); }
+        : function (a, b) { return recent(a, b) || az(a, b); };
+      return J(out.sort(cmp));
+    },
     savedMeals: function () { return J(state.meals.map(function (m) { return { id: m.id, name: m.name, kcal: mealTotal(m.items), n: m.items.length }; })); },
     // One food: its units, a starting amount (your usual, else a sensible serving) and its numbers per 100 g.
     food: function (id, meal) {
@@ -369,11 +393,14 @@
     expenditureHistory: function (weeks) {
       var out = [], today = dayNum(isoOf(new Date()));
       for (var k = weeks - 1; k >= 0; k--) {
-        var d = isoFromDay(today - 7 * k); __today = d; dataVer++;
-        var m = measuredEnergyNow(), goalKey = Object.keys(state.goals).filter(function (x) { return x <= d; }).sort().pop();
-        out.push({ date: d, tdee: m.ready ? m.tdee : null, intake: m.ready ? m.intake : null, target: goalKey ? state.goals[goalKey].k : null, trend: trendAt(dayNum(d)) });
+        var d = isoFromDay(today - 7 * k);
+        __today = d; dataVer++;
+        // "today" goes back to the real today even if a week can't be worked out (otherwise every list stays stuck)
+        try {
+          var m = measuredEnergyNow(), goalKey = Object.keys(state.goals).filter(function (x) { return x <= d; }).sort().pop();
+          out.push({ date: d, tdee: m.ready ? m.tdee : null, intake: m.ready ? m.intake : null, target: goalKey ? state.goals[goalKey].k : null, trend: trendAt(dayNum(d)) });
+        } finally { __today = null; dataVer++; }
       }
-      __today = null; dataVer++;
       return J(out);
     },
     // Which foods gave you the most of a nutrient over the last few days.

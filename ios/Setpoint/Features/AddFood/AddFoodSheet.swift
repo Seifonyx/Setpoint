@@ -12,13 +12,12 @@ struct AddFoodSheet: View {
     var startScan = false
     @State private var startedScan = false
     @State private var query = UserDefaults.standard.string(forKey: "search") ?? "" // build-server screenshots can open with a search
-    @State private var tab = Tab.all
+    @State private var tab = Tab(rawValue: UserDefaults.standard.string(forKey: "addtab") ?? "") ?? .all // -addtab: build-server screenshots
     @State private var hits: [FoodHit] = []
     @State private var recents: [FoodHit] = []
     @State private var frequent: [FoodHit] = []
     @State private var favorites: [FoodHit] = []
-    @State private var mine: [FoodHit] = []
-    @State private var recipes: [FoodHit] = []
+    @State private var allMine: [FoodHit] = []   // My foods: your foods, recipes and meals in one list
     @State private var meals: [SavedMeal] = []
     @State private var path = NavigationPath()
     @State private var quickAdd = false
@@ -33,7 +32,6 @@ struct AddFoodSheet: View {
     @State private var selecting = false
     @State private var selected: [String: FoodHit] = [:]
     @State private var startIDs: Set<String> = []
-    @AppStorage("addFoodClosed") private var closedGroups = ""
     @AppStorage("searchSort") private var sort = "best"
     @AppStorage("verifiedOnly") private var verifiedOnly = false
     @State private var plateCam = false
@@ -164,44 +162,40 @@ struct AddFoodSheet: View {
         Section { EmptyState(art: .cup, title: title, message: note) }
     }
 
-    private var sortedMeals: [SavedMeal] {
-        switch mineSort {
-        case "az": meals.sorted { $0.name.localizedCompare($1.name) == .orderedAscending }
-        case "kcal": meals.sorted { $0.kcal < $1.kcal }
-        default: meals
+    /// My foods: everything you made, in one list (no groups), like Cronometer's Custom tab. Your foods, recipes and
+    /// saved meals each keep their own icon; the filter sorts them all together.
+    @ViewBuilder private var mineTab: some View {
+        if allMine.isEmpty {
+            Section {
+                EmptyState(art: .cup, title: "Nothing here yet", message: "Foods, recipes and meals you make show up here.")
+                Button { creating = "" } label: { Label("New food", systemImage: "plus") }
+            }
+        } else {
+            Section {
+                ForEach(allMine) { h in
+                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m) } else { row(h) }
+                }
+                Button { creating = "" } label: { Label("New food", systemImage: "plus") }
+            }
         }
     }
-
-    @ViewBuilder private var mineTab: some View {
-        group("mine", "My foods", "pencil.line", Brand.green, count: mine.count) {
-            ForEach(mine) { row($0) }
-            Button { creating = "" } label: { Label("New food", systemImage: "plus") }
-        }
-        group("recipes", "Recipes", "frying.pan.fill", Brand.protein, count: recipes.count) {
-            ForEach(recipes) { row($0) }
-            if recipes.isEmpty { Text("Make recipes in Foods › Recipes.").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
-        }
-        group("meals", "Meals", "takeoutbag.and.cup.and.straw.fill", Brand.amber, count: meals.count) {
-            ForEach(sortedMeals) { m in
+    /// A saved meal: tap to see what's in it and choose servings; + adds it as it is.
+    private func mealRow(_ m: SavedMeal) -> some View {
+        HStack(spacing: 12) {
+            Button { logging = m } label: {
                 HStack(spacing: 12) {
-                    // tap a meal to see what's in it and choose servings; + adds it as it is
-                    Button { logging = m } label: {
-                        HStack(spacing: 12) {
-                            FoodIcon(kind: "meal")
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text(m.name).lineLimit(1)
-                                Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
-                            }
-                            Spacer()
-                        }
-                        .contentShape(.rect)
+                    FoodIcon(kind: "meal")
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(m.name).lineLimit(1)
+                        Text("\(m.n) foods").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
-                    .buttonStyle(.plain)
-                    Text(Fmt.kcal(m.kcal)).font(Brand.num(18, .semibold)).monospacedDigit()
-                    addButton { logSavedMeal(m) }
+                    Spacer()
                 }
+                .contentShape(.rect)
             }
-            if meals.isEmpty { Text("Make meals in Foods › Meals, or save one from the Diary (a meal's ⋯ › Save as meal).").font(.brand(.subheadline)).foregroundStyle(Brand.ink2) }
+            .buttonStyle(.plain)
+            Text(Fmt.kcal(m.kcal)).font(Brand.num(18, .semibold)).monospacedDigit()
+            addButton { logSavedMeal(m) }
         }
     }
 
@@ -236,7 +230,7 @@ struct AddFoodSheet: View {
         switch tab {
         case .all: return (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
         case .favorites: return favorites.count
-        case .mine: return mine.count + recipes.count + meals.count
+        case .mine: return allMine.count
         }
     }
     private var barTitle: LocalizedStringKey {
@@ -245,7 +239,7 @@ struct AddFoodSheet: View {
         switch tab {
         case .all: n = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
         case .favorites: n = favorites.count
-        case .mine: n = mine.count + recipes.count + meals.count
+        case .mine: n = allMine.count
         }
         return n == 1 ? "1 food" : "\(n) foods"
     }
@@ -317,30 +311,6 @@ struct AddFoodSheet: View {
         .accessibilityLabel(Text("Add"))
     }
 
-    /// A collapsible group in My foods (remembered between visits).
-    @ViewBuilder private func group<C: View>(_ key: String, _ title: LocalizedStringKey, _ icon: String, _ color: Color, count: Int, @ViewBuilder content: () -> C) -> some View {
-        let open = !closedGroups.split(separator: ",").contains(Substring(key))
-        Section {
-            if open { content() }
-        } header: {
-            Button {
-                var set = Set(closedGroups.split(separator: ",").map(String.init))
-                if open { set.insert(key) } else { set.remove(key) }
-                withAnimation(.snappy) { closedGroups = set.sorted().joined(separator: ",") }
-            } label: {
-                HStack(spacing: 10) {
-                    Image(systemName: icon).font(.subheadline).foregroundStyle(color)
-                    Text(title)
-                    Text("\(count)").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
-                    Spacer()
-                    Image(systemName: "chevron.down").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2)
-                        .rotationEffect(.degrees(open ? 0 : -90))
-                }
-                .contentShape(.rect)
-            }
-            .buttonStyle(.plain)
-        }
-    }
 
     // MARK: Toolbar and tray
 
@@ -429,9 +399,8 @@ struct AddFoodSheet: View {
         recents = await e.list("recents", meal: meal)
         frequent = await e.list("frequent", meal: meal)
         favorites = await e.list("favorites", meal: meal, sort: favSort, verifiedOnly: favVerified)
-        mine = await e.list("myFoods", meal: meal, sort: mineSort, verifiedOnly: false)
-        recipes = await e.list("recipes", meal: meal, sort: mineSort, verifiedOnly: false)
         meals = await e.savedMeals()
+        allMine = await e.mineAll(meal: meal, sort: mineSort)
     }
     private func toggle(_ h: FoodHit) {
         if selected[h.id] != nil { selected[h.id] = nil } else { selected[h.id] = h }

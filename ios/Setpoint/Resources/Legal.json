@@ -3,13 +3,13 @@
   {
    "id": "privacy",
    "title": "Privacy Policy",
-   "meta": "Effective 7 October 2026 · Setpoint, Egypt",
+   "meta": "Setpoint for iPhone · Effective 18 November 2026 · Setpoint, Egypt",
    "sections": [
     {
      "heading": "Who we are",
      "blocks": [
       {
-       "p": "Setpoint is a food, nutrition and weight tracking app at setpoint-tracker.web.app. It is run by an individual based in Egypt under the name **Setpoint** (\"we\", \"us\"). We are the controller of the personal data described here."
+       "p": "Setpoint is a food, nutrition and weight tracking app for iPhone. It is run by an individual based in Egypt under the name **Setpoint** (\"we\", \"us\"). We are the controller of the personal data described here."
       },
       {
        "p": "Contact for anything about your data: [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com)."
@@ -21,10 +21,10 @@
      "blocks": [
       {
        "list": [
-        "Setpoint works without an account. Without one, everything you enter stays **on your device** and we never receive it.",
-        "If you create an account, a copy of your data is stored in your account so you can sync and restore it. We use it only to run the app for you.",
+        "Setpoint needs an account. What you log is kept on your iPhone and in your account, so it's safe if you change phones. We use it only to run the app for you.",
+        "Photo recognition, label reading, barcode scanning and \"describe your meal\" all happen **on your iPhone**. Your photos aren't sent anywhere to be analysed.",
         "We don't show ads, don't use analytics or tracking, and don't sell or rent your data.",
-        "You can download everything (Settings → Back up & restore) and delete your account and cloud data at any time (You → Account → Delete account)."
+        "You can download everything (You → Back up, or You → Export to a spreadsheet) and delete your account and its data at any time (You → Account → Delete account)."
        ]
       }
      ]
@@ -33,25 +33,28 @@
      "heading": "What we collect and why",
      "blocks": [
       {
-       "p": "**1. What you enter in the app.** Your profile (sex, birth year, height and, if you add it, body fat), weigh-ins, food diary, recipes and meals, water, fasting, body measurements, progress photos, notes, targets and settings. This is used to show your diary, targets, trends and insights."
+       "p": "**1. Your account.** Your email address and an account ID. If you sign in with Google, Google tells us your email address (and shares your name and profile picture with the sign-in service); Setpoint keeps only your email address and account ID. Passwords are handled by Google Firebase Authentication; we never see or store your password."
       },
       {
-       "p": "Without an account this is kept only in your browser's storage on your device. With an account, a copy is also stored in your account (see \"Where your data is stored\")."
+       "p": "**2. What you enter in the app.** Your profile (sex, birth year, height and, if you add it, body fat), weigh-ins, food diary, your own foods, recipes and meals, water, fasting, body measurements, progress photos, notes, targets and settings. This is used to show your diary, targets, trends and insights, and to keep your data in your account."
       },
       {
-       "p": "**2. Health data.** Weight, food intake, body measurements and photos are health data, which the law treats as sensitive. We only store it in the cloud with your explicit consent, which you give when you sign in or create an account. You can withdraw that consent at any time by deleting your account."
+       "p": "**3. Health data.** Weight, food intake, body measurements and photos are health data, which the law treats as sensitive. We store it in your account only with your explicit consent, which you give when you create an account or sign in. You can withdraw that consent at any time by deleting your account."
       },
       {
-       "p": "**3. Account details.** If you create an account: your email address and an account ID. Passwords are handled by Google Firebase Authentication; we never see or store your password. If you sign in with Google, Google shares your name, email address and profile picture with the sign-in service; Setpoint keeps only your email address and account ID."
+       "p": "**4. Apple Health.** Only if you turn it on: Setpoint reads your **weight** and **steps** from Apple Health to fill in your weigh-ins and estimate what you burn. Setpoint doesn't write anything to Apple Health. What it reads is treated like anything else you log (kept on your iPhone and in your account) and is never used for advertising or shared with anyone else."
       },
       {
-       "p": "**4. Food lookups.** When you scan a barcode or search for packaged foods, the barcode or search words are sent to **Open Food Facts**, a public food database. Like any website, they can see your IP address. They don't receive your diary or account details."
+       "p": "**5. Camera and photos.** Used only when you choose to: scan a barcode, photograph a nutrition label or your plate, or add a progress photo. Barcodes, labels and food photos are read on your iPhone by Apple's built-in tools. A food photo isn't stored. Progress photos are kept on your iPhone and in your account."
       },
       {
-       "p": "**5. Camera and microphone.** Used only when you choose to scan a barcode or label, take a progress photo or speak a food. Barcode and label reading happen on your device. Progress photos are stored on your device and, if you have an account, in your account. Voice input uses your browser's own speech recognition; on some browsers (for example Chrome and Safari) the browser maker (Google or Apple) processes the audio to turn it into text, under their own privacy terms."
+       "p": "**6. Describe your meal.** On iPhones with Apple Intelligence, you can type what you ate and the app splits it into foods. This uses Apple's on-device language model; your words stay on your iPhone."
       },
       {
-       "p": "**6. Technical data.** Our hosting provider (Google Firebase Hosting) automatically records standard request information such as IP address, browser type and time of request, to deliver the app and keep it secure. The label-reading engine (Tesseract.js) is downloaded from the jsDelivr network the first time you scan a label, so jsDelivr also sees your IP address then."
+       "p": "**7. Food lookups.** When you scan a barcode that isn't in the app's own food list, the barcode number is sent to **Open Food Facts**, a public food database, to find the product. Like any online service, they can see your IP address. They don't receive your diary or account details."
+      },
+      {
+       "p": "**8. On your iPhone only.** Reminders, the app lock (Face ID or your passcode), widgets and the Lock Screen calories are handled by your iPhone. Face ID is checked by iOS; Setpoint never gets your face data."
       }
      ]
     },
@@ -67,10 +70,10 @@
      "heading": "Where your data is stored",
      "blocks": [
       {
-       "p": "Account data is stored with **Google Cloud Firestore** and **Firebase Authentication**, provided by Google, which act as our service providers (processors). Google's servers may be located outside Egypt, including in the United States and the European Union. By giving consent at sign-in you agree to this transfer. Google protects data with encryption in transit and at rest, and our security rules let only you read or change your account's data."
+       "p": "On your iPhone, in the app's own storage. In your account, with **Google Cloud Firestore** and **Firebase Authentication**, provided by Google, which act as our service providers (processors). Google's servers may be located outside Egypt, including in the United States and the European Union. By giving consent when you create an account or sign in, you agree to this transfer. Google protects data with encryption in transit and at rest, and our security rules let only you read or change your account's data."
       },
       {
-       "p": "Setpoint uses the same sign-in service as our Study Planner app, so one account works in both."
+       "p": "The same account works in Setpoint on the web and in our Study Planner app."
       }
      ]
     },
@@ -79,8 +82,8 @@
      "blocks": [
       {
        "list": [
-        "Google (Firebase Authentication, Firestore and Hosting), only to run the app.",
-        "Open Food Facts, only the barcodes and search words you look up.",
+        "Google (Firebase Authentication and Firestore), only to run your account. If you choose Google sign-in, Google also handles that sign-in.",
+        "Open Food Facts, only the barcodes you look up.",
         "Authorities, only if the law requires it."
        ]
       },
@@ -94,9 +97,8 @@
      "blocks": [
       {
        "list": [
-        "Data on your device: until you delete it (Settings → Erase all data) or clear your browser's data.",
-        "Account data: until you delete your account. Deleting it removes your synced data and photos from our database straight away; Google may keep encrypted backups for a short time before they are overwritten.",
-        "Hosting logs: kept by Google for a limited period under its own retention rules."
+        "On your iPhone: until you erase it (You → Settings → Erase all data on this iPhone) or delete the app.",
+        "In your account: until you delete your account. Deleting it removes your synced data and photos from our database straight away; Google may keep encrypted backups for a short time before they are overwritten. What's on your iPhone stays until you erase it."
        ]
       }
      ]
@@ -105,7 +107,7 @@
      "heading": "Your rights",
      "blocks": [
       {
-       "p": "You can ask to **see**, **correct**, **download** or **delete** your personal data, **withdraw consent**, or **object** to how it is used. Most of this you can do yourself in the app: edit anything you logged, download it all (Settings → Back up & restore), and delete your account (You → Account → Delete account). For anything else, email [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com) and we'll reply within 30 days."
+       "p": "You can ask to **see**, **correct**, **download** or **delete** your personal data, **withdraw consent**, or **object** to how it is used. Most of this you can do yourself in the app: edit anything you logged, download it all (You → Back up, or You → Export to a spreadsheet), and delete your account (You → Account → Delete account). For anything else, email [setpointapp.support@gmail.com](mailto:setpointapp.support@gmail.com) and we'll reply within 30 days."
       },
       {
        "p": "If you're unhappy with how we handle your data, you can complain to Egypt's **Personal Data Protection Center**, or, in the EU/UK, to your local data protection authority."
@@ -124,7 +126,7 @@
      "heading": "Security",
      "blocks": [
       {
-       "p": "Connections are encrypted (HTTPS), account data can only be read by its owner, and you can add an app lock (Face ID or your passcode) in Settings. No system is perfectly secure, so please use a strong password and keep your device locked."
+       "p": "Connections are encrypted, your account's data can only be read by you, and you can lock the app with Face ID or your passcode (You → Settings → Lock with Face ID). No system is perfectly secure, so please use a strong password and keep your iPhone locked."
       }
      ]
     },

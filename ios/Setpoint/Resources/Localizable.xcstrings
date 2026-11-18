@@ -3631,6 +3631,16 @@
         }
       }
     },
+    "Foods, recipes and meals you make show up here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكلات والوصفات والوجبات اللي بتعملها هتظهر هنا."
+          }
+        }
+      }
+    },
     "For bloating, a salty meal or travel. It stays in your history.": {
       "localizations": {
         "ar": {
@@ -5617,6 +5627,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ملاحظة"
+          }
+        }
+      }
+    },
+    "Nothing here yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لسه مفيش حاجة هنا"
           }
         }
       }

@@ -56,6 +56,8 @@ actor Engine {
     func search(_ q: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "searchSorted", [q, meal, sort, verifiedOnly]) ?? [] }
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
     func list(_ kind: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "listSorted", [kind, meal, sort, verifiedOnly]) ?? [] }
+    /// My foods as one list: your own foods, recipes and saved meals together, in one sort order.
+    func mineAll(meal: String, sort: String) -> [FoodHit] { decode([FoodHit].self, "mineAll", [meal, sort]) ?? [] }
     /// A whole day of food for your targets (tools/ios-planner.js).
     func planDay(target: DayPlan, meals: [String], seeds: [String: Int], seed: Int, mine: Bool, today: Bool = false) -> DayPlanResult? {
         let o: [String: Any] = ["target": ["kcal": target.kcal, "p": target.protein, "c": target.carbs, "f": target.fat],
@@ -163,8 +165,13 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
     let amt: String?
     let usual: Bool?
     let verified: Bool?
+    // in My foods: what it is (mine, recipe or meal), a saved meal's id and size, and how often you've logged it
+    let type: String?
+    let mealId: String?
+    let count: Int?
+    let uses: Int?
 
-    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual, verified }
+    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual, verified, type, mealId, count, uses }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: CodingKeys.self)
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
@@ -173,7 +180,8 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
         protein = try c.decodeIfPresent(Double.self, forKey: .protein)
         carbs = try c.decodeIfPresent(Double.self, forKey: .carbs)
         fat = try c.decodeIfPresent(Double.self, forKey: .fat)
-        id = try c.decodeIfPresent(String.self, forKey: .id) ?? "q|\(name)|\(Int(kcal ?? 0))"
+        // a quick add has no id: make one from everything that tells two apart (two rows sharing an id show stale)
+        id = try c.decodeIfPresent(String.self, forKey: .id) ?? "q|\(name)|\(kcal ?? 0)|\(protein ?? 0)|\(carbs ?? 0)|\(fat ?? 0)"
         sub = try c.decodeIfPresent(String.self, forKey: .sub)
         via = try c.decodeIfPresent(String.self, forKey: .via)
         fav = try c.decodeIfPresent(Bool.self, forKey: .fav)
@@ -187,6 +195,10 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
         amt = try c.decodeIfPresent(String.self, forKey: .amt)
         usual = try c.decodeIfPresent(Bool.self, forKey: .usual)
         verified = try c.decodeIfPresent(Bool.self, forKey: .verified)
+        type = try c.decodeIfPresent(String.self, forKey: .type)
+        mealId = try c.decodeIfPresent(String.self, forKey: .mealId)
+        count = try c.decodeIfPresent(Int.self, forKey: .count)
+        uses = try c.decodeIfPresent(Int.self, forKey: .uses)
     }
 }
 
