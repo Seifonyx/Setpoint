@@ -30,7 +30,7 @@ struct AboutYouSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(!valid) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(!valid).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear {
                 guard let p = store.overview?.profile else { return }
@@ -89,7 +89,7 @@ struct ActivitySheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear {
                 guard let p = store.overview?.profile else { return }
@@ -131,7 +131,7 @@ struct GoalWeightSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(kg == nil) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(kg == nil).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear { if let g = store.overview?.goalKg { text = Fmt.weight(g, unit: store.unit) } }
         }

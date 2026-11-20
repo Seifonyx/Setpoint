@@ -168,7 +168,7 @@ struct MeasureSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
         }
     }

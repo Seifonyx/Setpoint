@@ -49,7 +49,7 @@ struct WeightSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(value == nil) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(value == nil).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .confirmationDialog("Delete this weigh-in?", isPresented: $confirmDelete, titleVisibility: .visible) {
                 Button("Delete", role: .destructive) { store.deleteWeight(on: day); dismiss() }
@@ -159,7 +159,7 @@ struct CopyDaySheet: View {
                 .navigationBarTitleDisplayMode(.inline)
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) { Button("Copy") { store.copy(items, to: Day.iso(date)); dismiss() } }
+                    ToolbarItem(placement: .confirmationAction) { Button("Copy") { store.copy(items, to: Day.iso(date)); dismiss() }.buttonStyle(.glassProminent).tint(Brand.green) }
                 }
                 .onAppear { date = Day.date(from == Day.today ? Day.add(from, 1) : Day.today) }
         }

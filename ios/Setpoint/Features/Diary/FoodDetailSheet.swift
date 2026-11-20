@@ -461,7 +461,7 @@ struct PartAmountSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Done", action: save).disabled(qty == nil) }
+                ToolbarItem(placement: .confirmationAction) { Button("Done", action: save).disabled(qty == nil).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .task {
                 guard let ref = part["ref"]?.string, let info = await store.engineRef.food(ref, meal: "lunch") else { return }

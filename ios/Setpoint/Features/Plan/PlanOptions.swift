@@ -101,7 +101,7 @@ struct TrainingDaysSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear { picked = Set((store.root["settings"]?["train"]?["days"]?.array ?? []).compactMap { $0.number.map(Int.init) }) }
         }
@@ -152,7 +152,7 @@ struct FlexSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear {
                 let f = store.root["settings"]?["flex"]

@@ -156,7 +156,7 @@ struct QuickAddView: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Add", action: add).disabled(total == nil) }
+                ToolbarItem(placement: .confirmationAction) { Button("Add", action: add).disabled(total == nil).buttonStyle(.glassProminent).tint(Brand.green) }
             }
         }
         .presentationDetents([.medium, .large])

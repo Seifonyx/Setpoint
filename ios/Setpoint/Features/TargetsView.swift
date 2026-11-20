@@ -125,7 +125,7 @@ struct TargetEditor: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(invalid) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save", action: save).disabled(invalid).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear {
                 minText = row.use.goal.map(UnitList.text) ?? ""   // plain digits, no thousands separator, so it reads back exactly
@@ -209,7 +209,7 @@ struct HighlightPicker: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button("Save") { Highlights.set(picked, store); dismiss() }.disabled(picked.isEmpty) }
+                ToolbarItem(placement: .confirmationAction) { Button("Save") { Highlights.set(picked, store); dismiss() }.disabled(picked.isEmpty).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .sensoryFeedback(.selection, trigger: picked)
             .task { picked = Highlights.keys(store); data = await store.engineRef.targets(Day.today) }

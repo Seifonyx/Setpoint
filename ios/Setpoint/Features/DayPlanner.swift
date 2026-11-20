@@ -348,7 +348,7 @@ struct AddPlanSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Add") { Task { await add() } }.disabled(kept.isEmpty || busy)
+                    Button("Add") { Task { await add() } }.disabled(kept.isEmpty || busy).buttonStyle(.glassProminent).tint(Brand.green)
                 }
             }
         }

@@ -338,7 +338,7 @@ struct RepeatSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                ToolbarItem(placement: .confirmationAction) { Button(existing == nil ? "Start" : "Save", action: save) }
+                ToolbarItem(placement: .confirmationAction) { Button(existing == nil ? "Start" : "Save", action: save).buttonStyle(.glassProminent).tint(Brand.green) }
             }
             .onAppear {
                 meal = existing?["meal"]?.string ?? item["meal"]?.string ?? store.meals.first?.key ?? "breakfast"
