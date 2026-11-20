@@ -16,6 +16,10 @@ struct AddFoodSheet: View {
     @State private var hits: [FoodHit] = []
     @State private var recents: [FoodHit] = []
     @State private var frequent: [FoodHit] = []
+    @State private var mealRecents: [FoodHit] = []   // the same, at this meal only (the All tab's "This meal")
+    @State private var mealFrequent: [FoodHit] = []
+    @AppStorage("recentScope") private var scope = "meal"
+    @State private var speaking = false
     @State private var favorites: [FoodHit] = []
     @State private var allMine: [FoodHit] = []   // My foods: your foods, recipes and meals in one list
     @State private var meals: [SavedMeal] = []
@@ -87,6 +91,7 @@ struct AddFoodSheet: View {
             }
             .sheet(isPresented: $quickAdd) { QuickAddView(meal: meal, day: day) {} }
             .sheet(isPresented: $describing) { DescribeMealSheet(meal: meal, day: day) }
+            .sheet(isPresented: $speaking) { DescribeMealSheet(meal: meal, day: day, listen: true) }
             .sheet(item: Binding(get: { creating.map(Prefill.init) }, set: { creating = $0?.name })) { p in CustomFoodSheet(food: nil, prefill: p.name) }
             .fullScreenCover(isPresented: $labelCam) {
                 LabelCamera { img in
@@ -101,7 +106,7 @@ struct AddFoodSheet: View {
                     .ignoresSafeArea()
             }
             .sheet(item: $logging) { m in MealLogSheet(mealID: m.id, mealKey: meal, day: day) }
-            .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: DescribeMealSheet.available ? { describing = true } : nil) }
+            .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: { describing = true }) }
             .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
             .overlay {
@@ -139,8 +144,16 @@ struct AddFoodSheet: View {
 
     // MARK: Tabs
 
+    /// The All tab's list: recent or most frequent, at this meal (falling back to every meal while this one has
+    /// nothing yet) or at every meal.
+    private var allList: [FoodHit] {
+        let mealOnly = sort == "frequent" ? mealFrequent : mealRecents, every = sort == "frequent" ? frequent : recents
+        return (scope == "meal" && !mealOnly.isEmpty ? mealOnly : every).filter { !verifiedOnly || $0.verified == true }
+    }
+    /// "Lunch only": the All tab's choice to see what you have at this meal.
+    private var mealTitle: LocalizedStringKey { "\(store.meals.first { $0.key == meal }?.name ?? String(localized: "This meal")) only" }
     @ViewBuilder private var allTab: some View {
-        let list = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }
+        let list = allList
         if list.isEmpty {
             emptyCard(verifiedOnly ? "No verified foods here" : "Nothing logged yet",
                       verifiedOnly ? "Turn off Verified only to see all your foods." : "Search for a food to start.")
@@ -220,7 +233,8 @@ struct AddFoodSheet: View {
                 switch tab {
                 case .all:
                     FilterPill(sort: Binding(get: { sort == "frequent" ? "frequent" : "recent" }, set: { sort = $0 == "frequent" ? "frequent" : (sort == "recent" ? "recent" : "best") }),
-                               verified: $verifiedOnly, options: [Self.recent, Self.frequentOpt])
+                               verified: $verifiedOnly, options: [Self.recent, Self.frequentOpt],
+                               scope: $scope, scopes: [("meal", mealTitle, "fork.knife"), ("all", "All meals", "square.stack")])
                 case .favorites:
                     FilterPill(sort: $favSort, verified: $favVerified, options: [Self.recent, Self.frequentOpt, Self.az])
                 case .mine:
@@ -233,7 +247,7 @@ struct AddFoodSheet: View {
     private var barCount: Int {
         if !query.isEmpty { return hits.count }
         switch tab {
-        case .all: return (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
+        case .all: return allList.count
         case .favorites: return favorites.count
         case .mine: return allMine.count
         }
@@ -242,7 +256,7 @@ struct AddFoodSheet: View {
         if !query.isEmpty { return hits.count == 1 ? "1 result" : "\(hits.count) results" }
         let n: Int
         switch tab {
-        case .all: n = (sort == "frequent" ? frequent : recents).filter { !verifiedOnly || $0.verified == true }.count
+        case .all: n = allList.count
         case .favorites: n = favorites.count
         case .mine: n = allMine.count
         }
@@ -344,11 +358,13 @@ struct AddFoodSheet: View {
             if selecting {
                 Button("Done") { withAnimation(.snappy) { selecting = false; selected = [:] } }
             } else {
+                Button("Say what you ate", systemImage: "mic") { speaking = true }
+                    .accessibilityIdentifier("add-voice")
                 Button("Snap your plate", systemImage: "camera") { plateCam = true }
                 Menu {
                     Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
                     Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
-                    if DescribeMealSheet.available { Button("Describe what you ate", systemImage: "text.bubble") { describing = true } }
+                    Button("Describe what you ate", systemImage: "text.bubble") { describing = true }
                     Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
                     Button("New food", systemImage: "carrot") { creating = "" }
                     Divider()
@@ -403,6 +419,8 @@ struct AddFoodSheet: View {
         let e = store.engineRef
         recents = await e.list("recents", meal: meal)
         frequent = await e.list("frequent", meal: meal)
+        mealRecents = await e.mealList(meal, sort: "recent")
+        mealFrequent = await e.mealList(meal, sort: "frequent")
         favorites = await e.list("favorites", meal: meal, sort: favSort, verifiedOnly: favVerified)
         meals = await e.savedMeals()
         allMine = await e.mineAll(meal: meal, sort: mineSort)
@@ -600,6 +618,9 @@ struct FilterPill: View {
     @Binding var sort: String
     var verified: Binding<Bool>?
     let options: [Option]
+    /// Optional second choice under the sort (the All tab: this meal or all meals).
+    var scope: Binding<String>? = nil
+    var scopes: [Option] = []
 
     var body: some View {
         Menu {
@@ -607,6 +628,12 @@ struct FilterPill: View {
                 ForEach(options, id: \.0) { o in Label(o.1, systemImage: o.2).tag(o.0) }
             }
             .pickerStyle(.inline)
+            if let scope, !scopes.isEmpty {
+                SwiftUI.Section {
+                    Picker("Show", selection: scope) { ForEach(scopes, id: \.0) { o in Label(o.1, systemImage: o.2).tag(o.0) } }
+                        .pickerStyle(.inline)
+                }
+            }
             if let verified {
                 SwiftUI.Section { Toggle(isOn: verified) { Label("Verified only", systemImage: "checkmark.seal.fill") } }
             }
@@ -625,7 +652,7 @@ struct FilterPill: View {
             .foregroundStyle(Brand.ink)
         }
         .menuActionDismissBehavior(.disabled) // pick a sort and Verified only without reopening
-        .sensoryFeedback(.selection, trigger: "\(sort)\(verified?.wrappedValue ?? false)")
+        .sensoryFeedback(.selection, trigger: "\(sort)\(verified?.wrappedValue ?? false)\(scope?.wrappedValue ?? "")")
         .accessibilityLabel(Text("Sort"))
         .accessibilityValue(Text(options.first { $0.0 == sort }?.1 ?? options[0].1))
     }

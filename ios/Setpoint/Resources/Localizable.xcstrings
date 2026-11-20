@@ -271,6 +271,16 @@
         }
       }
     },
+    "%@ only": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ بس"
+          }
+        }
+      }
+    },
     "%@ options": {
       "localizations": {
         "ar": {
@@ -457,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld من %lld مكتملة"
+          }
+        }
+      }
+    },
+    "%lld of %lld ingredients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%1$lld من %2$lld مكونات"
           }
         }
       }
@@ -717,6 +737,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سنة"
+          }
+        }
+      }
+    },
+    "2 cups flour\n3 eggs\n1 tbsp olive oil": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "٢ كوب دقيق\n٣ بيضات\nمعلقة كبيرة زيت زيتون"
           }
         }
       }
@@ -997,6 +1027,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "حوالي %@ سعرة يوميًا تُضاف تلقائيًا"
+          }
+        }
+      }
+    },
+    "About %@ kcal a serving. Tap an ingredient to swap it for another food.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حوالي %@ سعرة للحصة. دوس على أي مكوّن عشان تبدّله بأكلة تانية."
           }
         }
       }
@@ -1411,6 +1451,16 @@
         }
       }
     },
+    "All meals": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "كل الوجبات"
+          }
+        }
+      }
+    },
     "Allow Setpoint to write Weight in the Health app (Profile › Apps › Setpoint), then try again.": {
       "localizations": {
         "ar": {
@@ -1427,6 +1477,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "اسمح بالكاميرا من الإعدادات، أو اكتب الرقم."
+          }
+        }
+      }
+    },
+    "Allow speech recognition for Setpoint in the Settings app to speak what you ate.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسمح لـ Setpoint بالتعرّف على الكلام من الإعدادات عشان تقول أكلت إيه."
+          }
+        }
+      }
+    },
+    "Allow the microphone for Setpoint in the Settings app to speak what you ate.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسمح لـ Setpoint بالمايك من الإعدادات عشان تقول أكلت إيه."
           }
         }
       }
@@ -2041,12 +2111,32 @@
         }
       }
     },
+    "Check the amount": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع الكمية"
+          }
+        }
+      }
+    },
     "Check the cooked weight": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "راجع الوزن بعد الطهي"
+          }
+        }
+      }
+    },
+    "Check the ingredients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع المكونات"
           }
         }
       }
@@ -2381,6 +2471,16 @@
         }
       }
     },
+    "Copy the link from the recipe's page. Setpoint reads its ingredients and finds each one; you check them before saving.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انسخ رابط صفحة الوصفة. Setpoint هيقرا المكونات ويلاقي كل واحدة، وانت تراجعهم قبل الحفظ."
+          }
+        }
+      }
+    },
     "Copy to": {
       "localizations": {
         "ar": {
@@ -2417,6 +2517,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقدرناش نلاقي الأكلات دي. جرب كلام أبسط."
+          }
+        }
+      }
+    },
+    "Couldn't open that page. Check your connection and the link.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نفتح الصفحة دي. راجع النت والرابط."
           }
         }
       }
@@ -2467,6 +2577,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مقدرناش ندخل. جرب تاني."
+          }
+        }
+      }
+    },
+    "Couldn't start listening. Type it instead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نبدأ نسمع. اكتبه بدل كده."
           }
         }
       }
@@ -3481,6 +3601,16 @@
         }
       }
     },
+    "Find these ingredients": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر على المكونات دي"
+          }
+        }
+      }
+    },
     "Finding a meal that fits…": {
       "localizations": {
         "ar": {
@@ -3647,6 +3777,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأكلات والوصفات والوجبات اللي بتعملها هتظهر هنا."
+          }
+        }
+      }
+    },
+    "For a recipe that isn't online, or a site that doesn't import: one ingredient a line.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لوصفة مش على النت، أو موقع مبيتستوردش: مكوّن في كل سطر."
           }
         }
       }
@@ -4081,6 +4221,16 @@
         }
       }
     },
+    "Import": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استيراد"
+          }
+        }
+      }
+    },
     "Import a backup file": {
       "localizations": {
         "ar": {
@@ -4101,6 +4251,16 @@
         }
       }
     },
+    "Import a recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استورد وصفة"
+          }
+        }
+      }
+    },
     "Import backup": {
       "localizations": {
         "ar": {
@@ -4117,6 +4277,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استورد من Apple Health"
+          }
+        }
+      }
+    },
+    "Import from a link instead": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "استورد من رابط بدل كده"
           }
         }
       }
@@ -4151,6 +4321,16 @@
         }
       }
     },
+    "Imported recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وصفة مستوردة"
+          }
+        }
+      }
+    },
     "In the Setpoint web app, open Settings › Back up, then import that file here.": {
       "localizations": {
         "ar": {
@@ -4177,6 +4357,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "المكونات"
+          }
+        }
+      }
+    },
+    "Ingredients, one a line": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "المكونات، كل واحدة في سطر"
           }
         }
       }
@@ -4391,6 +4581,16 @@
         }
       }
     },
+    "Left out: nothing to count": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "متشالة: مفيهاش حاجة تتحسب"
+          }
+        }
+      }
+    },
     "Length": {
       "localizations": {
         "ar": {
@@ -4437,6 +4637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نشاط خفيف"
+          }
+        }
+      }
+    },
+    "Listening…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بسمعك…"
           }
         }
       }
@@ -5601,6 +5811,16 @@
         }
       }
     },
+    "Not found: tap to choose a food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ملقيناهاش: دوس عشان تختار أكلة"
+          }
+        }
+      }
+    },
     "Not planned": {
       "localizations": {
         "ar": {
@@ -6171,6 +6391,26 @@
         }
       }
     },
+    "Paste": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لصق"
+          }
+        }
+      }
+    },
+    "Paste the ingredients instead": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصق المكونات بدل كده"
+          }
+        }
+      }
+    },
     "Pause": {
       "localizations": {
         "ar": {
@@ -6671,6 +6911,26 @@
         }
       }
     },
+    "Recipe link": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رابط الوصفة"
+          }
+        }
+      }
+    },
+    "Recipe name": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اسم الوصفة"
+          }
+        }
+      }
+    },
     "Recipes": {
       "localizations": {
         "ar": {
@@ -7107,6 +7367,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "بيحفظ وزن النهارده في Setpoint بوحدة التطبيق (كجم أو رطل)."
+          }
+        }
+      }
+    },
+    "Say what you ate": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "قول أكلت إيه"
           }
         }
       }
@@ -7701,6 +7971,16 @@
         }
       }
     },
+    "Speech recognition isn't available right now. Type it instead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "التعرّف على الكلام مش متاح دلوقتي. اكتبه بدل كده."
+          }
+        }
+      }
+    },
     "Split into %lld foods": {
       "localizations": {
         "ar": {
@@ -7857,6 +8137,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الخطوات والتمارين بتزوّد حرقك."
+          }
+        }
+      }
+    },
+    "Stop listening": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقّف الاستماع"
           }
         }
       }
@@ -8111,6 +8401,16 @@
         }
       }
     },
+    "That link doesn't look right.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الرابط ده شكله مش مظبوط."
+          }
+        }
+      }
+    },
     "That weight doesn't look right.": {
       "localizations": {
         "ar": {
@@ -8287,6 +8587,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "النسخة دي من Setpoint مش بتقدر تستخدم Apple Health. محتاجة نسخة اختبار Health (وحساب Apple يسمح بيها)."
+          }
+        }
+      }
+    },
+    "This meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الوجبة دي"
+          }
+        }
+      }
+    },
+    "This page doesn't share its recipe in a way Setpoint can read. Paste the ingredients instead.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الصفحة دي مش بتعرض وصفتها بطريقة Setpoint يقدر يقراها. الصق المكونات بدل كده."
           }
         }
       }
@@ -8627,6 +8947,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "النوع"
+          }
+        }
+      }
+    },
+    "Type it or tap the microphone and say it. You check everything before it's added.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اكتبه أو دوس على المايك وقوله. هتراجع كل حاجة قبل ما تتضاف."
           }
         }
       }
@@ -10207,6 +10537,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ميكروجرام"
+          }
+        }
+      }
+    },
+    "“%@”": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "“%@”"
           }
         }
       }

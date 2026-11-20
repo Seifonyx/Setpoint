@@ -283,6 +283,9 @@ struct FoodsView: View {
     @State private var newFood = false
     @State private var newRecipe = false
     @State private var newMeal = false
+    @State private var importing = UserDefaults.standard.string(forKey: "open") == "importrecipe" // build-server screenshots
+    @State private var imported: Imported?
+    struct Imported: Identifiable { let id = UUID(); let recipe: [String: JSONValue] }
     @State private var shotList: FoodLists.Kind?   // build-server screenshots
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
 
@@ -293,7 +296,7 @@ struct FoodsView: View {
                     card(.mine, FoodType.mine, "My foods", "Anything that isn't in the database, with its own serving and nutrition label.",
                          count("myFoods"), make: "New food") { newFood = true }
                     card(.recipes, FoodType.recipe, "Recipes", "Cook once, log a serving: every ingredient is added up for you.",
-                         count("recipes"), make: "New recipe") { newRecipe = true }
+                         count("recipes"), make: "New recipe", also: ("Import", "square.and.arrow.down", { importing = true })) { newRecipe = true }
                     card(.meals, FoodType.meal, "Meals", "Foods you often have together, logged in one tap.",
                          count("meals"), make: "New meal") { newMeal = true }
                     tools
@@ -310,6 +313,11 @@ struct FoodsView: View {
             .navigationDestination(item: $shotList) { FoodLists(kind: $0) }
             .sheet(isPresented: $newFood) { CustomFoodSheet(food: nil) }
             .sheet(isPresented: $newRecipe) { RecipeEditor(recipe: nil) }
+            // imported: the import sheet closes, then the recipe opens in the editor to save
+            .sheet(isPresented: $importing) {
+                ImportRecipeSheet { r in Task { try? await Task.sleep(for: .milliseconds(450)); imported = Imported(recipe: r) } }
+            }
+            .sheet(item: $imported) { RecipeEditor(recipe: $0.recipe) }
             .sheet(isPresented: $newMeal) { MealEditor(meal: nil) }
             .task { // build-server screenshots: -open planner / repeating / recipe / mine / newfood / newmeal
                 SavedDays.moveOld(store)
@@ -323,7 +331,8 @@ struct FoodsView: View {
 
     /// One of your own lists: tap the card to open it, or the button to make a new one straight away.
     private func card(_ kind: FoodLists.Kind, _ type: FoodType, _ title: LocalizedStringKey, _ about: LocalizedStringKey,
-                      _ n: Int, make: LocalizedStringKey, _ action: @escaping () -> Void) -> some View {
+                      _ n: Int, make: LocalizedStringKey, also: (LocalizedStringKey, String, () -> Void)? = nil,
+                      _ action: @escaping () -> Void) -> some View {
         VStack(alignment: .leading, spacing: 14) {
             NavigationLink(value: kind) {
                 HStack(alignment: .top, spacing: 14) {
@@ -342,13 +351,25 @@ struct FoodsView: View {
                 .contentShape(.rect)
             }
             .buttonStyle(.plain)
-            Button(action: action) {
-                // one colour for every New button: the app's action green (the icons carry each type's colour)
-                Label(make, systemImage: "plus").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
-                    .padding(.horizontal, 16).padding(.vertical, 9)
-                    .background(Brand.greenSoft, in: Capsule())
+            HStack(spacing: 10) {
+                Button(action: action) {
+                    // one colour for every New button: the app's action green (the icons carry each type's colour)
+                    Label(make, systemImage: "plus").font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.green)
+                        .padding(.horizontal, 16).padding(.vertical, 9)
+                        .background(Brand.greenSoft, in: Capsule())
+                }
+                .buttonStyle(.plain)
+                if let also {
+                    // a second way in (Import a recipe): the same shape, quieter
+                    Button(action: also.2) {
+                        Label(also.0, systemImage: also.1).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink)
+                            .padding(.horizontal, 16).padding(.vertical, 9)
+                            .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("import-recipe")
+                }
             }
-            .buttonStyle(.plain)
             .padding(.leading, 42)
         }
         .frame(maxWidth: .infinity, alignment: .leading)

@@ -52,6 +52,8 @@ targets:
         NSHealthShareUsageDescription: Setpoint reads your weight and steps from Apple Health to keep your log and expenditure up to date.
         NSHealthUpdateUsageDescription: Setpoint can save your weigh-ins to Apple Health.
         NSFaceIDUsageDescription: Setpoint uses Face ID to unlock the app when you turn on the lock.
+        NSMicrophoneUsageDescription: Setpoint listens only while you tap the microphone, so you can say what you ate.
+        NSSpeechRecognitionUsageDescription: Setpoint turns what you say into text to find the foods you ate.
         NSSupportsLiveActivities: true
         CFBundleURLTypes:
           - CFBundleURLName: app.setpoint.ios

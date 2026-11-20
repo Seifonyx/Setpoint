@@ -95,6 +95,83 @@
     return { id: newId(), meal: meal, ref: f.id, g: Math.round(g * 10) / 10, qty: Math.round(qty * 1000) / 1000, unit: u.label,
       kcal: Math.min(m.kcal, 10000), protein: m.protein, carbs: m.carbs, fat: m.fat, name: f.name.slice(0, 80) };
   }
+  // ---- Recipe import: a recipe page's ingredient lines, matched to the food list ----
+  // A recipe page's own description of itself (schema.org Recipe in <script type="application/ld+json">, which
+  // most recipe sites publish): its name, servings and ingredient lines. null if the page has none.
+  function recipeOf(html) {
+    var found = null;
+    var visit = function (o) {
+      if (found || !o || typeof o !== 'object') return;
+      if (Array.isArray(o)) { o.forEach(visit); return; }
+      var t = o['@type'], isR = t === 'Recipe' || (Array.isArray(t) && t.indexOf('Recipe') >= 0);
+      if (isR && Array.isArray(o.recipeIngredient || o.ingredients)) { found = o; return; }
+      Object.keys(o).forEach(function (k) { if (k === '@graph' || k === 'mainEntity' || k === 'itemListElement' || typeof o[k] === 'object') visit(o[k]); });
+    };
+    var re = /<script[^>]*type=["']?application\/ld\+json["']?[^>]*>([\s\S]*?)<\/script>/gi, m;
+    while ((m = re.exec(html)) && !found) { try { visit(JSON.parse(m[1].trim())); } catch (e) {} }
+    if (!found) return null;
+    var text = function (x) { return String(x == null ? '' : x).replace(/<[^>]+>/g, ' ').replace(/&amp;/g, '&').replace(/&#0?39;|&apos;|&#x27;/g, "'").replace(/&quot;/g, '"').replace(/&nbsp;|&#160;/g, ' ').replace(/&#(\d+);/g, function (_, n) { return String.fromCharCode(+n); }).replace(/\s+/g, ' ').trim(); };
+    var y = found.recipeYield; if (Array.isArray(y)) y = y[0];
+    var servings = parseInt(String(y == null ? '' : y).replace(/[^\d]/g, ' ').trim().split(' ')[0], 10);
+    return { name: text(found.name), servings: servings > 0 && servings < 100 ? servings : null,
+      lines: (found.recipeIngredient || found.ingredients).map(text).filter(Boolean).slice(0, 60) };
+  }
+  // "1 ½ cups (200 g) rice, rinsed" → { qty: 1.5, unit: 'cup', grams: 200, name: 'rice' }
+  var FRAC = { '½': 0.5, '⅓': 1 / 3, '⅔': 2 / 3, '¼': 0.25, '¾': 0.75, '⅕': 0.2, '⅛': 0.125, '⅜': 0.375, '⅝': 0.625, '⅞': 0.875 };
+  var UNITW = [['tbsp', /^(tablespoons?|tbsps?\.?|tbl?s?\.?|T|ملاعق كبيرة|ملعقة كبيرة|معالق كبيرة)$/], ['tsp', /^(teaspoons?|tsps?\.?|t|ملاعق صغيرة|ملعقة صغيرة|معالق صغيرة)$/],
+    ['cup', /^(cups?|c\.?|كوب|اكواب|أكواب|كوباية|كوبايات)$/], ['g', /^(g|grams?|grammes?|gr\.?|جم|جرام|غرام|جرامات)$/], ['kg', /^(kg|kilos?|kilograms?|كيلو|كجم)$/],
+    ['ml', /^(ml|millilitres?|milliliters?|مل|ملي)$/], ['l', /^(l|litres?|liters?|لتر)$/], ['oz', /^(oz|ounces?)$/], ['lb', /^(lbs?|pounds?)$/],
+    ['clove', /^(cloves?|فص|فصوص)$/], ['slice', /^(slices?|شريحة|شرائح)$/], ['can', /^(cans?|tins?|علبة|علب)$/], ['pinch', /^(pinch(es)?|dash(es)?|رشة)$/],
+    ['piece', /^(pieces?|pcs?|حبة|حبات|قطعة|قطع)$/], ['large', /^(large|كبيرة|كبير)$/], ['medium', /^(medium|متوسطة|متوسط)$/], ['small', /^(small|صغيرة|صغير)$/]];
+  function parseLine(line) {
+    var s = String(line).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/(\d)\s*([½⅓⅔¼¾⅕⅛⅜⅝⅞])/g, function (_, d, f) { return String(+d + FRAC[f]); })
+      .replace(/[½⅓⅔¼¾⅕⅛⅜⅝⅞]/g, function (f) { return String(FRAC[f]); }).replace(/⁄/g, '/');
+    // a weight in brackets is the most exact thing on the line: "1 (14.5 oz) can", "1 ½ cups (200 g)"
+    var grams = null, gm = /\((?:about |approx\.? |~)?(\d+(?:\.\d+)?)[\s-]*(g|grams?|ml|oz|ounces?)\b[^)]*\)/i.exec(s);
+    if (gm) grams = /^o/i.test(gm[2]) ? +gm[1] * 28.3495 : +gm[1];
+    var toTaste = /\b(to taste|as needed|for garnish|optional)\b|حسب الرغبة|حسب الذوق/i.test(s);
+    s = s.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    s = s.replace(/^(an?|one)\s+/i, '1 ');
+    var qty = null, m = /^(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)\s*/.exec(s);
+    if (m) { qty = +m[1] + m[2] / m[3]; s = s.slice(m[0].length); }
+    else if ((m = /^(\d+)\/(\d+)\s*/.exec(s))) { qty = m[1] / m[2]; s = s.slice(m[0].length); }
+    else if ((m = /^(\d+(?:[.,]\d+)?)\s*(?:-|–|to)\s*(\d+(?:[.,]\d+)?)\s*/.exec(s))) { qty = (parseFloat(m[1].replace(',', '.')) + parseFloat(m[2].replace(',', '.'))) / 2; s = s.slice(m[0].length); }
+    else if ((m = /^(\d+(?:[.,]\d+)?)\s*/.exec(s))) { qty = parseFloat(m[1].replace(',', '.')); s = s.slice(m[0].length); }
+    var unit = null, w = /^([^\s,]+)\s*/.exec(s);
+    if (w) { var word = w[1].replace(/\.$/, ''); for (var i = 0; i < UNITW.length; i++) if (UNITW[i][1].test(word) || UNITW[i][1].test(word.toLowerCase())) { unit = UNITW[i][0]; s = s.slice(w[0].length); break; } }
+    if (unit && /^of\s/i.test(s)) s = s.slice(3);
+    var name = s.split(/,|;| - | – /)[0].replace(/\b(fresh(ly)?|chopped|diced|minced|sliced|grated|optional|to taste|divided|plus more|for serving|finely|roughly|about|approximately|packed|heaping|level)\b/gi, ' ')
+      .replace(/\s+/g, ' ').trim();
+    // Arabic plurals the food list doesn't know (بيضات → بيض)
+    var stem = /[\u0600-\u06FF]/.test(name) ? name.replace(/(ات|ة)(?=\s|$)/g, '') : null;
+    return { qty: qty, unit: unit, grams: grams, name: name || String(line), stem: stem !== name ? stem : null, skip: toTaste && qty == null };
+  }
+  // The food's own unit for what the recipe said, and how many of them. null unit = use grams.
+  function unitMatch(f, p) {
+    var us = unitsFor(f), find = function (re) { return us.find(function (u) { return re.test(u.label); }); }, q = p.qty == null ? 1 : p.qty;
+    if (p.grams) return { qty: p.grams, unit: 'g', sure: true };
+    switch (p.unit) {
+      case 'g': return { qty: q, unit: 'g', sure: true };
+      case 'kg': return { qty: q * 1000, unit: 'g', sure: true };
+      case 'oz': return { qty: q * 28.3495, unit: 'g', sure: true };
+      case 'lb': return { qty: q * 453.592, unit: 'g', sure: true };
+      case 'l': p = { qty: q * 1000, unit: 'ml' }; q = p.qty; /* falls through */
+      case 'ml': { var ml = find(/^ml$/), cup = find(/^cup\b/);
+        if (ml) return { qty: q, unit: ml.label, sure: true };
+        if (cup) return { qty: q / 236.588, unit: cup.label, sure: true };
+        return { qty: q, unit: 'g', sure: false }; }
+      case 'cup': case 'tbsp': case 'tsp': { var u = find(new RegExp('^' + (p.unit === 'cup' ? 'cup' : p.unit === 'tbsp' ? '(tbsp|tablespoon)' : '(tsp|teaspoon)') + '\\b'));
+        if (u) return { qty: q, unit: u.label, sure: true };
+        var gPer = { cup: 240, tbsp: 15, tsp: 5 }[p.unit]; return { qty: q * gPer, unit: 'g', sure: false }; }
+      case 'pinch': { var t = find(/^(tsp|teaspoon)\b/); return t ? { qty: q * 0.0625, unit: t.label, sure: true } : { qty: q * 0.4, unit: 'g', sure: true }; }
+      case 'large': case 'medium': case 'small': { var z = find(new RegExp('\\b' + p.unit + '\\b', 'i')); if (z) return { qty: q, unit: z.label, sure: true }; break; }
+      case 'clove': case 'slice': case 'can': { var c = find(new RegExp('\\b' + p.unit, 'i')); if (c) return { qty: q, unit: c.label, sure: true }; break; }
+    }
+    // a count with no unit ("2 eggs", "1 onion"): the food's natural piece (a medium one when sizes are listed)
+    var piece = find(/\bmedium\b/i) || us.find(function (x) { return ['g', 'oz', 'kg', 'lb', 'ml', 'tbsp', 'tsp'].indexOf(x.label) < 0 && !/^(cup|tbsp|tsp|fl oz)\b/.test(x.label); });
+    if (piece && p.qty != null) return { qty: q, unit: piece.label, sure: p.unit == null };
+    var ds = defaultServing(f); return { qty: ds.qty, unit: ds.unit.label, sure: false };
+  }
   return {
     // Your data, in the web app's format (cleaned exactly as the web app cleans it).
     setState: function (txt) { var raw = JSON.parse(txt); state = keepIos(raw, migrate(raw)); setMeals(); dataVer++; return 'ok'; },
@@ -123,6 +200,30 @@
     recents: function (meal) {
       var fu = foodUse(), out = [];
       fu.order.forEach(function (o) {
+        if (out.length >= 40) return;
+        if (o.item.ref) { var f = getFood(o.item.ref); if (f) out.push(row(f, meal)); }
+        else out.push({ quick: true, name: o.item.name || L('Quick add'), kcal: o.item.kcal, protein: o.item.protein, carbs: o.item.carbs, fat: o.item.fat });
+      });
+      return J(out);
+    },
+    // Recent or most-logged foods at one meal (the All tab's "This meal"): what you eat at breakfast at breakfast.
+    // Same rules as foodUse (last 120 days, hidden ones left out); a logged meal counts each of its foods.
+    mealList: function (meal, sort) {
+      var from = dayNum(todayISO()) - 120, use = {}, order = [], hid = state.ui.hide || [], out = [];
+      Object.keys(state.food).sort().reverse().forEach(function (dt) {
+        if (dayNum(dt) < from) return;
+        state.food[dt].slice().reverse().forEach(function (it) {
+          if (it.meal !== meal || isDailyTotal(it) || it.plan || isImported(it)) return;
+          (it.mid ? (it.mi || []) : [it]).forEach(function (x) {
+            var k = x.ref || ('q|' + x.name + '|' + x.kcal + '|' + x.protein + '|' + x.carbs + '|' + x.fat);
+            if (hid.indexOf(k) >= 0) return;
+            if (use[k] == null) { use[k] = 0; order.push({ k: k, item: x, i: order.length }); }
+            use[k]++;
+          });
+        });
+      });
+      var list = sort === 'frequent' ? order.slice().sort(function (a, b) { return (use[b.k] - use[a.k]) || a.i - b.i; }) : order;
+      list.forEach(function (o) {
         if (out.length >= 40) return;
         if (o.item.ref) { var f = getFood(o.item.ref); if (f) out.push(row(f, meal)); }
         else out.push({ quick: true, name: o.item.name || L('Quick add'), kcal: o.item.kcal, protein: o.item.protein, carbs: o.item.carbs, fat: o.item.fat });
@@ -163,6 +264,24 @@
         : sort === 'frequent' ? function (a, b) { return (b.uses - a.uses) || recent(a, b) || az(a, b); }
         : function (a, b) { return recent(a, b) || az(a, b); };
       return J(out.sort(cmp));
+    },
+    // Recipe import: a page's recipe ({name, servings, lines} or null), then each line matched to a food.
+    recipeFromHtml: function (html) { return J(recipeOf(String(html))); },
+    importLines: function (txt) {
+      var self = this;
+      return J(JSON.parse(txt).map(function (line) {
+        var p = parseLine(line);
+        if (p.skip) return { line: line, ok: false, skip: true }; // "salt and pepper to taste": nothing to count
+        var find = function (q) { return JSON.parse(self.search(q, 'lunch')).filter(function (h) { return !h.quick; }).slice(0, 6).map(function (h) { return getFood(h.id); }).filter(Boolean); };
+        var foods = (p.stem && find(p.stem)) || []; if (!foods.length) foods = find(p.name);
+        // a cup of flour needs a food that knows what a cup weighs: prefer one of the top matches with that unit
+        var wants = { cup: /^cup\b/, tbsp: /^(tbsp|tablespoon)\b/, tsp: /^(tsp|teaspoon)\b/, clove: /clove/i, slice: /slice/i, large: /\blarge\b/i, medium: /\bmedium\b/i, small: /\bsmall\b/i }[p.unit];
+        var f = (wants && !p.grams && foods.find(function (x) { return unitsFor(x).some(function (u) { return wants.test(u.label); }); })) || foods[0];
+        if (!f) return { line: line, ok: false };
+        var u = unitMatch(f, p), it = itemFor(f, u.qty, u.unit, 'lunch');
+        return { line: line, ok: true, sure: u.sure, id: f.id, name: L(f.name), kind: ftKind(f), qty: it.qty, unit: it.unit, amt: L(fmtAmt(it.qty, it.unit)), kcal: it.kcal,
+          item: { ref: it.ref, name: it.name, g: it.g, qty: it.qty, unit: it.unit, kcal: it.kcal } };
+      }));
     },
     savedMeals: function () { return J(state.meals.map(function (m) { return { id: m.id, name: m.name, kcal: mealTotal(m.items), n: m.items.length }; })); },
     // One food: its units, a starting amount (your usual, else a sensible serving) and its numbers per 100 g.

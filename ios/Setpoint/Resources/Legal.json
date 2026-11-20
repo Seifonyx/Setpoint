@@ -23,6 +23,7 @@
        "list": [
         "Setpoint needs an account. What you log is kept on your iPhone and in your account, so it's safe if you change phones. We use it only to run the app for you.",
         "Photo recognition, label reading, barcode scanning and \"describe your meal\" all happen **on your iPhone**. Your photos aren't sent anywhere to be analysed.",
+        "If you speak what you ate, Apple's speech recognition turns it into text, on your iPhone where it can.",
         "We don't show ads, don't use analytics or tracking, and don't sell or rent your data.",
         "You can download everything (You → Back up, or You → Export to a spreadsheet) and delete your account and its data at any time (You → Account → Delete account)."
        ]
@@ -48,13 +49,16 @@
        "p": "**5. Camera and photos.** Used only when you choose to: scan a barcode, photograph a nutrition label or your plate, or add a progress photo. Barcodes, labels and food photos are read on your iPhone by Apple's built-in tools. A food photo isn't stored. Progress photos are kept on your iPhone and in your account."
       },
       {
-       "p": "**6. Describe your meal.** On iPhones with Apple Intelligence, you can type what you ate and the app splits it into foods. This uses Apple's on-device language model; your words stay on your iPhone."
+       "p": "**6. Describe or say your meal.** You can type what you ate, or tap the microphone and say it, and the app splits it into foods. Splitting it happens on your iPhone (with Apple's on-device model on iPhones with Apple Intelligence). To turn your voice into text, Setpoint uses Apple's speech recognition, which runs on your iPhone where Apple supports it for your language; otherwise Apple processes the recording under its own privacy terms. The microphone is used only while you're speaking to the app, and Setpoint doesn't keep the recording."
       },
       {
-       "p": "**7. Food lookups.** When you scan a barcode that isn't in the app's own food list, the barcode number is sent to **Open Food Facts**, a public food database, to find the product. Like any online service, they can see your IP address. They don't receive your diary or account details."
+       "p": "**7. Recipe links.** When you import a recipe from a link, the app downloads that page from its website to read the recipe, the way your browser would. That website can see your IP address; it doesn't receive your diary or account details."
       },
       {
-       "p": "**8. On your iPhone only.** Reminders, the app lock (Face ID or your passcode), widgets and the Lock Screen calories are handled by your iPhone. Face ID is checked by iOS; Setpoint never gets your face data."
+       "p": "**8. Food lookups.** When you scan a barcode that isn't in the app's own food list, the barcode number is sent to **Open Food Facts**, a public food database, to find the product. Like any online service, they can see your IP address. They don't receive your diary or account details."
+      },
+      {
+       "p": "**9. On your iPhone only.** Reminders, the app lock (Face ID or your passcode), widgets and the Lock Screen calories are handled by your iPhone. Face ID is checked by iOS; Setpoint never gets your face data."
       }
      ]
     },
@@ -84,6 +88,7 @@
        "list": [
         "Google (Firebase Authentication and Firestore), only to run your account. If you choose Google sign-in, Google also handles that sign-in.",
         "Open Food Facts, only the barcodes you look up.",
+        "Apple, when its speech recognition can't run on your iPhone: only what you say to the app, to turn it into text.",
         "Authorities, only if the law requires it."
        ]
       },

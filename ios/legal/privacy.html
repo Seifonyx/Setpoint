@@ -14,6 +14,7 @@
 <ul>
 <li>Setpoint needs an account. What you log is kept on your iPhone and in your account, so it's safe if you change phones. We use it only to run the app for you.</li>
 <li>Photo recognition, label reading, barcode scanning and "describe your meal" all happen <b>on your iPhone</b>. Your photos aren't sent anywhere to be analysed.</li>
+<li>If you speak what you ate, Apple's speech recognition turns it into text, on your iPhone where it can.</li>
 <li>We don't show ads, don't use analytics or tracking, and don't sell or rent your data.</li>
 <li>You can download everything (You → Back up, or You → Export to a spreadsheet) and delete your account and its data at any time (You → Account → Delete account).</li>
 </ul>
@@ -25,9 +26,10 @@
 <p><b>3. Health data.</b> Weight, food intake, body measurements and photos are health data, which the law treats as sensitive. We store it in your account only with your explicit consent, which you give when you create an account or sign in. You can withdraw that consent at any time by deleting your account.</p>
 <p><b>4. Apple Health.</b> Only if you turn it on (You → Settings → Apple Health): Setpoint reads your <b>weight</b> and <b>steps</b> from Apple Health to fill in your weigh-ins and estimate what you burn, and, if you choose "Save weigh-ins to Apple Health", saves your weigh-ins there. What it reads is treated like anything else you log (kept on your iPhone and in your account). Health data is never used for advertising or shared with anyone else. You can change what Setpoint may read or save at any time in the Health app.</p>
 <p><b>5. Camera and photos.</b> Used only when you choose to: scan a barcode, photograph a nutrition label or your plate, or add a progress photo. Barcodes, labels and food photos are read on your iPhone by Apple's built-in tools. A food photo isn't stored. Progress photos are kept on your iPhone and in your account.</p>
-<p><b>6. Describe your meal.</b> On iPhones with Apple Intelligence, you can type what you ate and the app splits it into foods. This uses Apple's on-device language model; your words stay on your iPhone.</p>
-<p><b>7. Food lookups.</b> When you scan a barcode that isn't in the app's own food list, the barcode number is sent to <b>Open Food Facts</b>, a public food database, to find the product. Like any online service, they can see your IP address. They don't receive your diary or account details.</p>
-<p><b>8. On your iPhone only.</b> Reminders, the app lock (Face ID or your passcode), widgets and the Lock Screen calories are handled by your iPhone. Face ID is checked by iOS; Setpoint never gets your face data.</p>
+<p><b>6. Describe or say your meal.</b> You can type what you ate, or tap the microphone and say it, and the app splits it into foods. Splitting it happens on your iPhone (with Apple's on-device model on iPhones with Apple Intelligence). To turn your voice into text, Setpoint uses Apple's speech recognition, which runs on your iPhone where Apple supports it for your language; otherwise Apple processes the recording under its own privacy terms. The microphone is used only while you're speaking to the app, and Setpoint doesn't keep the recording.</p>
+<p><b>7. Recipe links.</b> When you import a recipe from a link, the app downloads that page from its website to read the recipe, the way your browser would. That website can see your IP address; it doesn't receive your diary or account details.</p>
+<p><b>8. Food lookups.</b> When you scan a barcode that isn't in the app's own food list, the barcode number is sent to <b>Open Food Facts</b>, a public food database, to find the product. Like any online service, they can see your IP address. They don't receive your diary or account details.</p>
+<p><b>9. On your iPhone only.</b> Reminders, the app lock (Face ID or your passcode), widgets and the Lock Screen calories are handled by your iPhone. Face ID is checked by iOS; Setpoint never gets your face data.</p>
 </section>
 
 <section><h2>Legal bases</h2>
@@ -43,6 +45,7 @@
 <ul>
 <li>Google (Firebase Authentication and Firestore), only to run your account. If you choose Google sign-in, Google also handles that sign-in.</li>
 <li>Open Food Facts, only the barcodes you look up.</li>
+<li>Apple, when its speech recognition can't run on your iPhone: only what you say to the app, to turn it into text.</li>
 <li>Authorities, only if the law requires it.</li>
 </ul>
 <p>We never sell your data, and we don't share it with advertisers or data brokers.</p>

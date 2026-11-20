@@ -56,6 +56,15 @@ actor Engine {
     func search(_ q: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "searchSorted", [q, meal, sort, verifiedOnly]) ?? [] }
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
     func list(_ kind: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "listSorted", [kind, meal, sort, verifiedOnly]) ?? [] }
+    /// Recent ("recent") or most-logged ("frequent") foods at one meal.
+    func mealList(_ meal: String, sort: String) -> [FoodHit] { decode([FoodHit].self, "mealList", [meal, sort]) ?? [] }
+    /// A recipe page's own recipe (name, servings, ingredient lines), or nil if the page doesn't describe one.
+    func recipe(fromHTML html: String) -> PageRecipe? { decode(PageRecipe.self, "recipeFromHtml", [html]) }
+    /// Ingredient lines ("1 ½ cups rice") matched to foods, with amounts.
+    func importLines(_ lines: [String]) -> [ImportedLine] {
+        guard let d = try? JSONEncoder().encode(lines), let t = String(data: d, encoding: .utf8) else { return [] }
+        return decode([ImportedLine].self, "importLines", [t]) ?? []
+    }
     /// My foods as one list: your own foods, recipes and saved meals together, in one sort order.
     func mineAll(meal: String, sort: String) -> [FoodHit] { decode([FoodHit].self, "mineAll", [meal, sort]) ?? [] }
     /// A whole day of food for your targets (tools/ios-planner.js).
@@ -370,4 +379,29 @@ struct HighInRow: Decodable, Sendable, Identifiable {
     let sub: String
     let pct: Double?
     var id: String { hit.id }
+}
+
+/// A recipe as a web page describes it (schema.org Recipe).
+struct PageRecipe: Decodable, Sendable {
+    let name: String
+    let servings: Int?
+    let lines: [String]
+}
+
+/// One ingredient line, matched: the food, the amount and its calories, or not found / nothing to count.
+struct ImportedLine: Decodable, Sendable, Identifiable {
+    let id = UUID()
+    let line: String
+    let ok: Bool
+    let skip: Bool?
+    let sure: Bool?
+    let food: String?
+    let name: String?
+    let kind: String?
+    let qty: Double?
+    let unit: String?
+    let amt: String?
+    let kcal: Double?
+    let item: [String: JSONValue]?
+    enum CodingKeys: String, CodingKey { case line, ok, skip, sure, food = "id", name, kind, qty, unit, amt, kcal, item }
 }

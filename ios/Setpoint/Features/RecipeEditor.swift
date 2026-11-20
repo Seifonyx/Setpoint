@@ -81,7 +81,8 @@ struct RecipeEditor: View {
         guard !items.isEmpty else { error = String(localized: "Add at least one ingredient"); return }
         let g = Double(cooked.replacingOccurrences(of: ",", with: "."))
         if !cooked.isEmpty, (g ?? 0) <= 0 { error = String(localized: "Check the cooked weight"); return }
-        var v: [String: JSONValue] = recipe ?? ["id": .string("r" + Ids.new())]
+        var v: [String: JSONValue] = recipe ?? [:]
+        if v["id"]?.string == nil { v["id"] = .string("r" + Ids.new()) } // a new or imported recipe
         v["name"] = .string(String(nm.prefix(60)))
         v["servings"] = .number(Double(servings))
         v["cookedG"] = g.map { .number($0.rounded()) } ?? .null

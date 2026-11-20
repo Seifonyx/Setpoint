@@ -132,6 +132,28 @@ final class DiaryDragTests: XCTestCase {
         } else { note("form: no Calories label"); shot(n, "form-missing") }
         n.terminate()
 
+        // describing a meal in words (the simulator has no Apple Intelligence, so this is Setpoint's own reader)
+        let v = XCUIApplication()
+        v.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        v.launch()
+        let more = v.buttons["More ways to add"].firstMatch
+        if more.waitForExistence(timeout: 10) {
+            more.tap()
+            let describe = v.buttons["Describe what you ate"].firstMatch
+            if describe.waitForExistence(timeout: 3) {
+                describe.tap()
+                let box = v.textFields.firstMatch
+                _ = box.waitForExistence(timeout: 5)
+                box.tap(); box.typeText("2 eggs, a banana and a cup of milk")
+                v.buttons["Find these foods"].firstMatch.tap()
+                sleep(3)
+                let found = v.staticTexts.containing(NSPredicate(format: "label BEGINSWITH '“'")).count
+                note("describe: \(found) foods found for \"2 eggs, a banana and a cup of milk\"")
+                shot(v, "describe-found")
+            } else { note("describe: no Describe button"); shot(v, "describe-missing") }
+        } else { note("describe: no menu"); shot(v, "describe-missing") }
+        v.terminate()
+
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
         a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
