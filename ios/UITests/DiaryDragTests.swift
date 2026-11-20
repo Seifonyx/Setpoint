@@ -40,9 +40,9 @@ final class DiaryDragTests: XCTestCase {
         // (the list is still settling), so it gets one more try, and the log says so.
         let before = y(banana)
         drag(banana, to: oats, dy: 0.15)
-        if y(banana) == before {
-            note("\(tag) reorder: first drag didn't start, trying again")
-            sleep(2)
+        for attempt in 2...3 where y(banana) == before {
+            note("\(tag) reorder: drag didn't start, try \(attempt)")
+            sleep(3)
             drag(banana, to: oats, dy: 0.15)
         }
         shot(app, "drag-\(tag)-1-reorder")
