@@ -159,12 +159,13 @@ final class DiaryDragTests: XCTestCase {
         let t = XCUIApplication()
         t.launchArguments = ["-demo", "YES", "-tab", "diary"]
         t.launch()
-        let tick = el(t, "tick-g0")
+        // found by what VoiceOver says (the row's own test name covers the circle's)
+        let tick = t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch
         if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); sleep(2); return tick.exists }() {
             if !tick.isHittable { t.swipeUp(velocity: .slow); sleep(2) }
             shot(t, "tick-0-planned")
             tick.tap(); sleep(2)
-            note("tick: planned protein bar ticked off = \(!el(t, "tick-g0").exists) · app running = \(t.state == .runningForeground)")
+            note("tick: planned protein bar ticked off = \(!t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch.exists) · app running = \(t.state == .runningForeground)")
             shot(t, "tick-1-eaten")
         } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing") }
         t.terminate()
