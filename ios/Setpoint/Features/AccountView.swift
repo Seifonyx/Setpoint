@@ -9,6 +9,7 @@ struct AccountView: View {
     @State private var note: String?
     @State private var confirmOut = false
     @State private var confirmDelete = false
+    @State private var unsavedOut = false
 
     var body: some View {
         List {
@@ -32,23 +33,12 @@ struct AccountView: View {
         } footer: {
             if s.password && !s.verified { Text("Verify your email so you can always get back into your account.") }
         }
-        Section {
-            HStack {
-                Label {
-                    if account.busy { Text("Syncing…") }
-                    else if account.failed { Text("Couldn't sync. Are you offline?") }
-                    else if let d = account.lastSync { Text("Synced \(d, format: .relative(presentation: .named))") }
-                    else { Text("Not synced yet") }
-                } icon: {
-                    Image(systemName: account.failed ? "exclamationmark.icloud" : "checkmark.icloud").foregroundStyle(account.failed ? Brand.amber : Brand.green)
-                }
-                Spacer()
-                if account.busy { ProgressView() }
+        if account.stuck {
+            Section {
+                Label("Some changes haven't reached your account yet", systemImage: "exclamationmark.icloud").foregroundStyle(Brand.amber)
+            } footer: {
+                Text("They're safe on this iPhone and are saved to your account by themselves once you're back online.")
             }
-            Button("Sync now", systemImage: "arrow.triangle.2.circlepath") { Task { await account.syncNow() } }
-                .disabled(account.busy)
-        } footer: {
-            Text("Your weigh-ins, food log, foods, recipes, plan, settings and progress photos are saved in your account.")
         }
         Section {
             NavigationLink { LegalView(id: "privacy") } label: { Text("Privacy Policy") }
@@ -58,8 +48,14 @@ struct AccountView: View {
             Button("Sign out", role: .destructive) { confirmOut = true }.foregroundStyle(Brand.danger)
                 .confirmationDialog("Sign out?", isPresented: $confirmOut, titleVisibility: .visible) {
                     // save to the account first: after this you only get back in by signing in
-                    Button("Sign out", role: .destructive) { Task { working = true; await account.syncNow(); account.signOut(); working = false } }
+                    Button("Sign out", role: .destructive) { signOut() }
                 } message: { Text("Your log is saved in your account. Sign in again to get back to it.") }
+                // changes that couldn't be saved: say so, and let you try again rather than lose them
+                .confirmationDialog("Some changes haven't reached your account", isPresented: $unsavedOut, titleVisibility: .visible) {
+                    Button("Try again") { signOut() }
+                    Button("Sign out anyway", role: .destructive) { account.signOut() }
+                } message: { Text("They're only on this iPhone, probably because you're offline. If you sign out now and a different account signs in here, they'll be lost.") }
+                .disabled(working)
         }
         Section {
             Button("Delete account", role: .destructive) { confirmDelete = true }.foregroundStyle(Brand.danger)
@@ -71,6 +67,15 @@ struct AccountView: View {
         }
     }
 
+    /// Saves everything first; signs out only when nothing would be lost (otherwise asks).
+    private func signOut() {
+        Task {
+            working = true
+            let saved = await account.saveEverything()
+            working = false
+            if saved { account.signOut() } else { unsavedOut = true }
+        }
+    }
     private func act(_ work: @escaping () async throws -> Void) {
         working = true
         Task {

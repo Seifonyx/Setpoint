@@ -10,7 +10,16 @@ enum Health {
     static let store = HKHealthStore()
     enum Result { case imported(weights: Int, steps: Int?), unavailable(String) }
 
-    static func sync(_ app: Store) async -> Result {
+    /// Set once Health is connected (an import or saving weigh-ins worked): from then on new weigh-ins from your
+    /// smart scale come in by themselves whenever you open the app.
+    static let linkedKey = "healthLinked"
+    /// On opening the app: bring in new weigh-ins and steps quietly, if Health is connected.
+    static func autoImport(_ app: Store) async {
+        guard UserDefaults.standard.bool(forKey: linkedKey), allowed else { return }
+        _ = await sync(app, quiet: true)
+    }
+
+    static func sync(_ app: Store, quiet: Bool = false) async -> Result {
         guard HKHealthStore.isHealthDataAvailable() else { return .unavailable(String(localized: "Apple Health isn't available on this device.")) }
         let mass = HKQuantityType(.bodyMass), steps = HKQuantityType(.stepCount)
         do {
@@ -30,7 +39,7 @@ enum Health {
         }
         var added = 0
         for (d, kg) in byDay.sorted(by: { $0.key < $1.key }) where app.entry(d) == nil && (20...400).contains(kg) {
-            app.logWeight(kg, on: d, note: String(localized: "From Apple Health"), excluded: false); added += 1
+            app.logWeight(kg, on: d, note: String(localized: "From Apple Health"), excluded: false, quiet: quiet); added += 1
         }
         // Average daily steps over the last 14 full days.
         let s14 = Calendar.current.date(byAdding: .day, value: -14, to: Calendar.current.startOfDay(for: Date()))!
@@ -39,7 +48,8 @@ enum Health {
             options: .cumulativeSum).result(for: store)
         let total = sum?.sumQuantity()?.doubleValue(for: .count())
         let avg = total.map { Int(($0 / 14 / 100).rounded() * 100) }
-        if let a = avg, a > 500 { app.setProfile { $0["steps"] = .number(Double(a)) } }
+        if let a = avg, a > 500, app.root["profile"]?.object?["steps"]?.number != Double(a) { app.setProfile { $0["steps"] = .number(Double(a)) } }
+        UserDefaults.standard.set(true, forKey: linkedKey)
         return .imported(weights: added, steps: avg)
     }
 
@@ -61,6 +71,7 @@ enum Health {
         guard store.authorizationStatus(for: mass) == .sharingAuthorized else {
             return String(localized: "Allow Setpoint to write Weight in the Health app (Profile › Apps › Setpoint), then try again.")
         }
+        UserDefaults.standard.set(true, forKey: linkedKey)
         return nil
     }
 

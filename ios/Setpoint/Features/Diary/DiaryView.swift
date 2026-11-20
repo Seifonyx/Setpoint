@@ -17,6 +17,7 @@ struct DiaryView: View {
     @State private var nutrientRoute: NutrientRoute? = ["nutrient", "highin"].contains(UserDefaults.standard.string(forKey: "open") ?? "") ? .one("fe") : nil // build-server screenshots
     @Environment(\.layoutDirection) private var direction
     @Binding var importing: Bool
+    @Environment(Account.self) private var account
 
     var body: some View {
         NavigationStack {
@@ -69,6 +70,8 @@ struct DiaryView: View {
             .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
             .brandList()
             .shrinksTabBar()
+            // pull down: bring in what you logged on another device (and save anything waiting here)
+            .refreshable { await account.syncNow() }
             .navigationTitle(title)
             .navigationSubtitle(subtitle)
             .toolbar {

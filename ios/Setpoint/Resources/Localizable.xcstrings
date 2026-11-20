@@ -5611,6 +5611,16 @@
         }
       }
     },
+    "Not saved to your account yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لسه متحفظش في حسابك"
+          }
+        }
+      }
+    },
     "Not set": {
       "localizations": {
         "ar": {
@@ -7521,6 +7531,16 @@
         }
       }
     },
+    "Sign out anyway": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اخرج برضه"
+          }
+        }
+      }
+    },
     "Sign out?": {
       "localizations": {
         "ar": {
@@ -7627,6 +7647,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "صوديوم"
+          }
+        }
+      }
+    },
+    "Some changes haven't reached your account": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيه تغييرات موصلتش لحسابك"
+          }
+        }
+      }
+    },
+    "Some changes haven't reached your account yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فيه تغييرات لسه موصلتش لحسابك"
           }
         }
       }
@@ -8161,6 +8201,26 @@
         }
       }
     },
+    "They're only on this iPhone, probably because you're offline. If you sign out now and a different account signs in here, they'll be lost.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هي موجودة على الآيفون ده بس، غالباً عشان مفيش نت. لو خرجت دلوقتي ودخل حساب تاني هنا، هتضيع."
+          }
+        }
+      }
+    },
+    "They're safe on this iPhone and are saved to your account by themselves once you're back online.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "هي محفوظة على الآيفون ده، وهتتحفظ في حسابك لوحدها أول ما النت يرجع."
+          }
+        }
+      }
+    },
     "Thiamin (B1)": {
       "localizations": {
         "ar": {
@@ -8507,6 +8567,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "جرّب صورة أقرب من الأعلى وفي إضاءة جيدة. أو ابحث عنه بالأسفل."
+          }
+        }
+      }
+    },
+    "Try again": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "جرّب تاني"
           }
         }
       }
@@ -8987,6 +9057,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أوزانك من الميزان الذكي ومتوسط خطواتك."
+          }
+        }
+      }
+    },
+    "Weigh-ins from your smart scale and your average steps. Once connected, new ones come in by themselves when you open Setpoint.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أوزانك من الميزان الذكي ومتوسط خطواتك. بعد ما توصّله، الجديد بيدخل لوحده لما تفتح Setpoint."
           }
         }
       }

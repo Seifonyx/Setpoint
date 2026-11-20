@@ -538,8 +538,8 @@ final class Store {
     }
     func dailyTotals(_ day: String) -> [FoodItem] { items(day).filter(\.isDailyTotal) }
 
-    func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool, kcal: Double?? = nil) {
-        remember(String(localized: "Weight saved"), .add)
+    func logWeight(_ kg: Double, on day: String, note: String, excluded: Bool, kcal: Double?? = nil, quiet: Bool = false) {
+        if !quiet { remember(String(localized: "Weight saved"), .add) } // quiet: brought in from Apple Health, no undo toast
         var raw = entry(day)?.raw ?? [:]
         // The day's calories as one total (for days you didn't log food), like the web app.
         if let k = kcal { if let k { raw["kcal"] = .number(min(10000, k.rounded())) } else { raw.removeValue(forKey: "kcal") } }

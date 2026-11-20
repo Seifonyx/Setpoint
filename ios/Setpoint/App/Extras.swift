@@ -173,7 +173,7 @@ struct DeviceSettingsView: View {
                     }
                 })) { TileLabel("Save weigh-ins to Apple Health", "heart.text.square.fill", Brand.danger) }
             } header: { Text("Apple Health") } footer: {
-                Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps."))
+                Text(healthNote ?? String(localized: "Weigh-ins from your smart scale and your average steps. Once connected, new ones come in by themselves when you open Setpoint."))
             } }
             Section {
                 Toggle(isOn: $live) { TileLabel("Calories on the Lock Screen", "lock.iphone", Brand.ink2) }

@@ -2,6 +2,7 @@ import Foundation
 import Observation
 import CryptoKit
 import Security
+import Network
 
 /// Your Setpoint account: the same Firebase account and cloud save as the web app, so both stay in step.
 /// Sign-in uses Firebase's REST API; the save lives at users/{uid}/setpoint/state with the food log in monthly
@@ -23,11 +24,19 @@ final class Account {
     private(set) var busy = false
     private(set) var failed = false
     var signedIn: Bool { session != nil }
+    /// Saving to your account happens out of sight (like the big apps), retrying by itself. This is only true when
+    /// changes have kept failing to reach your account (offline for a while, say): the one time it's worth saying so.
+    private(set) var failures = 0
+    var stuck: Bool { signedIn && failures >= 2 && unsaved }
+    /// Changes on this iPhone that haven't reached your account yet.
+    var unsaved: Bool { store?.syncValue("dirty")?.bool == true }
 
     @ObservationIgnored private weak var store: Store?
     @ObservationIgnored private var pushTask: Task<Void, Never>?
     @ObservationIgnored private var running = false
     @ObservationIgnored private var again = false
+    @ObservationIgnored private var retryTask: Task<Void, Never>?
+    @ObservationIgnored private let network = NWPathMonitor()
 
     static let shared = Account(store: Store.shared)
 
@@ -36,6 +45,12 @@ final class Account {
         session = ProcessInfo.processInfo.arguments.contains("-demo") ? nil : Keychain.load() // screenshots never sync
         store.signedIn = session != nil
         store.onDirty = { [weak self] in self?.schedulePush() }
+        // back online with changes waiting: save them straight away
+        network.pathUpdateHandler = { [weak self] path in
+            guard path.status == .satisfied else { return }
+            Task { @MainActor in if let self, self.signedIn, self.unsaved, self.failures > 0 { await self.syncNow() } }
+        }
+        network.start(queue: DispatchQueue(label: "setpoint.network"))
     }
 
     // MARK: Signing in
@@ -77,7 +92,7 @@ final class Account {
     static let lastUser = "lastAccount"
 
     func signOut() {
-        pushTask?.cancel()
+        pushTask?.cancel(); retryTask?.cancel(); failures = 0
         Keychain.save(nil)
         session = nil
         store?.signedIn = false
@@ -136,6 +151,28 @@ final class Account {
         set { UserDefaults.standard.set(newValue, forKey: sentKey) }
     }
 
+    /// After a failed save: try again by itself, waiting a little longer each time (10 s, 20 s, 40 s … up to 5 min).
+    private func retryLater() {
+        guard session != nil else { return }
+        let wait = min(300, 10 * pow(2, Double(min(failures, 6) - 1)))
+        retryTask?.cancel()
+        retryTask = Task { [weak self] in
+            try? await Task.sleep(for: .seconds(wait))
+            guard !Task.isCancelled else { return }
+            await self?.syncNow()
+        }
+    }
+    /// Before signing out: wait for any save under way, then save what's left. True when everything reached your account.
+    func saveEverything() async -> Bool {
+        pushTask?.cancel()
+        var n = 0
+        while running && n < 75 { try? await Task.sleep(for: .milliseconds(200)); n += 1 }
+        if unsaved { await run { try await $0.push() } }
+        n = 0
+        while running && n < 75 { try? await Task.sleep(for: .milliseconds(200)); n += 1 }
+        return !unsaved
+    }
+
     func schedulePush() {
         guard session != nil else { return }
         pushTask?.cancel()
@@ -159,7 +196,8 @@ final class Account {
     private func run(_ work: @escaping (Account) async throws -> Void) async {
         if running { again = true; return }
         running = true; busy = true; failed = false
-        do { try await work(self) } catch { failed = true; print("Sync:", error) }
+        do { try await work(self); failures = 0; retryTask?.cancel() }
+        catch { failed = true; failures += 1; print("Sync:", error); retryLater() }
         running = false; busy = false
         if again { again = false; schedulePush() }
     }

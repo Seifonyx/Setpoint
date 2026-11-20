@@ -36,8 +36,15 @@ final class DiaryDragTests: XCTestCase {
         shot(app, "drag-\(tag)-0-start")
         note("\(tag) start: oats \(y(oats)) banana \(y(banana)) chicken \(y(chicken))")
 
-        // 1. reorder inside Breakfast: banana above oats
+        // 1. reorder inside Breakfast: banana above oats. The very first drag after launch sometimes doesn't start
+        // (the list is still settling), so it gets one more try, and the log says so.
+        let before = y(banana)
         drag(banana, to: oats, dy: 0.15)
+        if y(banana) == before {
+            note("\(tag) reorder: first drag didn't start, trying again")
+            sleep(2)
+            drag(banana, to: oats, dy: 0.15)
+        }
         shot(app, "drag-\(tag)-1-reorder")
         note("\(tag) reorder: banana above oats = \(y(banana) < y(oats)) (banana \(y(banana)) oats \(y(oats)))")
 

@@ -33,13 +33,11 @@ struct YouView: View {
                             .frame(width: 56, height: 56)
                             VStack(alignment: .leading, spacing: 3) {
                                 Text(account.session?.email ?? String(localized: "Not signed in")).font(.brand(.headline)).lineLimit(1)
-                                HStack(spacing: 5) {
-                                    if account.busy { ProgressView().controlSize(.mini) }
-                                    Image(systemName: account.signedIn ? "checkmark.icloud.fill" : "icloud.slash").font(.caption)
-                                    Text(account.signedIn ? LocalizedStringKey("Synced with your account") : LocalizedStringKey("Sign in to sync and keep a copy"))
-                                        .font(.brand(.footnote))
+                                // saving to your account happens out of sight; only a problem is worth a line here
+                                if account.stuck {
+                                    Label("Not saved to your account yet", systemImage: "exclamationmark.icloud.fill")
+                                        .font(.brand(.footnote)).foregroundStyle(Brand.amber)
                                 }
-                                .foregroundStyle(account.signedIn ? Brand.green : Brand.ink2)
                             }
                         }
                         .padding(.vertical, 4)
