@@ -89,10 +89,12 @@ struct MealRows: View {
             var moved = rows
             moved.move(fromOffsets: from, toOffset: to)
             guard let at = moved.firstIndex(where: { $0.id == rows[i].id }) else { return }
-            var meal = store.meals.first?.key ?? food.meal
-            for j in stride(from: at - 1, through: 0, by: -1) { if case .header(let m) = moved[j] { meal = m.key; break } }
+            var meal = store.meals.first?.key ?? food.meal, aboveAll = true
+            for j in stride(from: at - 1, through: 0, by: -1) { if case .header(let m) = moved[j] { meal = m.key; aboveAll = false; break } }
             var before: String?
             if at + 1 < moved.count, case .food(let next, _) = moved[at + 1] { before = next.id }
+            // dropped above the first meal's name: the top of that meal, not the bottom
+            if aboveAll { before = foods(meal).first(where: { $0.id != food.id })?.id }
             withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) }
             if !isOpen(meal) { setOpen(meal, true) } // dropped into a folded meal: open it so you see where it went
         }

@@ -179,6 +179,10 @@ struct ImportRecipeSheet: View {
         let clean = lines.map { $0.trimmingCharacters(in: .whitespaces) }.filter { !$0.isEmpty }
         guard !clean.isEmpty else { return }
         working = true; defer { working = false }
+        // just after opening the app the food list may still be loading: wait for it (up to 15 s), or every
+        // ingredient would come back "not found"
+        var waited = 0
+        while !store.foodsReady && waited < 75 { try? await Task.sleep(for: .milliseconds(200)); waited += 1 }
         let found = await store.engineRef.importLines(clean)
         name = title; servings = serves
         withAnimation {

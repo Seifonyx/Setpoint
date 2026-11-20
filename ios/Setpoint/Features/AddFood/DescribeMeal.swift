@@ -120,6 +120,8 @@ struct DescribeMealSheet: View {
 
     private func parse() async {
         working = true; error = nil; defer { working = false }
+        var waited = 0 // the food list may still be loading just after opening the app
+        while !store.foodsReady && waited < 75 { try? await Task.sleep(for: .milliseconds(200)); waited += 1 }
         var out: [Match] = []
         #if canImport(FoundationModels)
         if Self.modelAvailable {

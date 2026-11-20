@@ -127,10 +127,13 @@
     var s = String(line).replace(/[٠-٩]/g, function (d) { return '٠١٢٣٤٥٦٧٨٩'.indexOf(d); }).replace(/(\d)\s*([½⅓⅔¼¾⅕⅛⅜⅝⅞])/g, function (_, d, f) { return String(+d + FRAC[f]); })
       .replace(/[½⅓⅔¼¾⅕⅛⅜⅝⅞]/g, function (f) { return String(FRAC[f]); }).replace(/⁄/g, '/');
     // a weight in brackets is the most exact thing on the line: "1 (14.5 oz) can", "1 ½ cups (200 g)"
-    var grams = null, gm = /\((?:about |approx\.? |~)?(\d+(?:\.\d+)?)[\s-]*(g|grams?|ml|oz|ounces?)\b[^)]*\)/i.exec(s);
+    var grams = null, gm = /\([^)]*?(\d+(?:\.\d+)?)[\s-]*(g|grams?|ml|oz|ounces?)\b[^)]*\)/i.exec(s);
     if (gm) grams = /^o/i.test(gm[2]) ? +gm[1] * 28.3495 : +gm[1];
-    var toTaste = /\b(to taste|as needed|for garnish|optional)\b|حسب الرغبة|حسب الذوق/i.test(s);
-    s = s.replace(/\([^)]*\)/g, ' ').replace(/\s+/g, ' ').trim();
+    var toTaste = /\b(to taste|as needed|for garnish|for serving|to serve|optional)\b|حسب الرغبة|حسب الذوق/i.test(s);
+    s = s.replace(/[*†‡]/g, ' ').replace(/\s+plus\s+\d+(?:\.\d+)?\s*\w+\.?(?=\s)/i, ' ');
+    // brackets, even nested ones ("((or other Asian greens))"), go entirely, with any stray ones left over
+    for (var nb = 0; nb < 4 && /\([^()]*\)/.test(s); nb++) s = s.replace(/\([^()]*\)/g, ' ');
+    s = s.replace(/[()]/g, ' ').replace(/\s+/g, ' ').trim();
     s = s.replace(/^(an?|one)\s+/i, '1 ');
     var qty = null, m = /^(\d+(?:\.\d+)?)\s+(\d+)\/(\d+)\s*/.exec(s);
     if (m) { qty = +m[1] + m[2] / m[3]; s = s.slice(m[0].length); }
@@ -140,11 +143,23 @@
     var unit = null, w = /^([^\s,]+)\s*/.exec(s);
     if (w) { var word = w[1].replace(/\.$/, ''); for (var i = 0; i < UNITW.length; i++) if (UNITW[i][1].test(word) || UNITW[i][1].test(word.toLowerCase())) { unit = UNITW[i][0]; s = s.slice(w[0].length); break; } }
     if (unit && /^of\s/i.test(s)) s = s.slice(3);
-    var name = s.split(/,|;| - | – /)[0].replace(/\b(fresh(ly)?|chopped|diced|minced|sliced|grated|optional|to taste|divided|plus more|for serving|finely|roughly|about|approximately|packed|heaping|level)\b/gi, ' ')
-      .replace(/\s+/g, ' ').trim();
+    if (['g', 'kg', 'ml', 'l', 'oz', 'lb'].indexOf(unit) >= 0) grams = null; // "180g (6oz) chicken": the first weight wins
+    // a unit after the food ("1 garlic clove", "2 garlic cloves", "5 stems choy sum")
+    if (!unit) { var after = /\b(cloves?|slices?|stems?|stalks?|sprigs?|pieces?)\b/i.exec(s);
+      if (after) { unit = /^clove/i.test(after[1]) ? 'clove' : /^slice/i.test(after[1]) ? 'slice' : /^piece/i.test(after[1]) ? 'piece' : null; s = s.replace(after[0], ' '); } }
+    var name = s.split(/,|;| - | – /)[0].replace(/\b(fresh(ly)?|chopped|diced|minced|sliced|grated|optional|to taste|divided|plus more|for serving|finely|roughly|thinly|about|approximately|packed|heaping|level|warm|hot|cold|chilled|smooth|softened|melted|room temperature|large|medium|small)\b/gi, ' ')
+      .replace(/[.]+$/, '').replace(/\s+(plus|for (frying|greasing|brushing|dusting|the pan))\b.*$/i, '').replace(/\s+/g, ' ').trim();
+    // British and kitchen names the food list knows by another name
+    name = name.replace(/\bcorn ?flour\b/i, 'cornstarch').replace(/\bbi-?carb(onate)?( of soda)?\b/i, 'baking soda')
+      .replace(/\b(light|dark|low[- ]sodium|all[- ]purpose)\s+soy\b/i, 'soy').replace(/\bplain flour\b/i, 'all-purpose flour');
+    // "sunflower or vegetable oil", "baking soda / bi-carb": other ways the recipe names it, tried in turn
+    var alts = [];
+    var or = /^(.+?)\s+or\s+(.+)$/i.exec(name);
+    if (or) { var last = or[2].split(' ').slice(1).join(' '); alts.push(or[1] + (last && or[1].split(' ').length === 1 ? ' ' + last : ''), or[2]); name = alts[0]; }
+    if (name.indexOf('/') > 0) { alts = name.split('/').map(function (x) { return x.trim(); }).filter(Boolean); name = alts[0]; }
     // Arabic plurals the food list doesn't know (بيضات → بيض)
     var stem = /[\u0600-\u06FF]/.test(name) ? name.replace(/(ات|ة)(?=\s|$)/g, '') : null;
-    return { qty: qty, unit: unit, grams: grams, name: name || String(line), stem: stem !== name ? stem : null, skip: toTaste && qty == null };
+    return { qty: qty, unit: unit, grams: grams, name: name || String(line), stem: stem !== name ? stem : null, alts: alts, skip: toTaste && qty == null };
   }
   // The food's own unit for what the recipe said, and how many of them. null unit = use grams.
   function unitMatch(f, p) {
@@ -285,14 +300,34 @@
       return J(JSON.parse(txt).map(function (line) {
         var p = parseLine(line);
         if (p.skip) return { line: line, ok: false, skip: true }; // "salt and pepper to taste": nothing to count
-        var find = function (q) { return JSON.parse(self.search(q, 'lunch')).filter(function (h) { return !h.quick; }).slice(0, 6).map(function (h) { return getFood(h.id); }).filter(Boolean); };
-        var foods = (p.stem && find(p.stem)) || []; if (!foods.length) foods = find(p.name);
+        // the top matches, plain foods before branded products (whose numbers are often wrong)
+        // the top matches: verified foods (lab data) first, then other plain foods, then branded products
+        var find = function (q) {
+          var hs = JSON.parse(self.search(q, 'lunch')).filter(function (h) { return !h.quick; }).slice(0, 6);
+          var rank = function (h) { return h.verified ? 0 : h.off || h.via ? 2 : 1; };
+          return hs.map(function (h, i) { return [h, i]; }).sort(function (a, b) { return rank(a[0]) - rank(b[0]) || a[1] - b[1]; })
+            .map(function (x) { return getFood(x[0].id); }).filter(Boolean);
+        };
+        var tries = [p.stem, p.name].concat(p.alts || []).filter(Boolean), foods = [], loose = false;
+        for (var t = 0; t < tries.length && !foods.length; t++) foods = find(tries[t]);
+        // Nothing found, or only branded products ("extra-virgin olive oil", "sea salt"): drop describing words from the
+        // front ("olive oil", "salt"), preferring a verified food. One word left only counts as a whole word of a food's main name
+        // ("salt" → Salt, "chocolate" → Dark chocolate, but never "sum" → Summer squash). Found this way, it's worth a check.
+        var branded = foods.length && !isVerified(foods[0]) && /^ub/.test(foods[0].id);
+        var ws = p.name.split(' ');
+        for (var k = 1; k < ws.length && k < 3 && (!foods.length || branded); k++) {
+          var rest = ws.slice(k).join(' '), found = find(rest);
+          if (ws.length - k === 1) found = found.filter(function (x) { return normText(String(x.name).split(',')[0]).split(/\s+/).indexOf(normText(rest)) >= 0; });
+          if (!found.length) continue;
+          if (!foods.length) { foods = found; loose = true; }
+          else if (isVerified(found[0])) { foods = found; branded = false; } // a verified food beats a branded one
+        }
         // a cup of flour needs a food that knows what a cup weighs: prefer one of the top matches with that unit
         var wants = { cup: /^cup\b/, tbsp: /^(tbsp|tablespoon)\b/, tsp: /^(tsp|teaspoon)\b/, clove: /clove/i, slice: /slice/i, large: /\blarge\b/i, medium: /\bmedium\b/i, small: /\bsmall\b/i }[p.unit];
         var f = (wants && !p.grams && foods.find(function (x) { return unitsFor(x).some(function (u) { return wants.test(u.label); }); })) || foods[0];
         if (!f) return { line: line, ok: false };
         var u = unitMatch(f, p), it = itemFor(f, u.qty, u.unit, 'lunch');
-        return { line: line, ok: true, sure: u.sure, id: f.id, name: L(f.name), kind: ftKind(f), qty: it.qty, unit: it.unit, amt: L(fmtAmt(it.qty, it.unit)), kcal: it.kcal,
+        return { line: line, ok: true, sure: u.sure && !loose, id: f.id, name: L(f.name), kind: ftKind(f), qty: it.qty, unit: it.unit, amt: L(fmtAmt(it.qty, it.unit)), kcal: it.kcal,
           item: { ref: it.ref, name: it.name, g: it.g, qty: it.qty, unit: it.unit, kcal: it.kcal } };
       }));
     },
