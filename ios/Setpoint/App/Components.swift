@@ -19,7 +19,7 @@ struct EmptyState: View {
             Text(message).font(.brand(.subheadline)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
                 .fixedSize(horizontal: false, vertical: true)
             if let action {
-                Button(action: action.run) { Text(action.title).font(.brand(.headline)).padding(.horizontal, 8) }
+                Button(action: action.run) { Text(action.title).font(.brand(.headline)).foregroundStyle(Brand.onGreen).padding(.horizontal, 8) }
                     .buttonStyle(.glassProminent).tint(Brand.green).padding(.top, 4)
             }
         }

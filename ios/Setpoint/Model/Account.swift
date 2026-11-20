@@ -164,6 +164,7 @@ final class Account {
     }
     /// Before signing out: wait for any save under way, then save what's left. True when everything reached your account.
     func saveEverything() async -> Bool {
+        store?.flushSave()
         pushTask?.cancel()
         var n = 0
         while running && n < 75 { try? await Task.sleep(for: .milliseconds(200)); n += 1 }

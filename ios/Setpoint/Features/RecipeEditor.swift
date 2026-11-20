@@ -33,7 +33,7 @@ struct RecipeEditor: View {
                     }
                     .onDelete { items.remove(atOffsets: $0) }
                     .onMove { items.move(fromOffsets: $0, toOffset: $1) } // press, hold and drag to reorder
-                    Button("Add ingredient", systemImage: "plus") { picking = true }
+                    Button { picking = true } label: { Label("Add ingredient", systemImage: "plus.circle.fill").foregroundStyle(Brand.green).fontWeight(.semibold) }
                 } header: { Text("Ingredients") } footer: {
                     if let error { Text(error).foregroundStyle(Brand.danger) }
                     else if !items.isEmpty {

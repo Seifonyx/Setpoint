@@ -31,11 +31,11 @@ struct TargetExplainer: View {
                             if p.pace.dir == "maintain" || p.pace.kg == 0 {
                                 Text("You're maintaining, so you eat what you burn.")
                             } else {
-                                Text("\(Fmt.weight(p.pace.kg, unit: store.unit)) \(store.unit) a week is about \(Fmt.kcal(perDay)) kcal a day \(p.pace.dir == "lose" ? String(localized: "below") : String(localized: "above")) what you burn (a kilo of body weight is about 7,700 kcal).")
+                                Text("\(Fmt.weight(abs(p.pace.kg), unit: store.unit)) \(store.unit) a week is about \(Fmt.kcal(abs(perDay))) kcal a day \(p.pace.dir == "lose" ? String(localized: "below") : String(localized: "above")) what you burn (a kilo of body weight is about 7,700 kcal).")
                             }
                         }
                         step(3, "Your target", "\(Fmt.kcal((p.target / 10).rounded() * 10)) kcal", Brand.protein) {
-                            Text(verbatim: "\(Fmt.kcal(burn)) \(p.pace.dir == "gain" ? "+" : "−") \(Fmt.kcal(p.pace.dir == "maintain" ? 0 : perDay)) ≈ \(Fmt.kcal((p.target / 10).rounded() * 10)) kcal")
+                            Text(verbatim: "\(Fmt.kcal(burn)) \(p.pace.dir == "gain" ? "+" : "−") \(Fmt.kcal(p.pace.dir == "maintain" ? 0 : abs(perDay))) ≈ \(Fmt.kcal((p.target / 10).rounded() * 10)) kcal")
                                 .font(Brand.num(24, .semibold)).monospacedDigit()
                             if !p.warn.isEmpty { Text(LocalizedStringKey(p.warn)).foregroundStyle(Brand.danger) }
                             Text("Protein \(Fmt.grams(p.protein)) g · carbs \(Fmt.grams(p.carbs)) g · fat \(Fmt.grams(p.fat)) g")
@@ -85,7 +85,7 @@ struct TargetExplainer: View {
     }
     private func paceTitle(_ p: Overview.Pace) -> String {
         p.dir == "maintain" || p.kg == 0 ? String(localized: "Maintain")
-            : (p.dir == "lose" ? "−" : "+") + Fmt.weight(p.kg, unit: store.unit) + " " + store.unit + String(localized: "/wk")
+            : (p.dir == "lose" ? "−" : "+") + Fmt.weight(abs(p.kg), unit: store.unit) + " " + store.unit + String(localized: "/wk")
     }
     /// How far the app is in learning your metabolism from your own log.
     private func learning(_ m: Overview.Measured) -> some View {

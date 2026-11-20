@@ -198,7 +198,7 @@ struct CycleSheet: View {
                         Section {
                             ForEach(starts.reversed(), id: \.self) { d in
                                 Text(Day.date(d), format: .dateTime.weekday(.abbreviated).month(.abbreviated).day().year())
-                                    .swipeActions { Button("Remove", systemImage: "trash", role: .destructive) { set { $0["starts"] = .array(starts.filter { $0 != d }.map { .string($0) }) } } }
+                                    .swipeActions { Button("Remove", systemImage: "trash", role: .destructive) { set { $0["starts"] = .array(starts.filter { $0 != d }.map { .string($0) }) } }.tint(Brand.danger) }
                             }
                         } footer: { Text("Stays private in your Setpoint data. It only changes how the chart is shaded.") }
                     }

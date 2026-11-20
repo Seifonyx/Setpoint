@@ -420,7 +420,7 @@ struct AddFoodSheet: View {
             Button("Food", systemImage: "carrot") { creating = "" }
             Button("Recipe", systemImage: "frying.pan") { newRecipe = true }
             Button("Meal", systemImage: "takeoutbag.and.cup.and.straw") { newMeal = true }
-        } label: { Label("New", systemImage: "plus") }
+        } label: { Label("New", systemImage: "plus.circle.fill").foregroundStyle(Brand.green).fontWeight(.semibold) }
     }
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {

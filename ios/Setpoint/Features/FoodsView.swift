@@ -42,7 +42,7 @@ struct FoodLists: View {
                             .contentShape(.rect)
                         }
                         .tint(.primary)
-                        .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("myFoods", id: f["id"]?.string ?? "") } }
+                        .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("myFoods", id: f["id"]?.string ?? "") }.tint(Brand.danger) }
                     }
                 } header: { Text("My foods") }
 
@@ -64,7 +64,7 @@ struct FoodLists: View {
                             .contentShape(.rect)
                         }
                         .tint(.primary)
-                        .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") } }
+                        .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("recipes", id: r["id"]?.string ?? "") }.tint(Brand.danger) }
                     }
                 } header: { Text("Recipes") }
 
@@ -93,7 +93,7 @@ struct FoodLists: View {
                                 .contentShape(.rect)
                             }
                             .buttonStyle(.plain)
-                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("meals", id: m["id"]?.string ?? "") } }
+                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { remove("meals", id: m["id"]?.string ?? "") }.tint(Brand.danger) }
                         }
                     }
                 }
@@ -107,7 +107,7 @@ struct FoodLists: View {
                                 .swipeActions {
                                     Button("Remove", systemImage: "star.slash", role: .destructive) {
                                         store.setRoot("favs", .array((store.root["favs"]?.array ?? []).filter { $0.string != f.id }))
-                                    }
+                                    }.tint(Brand.danger)
                                 }
                         }
                     }
@@ -127,6 +127,7 @@ struct FoodLists: View {
                             default: mealEdit = MealJob(meal: nil)
                             }
                         }
+                        .buttonStyle(.glassProminent).tint(Brand.green)
                     }
                 }
             }

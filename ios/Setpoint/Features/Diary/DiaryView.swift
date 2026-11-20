@@ -56,7 +56,7 @@ struct DiaryView: View {
                                 Text("Daily total")
                                 Text("Calories saved with your weigh-in")
                             }
-                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } } }
+                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } }.tint(Brand.danger) }
                         }
                     }
                 }
@@ -389,7 +389,8 @@ struct MicrosCard: View {
             GeometryReader { g in
                 ZStack(alignment: .leading) {
                     Capsule().fill(Brand.card2)
-                    Capsule().fill(color).frame(width: g.size.width * min(1, pct))
+                    // on the way to the minimum: a lighter green; reached: full green; over the maximum: red
+                    Capsule().fill(color == Brand.ink2 && r.goal != nil ? Brand.green.opacity(0.5) : color).frame(width: g.size.width * min(1, pct))
                 }
             }
             .frame(height: 5)

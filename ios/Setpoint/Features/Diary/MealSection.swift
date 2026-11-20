@@ -102,9 +102,11 @@ struct MealRows: View {
             let exact = !aboveAll && isOpen(meal) && at + 1 < moved.count && {
                 switch moved[at + 1] { case .food(_, let m), .end(let m): return m.key == meal; default: return false }
             }()
-            let apply = {
+            let apply: () -> Void = {
                 if !isOpen(meal) { setOpen(meal, true) } // a folded meal opens, so you see where it went
-                withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) }
+                // exact: the list already shows it there, so nothing more to animate (a second animation is what jolts)
+                if exact { store.place(food.id, meal: meal, before: before, on: day) }
+                else { withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) } }
             }
             if exact { apply() } else { Task { @MainActor in try? await Task.sleep(for: .milliseconds(300)); apply() } }
         }
@@ -225,11 +227,11 @@ struct MealFoodRow: View {
         }
             .accessibilityIdentifier("food-\(food.id)")
             .swipeActions(edge: .trailing) {
-                Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
+                Button("Delete", systemImage: "trash", role: .destructive) { store.delete(food, on: day) }.tint(Brand.danger)
             }
             .swipeActions(edge: .leading) {
                 // swipe right: ⋯ with everything you can do to it
-                Button("More", systemImage: "ellipsis") { actions.more = food }.tint(Brand.ink2)
+                Button("More", systemImage: "ellipsis") { actions.more = food }.tint(Brand.blue)
             }
     }
 }
@@ -369,7 +371,7 @@ struct MealSummarySheet: View {
                 Section {
                     ForEach(foods) { f in
                         Button { open = f } label: { FoodRow(food: f, day: day, kind: kinds[f.id]) }.buttonStyle(.plain)
-                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } } }
+                            .swipeActions { Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(f, on: day) } }.tint(Brand.danger) }
                     }
                     Button(action: addFood) { Label("Add food", systemImage: "plus.circle.fill").font(.brand(.body, .semibold)).foregroundStyle(Brand.green) }
                 } header: { Text("\(foods.count) foods") }

@@ -89,7 +89,7 @@ struct RepeatingView: View {
         .paperPage()
         .navigationTitle("Repeating")
         .hidesTabBar()
-        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Add a repeating food", systemImage: "plus") { picking = true } } }
+        .toolbar { ToolbarItem(placement: .topBarTrailing) { Button("Add a repeating food", systemImage: "plus") { picking = true }.buttonStyle(.glassProminent).tint(Brand.green) } }
         .sheet(isPresented: $picking, onDismiss: { if let p = pending { newItem = Edit(id: "new", rec: nil, item: p); pending = nil } }) {
             RepeatPicker { raw in pending = raw; picking = false }
         }

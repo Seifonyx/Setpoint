@@ -218,7 +218,7 @@ struct PhasesSection: View {
                 .swipeActions {
                     Button("Delete", systemImage: "trash", role: .destructive) {
                         store.setRoot("phases", .array((store.root["phases"]?.array ?? []).filter { $0["date"]?.string != start }))
-                    }
+                    }.tint(Brand.danger)
                 }
             }
             Button(list.isEmpty ? "Start a phase" : "New phase", systemImage: "flag") { label = ""; date = Date(); adding = true }

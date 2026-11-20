@@ -23,7 +23,10 @@ struct ExportView: View {
                 } else {
                     ShareLink(items: files) {
                         Label("Export \(files.count) files", systemImage: "square.and.arrow.up")
+                            .font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 44)
                     }
+                    .buttonStyle(.glassProminent).tint(Brand.green)
+                    .listRowBackground(Color.clear).listRowInsets(EdgeInsets())
                 }
             } footer: {
                 if !files.isEmpty { Text(summary) }

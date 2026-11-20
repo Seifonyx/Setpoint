@@ -182,7 +182,7 @@ struct FoodDetailSheet: View {
                               kcal: (it["kcal"]?.number ?? 0) * factor, kind: it["ref"]?.string == nil ? "quick" : "food", ref: it["ref"]?.string)
                 }
                 .buttonStyle(.plain)
-                .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } } }
+                .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = parts.remove(at: i); partsEdited = true } }.tint(Brand.danger) }
             }
             .onMove { parts.move(fromOffsets: $0, toOffset: $1); partsEdited = true }
         } header: { Text("In this meal") } footer: { Text("Tap a food to change it, swipe to remove. For this day only.") }
@@ -199,7 +199,7 @@ struct FoodDetailSheet: View {
                 .swipeActions {
                     Button("Remove", systemImage: "minus.circle", role: .destructive) {
                         var items = recipe?["items"]?.array ?? []; items.remove(at: i); recipe?["items"] = .array(items); recipeEdited = true
-                    }
+                    }.tint(Brand.danger)
                 }
             }
             if food.raw["rc"] != nil || recipeEdited {

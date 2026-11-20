@@ -40,10 +40,10 @@ struct MealEditor: View {
                             IngredientRow(name: it["name"]?.string ?? "", amount: it["qty"]?.number.flatMap { q in it["unit"]?.string.map { Fmt.amount(q, $0) } }, kcal: it["kcal"]?.number ?? 0, ref: it["ref"]?.string)
                         }
                         .buttonStyle(.plain)
-                        .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = items.remove(at: i) } } }
+                        .swipeActions { Button("Remove", systemImage: "minus.circle", role: .destructive) { withAnimation { _ = items.remove(at: i) } }.tint(Brand.danger) }
                     }
                     .onMove { items.move(fromOffsets: $0, toOffset: $1) } // press, hold and drag to reorder
-                    Button { picking = true } label: { Label("Add a food", systemImage: "plus") }
+                    Button { picking = true } label: { Label("Add a food", systemImage: "plus.circle.fill").foregroundStyle(Brand.green).fontWeight(.semibold) }
                 } header: { Text("Foods") } footer: {
                     Text("Tap a food to change its amount, swipe to remove it, or hold and drag to reorder.")
                 }
@@ -57,7 +57,7 @@ struct MealEditor: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } }
                 ToolbarItem(placement: .confirmationAction) {
-                    Button("Save", action: save).disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || items.isEmpty)
+                    Button("Save", action: save).disabled(name.trimmingCharacters(in: .whitespaces).isEmpty || items.isEmpty).buttonStyle(.glassProminent).tint(Brand.green)
                 }
             }
             .sheet(isPresented: $picking) {

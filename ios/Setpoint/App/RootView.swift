@@ -116,6 +116,7 @@ struct RootView: View {
         .task { if let a = QuickActionInbox.take() { open(a) } }
         .onChange(of: phase) { _, p in
             if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store) } }
+            if p != .active { store.flushSave() } // nothing waiting to be written when the app is left
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in

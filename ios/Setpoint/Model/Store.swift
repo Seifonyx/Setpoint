@@ -101,6 +101,26 @@ final class Store {
         root["food"] = .object(food.filter { !$0.value.isEmpty }.mapValues { .array($0.map { .object($0.raw) }) })
         root["entries"] = .array(entries.map { .object($0.raw) })
         root["water"] = .object(water.mapValues { .number($0) })
+        // The heavy part (encoding everything, writing the file, handing it to the engine, which then refreshes every
+        // screen) waits until a drag, swipe or slide-in has finished, so it never lands mid-animation. Several quick
+        // changes are written once. Leaving the app or making a backup writes straight away (flushSave).
+        if !quiet { pendingLoud = true }
+        saveTask?.cancel()
+        saveTask = Task { [weak self] in
+            try? await Task.sleep(for: .milliseconds(450))
+            guard !Task.isCancelled else { return }
+            self?.flushSave()
+        }
+    }
+    @ObservationIgnored private var saveTask: Task<Void, Never>?
+    @ObservationIgnored private var pendingLoud = false
+    @ObservationIgnored private var writing: Task<Void, Never>?
+
+    /// Writes a waiting save now (if there is one).
+    func flushSave() {
+        guard let task = saveTask else { return }
+        task.cancel(); saveTask = nil
+        let quiet = !pendingLoud; pendingLoud = false
         if signedIn {
             // Something you changed (not just sync bookkeeping): mark it for upload, like the web app.
             let sig = Account.sig(cloudDataText())
@@ -115,7 +135,11 @@ final class Store {
         version += 1
         reportWeights()
         guard let data = try? JSONEncoder().encode(JSONValue.object(root)) else { return }
-        if !demo { try? data.write(to: Self.fileURL, options: .atomic) }
+        if !demo {
+            // off the main thread, one write after another (a newer save never lands before an older one)
+            let url = Self.fileURL, before = writing
+            writing = Task.detached(priority: .userInitiated) { await before?.value; try? data.write(to: url, options: .atomic) }
+        }
         let v = version, text = String(decoding: data, as: UTF8.self)
         Task { [engine] in
             await engine.setState(text, version: v)
@@ -341,6 +365,7 @@ final class Store {
 
     /// A backup in the same format the web app writes, so it can be restored there too.
     func exportBackup() throws -> URL {
+        flushSave()
         save()
         var o = root
         o["app"] = .string("Setpoint")
