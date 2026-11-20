@@ -56,6 +56,10 @@ actor Engine {
     func search(_ q: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "searchSorted", [q, meal, sort, verifiedOnly]) ?? [] }
     func list(_ kind: String, meal: String) -> [FoodHit] { decode([FoodHit].self, kind, [meal]) ?? [] }
     func list(_ kind: String, meal: String, sort: String, verifiedOnly: Bool) -> [FoodHit] { decode([FoodHit].self, "listSorted", [kind, meal, sort, verifiedOnly]) ?? [] }
+    /// Search inside Favorites ("favorites") or My foods ("mine") only, in that tab's sort order.
+    func searchIn(_ q: String, meal: String, kind: String, sort: String, verifiedOnly: Bool) -> [FoodHit] {
+        decode([FoodHit].self, "searchIn", [q, meal, kind, sort, verifiedOnly]) ?? []
+    }
     /// Recent ("recent") or most-logged ("frequent") foods at one meal.
     func mealList(_ meal: String, sort: String) -> [FoodHit] { decode([FoodHit].self, "mealList", [meal, sort]) ?? [] }
     /// A recipe page's own recipe (name, servings, ingredient lines), or nil if the page doesn't describe one.

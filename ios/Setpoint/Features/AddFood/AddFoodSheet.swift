@@ -83,7 +83,7 @@ struct AddFoodSheet: View {
             .contentMargins(.top, 2, for: .scrollContent) // tabs sit right under the search bar
             .brandList()
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: "Search foods")
+            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: searchPrompt)
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom) { tray }
             .navigationDestination(for: String.self) { id in
@@ -130,10 +130,15 @@ struct AddFoodSheet: View {
             } message: { Text("This product isn't in Open Food Facts yet. Photograph its nutrition label and Setpoint fills in the numbers.") }
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
             .task(id: "\(meal)|\(store.version)|\(store.foodsReady)|\(favSort)|\(favVerified)|\(mineSort)") { await loadLists() }
-            .task(id: "\(query)|\(meal)|\(store.foodsReady)|\(sort)|\(verifiedOnly)") {
+            .task(id: "\(query)|\(meal)|\(store.foodsReady)|\(sort)|\(verifiedOnly)|\(tab)|\(favSort)|\(favVerified)|\(mineSort)|\(store.version)") {
                 guard !query.isEmpty else { hits = []; return }
                 try? await Task.sleep(for: .milliseconds(150)) // wait for typing to pause
-                hits = await store.engineRef.search(query, meal: meal, sort: sort, verifiedOnly: verifiedOnly)
+                // search stays inside the tab you're on: All searches everything, Favorites and My foods only themselves
+                switch tab {
+                case .all: hits = await store.engineRef.search(query, meal: meal, sort: sort, verifiedOnly: verifiedOnly)
+                case .favorites: hits = await store.engineRef.searchIn(query, meal: meal, kind: "favorites", sort: favSort, verifiedOnly: favVerified)
+                case .mine: hits = await store.engineRef.searchIn(query, meal: meal, kind: "mine", sort: mineSort, verifiedOnly: false)
+                }
             }
             .onAppear { if startIDs.isEmpty { startIDs = Set(store.items(day).map(\.id)) } }
         }
@@ -227,7 +232,7 @@ struct AddFoodSheet: View {
         HStack(alignment: .center) {
             Text(barTitle).font(.brand(.subheadline, .medium)).opacity(barCount == 0 ? 0 : 1).foregroundStyle(Brand.ink2).monospacedDigit().contentTransition(.numericText())
             Spacer()
-            if !query.isEmpty {
+            if !query.isEmpty && tab == .all {
                 FilterPill(sort: $sort, verified: $verifiedOnly, options: [("best", "Best match", "text.magnifyingglass"), Self.recent, Self.frequentOpt])
             } else {
                 switch tab {
@@ -263,7 +268,36 @@ struct AddFoodSheet: View {
         return n == 1 ? "1 food" : "\(n) foods"
     }
 
+    /// The search box says where it looks.
+    private var searchPrompt: LocalizedStringKey {
+        switch tab { case .all: "Search foods"; case .favorites: "Search favorites"; case .mine: "Search my foods" }
+    }
+
     @ViewBuilder private var searchResults: some View {
+        if tab != .all { scopedResults } else { allResults }
+    }
+    /// Searching inside Favorites or My foods: only what's in that tab, and a way out to the whole food list.
+    @ViewBuilder private var scopedResults: some View {
+        if !hits.isEmpty {
+            Section {
+                ForEach(hits) { h in
+                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m) } else { row(h) }
+                }
+            }
+        } else {
+            Section {
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("No matches for “\(query)”").font(.brand(.headline))
+                    Text(tab == .mine ? LocalizedStringKey("None of your foods, recipes or meals match.") : LocalizedStringKey("None of your favorites match."))
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                }
+                .padding(.vertical, 4)
+                Button { withAnimation(.snappy) { tab = .all } } label: { Label("Search all foods", systemImage: "magnifyingglass") }
+                    .accessibilityIdentifier("search-all")
+            }
+        }
+    }
+    @ViewBuilder private var allResults: some View {
         if !store.foodsReady {
             Section { SkeletonRows(count: 5).padding(.vertical, 6) }
         }

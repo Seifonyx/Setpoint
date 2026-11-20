@@ -5781,6 +5781,26 @@
         }
       }
     },
+    "None of your favorites match.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة في المفضلة مطابقة."
+          }
+        }
+      }
+    },
+    "None of your foods, recipes or meals match.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش أكلة أو وصفة أو وجبة من بتوعك مطابقة."
+          }
+        }
+      }
+    },
     "None of your logged foods have data for this.": {
       "localizations": {
         "ar": {
@@ -7431,6 +7451,26 @@
         }
       }
     },
+    "Search all foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر في كل الأكلات"
+          }
+        }
+      }
+    },
+    "Search favorites": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر في المفضلة"
+          }
+        }
+      }
+    },
     "Search foods": {
       "localizations": {
         "ar": {
@@ -7447,6 +7487,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "ابحث عن طعام للبدء."
+          }
+        }
+      }
+    },
+    "Search my foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر في أطعمتي"
           }
         }
       }

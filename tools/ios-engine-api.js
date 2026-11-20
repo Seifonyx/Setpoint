@@ -265,6 +265,19 @@
         : function (a, b) { return recent(a, b) || az(a, b); };
       return J(out.sort(cmp));
     },
+    // Search inside one tab only (Favorites or My foods), with the same word matching as the main search
+    // (synonyms, Arabic, small typos), in the tab's own sort order.
+    searchIn: function (q, meal, kind, sort, verifiedOnly) {
+      var toks = queryToks(q);
+      if (toks.length > 1) { var kept = toks.filter(function (a) { return !FILLER[a[0]]; }); if (kept.length) toks = kept; }
+      var qn = normText(q);
+      if (!toks.length && !qn) return '[]';
+      var rows = kind === 'mine' ? JSON.parse(this.mineAll(meal, sort)) : JSON.parse(this.listSorted('favorites', meal, sort, verifiedOnly));
+      return J(rows.filter(function (r) {
+        var f = r.mealId ? null : getFood(r.id), w = f && f.w ? f.w : wordsOf(r.name);
+        return (toks.length && toks.every(function (t) { return !!matchTok(t, w); })) || normText(r.name).indexOf(qn) >= 0;
+      }));
+    },
     // Recipe import: a page's recipe ({name, servings, lines} or null), then each line matched to a food.
     recipeFromHtml: function (html) { return J(recipeOf(String(html))); },
     importLines: function (txt) {

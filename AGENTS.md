@@ -86,3 +86,14 @@ After implementation:
 Non-negotiable principle: think like an experienced product engineer, not an AI that simply generates code. Inspect
 the app, research proven solutions, anticipate mistakes, implement carefully, and verify the result. Never substitute
 assumptions or generic AI suggestions for evidence.
+
+## Release policy (set by the user; in force until the user changes it)
+
+Publish first, then test, then fix:
+1. Push finished changes straight to `main` without `[preview]`, so they are released to SideStore right away.
+2. After every release, check the build's results: the build itself, the simulator screenshots (on the `ios-preview`
+   release) and the UI test results (`drag-results.txt`, `uitest-log.txt`, and any other check files the build writes).
+3. If anything looks wrong or a check fails, fix it and publish again, then check again. Repeat until it's clean.
+4. Report what was released, what the checks showed, and what was fixed. Say plainly what couldn't be checked
+   (for example, anything that needs the real phone).
+Only use `[preview]` again if the user asks to see something before it's released.
