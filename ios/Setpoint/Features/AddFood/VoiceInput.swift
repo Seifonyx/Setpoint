@@ -29,7 +29,7 @@ final class VoiceInput {
     func start() async {
         guard !listening else { return }
         error = nil; text = ""
-        let speech = await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { c.resume(returning: $0) } }
+        let speech = await Self.authorize()
         guard speech == .authorized else { error = String(localized: "Allow speech recognition for Setpoint in the Settings app to speak what you ate."); return }
         guard await AVAudioApplication.requestRecordPermission() else { error = String(localized: "Allow the microphone for Setpoint in the Settings app to speak what you ate."); return }
         guard let rec = Self.recognizer() else { error = String(localized: "Speech recognition isn't available right now. Type it instead."); return }
@@ -41,15 +41,20 @@ final class VoiceInput {
             req.shouldReportPartialResults = true
             req.addsPunctuation = true
             if rec.supportsOnDeviceRecognition { req.requiresOnDeviceRecognition = true } // stays on this iPhone where it can
-            nonisolated(unsafe) let sink = req
             let input = engine.inputNode
-            input.installTap(onBus: 0, bufferSize: 1024, format: input.outputFormat(forBus: 0)) { buffer, _ in sink.append(buffer) }
+            // a microphone with no usable sound format can't be listened to (and would stop the app)
+            let format = input.outputFormat(forBus: 0)
+            guard format.channelCount > 0, format.sampleRate > 0 else {
+                error = String(localized: "Couldn't start listening. Type it instead.")
+                try? session.setActive(false, options: .notifyOthersOnDeactivation)
+                return
+            }
+            Self.feed(input, format: format, into: req)
             engine.prepare()
             try engine.start()
             request = req
             listening = true
-            task = rec.recognitionTask(with: req) { [weak self] result, err in
-                let words = result?.bestTranscription.formattedString, done = result?.isFinal == true || err != nil
+            task = Self.recognize(rec, req) { [weak self] words, done in
                 Task { @MainActor in
                     guard let self, self.listening else { return }
                     if let words { self.text = words; self.waitForPause() }
@@ -61,6 +66,20 @@ final class VoiceInput {
             self.error = String(localized: "Couldn't start listening. Type it instead.")
             stop()
         }
+    }
+
+    // These three are called by iOS on its own threads, not the main one. They're built here, outside the main
+    // actor, so Swift doesn't treat them as main-thread code (which stops the app when iOS calls them).
+    nonisolated private static func authorize() async -> SFSpeechRecognizerAuthorizationStatus {
+        await withCheckedContinuation { c in SFSpeechRecognizer.requestAuthorization { status in c.resume(returning: status) } }
+    }
+    nonisolated private static func feed(_ input: AVAudioInputNode, format: AVAudioFormat, into req: SFSpeechAudioBufferRecognitionRequest) {
+        nonisolated(unsafe) let sink = req // appending audio from iOS's audio thread is what this request is for
+        input.installTap(onBus: 0, bufferSize: 1024, format: format) { buffer, _ in sink.append(buffer) }
+    }
+    nonisolated private static func recognize(_ rec: SFSpeechRecognizer, _ req: SFSpeechAudioBufferRecognitionRequest,
+                                              _ heard: @escaping @Sendable (String?, Bool) -> Void) -> SFSpeechRecognitionTask {
+        rec.recognitionTask(with: req) { result, err in heard(result?.bestTranscription.formattedString, result?.isFinal == true || err != nil) }
     }
 
     /// Stops after 2 seconds without new words (and after 8 if nothing was said at all).
@@ -78,7 +97,7 @@ final class VoiceInput {
         guard listening else { return }
         listening = false
         quiet?.cancel()
-        engine.stop()
+        if engine.isRunning { engine.stop() }
         engine.inputNode.removeTap(onBus: 0)
         request?.endAudio()
         task?.finish()

@@ -95,7 +95,8 @@ struct DiaryView: View {
                 CopyDaySheet(items: job.items, from: day)
             }
             .sensoryFeedback(.selection, trigger: day)
-            .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day, startScan: job.scan) }
+            // plan mode lasts while Add food is open: it's off again next time
+            .sheet(item: $adding, onDismiss: { store.planning = false }) { job in AddFoodSheet(meal: job.meal, day: day, startScan: job.scan) }
             .sheet(item: $openFood) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
             .onChange(of: store.request) { _, r in
                 handle(r)

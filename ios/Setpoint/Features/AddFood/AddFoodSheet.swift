@@ -380,7 +380,10 @@ struct AddFoodSheet: View {
                     // the name is centred exactly; the arrow hangs beside it without pushing it over
                     Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold))
                         .overlay(alignment: .trailing) { Image(systemName: "chevron.down").font(.brand(.caption, .bold)).fixedSize().alignmentGuide(.trailing) { $0[.leading] - 5 } }
-                    if let left = kcalLeft {
+                    if store.planning {
+                        // plan mode: say so where you look, in the plan colour
+                        Label("Planning", systemImage: "checklist").font(.brand(.caption, .semibold)).foregroundStyle(Brand.blue)
+                    } else if let left = kcalLeft {
                         Text(left >= 0 ? "\(Fmt.kcal(left)) kcal left" : "\(Fmt.kcal(-left)) kcal over").font(.brand(.caption)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit()
                     }
@@ -396,6 +399,11 @@ struct AddFoodSheet: View {
                     .accessibilityIdentifier("add-voice")
                 Button("Snap your plate", systemImage: "camera") { plateCam = true }
                 Menu {
+                    // plan today's food now, tick each one off in the Diary when you eat it
+                    Toggle(isOn: Binding(get: { store.planning }, set: { on in withAnimation(.snappy) { store.planning = on } })) {
+                        Label("Plan, tick off later", systemImage: "checklist")
+                    }
+                    Divider()
                     Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
                     Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
                     Button("Describe what you ate", systemImage: "text.bubble") { describing = true }

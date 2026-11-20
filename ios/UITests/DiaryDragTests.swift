@@ -132,6 +132,62 @@ final class DiaryDragTests: XCTestCase {
         } else { note("form: no Calories label"); shot(n, "form-missing") }
         n.terminate()
 
+        // the crashes you reported: dropping into a folded meal (Snacks), and below the last card; then ticking off a
+        // planned food. After each, is the app still running?
+        let c = XCUIApplication()
+        c.launchArguments = ["-demo", "YES", "-tab", "diary", "-closedMeals", "snacks", "-movelog"]
+        c.launch()
+        let ban = el(c, "food-b0"), snacks = el(c, "meal-snacks")
+        if ban.waitForExistence(timeout: 10) {
+            c.swipeUp(velocity: .slow); sleep(3)
+            if snacks.exists {
+                drag(ban, to: snacks, dy: 0.5)
+                sleep(2)
+                note("crash test: into folded Snacks → app running = \(c.state == .runningForeground)")
+                shot(c, "crash-1-folded-snacks")
+            }
+            let rice = el(c, "food-d0")
+            if rice.exists, snacks.exists {
+                drag(rice, to: snacks, dy: 2.5) // below the last card
+                sleep(2)
+                note("crash test: below the last card → app running = \(c.state == .runningForeground)")
+                shot(c, "crash-2-below-last")
+            }
+        } else { note("crash test: no foods"); shot(c, "crash-missing") }
+        c.terminate()
+
+        let t = XCUIApplication()
+        t.launchArguments = ["-demo", "YES", "-tab", "diary"]
+        t.launch()
+        let tick = el(t, "tick-g0")
+        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); sleep(2); return tick.exists }() {
+            if !tick.isHittable { t.swipeUp(velocity: .slow); sleep(2) }
+            shot(t, "tick-0-planned")
+            tick.tap(); sleep(2)
+            note("tick: planned protein bar ticked off = \(!el(t, "tick-g0").exists) · app running = \(t.state == .runningForeground)")
+            shot(t, "tick-1-eaten")
+        } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing") }
+        t.terminate()
+
+        // the microphone: allow the permission prompts and see that the app keeps going
+        let m = XCUIApplication()
+        m.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        m.launch()
+        let mic = el(m, "add-voice")
+        if mic.waitForExistence(timeout: 10) {
+            mic.tap()
+            let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
+            for _ in 0..<3 {
+                sleep(2)
+                for label in ["Allow", "OK", "Allow While Using App"] where springboard.buttons[label].exists { springboard.buttons[label].tap(); break }
+            }
+            sleep(4)
+            let words = m.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'listen' OR label CONTAINS[c] 'speech' OR label CONTAINS[c] 'microphone'")).firstMatch
+            note("voice: app running after the microphone = \(m.state == .runningForeground) · says: \(words.exists ? words.label : "(nothing)")")
+            shot(m, "voice-1")
+        } else { note("voice: no microphone button"); shot(m, "voice-missing") }
+        m.terminate()
+
         // describing a meal in words (the simulator has no Apple Intelligence, so this is Setpoint's own reader)
         let v = XCUIApplication()
         v.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]

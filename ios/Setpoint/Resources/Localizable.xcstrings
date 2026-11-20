@@ -5061,6 +5061,16 @@
         }
       }
     },
+    "Mark %@ as eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علّم إن %@ اتاكلت"
+          }
+        }
+      }
+    },
     "Mark a cut, bulk or diet break": {
       "localizations": {
         "ar": {
@@ -5367,6 +5377,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نقل"
+          }
+        }
+      }
+    },
+    "Move back to planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "رجّعها للمخطّط"
           }
         }
       }
@@ -6611,6 +6631,16 @@
         }
       }
     },
+    "Plan, tick off later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط، وعلّم عليها بعدين"
+          }
+        }
+      }
+    },
     "Planned": {
       "localizations": {
         "ar": {
@@ -6627,6 +6657,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تم تخطيط %lld أطعمة"
+          }
+        }
+      }
+    },
+    "Planning": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بتخطّط"
           }
         }
       }

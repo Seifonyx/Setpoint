@@ -85,7 +85,7 @@ struct MealRows: View {
         // press, hold and drag a food: it lands in the meal whose name is above where you let go, before the food below
         .onMove { from, to in
             MoveLog.shared.text = "mv \(from.first ?? -1)>\(to) of \(rows.count)"
-            guard let i = from.first, case .food(let food, _) = rows[i] else { return }
+            guard let i = from.first, rows.indices.contains(i), case .food(let food, _) = rows[i] else { return }
             var moved = rows
             moved.move(fromOffsets: from, toOffset: to)
             guard let at = moved.firstIndex(where: { $0.id == rows[i].id }) else { return }
@@ -95,8 +95,18 @@ struct MealRows: View {
             if at + 1 < moved.count, case .food(let next, _) = moved[at + 1] { before = next.id }
             // dropped above the first meal's name: the top of that meal, not the bottom
             if aboveAll { before = foods(meal).first(where: { $0.id != food.id })?.id }
-            withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) }
-            if !isOpen(meal) { setOpen(meal, true) } // dropped into a folded meal: open it so you see where it went
+            // The list has already moved the row to where you let go. If the diary ends up in exactly that order
+            // (between foods of an open meal, or last in it), it's saved at once. Otherwise (into a folded meal, below
+            // a meal's card, above everything) rows would appear or vanish during the drop itself, which crashes the
+            // list: so the list settles first, and the food moves where it belongs a moment later.
+            let exact = !aboveAll && isOpen(meal) && at + 1 < moved.count && {
+                switch moved[at + 1] { case .food(_, let m), .end(let m): return m.key == meal; default: return false }
+            }()
+            let apply = {
+                if !isOpen(meal) { setOpen(meal, true) } // a folded meal opens, so you see where it went
+                withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) }
+            }
+            if exact { apply() } else { Task { @MainActor in try? await Task.sleep(for: .milliseconds(300)); apply() } }
         }
         .task {
             if UserDefaults.standard.string(forKey: "sheet") == "food", let m = store.meals.first { open = foods(m.key).first }
@@ -190,9 +200,29 @@ struct MealFoodRow: View {
     @Binding var open: FoodItem?
     let actions: MealActions
 
+    @State private var ticked = false
+    private var tickable: Bool { food.isPlanned && day <= Day.today }
+
     var body: some View {
-        Button { open = food } label: { FoodRow(food: food, day: day, kind: kind) }
-            .buttonStyle(.plain)
+        HStack(spacing: 10) {
+            // planned: a circle to tick when you eat it (then it counts, at the time you ticked it)
+            if tickable {
+                Button {
+                    withAnimation(.snappy) { ticked = true }
+                    Task { try? await Task.sleep(for: .milliseconds(250)); withAnimation(.snappy) { store.markEaten(food, on: day) } }
+                } label: {
+                    Image(systemName: ticked ? "checkmark.circle.fill" : "circle")
+                        .font(.system(size: 24, weight: .regular)).foregroundStyle(ticked ? Brand.green : Brand.ink2)
+                        .contentTransition(.symbolEffect(.replace)).frame(width: 30, height: 44).contentShape(.rect)
+                }
+                .buttonStyle(.plain)
+                .sensoryFeedback(.success, trigger: ticked) { _, now in now }
+                .accessibilityLabel(Text("Mark \(food.displayName) as eaten"))
+                .accessibilityIdentifier("tick-\(food.id)")
+            }
+            Button { open = food } label: { FoodRow(food: food, day: day, kind: kind) }
+                .buttonStyle(.plain)
+        }
             .accessibilityIdentifier("food-\(food.id)")
             .swipeActions(edge: .trailing) {
                 Button("Delete", systemImage: "trash", role: .destructive) { withAnimation { store.delete(food, on: day) } }
@@ -218,6 +248,7 @@ struct MealDialogs: ViewModifier {
             .confirmationDialog(actions.more?.displayName ?? "", isPresented: Binding(get: { actions.more != nil }, set: { if !$0 { actions.more = nil } }), titleVisibility: .visible, presenting: actions.more) { f in
                 Button("Adjust") { open = f }
                 if f.isPlanned && day <= Day.today { Button("Mark as eaten") { store.markEaten(f, on: day) } }
+                if !f.isPlanned && day == Day.today { Button("Move back to planned") { withAnimation(.snappy) { store.markPlanned(f, on: day) } } }
                 Button("Add another") { withAnimation { store.addAnother(f, on: day) } }
                 Button("Move") {
                     // one Move: the ⋯ closes first, then the choice of meal opens
