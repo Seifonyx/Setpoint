@@ -272,7 +272,7 @@ struct AddFoodSheet: View {
     /// Setpoint's own search bar, so the microphone and "select several" can sit in it.
     private var searchBar: some View {
         HStack(spacing: 8) {
-            Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .semibold)).foregroundStyle(Brand.ink2)
+            Image(systemName: "magnifyingglass").font(.system(size: 16, weight: .semibold)).foregroundStyle(Brand.ink2)
             TextField(searchPrompt, text: $query)
                 .font(.brand(.body)).submitLabel(.search).autocorrectionDisabled().textInputAutocapitalization(.never)
                 .focused($searchFocused)
@@ -282,13 +282,13 @@ struct AddFoodSheet: View {
                     .accessibilityLabel(Text("Clear"))
             }
             Button { searchFocused = false; speaking = true } label: {
-                Image(systemName: "mic.fill").font(.system(size: 15, weight: .semibold)).foregroundStyle(Brand.green).frame(width: 32, height: 36)
+                Image(systemName: "mic.fill").font(.system(size: 18, weight: .semibold)).foregroundStyle(Brand.green).frame(width: 38, height: 40)
             }
             .accessibilityLabel(Text("Say what you ate"))
             .accessibilityIdentifier("add-voice")
             Button { withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } } } label: {
                 Image(systemName: selecting ? "checkmark.circle.fill" : "checkmark.circle")
-                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(selecting ? Brand.green : Brand.ink2).frame(width: 32, height: 36)
+                    .font(.system(size: 19, weight: .semibold)).foregroundStyle(selecting ? Brand.green : Brand.ink2).frame(width: 38, height: 40)
             }
             .accessibilityLabel(Text(selecting ? LocalizedStringKey("Stop selecting") : LocalizedStringKey("Select several")))
         }

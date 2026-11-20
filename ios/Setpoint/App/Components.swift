@@ -213,9 +213,9 @@ struct BarIcon: View {
     init(_ symbol: String, tint: Color? = nil) { self.symbol = symbol; self.tint = tint }
     var body: some View {
         Image(systemName: symbol)
-            .font(.system(size: 15, weight: .semibold))
+            .font(.system(size: 17, weight: .semibold))
             .foregroundStyle(tint == nil ? Brand.ink : Brand.onGreen)
-            .frame(width: 34, height: 34)
+            .frame(width: 40, height: 40)
             .glassEffect(tint.map { .regular.tint($0).interactive() } ?? .regular.interactive(), in: .circle)
             .frame(minWidth: 40, minHeight: 44)
             .contentShape(.rect)
