@@ -141,8 +141,9 @@ final class Store {
             writing = Task.detached(priority: .userInitiated) { await before?.value; try? data.write(to: url, options: .atomic) }
         }
         let v = version, text = String(decoding: data, as: UTF8.self)
+        engine.stage(text, version: v) // taken in before the engine's next job, whoever asks
         Task { [engine] in
-            await engine.setState(text, version: v)
+            await engine.applyStaged()
             await MainActor.run { self.plans = [:] }
             await self.refreshOverview()
         }
@@ -221,25 +222,25 @@ final class Store {
     /// On launch (and coming back to the app): load the food list, then do what the web app does on every open.
     func start() async {
         save()
-        await engine.loadFoods()
-        foodsReady = await engine.foodsReady
+        await eng.loadFoods()
+        foodsReady = await eng.foodsReady
         await tick()
     }
     func tick() async {
         // Foods set to repeat every day are added to today (as the web app does on every open).
-        if await engine.applyRepeats() > 0 { await adoptEngineState() }
-        guard let t = await engine.tick(), let label = Self.tuneLabel(t) else { await refreshOverview(); return }
+        if await eng.applyRepeats() > 0 { await adoptEngineState() }
+        guard let t = await eng.tick(), let label = Self.tuneLabel(t) else { await refreshOverview(); return }
         await adoptEngineState()
         undoSnap = nil
         undoLabel = label
         undoAction = { [weak self] in
             guard let self else { return }
-            Task { await self.engine.undoTune(); await self.adoptEngineState() }
+            Task { await self.eng.undoTune(); await self.adoptEngineState() }
         }
     }
     /// Undo the last weekly target adjustment (from the Plan screen, any time until the next one).
     func undoTargetChange() async {
-        await engine.undoTune()
+        await eng.undoTune()
         await adoptEngineState()
         await refreshOverview()
         clearUndo()
@@ -253,13 +254,13 @@ final class Store {
     }
     /// The engine changed something itself (goals remembered, a weekly adjustment): take its copy.
     func adoptEngineState() async {
-        guard let text = await engine.state(), let data = text.data(using: .utf8) else { return }
+        guard let text = await eng.state(), let data = text.data(using: .utf8) else { return }
         load(data)
         save()
     }
-    func refreshOverview() async { overview = await engine.overview() }
+    func refreshOverview() async { overview = await eng.overview() }
     func refreshPlan(_ day: String) async {
-        if let p = await engine.dayPlan(day) { plans[day] = p }
+        if let p = await eng.dayPlan(day) { plans[day] = p }
     }
     /// Change part of your data (profile, settings, favorites…) and save.
     func setRoot(_ key: String, _ value: JSONValue) { root[key] = value; save() }
@@ -285,7 +286,8 @@ final class Store {
     func setSetting(_ key: String, _ value: JSONValue?) {
         var s = root["settings"]?.object ?? [:]; s[key] = value; root["settings"] = .object(s); save()
     }
-    var engineRef: Engine { engine }
+    private var eng: Engine { flushSave(); return engine }
+    var engineRef: Engine { flushSave(); return engine } // a change still waiting is handed over first
 
     /// Foods for a day, as the web app adds them: today gets the time, days still to come are planned.
     /// planned: added with the Plan button (not eaten yet: ticked off in the Diary when it is).

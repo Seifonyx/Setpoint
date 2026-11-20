@@ -23,7 +23,26 @@ actor Engine {
         sp.invokeMethod("setLang", withArguments: [Bundle.main.preferredLocalizations.first?.hasPrefix("ar") == true ? "ar" : "en"])
     }
 
+    /// Your latest data, handed over by the app without waiting (stage): taken in before the engine's next job, so the
+    /// engine never works on, or hands back, an older copy than the app has.
+    nonisolated let staged = Staged()
+    final class Staged: @unchecked Sendable {
+        private let lock = NSLock()
+        private var value: (json: String, version: Int)?
+        func put(_ json: String, _ version: Int) { lock.lock(); value = (json, version); lock.unlock() }
+        func take() -> (json: String, version: Int)? { lock.lock(); defer { value = nil; lock.unlock() }; return value }
+    }
+    nonisolated func stage(_ json: String, version: Int) { staged.put(json, version) }
+    private func takeStaged() {
+        guard let s = staged.take(), s.version > stateVersion else { return }
+        stateVersion = s.version
+        _ = sp.invokeMethod("setState", withArguments: [s.json])
+    }
+    /// Takes in staged data now (call() does this before every job anyway).
+    func applyStaged() { takeStaged() }
+
     private func call(_ fn: String, _ args: [Any] = []) -> String? {
+        takeStaged()
         guard let r = sp.invokeMethod(fn, withArguments: args), !r.isUndefined, !r.isNull else { return nil }
         let s = r.toString() ?? ""
         return s == "null" ? nil : s
@@ -37,6 +56,7 @@ actor Engine {
 
     /// Hands the engine your data. Older versions arriving late are ignored.
     func setState(_ json: String, version: Int) {
+        takeStaged()
         guard version > stateVersion else { return }
         stateVersion = version
         _ = call("setState", [json])
