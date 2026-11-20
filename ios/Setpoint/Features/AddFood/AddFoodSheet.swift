@@ -19,14 +19,15 @@ struct AddFoodSheet: View {
     @State private var mealRecents: [FoodHit] = []   // the same, at this meal only (the All tab's "This meal")
     @State private var mealFrequent: [FoodHit] = []
     @AppStorage("recentScope") private var scope = "meal"
-    @State private var speaking = false
+    @State private var voice = VoiceInput()   // the microphone in the search bar: say a food, it is searched for
     @State private var favorites: [FoodHit] = []
     @State private var allMine: [FoodHit] = []   // My foods: your foods, recipes and meals in one list
     @State private var meals: [SavedMeal] = []
     @State private var path = NavigationPath()
     @State private var quickAdd = false
     @State private var scanning = false
-    @State private var describing = false
+    @State private var newRecipe = false
+    @State private var newMeal = false
     @State private var creating: String?
     @State private var labelCam = false
     @State private var labelValues: LabelValuesBox?
@@ -91,8 +92,20 @@ struct AddFoodSheet: View {
                 FoodAmountView(foodID: id, meal: meal, day: day) { path = NavigationPath() }
             }
             .sheet(isPresented: $quickAdd) { QuickAddView(meal: meal, day: day) {} }
-            .sheet(isPresented: $describing) { DescribeMealSheet(meal: meal, day: day) }
-            .sheet(isPresented: $speaking) { DescribeMealSheet(meal: meal, day: day, listen: true) }
+            .sheet(isPresented: $newRecipe) { RecipeEditor(recipe: nil) }
+            .sheet(isPresented: $newMeal) { MealEditor(meal: nil) }
+            .onDisappear { voice.stop() }
+            .onChange(of: voice.text) { _, t in if voice.listening, !t.isEmpty { query = t } }
+            .overlay(alignment: .top) {
+                if voice.listening || voice.error != nil {
+                    Label(voice.error ?? (voice.text.isEmpty ? String(localized: "Listening… say a food") : String(localized: "Listening…")),
+                          systemImage: voice.error == nil ? "waveform" : "mic.slash")
+                        .font(.brand(.subheadline, .semibold)).foregroundStyle(voice.error == nil ? Brand.green : Brand.danger)
+                        .padding(.horizontal, 14).padding(.vertical, 8).glassEffect(.regular, in: .capsule)
+                        .padding(.top, 58).transition(.opacity)
+                        .task(id: voice.error) { if voice.error != nil { try? await Task.sleep(for: .seconds(4)); voice.clearError() } }
+                }
+            }
             .sheet(item: Binding(get: { creating.map(Prefill.init) }, set: { creating = $0?.name })) { p in CustomFoodSheet(food: nil, prefill: p.name) }
             .fullScreenCover(isPresented: $labelCam) {
                 LabelCamera { img in
@@ -107,7 +120,7 @@ struct AddFoodSheet: View {
                     .ignoresSafeArea()
             }
             .sheet(item: $logging) { m in MealLogSheet(mealID: m.id, mealKey: meal, day: day) }
-            .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day, describe: { describing = true }) }
+            .sheet(item: $plate) { p in PlateSheet(image: p.image, meal: meal, day: day) }
             .sheet(item: $labelValues) { b in CustomFoodSheet(food: nil, prefill: query, values: b.values) }
             .fullScreenCover(isPresented: $scanning) { BarcodeScreen { code in scanning = false; Task { await lookUp(code) } } }
             .overlay {
@@ -187,14 +200,14 @@ struct AddFoodSheet: View {
         if allMine.isEmpty {
             Section {
                 EmptyState(art: .cup, title: "Nothing here yet", message: "Foods, recipes and meals you make show up here.")
-                Button { creating = "" } label: { Label("New food", systemImage: "plus") }
+                newMenu
             }
         } else {
             Section {
                 ForEach(allMine) { h in
                     if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m) } else { row(h) }
                 }
-                Button { creating = "" } label: { Label("New food", systemImage: "plus") }
+                newMenu
             }
         }
     }
@@ -281,10 +294,13 @@ struct AddFoodSheet: View {
                 Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Brand.ink2) }
                     .accessibilityLabel(Text("Clear"))
             }
-            Button { searchFocused = false; speaking = true } label: {
-                Image(systemName: "mic.fill").font(.system(size: 18, weight: .semibold)).foregroundStyle(Brand.green).frame(width: 38, height: 40)
+            Button {
+                if voice.listening { voice.stop() } else { searchFocused = false; Task { await voice.start() } }
+            } label: {
+                Image(systemName: voice.listening ? "stop.circle.fill" : "mic.fill").font(.system(size: 18, weight: .semibold)).foregroundStyle(Brand.green)
+                    .symbolEffect(.pulse, isActive: voice.listening).frame(width: 38, height: 40)
             }
-            .accessibilityLabel(Text("Say what you ate"))
+            .accessibilityLabel(Text(voice.listening ? LocalizedStringKey("Stop listening") : LocalizedStringKey("Search by voice")))
             .accessibilityIdentifier("add-voice")
             Button { withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } } } label: {
                 Image(systemName: selecting ? "checkmark.circle.fill" : "checkmark.circle")
@@ -398,6 +414,15 @@ struct AddFoodSheet: View {
 
     // MARK: Toolbar and tray
 
+    /// "New", then which: a food, a recipe or a saved meal.
+    private var newMenu: some View {
+        Menu {
+            Button("Food", systemImage: "carrot") { creating = "" }
+            Button("Recipe", systemImage: "frying.pan") { newRecipe = true }
+            Button("Meal", systemImage: "takeoutbag.and.cup.and.straw") { newMeal = true }
+        } label: { Label("New", systemImage: "plus") }
+    }
+
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
             Button { dismiss() } label: { BarIcon("chevron.backward") }.buttonStyle(.plain)
@@ -434,9 +459,8 @@ struct AddFoodSheet: View {
                     .accessibilityLabel(Text("Camera"))
                     .accessibilityIdentifier("add-camera")
                     Menu {
-                        Button("Describe what you ate", systemImage: "text.bubble") { describing = true }
                         Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
-                        Button("New food", systemImage: "carrot") { creating = "" }
+                        newMenu
                     } label: { BarIcon("ellipsis") }
                     .accessibilityLabel(Text("More ways to add"))
                 }

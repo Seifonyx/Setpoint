@@ -75,25 +75,17 @@ struct DiaryView: View {
             .navigationTitle(title)
             .navigationSubtitle(subtitle)
             .toolbar {
-                // smaller round buttons than the system's (BarIcon), same touch area
-                ToolbarItem(placement: .topBarLeading) {
-                    HStack(spacing: 4) {
-                        Button { step(-1) } label: { BarIcon("chevron.backward") }.accessibilityLabel(Text("Previous day"))
-                        Button { step(1) } label: { BarIcon("chevron.forward") }.accessibilityLabel(Text("Next day"))
-                            .disabled(day >= Day.add(Day.today, 14))
-                    }
-                    .buttonStyle(.plain)
+                ToolbarItemGroup(placement: .topBarLeading) {
+                    Button("Previous day", systemImage: "chevron.backward") { step(-1) }
+                    Button("Next day", systemImage: "chevron.forward") { step(1) }
+                        .disabled(day >= Day.add(Day.today, 14))
                 }
-                .sharedBackgroundVisibility(.hidden)
-                ToolbarItem(placement: .topBarTrailing) {
-                    HStack(spacing: 4) {
-                        ShareLink(item: shareText) { BarIcon("square.and.arrow.up") }.accessibilityLabel(Text("Share day"))
-                        Button { pickDay = true } label: { BarIcon("calendar") }.accessibilityLabel(Text("Choose day"))
-                        Button { adding = AddJob(meal: mealNow) } label: { BarIcon("plus", tint: Brand.green) }.accessibilityLabel(Text("Add food"))
-                    }
-                    .buttonStyle(.plain)
+                ToolbarItemGroup(placement: .topBarTrailing) {
+                    ShareLink(item: shareText) { Label("Share day", systemImage: "square.and.arrow.up") }
+                    Button("Choose day", systemImage: "calendar") { pickDay = true }
+                    Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
+                        .buttonStyle(.glassProminent).tint(Brand.green)
                 }
-                .sharedBackgroundVisibility(.hidden)
             }
             .safeAreaInset(edge: .bottom) { UndoBanner() }
             .sheet(isPresented: $weightSheet) { WeightSheet(day: day) }

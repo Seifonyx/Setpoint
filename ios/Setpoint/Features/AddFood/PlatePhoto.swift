@@ -44,7 +44,6 @@ struct PlateSheet: View {
     let image: UIImage
     let meal: String
     let day: String
-    var describe: (() -> Void)? = nil
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     @State private var found: [Found] = []
@@ -112,9 +111,6 @@ struct PlateSheet: View {
                     HStack {
                         Image(systemName: "magnifyingglass").foregroundStyle(Brand.ink2)
                         TextField("Something missing? Add it", text: $search).submitLabel(.search).onSubmit { Task { await addSearch() } }
-                    }
-                    if let describe {
-                        Button { dismiss(); describe() } label: { Label("Describe it instead", systemImage: "text.bubble") }
                     }
                 }
             }

@@ -48,10 +48,20 @@ struct YouView: View {
                     NavigationLink { PlanView() } label: {
                         LabeledContent {
                             if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
-                        } label: { TileLabel("Plan", "target", Brand.green) }
+                        } label: {
+                            HStack(spacing: 8) {
+                                TileLabel("Plan", "target", Brand.green)
+                                // how the target is worked out, one tap from the plan itself
+                                Button { explain = true } label: {
+                                    Image(systemName: "info.circle").font(.system(size: 17, weight: .semibold)).foregroundStyle(Brand.blue)
+                                        .frame(width: 32, height: 32).contentShape(.rect)
+                                }
+                                .buttonStyle(.borderless)
+                                .accessibilityLabel(Text("How your target works"))
+                            }
+                        }
                     }
                     NavigationLink { TargetsView() } label: { TileLabel("Targets", "slider.horizontal.3", Brand.protein) }
-                    Button { explain = true } label: { TileLabel("How your target works", "info", Brand.blue) }.tint(.primary)
                     NavigationLink { CheckInView() } label: {
                         LabeledContent {
                             if CheckInView.due && store.entries.count >= 3 {
@@ -61,12 +71,12 @@ struct YouView: View {
                     }
                 } header: { Text("Your plan") }
                 Section {
+                    NavigationLink { DeviceSettingsView() } label: { TileLabel("Settings", "gearshape.fill", Brand.ink2) }
                     NavigationLink { FastingView() } label: {
                         LabeledContent {
                             if store.root["fast"]?.object?["start"]?.number != nil { Text("Fasting").foregroundStyle(Brand.green) }
                         } label: { TileLabel("Fasting timer", "timer", Brand.protein) }
                     }
-                    NavigationLink { DeviceSettingsView() } label: { TileLabel("Settings", "gearshape.fill", Brand.ink2) }
                 } header: { Text("App") }
                 Section {
                     Button {

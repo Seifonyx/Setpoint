@@ -93,6 +93,8 @@ final class VoiceInput {
         }
     }
 
+    func clearError() { error = nil }
+
     func stop() {
         guard listening else { return }
         listening = false

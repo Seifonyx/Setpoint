@@ -4671,6 +4671,16 @@
         }
       }
     },
+    "Listening… say a food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سامعك… قول اسم أكلة"
+          }
+        }
+      }
+    },
     "Loading": {
       "localizations": {
         "ar": {
@@ -7543,6 +7553,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "دوّر في كل الأكلات"
+          }
+        }
+      }
+    },
+    "Search by voice": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "دوّر بصوتك"
           }
         }
       }

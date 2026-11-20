@@ -182,33 +182,12 @@ final class DiaryDragTests: XCTestCase {
                 for label in ["Allow", "OK", "Allow While Using App"] where springboard.buttons[label].exists { springboard.buttons[label].tap(); break }
             }
             sleep(4)
-            let words = m.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'listen' OR label CONTAINS[c] 'speech' OR label CONTAINS[c] 'microphone'")).firstMatch
+            let words = m.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'listen' OR label CONTAINS[c] 'speech' OR label CONTAINS[c] 'microphone' OR label CONTAINS[c] 'type'")).firstMatch
             note("voice: app running after the microphone = \(m.state == .runningForeground) · says: \(words.exists ? words.label : "(nothing)")")
             shot(m, "voice-1")
         } else { note("voice: no microphone button"); shot(m, "voice-missing") }
         m.terminate()
 
-        // describing a meal in words (the simulator has no Apple Intelligence, so this is Setpoint's own reader)
-        let v = XCUIApplication()
-        v.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
-        v.launch()
-        let more = v.buttons["More ways to add"].firstMatch
-        if more.waitForExistence(timeout: 10) {
-            more.tap()
-            let describe = v.buttons["Describe what you ate"].firstMatch
-            if describe.waitForExistence(timeout: 3) {
-                describe.tap()
-                let box = v.textFields.firstMatch
-                _ = box.waitForExistence(timeout: 5)
-                box.tap(); box.typeText("2 eggs, a banana and a cup of milk")
-                v.buttons["Find these foods"].firstMatch.tap()
-                sleep(3)
-                let found = v.staticTexts.containing(NSPredicate(format: "label BEGINSWITH '“'")).count
-                note("describe: \(found) foods found for \"2 eggs, a banana and a cup of milk\"")
-                shot(v, "describe-found")
-            } else { note("describe: no Describe button"); shot(v, "describe-missing") }
-        } else { note("describe: no menu"); shot(v, "describe-missing") }
-        v.terminate()
 
         // the camera button lists its three ways in
         let cm = XCUIApplication()
@@ -222,6 +201,23 @@ final class DiaryDragTests: XCTestCase {
             shot(cm, "camera-menu")
         } else { note("camera menu: no camera button"); shot(cm, "camera-missing") }
         cm.terminate()
+
+        // ⋯ then New: a food, a recipe or a meal
+        let nw = XCUIApplication()
+        nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        nw.launch()
+        let more = nw.buttons["More ways to add"].firstMatch
+        if more.waitForExistence(timeout: 10) {
+            more.tap(); sleep(1)
+            let new = nw.buttons["New"].firstMatch
+            if new.waitForExistence(timeout: 3) {
+                new.tap(); sleep(1)
+                let kinds = ["Food", "Recipe", "Meal"].filter { nw.buttons[$0].firstMatch.exists }
+                note("new menu: \(kinds.count) of 3 (\(kinds.joined(separator: ", ")))")
+                shot(nw, "new-menu")
+            } else { note("new menu: no New in ⋯"); shot(nw, "new-missing") }
+        } else { note("new menu: no ⋯ button"); shot(nw, "new-missing") }
+        nw.terminate()
 
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
