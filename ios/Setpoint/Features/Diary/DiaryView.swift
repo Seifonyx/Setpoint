@@ -75,17 +75,25 @@ struct DiaryView: View {
             .navigationTitle(title)
             .navigationSubtitle(subtitle)
             .toolbar {
-                ToolbarItemGroup(placement: .topBarLeading) {
-                    Button("Previous day", systemImage: "chevron.backward") { step(-1) }
-                    Button("Next day", systemImage: "chevron.forward") { step(1) }
-                        .disabled(day >= Day.add(Day.today, 14))
+                // smaller round buttons than the system's (BarIcon), same touch area
+                ToolbarItem(placement: .topBarLeading) {
+                    HStack(spacing: 4) {
+                        Button { step(-1) } label: { BarIcon("chevron.backward") }.accessibilityLabel(Text("Previous day"))
+                        Button { step(1) } label: { BarIcon("chevron.forward") }.accessibilityLabel(Text("Next day"))
+                            .disabled(day >= Day.add(Day.today, 14))
+                    }
+                    .buttonStyle(.plain)
                 }
-                ToolbarItemGroup(placement: .topBarTrailing) {
-                    ShareLink(item: shareText) { Label("Share day", systemImage: "square.and.arrow.up") }
-                    Button("Choose day", systemImage: "calendar") { pickDay = true }
-                    Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
-                        .buttonStyle(.glassProminent).tint(Brand.green)
+                .sharedBackgroundVisibility(.hidden)
+                ToolbarItem(placement: .topBarTrailing) {
+                    HStack(spacing: 4) {
+                        ShareLink(item: shareText) { BarIcon("square.and.arrow.up") }.accessibilityLabel(Text("Share day"))
+                        Button { pickDay = true } label: { BarIcon("calendar") }.accessibilityLabel(Text("Choose day"))
+                        Button { adding = AddJob(meal: mealNow) } label: { BarIcon("plus", tint: Brand.green) }.accessibilityLabel(Text("Add food"))
+                    }
+                    .buttonStyle(.plain)
                 }
+                .sharedBackgroundVisibility(.hidden)
             }
             .safeAreaInset(edge: .bottom) { UndoBanner() }
             .sheet(isPresented: $weightSheet) { WeightSheet(day: day) }
@@ -95,8 +103,7 @@ struct DiaryView: View {
                 CopyDaySheet(items: job.items, from: day)
             }
             .sensoryFeedback(.selection, trigger: day)
-            // plan mode lasts while Add food is open: it's off again next time
-            .sheet(item: $adding, onDismiss: { store.planning = false }) { job in AddFoodSheet(meal: job.meal, day: day, startScan: job.scan) }
+            .sheet(item: $adding) { job in AddFoodSheet(meal: job.meal, day: day, startScan: job.scan) }
             .sheet(item: $openFood) { f in FoodDetailSheet(food: f, day: day, kind: kinds[f.id]) }
             .onChange(of: store.request) { _, r in
                 handle(r)

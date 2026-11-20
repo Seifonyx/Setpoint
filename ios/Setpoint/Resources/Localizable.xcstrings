@@ -1381,6 +1381,16 @@
         }
       }
     },
+    "Adds it unticked: tick it off in the Diary when you eat it": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بتتضاف من غير علامة: علّم عليها في اليوميات لما تاكلها"
+          }
+        }
+      }
+    },
     "Adds water to today in Setpoint.": {
       "localizations": {
         "ar": {
@@ -2027,6 +2037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "السعرات اللي اتحفظت مع وزنتك"
+          }
+        }
+      }
+    },
+    "Camera": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكاميرا"
           }
         }
       }
@@ -6611,6 +6631,22 @@
         }
       }
     },
+    "Plan (verb)": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط"
+          }
+        },
+        "en": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "Plan"
+          }
+        }
+      }
+    },
     "Plan a day, then tap the bookmark to keep it here.": {
       "localizations": {
         "ar": {
@@ -6647,6 +6683,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "متخططة"
+          }
+        }
+      }
+    },
+    "Planned %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتخطّط %@"
           }
         }
       }
@@ -8247,6 +8293,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "وقف التكرار"
+          }
+        }
+      }
+    },
+    "Stop selecting": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "وقّف الاختيار"
           }
         }
       }

@@ -80,8 +80,15 @@ struct FoodAmountView: View {
             ToolbarItem(placement: .primaryAction) {
                 Button(fav ? "Remove from favorites" : "Add to favorites", systemImage: fav ? "star.fill" : "star") { toggleFav() }
             }
+            // Plan next to Add (not for a recipe's ingredient, or a day still to come, which is always planned)
+            if pick == nil && day <= Day.today {
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(String(localized: "Plan (verb)", defaultValue: "Plan")) { add(planned: true) }.disabled(qty == nil || info == nil)
+                        .accessibilityHint(Text("Adds it unticked: tick it off in the Diary when you eat it"))
+                }
+            }
             ToolbarItem(placement: .confirmationAction) {
-                Button("Add", action: add).disabled(qty == nil || info == nil).buttonStyle(.glassProminent).tint(Brand.green)
+                Button("Add") { add() }.disabled(qty == nil || info == nil).buttonStyle(.glassProminent).tint(Brand.green)
             }
         }
         .task {
@@ -97,12 +104,12 @@ struct FoodAmountView: View {
         .sensoryFeedback(.selection, trigger: unit)
     }
 
-    private func add() {
+    private func add(planned: Bool = false) {
         guard let q = qty else { return }
         Task {
             guard let item = await store.engineRef.item(foodID, qty: q, unit: unit, meal: meal) else { return }
             if let pick { pick(item); done(); return }
-            store.add([item], to: day, label: String(localized: "Added \(info?.name ?? "")"))
+            store.add([item], to: day, label: planned ? String(localized: "Planned \(info?.name ?? "")") : String(localized: "Added \(info?.name ?? "")"), planned: planned)
             done()
         }
     }

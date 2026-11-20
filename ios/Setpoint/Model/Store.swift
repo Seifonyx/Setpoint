@@ -264,10 +264,8 @@ final class Store {
     var engineRef: Engine { engine }
 
     /// Foods for a day, as the web app adds them: today gets the time, days still to come are planned.
-    /// Add food's "Plan, tick off later": what's added goes in as planned, to tick off in the Diary when eaten.
-    var planning = false
-
-    func add(_ items: [[String: JSONValue]], to day: String, label: String? = nil) {
+    /// planned: added with the Plan button (not eaten yet: ticked off in the Diary when it is).
+    func add(_ items: [[String: JSONValue]], to day: String, label: String? = nil, planned: Bool = false) {
         guard !items.isEmpty else { return }
         let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
         let now = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
@@ -276,12 +274,12 @@ final class Store {
             var r = raw
             if r["id"]?.string == nil { r["id"] = .string(Ids.new()) }
             // days still to come are always planned; today too while Add food is in plan mode (tick them off later)
-            if day > Day.today || planning { r["plan"] = .bool(true); r.removeValue(forKey: "t") }
+            if day > Day.today || planned { r["plan"] = .bool(true); r.removeValue(forKey: "t") }
             else if day == Day.today, r["t"] == nil { r["t"] = .string(now) }
             r["u"] = ms
             return FoodItem(raw: r)
         }
-        remember(label ?? (planning ? String(localized: "Planned \(new.count) foods") : String(localized: "Added \(new.count) foods")), .add)
+        remember(label ?? (planned ? String(localized: "Planned \(new.count) foods") : String(localized: "Added \(new.count) foods")), .add)
         food[day, default: []].append(contentsOf: new)
         save()
         // the rows you just added glow for a moment in the Diary

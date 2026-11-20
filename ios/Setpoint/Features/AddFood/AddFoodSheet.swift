@@ -34,6 +34,7 @@ struct AddFoodSheet: View {
     @State private var notFound = false
     @State private var lookingUp = false   // a scanned barcode is being looked up
     @State private var selecting = false
+    @FocusState private var searchFocused: Bool
     @State private var selected: [String: FoodHit] = [:]
     @State private var startIDs: Set<String> = []
     @AppStorage("searchSort") private var sort = "best"
@@ -83,7 +84,7 @@ struct AddFoodSheet: View {
             .contentMargins(.top, 2, for: .scrollContent) // tabs sit right under the search bar
             .brandList()
             .navigationBarTitleDisplayMode(.inline)
-            .searchable(text: $query, placement: .navigationBarDrawer(displayMode: .always), prompt: searchPrompt)
+            .safeAreaInset(edge: .top, spacing: 0) { searchBar }
             .toolbar { toolbar }
             .safeAreaInset(edge: .bottom) { tray }
             .navigationDestination(for: String.self) { id in
@@ -268,6 +269,36 @@ struct AddFoodSheet: View {
         return n == 1 ? "1 food" : "\(n) foods"
     }
 
+    /// Setpoint's own search bar, so the microphone and "select several" can sit in it.
+    private var searchBar: some View {
+        HStack(spacing: 8) {
+            Image(systemName: "magnifyingglass").font(.system(size: 15, weight: .semibold)).foregroundStyle(Brand.ink2)
+            TextField(searchPrompt, text: $query)
+                .font(.brand(.body)).submitLabel(.search).autocorrectionDisabled().textInputAutocapitalization(.never)
+                .focused($searchFocused)
+                .accessibilityIdentifier("add-search")
+            if !query.isEmpty {
+                Button { query = "" } label: { Image(systemName: "xmark.circle.fill").foregroundStyle(Brand.ink2) }
+                    .accessibilityLabel(Text("Clear"))
+            }
+            Button { searchFocused = false; speaking = true } label: {
+                Image(systemName: "mic.fill").font(.system(size: 15, weight: .semibold)).foregroundStyle(Brand.green).frame(width: 32, height: 36)
+            }
+            .accessibilityLabel(Text("Say what you ate"))
+            .accessibilityIdentifier("add-voice")
+            Button { withAnimation(.snappy) { selecting.toggle(); if !selecting { selected = [:] } } } label: {
+                Image(systemName: selecting ? "checkmark.circle.fill" : "checkmark.circle")
+                    .font(.system(size: 16, weight: .semibold)).foregroundStyle(selecting ? Brand.green : Brand.ink2).frame(width: 32, height: 36)
+            }
+            .accessibilityLabel(Text(selecting ? LocalizedStringKey("Stop selecting") : LocalizedStringKey("Select several")))
+        }
+        .buttonStyle(.plain)
+        .padding(.leading, 14).padding(.trailing, 6)
+        .frame(height: 44)
+        .glassEffect(.regular.interactive(), in: .capsule)
+        .padding(.horizontal, 16).padding(.top, 4).padding(.bottom, 6)
+    }
+
     /// The search box says where it looks.
     private var searchPrompt: LocalizedStringKey {
         switch tab { case .all: "Search foods"; case .favorites: "Search favorites"; case .mine: "Search my foods" }
@@ -369,9 +400,10 @@ struct AddFoodSheet: View {
 
     @ToolbarContentBuilder private var toolbar: some ToolbarContent {
         ToolbarItem(placement: .cancellationAction) {
-            Button { dismiss() } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)) }
+            Button { dismiss() } label: { BarIcon("chevron.backward") }.buttonStyle(.plain)
                 .accessibilityLabel(Text(added.isEmpty ? "Cancel" : "Done"))
         }
+        .sharedBackgroundVisibility(.hidden)
         ToolbarItem(placement: .principal) {
             Menu {
                 Picker("Meal", selection: $meal) { ForEach(store.meals) { Text($0.name).tag($0.key) } }
@@ -380,10 +412,7 @@ struct AddFoodSheet: View {
                     // the name is centred exactly; the arrow hangs beside it without pushing it over
                     Text(store.meals.first { $0.key == meal }?.name ?? "").font(Brand.display(17, .bold))
                         .overlay(alignment: .trailing) { Image(systemName: "chevron.down").font(.brand(.caption, .bold)).fixedSize().alignmentGuide(.trailing) { $0[.leading] - 5 } }
-                    if store.planning {
-                        // plan mode: say so where you look, in the plan colour
-                        Label("Planning", systemImage: "checklist").font(.brand(.caption, .semibold)).foregroundStyle(Brand.blue)
-                    } else if let left = kcalLeft {
+                    if let left = kcalLeft {
                         Text(left >= 0 ? "\(Fmt.kcal(left)) kcal left" : "\(Fmt.kcal(-left)) kcal over").font(.brand(.caption)).foregroundStyle(left >= 0 ? Brand.ink2 : Brand.over)
                             .contentTransition(.numericText()).monospacedDigit()
                     }
@@ -391,30 +420,30 @@ struct AddFoodSheet: View {
             }
             .tint(.primary)
         }
-        ToolbarItemGroup(placement: .primaryAction) {
+        ToolbarItem(placement: .primaryAction) {
             if selecting {
-                Button("Done") { withAnimation(.snappy) { selecting = false; selected = [:] } }
+                Button("Done") { withAnimation(.snappy) { selecting = false; selected = [:] } }.fontWeight(.semibold)
             } else {
-                Button("Say what you ate", systemImage: "mic") { speaking = true }
-                    .accessibilityIdentifier("add-voice")
-                Button("Snap your plate", systemImage: "camera") { plateCam = true }
-                Menu {
-                    // plan today's food now, tick each one off in the Diary when you eat it
-                    Toggle(isOn: Binding(get: { store.planning }, set: { on in withAnimation(.snappy) { store.planning = on } })) {
-                        Label("Plan, tick off later", systemImage: "checklist")
-                    }
-                    Divider()
-                    Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
-                    Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
-                    Button("Describe what you ate", systemImage: "text.bubble") { describing = true }
-                    Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
-                    Button("New food", systemImage: "carrot") { creating = "" }
-                    Divider()
-                    Button("Select several", systemImage: "checkmark.circle") { withAnimation(.snappy) { selecting = true } }
-                } label: { Image(systemName: "ellipsis") }
-                .accessibilityLabel(Text("More ways to add"))
+                HStack(spacing: 4) {
+                    // the camera: every way in that uses it (your plate, a barcode, a nutrition label)
+                    Menu {
+                        Button("Snap your plate", systemImage: "fork.knife") { plateCam = true }
+                        Button("Scan barcode", systemImage: "barcode.viewfinder") { scanning = true }
+                        Button("Scan a nutrition label", systemImage: "text.viewfinder") { labelCam = true }
+                    } label: { BarIcon("camera") }
+                    .accessibilityLabel(Text("Camera"))
+                    .accessibilityIdentifier("add-camera")
+                    Menu {
+                        Button("Describe what you ate", systemImage: "text.bubble") { describing = true }
+                        Button("Quick add calories", systemImage: "bolt") { quickAdd = true }
+                        Button("New food", systemImage: "carrot") { creating = "" }
+                    } label: { BarIcon("ellipsis") }
+                    .accessibilityLabel(Text("More ways to add"))
+                }
+                .buttonStyle(.plain)
             }
         }
+        .sharedBackgroundVisibility(selecting ? .automatic : .hidden)
     }
 
     private var kcalLeft: Double? {
@@ -431,6 +460,8 @@ struct AddFoodSheet: View {
                     Text("\(Fmt.kcal(k)) kcal").font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit()
                 }
                 Spacer()
+                // Plan: not eaten yet, ticked off in the Diary when it is
+                Button(String(localized: "Plan (verb)", defaultValue: "Plan")) { addSelected(planned: true) }.buttonStyle(.glass).fontWeight(.semibold)
                 Button("Add \(selected.count)") { addSelected() }.buttonStyle(.glassProminent).tint(Brand.green).fontWeight(.semibold)
             }
             .padding(.horizontal, 18).padding(.vertical, 10)
@@ -478,7 +509,7 @@ struct AddFoodSheet: View {
             withAnimation { store.add([item], to: day, label: String(localized: "Added \(h.name)")) }
         }
     }
-    private func addSelected() {
+    private func addSelected(planned: Bool = false) {
         let list = Array(selected.values)
         Task {
             var items: [[String: JSONValue]] = []
@@ -486,7 +517,7 @@ struct AddFoodSheet: View {
                 if h.quick == true { items.append(quickRaw(h)) }
                 else if let it = await store.engineRef.item(h.id, qty: h.q ?? 1, unit: h.u ?? "g", meal: meal) { items.append(it) }
             }
-            withAnimation { store.add(items, to: day) }
+            withAnimation { store.add(items, to: day, planned: planned) }
             selected = [:]; selecting = false
         }
     }

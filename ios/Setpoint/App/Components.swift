@@ -204,3 +204,20 @@ struct WordsField: View {
         .padding(.vertical, 2)
     }
 }
+
+/// A round top-bar button drawn smaller than the system's (34 pt instead of 44), in Liquid Glass, with the full
+/// 44-pt touch area kept so it's no harder to tap. Use with `.sharedBackgroundVisibility(.hidden)` on its toolbar item.
+struct BarIcon: View {
+    let symbol: String
+    var tint: Color? = nil   // a filled button (the green +)
+    init(_ symbol: String, tint: Color? = nil) { self.symbol = symbol; self.tint = tint }
+    var body: some View {
+        Image(systemName: symbol)
+            .font(.system(size: 15, weight: .semibold))
+            .foregroundStyle(tint == nil ? Brand.ink : Brand.onGreen)
+            .frame(width: 34, height: 34)
+            .glassEffect(tint.map { .regular.tint($0).interactive() } ?? .regular.interactive(), in: .circle)
+            .frame(minWidth: 40, minHeight: 44)
+            .contentShape(.rect)
+    }
+}

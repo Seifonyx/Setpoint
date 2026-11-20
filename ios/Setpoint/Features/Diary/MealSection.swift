@@ -290,21 +290,23 @@ struct FoodRow: View {
                     if food.isAdjusted { Image(systemName: "slider.horizontal.3").font(.brand(.caption)).foregroundStyle(.secondary).accessibilityLabel(Text("Adjusted for this day")) }
                     if food.isRepeat { Image(systemName: "repeat").font(.brand(.caption)).foregroundStyle(.secondary).accessibilityLabel(Text("Repeat item")) }
                 }
-                if !detail.isEmpty {
-                    Text(detail).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1)
+                if planned || !detail.isEmpty {
+                    // planned: said in the plan colour (not faded: it's waiting to be ticked, not switched off)
+                    (planned ? Text("Planned").foregroundStyle(Brand.blue).fontWeight(.semibold) + Text(detail.isEmpty ? "" : " · ") : Text(""))
+                        .font(.brand(.subheadline)) + Text(detail).font(.brand(.subheadline)).foregroundStyle(.secondary)
                 }
                 if let note = food.note { Text(note).font(.brand(.footnote)).italic().foregroundStyle(.secondary).lineLimit(1) }
             }
             Spacer()
-            Text(Fmt.kcal(food.kcal)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink)
+            // not counted until it's ticked: only the calories are quieter
+            Text(Fmt.kcal(food.kcal)).font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(planned ? Brand.ink2 : Brand.ink)
         }
         .contentShape(.rect)
-        .opacity(food.isPlanned && day <= Day.today ? 0.55 : 1)
     }
+    private var planned: Bool { food.isPlanned && day <= Day.today }
 
     private var detail: String {
         var parts: [String] = []
-        if food.isPlanned && day <= Day.today { parts.append(String(localized: "Planned")) }
         if let t = food.time { parts.append(t) }
         if let q = food.qty, let u = food.unit, food.ref != nil { parts.append(Fmt.amount(q, u)) }
         else {

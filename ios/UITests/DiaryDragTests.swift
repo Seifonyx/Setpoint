@@ -210,6 +210,19 @@ final class DiaryDragTests: XCTestCase {
         } else { note("describe: no menu"); shot(v, "describe-missing") }
         v.terminate()
 
+        // the camera button lists its three ways in
+        let c = XCUIApplication()
+        c.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        c.launch()
+        let cam = c.buttons["Camera"].firstMatch
+        if cam.waitForExistence(timeout: 10) {
+            cam.tap(); sleep(1)
+            let ways = ["Snap your plate", "Scan barcode", "Scan a nutrition label"].filter { c.buttons[$0].firstMatch.exists }
+            note("camera menu: \(ways.count) of 3 options (\(ways.joined(separator: ", ")))")
+            shot(c, "camera-menu")
+        } else { note("camera menu: no camera button"); shot(c, "camera-missing") }
+        c.terminate()
+
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
         a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
