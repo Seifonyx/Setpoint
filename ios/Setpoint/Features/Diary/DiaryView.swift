@@ -87,7 +87,10 @@ struct DiaryView: View {
                         .buttonStyle(.glassProminent).tint(Brand.green)
                 }
             }
-            .safeAreaInset(edge: .bottom) { UndoBanner() }
+            // floats over the list instead of pushing it up: the list never resizes when it comes and goes, so a
+            // swipe or a drag under way isn't jolted (or cancelled) by it
+            .overlay(alignment: .bottom) { UndoBanner().animation(.snappy, value: store.undoLabel) }
+            .contentMargins(.bottom, 64, for: .scrollContent) // room to scroll the last food clear of it
             .sheet(isPresented: $weightSheet) { WeightSheet(day: day) }
             .sheet(isPresented: $waterSheet) { WaterSheet(day: day) }
             .sheet(isPresented: $pickDay) { DayPickerSheet(day: $day) }

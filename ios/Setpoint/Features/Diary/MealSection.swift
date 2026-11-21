@@ -103,7 +103,8 @@ struct MealRows: View {
                 switch moved[at + 1] { case .food(_, let m), .end(let m): return m.key == meal; default: return false }
             }()
             let apply: () -> Void = {
-                if !isOpen(meal) { setOpen(meal, true) } // a folded meal opens, so you see where it went
+                // a folded meal stays folded: the food slides into it and its count goes up (opening it would make the
+                // whole list jump just as you let go)
                 // exact: the list already shows it there, so nothing more to animate (a second animation is what jolts)
                 if exact { store.place(food.id, meal: meal, before: before, on: day) }
                 else { withAnimation(.snappy) { store.place(food.id, meal: meal, before: before, on: day) } }
