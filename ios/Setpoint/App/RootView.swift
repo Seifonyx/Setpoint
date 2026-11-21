@@ -91,10 +91,7 @@ struct RootView: View {
             // the build server's -onboarding screenshot, or an account that never finished setting up its plan
             if ProcessInfo.processInfo.arguments.contains("-onboarding") || needsPlan { onboarding = true }
         }
-        .onChange(of: account.signedIn) { _, signedIn in if signedIn { tab = .diary } }
-        // a sign-in has finished bringing the account's data over: only a truly new account goes on to set up its
-        // plan (judging at the moment of signing in, before the data arrived, sent existing accounts to the tutorial)
-        .onChange(of: account.arrived) { if needsPlan && !account.failed { onboarding = true } }
+        .modifier(SignInWatch(account: account, signedIn: { tab = .diary }, arrived: { if needsPlan && !account.failed { onboarding = true } }))
         .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the main actions
         .toggleStyle(SwitchToggleStyle(tint: Brand.green)) // switches stay green, as on the iPhone itself
         .font(.brand(.body))
@@ -149,4 +146,17 @@ struct RootView: View {
 
 #Preview {
     RootView()
+}
+
+/// After signing in: go to the Diary; and once the account's data has arrived, only a truly new account goes on to set
+/// up its plan (judging at the moment of signing in, before the data arrived, sent existing accounts to the tutorial).
+struct SignInWatch: ViewModifier {
+    let account: Account
+    let signedIn: () -> Void
+    let arrived: () -> Void
+    func body(content: Content) -> some View {
+        content
+            .onChange(of: account.signedIn) { _, on in if on { signedIn() } }
+            .onChange(of: account.arrived) { arrived() }
+    }
 }
