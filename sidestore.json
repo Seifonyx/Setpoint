@@ -22,12 +22,12 @@
       ],
       "versions": [
         {
-          "version": "0.1.144",
-          "buildVersion": "144",
-          "date": "2026-11-21T00:28:03Z",
-          "localizedDescription": "Build 144.",
+          "version": "0.1.145",
+          "buildVersion": "145",
+          "date": "2026-11-21T05:20:58Z",
+          "localizedDescription": "Build 145.",
           "downloadURL": "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/Setpoint.ipa",
-          "size": 11197825,
+          "size": 11199649,
           "minOSVersion": "26.0"
         }
       ],
