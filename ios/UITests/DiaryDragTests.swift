@@ -33,6 +33,11 @@ final class DiaryDragTests: XCTestCase {
         guard oats.waitForExistence(timeout: 10) else { note("\(tag): no food rows found"); shot(app, "drag-\(tag)-missing"); return }
         app.swipeUp(velocity: .slow)
         sleep(3) // let the list stop coasting before pressing
+        // how far a swipe scrolls varies: if Breakfast's first food ended up under the top bar, scroll back a little
+        for _ in 0..<3 where y(oats) < 200 {
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)).press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58)))
+            sleep(2)
+        }
         shot(app, "drag-\(tag)-0-start")
         note("\(tag) start: oats \(y(oats)) banana \(y(banana)) chicken \(y(chicken))")
 
