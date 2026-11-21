@@ -170,6 +170,8 @@ actor Engine {
     func paceValue(_ dir: String, _ i: Int) -> Double { sp.invokeMethod("paceValue", withArguments: [dir, i])?.toDouble() ?? 0 }
     /// What the web app does on every open: a due weekly adjustment, reaching your goal, today's targets remembered.
     func tick() -> JSONValue? { decode(JSONValue.self, "tick") }
+    /// Writes today's target from your current plan; true when it changed.
+    func recordGoal() -> Bool { call("recordGoal") == "changed" }
     func undoTune() { _ = call("undoTune") }
 }
 

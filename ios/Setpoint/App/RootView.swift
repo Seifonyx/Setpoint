@@ -34,6 +34,7 @@ struct RootView: View {
     private var needsPlan: Bool {
         !ProcessInfo.processInfo.arguments.contains("-demo") && account.signedIn && store.food.isEmpty
             && store.root["profile"]?.object?["heightCm"] == nil
+            && store.syncValue("lastSync") != nil // checked with the account (offline, an empty phone proves nothing)
     }
 
     init() {
@@ -90,12 +91,10 @@ struct RootView: View {
             // the build server's -onboarding screenshot, or an account that never finished setting up its plan
             if ProcessInfo.processInfo.arguments.contains("-onboarding") || needsPlan { onboarding = true }
         }
-        // just signed in (its data has arrived by now): a new account goes on to set up its plan
-        .onChange(of: account.signedIn) { _, signedIn in
-            guard signedIn else { return }
-            tab = .diary
-            if needsPlan { onboarding = true }
-        }
+        .onChange(of: account.signedIn) { _, signedIn in if signedIn { tab = .diary } }
+        // a sign-in has finished bringing the account's data over: only a truly new account goes on to set up its
+        // plan (judging at the moment of signing in, before the data arrived, sent existing accounts to the tutorial)
+        .onChange(of: account.arrived) { if needsPlan && !account.failed { onboarding = true } }
         .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the main actions
         .toggleStyle(SwitchToggleStyle(tint: Brand.green)) // switches stay green, as on the iPhone itself
         .font(.brand(.body))

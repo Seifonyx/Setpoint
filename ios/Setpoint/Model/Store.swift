@@ -144,7 +144,12 @@ final class Store {
         engine.stage(text, version: v) // taken in before the engine's next job, whoever asks
         Task { [engine] in
             await engine.applyStaged()
-            await MainActor.run { self.plans = [:] }
+            // a change to your plan: today's target is written down now, and the app takes the engine's copy
+            if await engine.recordGoal() { await self.adoptEngineState(); return }
+            // the days on screen get their new targets in one go (never an empty moment that falls back to old numbers)
+            var fresh: [String: DayPlan] = [:]
+            for d in await MainActor.run(body: { Array(self.plans.keys) }) { if let p = await engine.dayPlan(d) { fresh[d] = p } }
+            await MainActor.run { self.plans = fresh }
             await self.refreshOverview()
         }
     }
@@ -263,7 +268,9 @@ final class Store {
         if let p = await eng.dayPlan(day) { plans[day] = p }
     }
     /// Change part of your data (profile, settings, favorites…) and save.
-    func setRoot(_ key: String, _ value: JSONValue) { root[key] = value; save() }
+    // Settings, profile and plan changes aren't animations: they're handed over at once (flushSave), so every screen
+    // shows the new plan straight away.
+    func setRoot(_ key: String, _ value: JSONValue) { root[key] = value; save(); flushSave() }
     /// The iPhone app's own synced data (root.ios), like saved days.
     func ios(_ key: String) -> JSONValue? { root["ios"]?[key] }
     func setIos(_ change: (inout [String: JSONValue]) -> Void) {
@@ -281,10 +288,10 @@ final class Store {
     /// Your own maximum for calories or a macro (kcal, p, c, f), if you set one.
     func macroMax(_ key: String) -> Double? { root["profile"]?.object?["nutT"]?.object?[key]?.object?["hi"]?.number }
     func setProfile(_ change: (inout [String: JSONValue]) -> Void) {
-        var p = root["profile"]?.object ?? [:]; change(&p); root["profile"] = .object(p); save()
+        var p = root["profile"]?.object ?? [:]; change(&p); root["profile"] = .object(p); save(); flushSave()
     }
     func setSetting(_ key: String, _ value: JSONValue?) {
-        var s = root["settings"]?.object ?? [:]; s[key] = value; root["settings"] = .object(s); save()
+        var s = root["settings"]?.object ?? [:]; s[key] = value; root["settings"] = .object(s); save(); flushSave()
     }
     private var eng: Engine { flushSave(); return engine }
     var engineRef: Engine { flushSave(); return engine } // a change still waiting is handed over first

@@ -623,5 +623,8 @@
     },
     // Run on every open, like the web app: a due weekly adjustment, reaching your goal, and today's targets remembered.
     tick: function () { var t = autoTune(); recordGoal(); return J(t || null); },
+    // Today's target written down straight after a change to your plan (not only when the app next opens), so the
+    // Diary never shows yesterday's numbers for a moment. 'changed' when it wrote a new one.
+    recordGoal: function () { var before = JSON.stringify(state.goals); recordGoal(); return JSON.stringify(state.goals) === before ? 'same' : 'changed'; },
     undoTune: function () { var t = state.ui.tune; if (t) undoTune(t); return 'ok'; }
   };

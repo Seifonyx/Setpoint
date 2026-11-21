@@ -118,7 +118,10 @@ final class Account {
         store.signedIn = true
         store.setSync { $0["uid"] = .string(s.uid); $0["email"] = .string(s.email) }
         await pull(fresh: fresh)
+        arrived += 1 // the account's data is here (or couldn't be fetched): now it's safe to judge whether it's new
     }
+    /// Goes up each time a sign-in has finished bringing the account's data over.
+    private(set) var arrived = 0
 
     /// Refreshes the sign-in when it's about to run out (it lasts an hour).
     private func validSession() async throws -> Session? {
