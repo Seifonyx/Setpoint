@@ -201,6 +201,16 @@
         }
       }
     },
+    "%@ kcal planned, not eaten yet": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعر متخطط، لسه ما اتاكلش"
+          }
+        }
+      }
+    },
     "%@ kcal under target": {
       "localizations": {
         "ar": {
@@ -501,6 +511,16 @@
         }
       }
     },
+    "%lld planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld متخطط"
+          }
+        }
+      }
+    },
     "%lld results": {
       "localizations": {
         "ar": {
@@ -617,6 +637,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "+%@ سعرة"
+          }
+        }
+      }
+    },
+    "+%@ planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "+%@ متخطط"
           }
         }
       }
@@ -5121,12 +5151,32 @@
         }
       }
     },
+    "Mark all as eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "علّم الكل إنه اتاكل"
+          }
+        }
+      }
+    },
     "Mark as eaten": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "علّم كمأكول"
+          }
+        }
+      }
+    },
+    "Marked %lld as eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتعلّم %lld إنهم اتاكلوا"
           }
         }
       }

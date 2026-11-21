@@ -203,6 +203,39 @@ final class DiaryDragTests: XCTestCase {
         } else { note("camera menu: no camera button"); shot(cm, "camera-missing") }
         cm.terminate()
 
+        // selecting several in My foods takes a recipe and a saved meal too, and plans them
+        let sp = XCUIApplication()
+        sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine"]
+        sp.launch()
+        let several = sp.buttons["Select several"].firstMatch
+        if several.waitForExistence(timeout: 10) {
+            several.tap(); sleep(1)
+            for name in ["Oven potatoes", "Usual breakfast"] { sp.staticTexts[name].firstMatch.tap() }
+            sleep(1)
+            let tray = sp.staticTexts.containing(NSPredicate(format: "label ENDSWITH 'selected'")).firstMatch
+            note("select several: \(tray.exists ? tray.label : "(no tray)")")
+            shot(sp, "select-meal-recipe")
+            sp.buttons["Plan"].firstMatch.tap(); sleep(2)
+            (sp.buttons["Done"].firstMatch.exists ? sp.buttons["Done"] : sp.buttons["Cancel"]).firstMatch.tap(); sleep(2) // back to the Diary
+            let badge = sp.staticTexts.containing(NSPredicate(format: "label ENDSWITH 'planned'")).count
+            note("select several: planned labels in the Diary after Plan = \(badge)")
+            shot(sp, "select-planned-diary")
+        } else { note("select several: no button"); shot(sp, "select-missing") }
+        sp.terminate()
+
+        // the sort and filter menu, open (Verified only should be a normal choice)
+        let fm = XCUIApplication()
+        fm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        fm.launch()
+        let pill = fm.buttons["Sort"].firstMatch
+        if pill.waitForExistence(timeout: 10) {
+            pill.tap(); sleep(1)
+            let v = fm.buttons["Verified only"].firstMatch
+            note("filter menu: Verified only exists = \(v.exists) · enabled = \(v.exists && v.isEnabled)")
+            shot(fm, "filter-menu")
+        } else { note("filter menu: no sort button"); shot(fm, "filter-missing") }
+        fm.terminate()
+
         // ⋯ then New: a food, a recipe or a meal
         let nw = XCUIApplication()
         nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]

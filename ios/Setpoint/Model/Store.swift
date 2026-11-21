@@ -510,6 +510,21 @@ final class Store {
             }
         }
     }
+    /// Every planned food in a meal ticked off at once (one undo).
+    func markAllEaten(meal: String, on day: String) {
+        let ids = Set(items(day).filter { $0.isPlanned && mealKey(of: $0) == meal }.map(\.id))
+        guard !ids.isEmpty else { return }
+        remember(String(localized: "Marked \(ids.count) as eaten"), .edit)
+        let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
+        let now = String(format: "%02d:%02d", c.hour ?? 0, c.minute ?? 0)
+        food[day] = food[day]?.map { f in
+            guard ids.contains(f.id) else { return f }
+            var g = f; g.isPlanned = false
+            if day == Day.today { g.raw["t"] = .string(now) }
+            return g
+        }
+        save()
+    }
     /// Start or change a repeating food. It begins tomorrow (or today, at a time still to come), as in the web app.
     func saveRepeat(_ rec: [String: JSONValue], startsToday: Bool) {
         guard let id = rec["id"]?.string else { return }

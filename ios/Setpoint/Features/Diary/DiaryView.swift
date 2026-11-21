@@ -195,13 +195,15 @@ struct SummaryPager: View {
     let totals: Totals
     let plan: DayPlan?
     var openNutrient: (NutrientRoute) -> Void = { _ in }
+    @Environment(Store.self) private var store
+    private var plannedKcal: Double { day > Day.today ? 0 : store.items(day).filter { $0.isPlanned && !$0.isDailyTotal }.reduce(0) { $0 + $1.kcal } }
     @State private var page = UserDefaults.standard.string(forKey: "page") == "micros" ? 1 : 0 // build-server screenshots
     @ScaledMetric(relativeTo: .body) private var pagerHeight: CGFloat = 208 // grows with the iPhone's text size
 
     var body: some View {
         VStack(spacing: 10) {
             TabView(selection: $page) {
-                SummaryCard(totals: totals, plan: plan).tag(0)
+                SummaryCard(totals: totals, plan: plan, planned: plannedKcal).tag(0)
                 MicrosCard(day: day, open: openNutrient).tag(1)
             }
             .tabViewStyle(.page(indexDisplayMode: .never))
@@ -222,6 +224,8 @@ struct SummaryPager: View {
 struct SummaryCard: View {
     let totals: Totals
     let plan: DayPlan?
+    /// Planned and not ticked yet: shown under the dial, so you see where the day will end.
+    var planned: Double = 0
 
     /// The dial and its numbers, sized together: 184pt with slimmer rings keeps the number as big as before.
     static let dial: CGFloat = 184
@@ -260,6 +264,12 @@ struct SummaryCard: View {
                     .font(.brand(.caption, .medium)).foregroundStyle(Brand.ink2).monospacedDigit()
                     .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 104)
                     .offset(y: Self.dial * 0.45) // in the opening, clear of the arc's two ends
+                if planned > 0 {
+                    Text("+\(Fmt.kcal(planned)) planned").font(.brand(.caption, .semibold)).foregroundStyle(Brand.blue).monospacedDigit()
+                        .lineLimit(1).minimumScaleFactor(0.7).frame(maxWidth: 110)
+                        .offset(y: Self.dial * 0.45 + 16)
+                        .accessibilityLabel(Text("\(Fmt.kcal(planned)) kcal planned, not eaten yet"))
+                }
             }
             .frame(width: Self.dial, height: Self.dial)
             .contentShape(Rectangle())

@@ -139,20 +139,30 @@ struct MealLogSheet: View {
             .navigationBarTitleDisplayMode(.inline)
             .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel") { dismiss() } } }
             .safeAreaInset(edge: .bottom) {
-                Button { Task { await add() } } label: {
-                    Text("Add \(items.count) foods · \(addKcal) kcal")
-                        .font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 50)
+                HStack(spacing: 10) {
+                    // Plan: in the diary unticked, ticked off when you eat it (a day still to come is always planned)
+                    if day <= Day.today {
+                        Button { Task { await add(planned: true) } } label: {
+                            Text(String(localized: "Plan (verb)", defaultValue: "Plan")).font(.brand(.headline)).frame(minWidth: 70, minHeight: 50)
+                        }
+                        .buttonStyle(.glass)
+                    }
+                    Button { Task { await add() } } label: {
+                        Text("Add \(items.count) foods · \(addKcal) kcal")
+                            .font(.brand(.headline)).frame(maxWidth: .infinity, minHeight: 50)
+                    }
+                    .buttonStyle(.glassProminent).tint(Brand.green)
                 }
-                .buttonStyle(.glassProminent).tint(Brand.green)
                 .padding(.horizontal, 16).padding(.bottom, 8)
             }
         }
         .presentationDetents([.medium, .large])
     }
     private var addKcal: String { Fmt.kcal(items.reduce(0.0) { $0 + ($1["kcal"]?.number ?? 0) } * servings) }
-    private func add() async {
+    private func add(planned: Bool = false) async {
         let list = await store.engineRef.logMeal(mealID, meal: mealKey, factor: servings)
-        store.add(list, to: day, label: String(localized: "Added \(rec?["name"]?.string ?? "")"))
+        let name = rec?["name"]?.string ?? ""
+        store.add(list, to: day, label: planned ? String(localized: "Planned \(name)") : String(localized: "Added \(name)"), planned: planned)
         dismiss()
     }
 }

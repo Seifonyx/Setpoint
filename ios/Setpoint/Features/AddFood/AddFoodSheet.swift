@@ -205,16 +205,22 @@ struct AddFoodSheet: View {
         } else {
             Section {
                 ForEach(allMine) { h in
-                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m) } else { row(h) }
+                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m, hit: h) } else { row(h) }
                 }
                 newMenu
             }
         }
     }
     /// A saved meal: tap to see what's in it and choose servings; + adds it as it is.
-    private func mealRow(_ m: SavedMeal) -> some View {
-        HStack(spacing: 12) {
-            Button { logging = m } label: {
+    private func mealRow(_ m: SavedMeal, hit: FoodHit? = nil) -> some View {
+        let picked = hit.map { selected[$0.id] != nil } ?? false
+        return HStack(spacing: 12) {
+            // selecting several: a meal can be picked like any food (it goes in as the meal, at its usual size)
+            if selecting, hit != nil {
+                Image(systemName: picked ? "checkmark.circle.fill" : "circle").font(.title3)
+                    .foregroundStyle(picked ? Brand.green : Brand.ink2)
+            }
+            Button { if selecting, let hit { toggle(hit) } else { logging = m } } label: {
                 HStack(spacing: 12) {
                     FoodIcon(kind: "meal")
                     VStack(alignment: .leading, spacing: 2) {
@@ -232,7 +238,7 @@ struct AddFoodSheet: View {
             }
             .buttonStyle(.plain)
             Text(Fmt.kcal(m.kcal)).font(Brand.num(18, .semibold)).monospacedDigit()
-            addButton { logSavedMeal(m) }
+            if !selecting { addButton { logSavedMeal(m) } }
         }
     }
 
@@ -328,7 +334,7 @@ struct AddFoodSheet: View {
         if !hits.isEmpty {
             Section {
                 ForEach(hits) { h in
-                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m) } else { row(h) }
+                    if h.type == "meal", let m = meals.first(where: { $0.id == h.mealId }) { mealRow(m, hit: h) } else { row(h) }
                 }
             }
         } else {
@@ -539,6 +545,10 @@ struct AddFoodSheet: View {
             var items: [[String: JSONValue]] = []
             for h in list {
                 if h.quick == true { items.append(quickRaw(h)) }
+                else if h.type == "meal" || h.id.hasPrefix("m:") {
+                    // a saved meal: its foods (or the meal as one entry, as you've set it to log)
+                    items += await store.engineRef.logMeal(h.mealId ?? String(h.id.dropFirst(2)), meal: meal)
+                }
                 else if let it = await store.engineRef.item(h.id, qty: h.q ?? 1, unit: h.u ?? "g", meal: meal) { items.append(it) }
             }
             withAnimation { store.add(items, to: day, planned: planned) }
@@ -732,14 +742,18 @@ struct FilterPill: View {
                 }
             }
             if let verified {
-                SwiftUI.Section { Toggle(isOn: verified) { Label("Verified only", systemImage: "checkmark.seal.fill") } }
+                SwiftUI.Section {
+                    Button { verified.wrappedValue.toggle() } label: {
+                        Label("Verified only", systemImage: verified.wrappedValue ? "checkmark.circle.fill" : "checkmark.seal")
+                    }
+                }
             }
         } label: {
             HStack(spacing: 5) {
                 Image(systemName: "arrow.up.arrow.down").font(.caption.weight(.semibold))
                 Text(options.first { $0.0 == sort }?.1 ?? options[0].1).font(.brand(.subheadline, .semibold)).lineLimit(1)
                 if verified?.wrappedValue == true {
-                    Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(Brand.ink2).accessibilityLabel(Text("Verified only"))
+                    Image(systemName: "checkmark.seal.fill").font(.caption).foregroundStyle(Brand.green).accessibilityLabel(Text("Verified only"))
                 }
                 Image(systemName: "chevron.down").font(.caption2.weight(.bold)).foregroundStyle(Brand.ink2)
             }

@@ -148,6 +148,7 @@ struct MealHeader: View {
     let addFood: () -> Void
 
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
+    private var plannedCount: Int { day > Day.today ? 0 : foods.filter(\.isPlanned).count }
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -164,10 +165,18 @@ struct MealHeader: View {
                 Text("\(foods.count)").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
             }
             Spacer()
+            // still to eat in this meal: tap ⋯ › Mark all as eaten when you've had them
+            if plannedCount > 0 {
+                Text("\(plannedCount) planned").font(.brand(.caption, .semibold)).foregroundStyle(Brand.blue)
+                    .padding(.horizontal, 7).padding(.vertical, 2).background(Brand.blue.opacity(0.12), in: Capsule())
+            }
             if !counted.isEmpty {
                 Text("\(Fmt.kcal(counted.reduce(0) { $0 + $1.kcal }))").font(Brand.num(18, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
             }
             Menu {
+                if plannedCount > 0 {
+                    Button("Mark all as eaten", systemImage: "checkmark.circle") { withAnimation(.snappy) { store.markAllEaten(meal: meal.key, on: day) } }
+                }
                 Button("Copy from yesterday", systemImage: "arrow.uturn.backward") {
                     withAnimation { _ = store.copyFromYesterday(meal: meal.key, to: day) }
                 }
