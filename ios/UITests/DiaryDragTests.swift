@@ -17,6 +17,17 @@ final class DiaryDragTests: XCTestCase {
     private func y(_ e: XCUIElement) -> Int { e.exists ? Int(e.frame.midY) : -1 }
     /// Press and hold `what`, then drag it to a point inside `to` (dy: 0 = its top edge, 1 = its bottom edge).
     private func drag(_ what: XCUIElement, to: XCUIElement, dy: CGFloat) {
+        // both ends in the open middle of the screen (not under the top bar or the tab bar): how far a swipe scrolls
+        // varies from run to run, so nudge the list a little until they are
+        let app = XCUIApplication()
+        for _ in 0..<5 {
+            let top = min(y(what), y(to)), bottom = max(y(what), y(to))
+            let step: CGFloat
+            if top < 190 { step = 0.1 } else if bottom > 690 && top > 260 { step = -0.1 } else { break }
+            app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5 + step)))
+            sleep(2)
+        }
         let a = what.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
         let b = to.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy))
         a.press(forDuration: 0.8, thenDragTo: b, withVelocity: .slow, thenHoldForDuration: 0.8)
@@ -33,11 +44,6 @@ final class DiaryDragTests: XCTestCase {
         guard oats.waitForExistence(timeout: 10) else { note("\(tag): no food rows found"); shot(app, "drag-\(tag)-missing"); return }
         app.swipeUp(velocity: .slow)
         sleep(3) // let the list stop coasting before pressing
-        // how far a swipe scrolls varies: if Breakfast's first food ended up under the top bar, scroll back a little
-        for _ in 0..<3 where y(oats) < 200 {
-            app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.45)).press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.58)))
-            sleep(2)
-        }
         shot(app, "drag-\(tag)-0-start")
         note("\(tag) start: oats \(y(oats)) banana \(y(banana)) chicken \(y(chicken))")
 
