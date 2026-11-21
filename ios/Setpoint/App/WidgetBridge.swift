@@ -48,7 +48,7 @@ enum WidgetBridge {
                          weightKg: last?.kg, weightDay: last?.date, recent: weighIns.suffix(14).map(\.kg),
                          unit: store.unit, trackCalories: store.root["settings"]?.object?["trackCalories"]?.bool ?? true,
                          planned: store.items(today).filter { $0.isPlanned && !$0.isDailyTotal }.prefix(8)
-                            .map { WidgetPlanned(id: $0.id, name: $0.displayName, kcal: $0.kcal, meal: store.meals.first { m in m.key == store.mealKey(of: $0) }?.name ?? "") })
+                            .map { f in WidgetPlanned(id: f.id, name: f.displayName, kcal: f.kcal, meal: store.meals.first { $0.key == store.mealKey(of: f) }?.name ?? "") })
     }
 }
 
