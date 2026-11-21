@@ -28,11 +28,18 @@ final class DiaryDragTests: XCTestCase {
                 .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5 + step)))
             sleep(2)
         }
-        let a = what.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
-        let b = to.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy))
-        a.press(forDuration: 0.8, thenDragTo: b, withVelocity: .slow, thenHoldForDuration: 0.8)
-        sleep(1)
         let mv = XCUIApplication().staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'mv'")).firstMatch
+        let before = mv.exists ? mv.label : ""
+        // a press that lands while the list is still settling after a scroll doesn't pick the row up (on a real iPhone
+        // too): if the list reported no move, press again once
+        for attempt in 0..<2 {
+            if attempt > 0 { note("   (drag didn't start, pressing again)"); sleep(2) }
+            let a = what.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.5))
+            let b = to.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: dy))
+            a.press(forDuration: 0.8, thenDragTo: b, withVelocity: .slow, thenHoldForDuration: 0.8)
+            sleep(1)
+            if (mv.exists ? mv.label : "") != before || !mv.exists { break }
+        }
         note("   list said: \(mv.exists ? mv.label : "(no log)")")
     }
 
