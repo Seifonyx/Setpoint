@@ -49,18 +49,7 @@ struct YouView: View {
                     NavigationLink { PlanView() } label: {
                         LabeledContent {
                             if let t = store.overview?.plan?.target { Text("\(Fmt.kcal((t / 10).rounded() * 10)) kcal").monospacedDigit() }
-                        } label: {
-                            HStack(spacing: 8) {
-                                TileLabel("Plan", "target", Brand.green)
-                                // how the target is worked out, one tap from the plan itself
-                                Button { explain = true } label: {
-                                    Image(systemName: "info.circle").font(.system(size: 17, weight: .semibold)).foregroundStyle(Brand.blue)
-                                        .frame(width: 32, height: 32).contentShape(.rect)
-                                }
-                                .buttonStyle(.borderless)
-                                .accessibilityLabel(Text("How your target works"))
-                            }
-                        }
+                        } label: { TileLabel("Plan", "target", Brand.green) }
                     }
                     NavigationLink { TargetsView() } label: { TileLabel("Targets", "slider.horizontal.3", Brand.protein) }
                     NavigationLink { CheckInView() } label: {
@@ -70,7 +59,18 @@ struct YouView: View {
                             }
                         } label: { TileLabel("Weekly check-in", "chart.line.uptrend.xyaxis", Brand.amber) }
                     }
-                } header: { Text("Your plan") }
+                } header: {
+                    // how the target is worked out: the i beside the section's name
+                    HStack(spacing: 6) {
+                        Text("Your plan")
+                        Button { explain = true } label: {
+                            Image(systemName: "info.circle").font(.system(size: 17, weight: .semibold)).foregroundStyle(Brand.blue)
+                                .frame(width: 30, height: 30).contentShape(.rect)
+                        }
+                        .buttonStyle(.borderless)
+                        .accessibilityLabel(Text("How your target works"))
+                    }
+                }
                 Section {
                     NavigationLink { DeviceSettingsView() } label: { TileLabel("Settings", "gearshape.fill", Brand.ink2) }
                     NavigationLink { FastingView() } label: {
