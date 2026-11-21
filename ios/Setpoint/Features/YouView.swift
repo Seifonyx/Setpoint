@@ -10,7 +10,8 @@ struct YouView: View {
     @State private var error: String?
     @State private var explain = false
     @State private var showPlan = UserDefaults.standard.string(forKey: "open") == "plan" // build-server screenshots
-    @State private var showSettings = UserDefaults.standard.string(forKey: "open") == "settings"
+    @State private var showSettings = ["settings", "ramadan"].contains(UserDefaults.standard.string(forKey: "open") ?? "")
+    @State private var showFasting = UserDefaults.standard.string(forKey: "open") == "fasting"
     @State private var showExport = UserDefaults.standard.string(forKey: "open") == "export"
     @State private var showTargets = UserDefaults.standard.string(forKey: "open") == "targets"
     @State private var showLegal = UserDefaults.standard.string(forKey: "open") == "legal"
@@ -100,6 +101,7 @@ struct YouView: View {
             .navigationTitle("You")
             .navigationDestination(isPresented: $showPlan) { PlanView() }
             .navigationDestination(isPresented: $showSettings) { DeviceSettingsView() }
+            .navigationDestination(isPresented: $showFasting) { FastingView() }
             .navigationDestination(isPresented: $showExport) { ExportView() }
             .navigationDestination(isPresented: $showTargets) { TargetsView() }
             .navigationDestination(isPresented: $showLegal) { LegalView(id: UserDefaults.standard.string(forKey: "legal") ?? "privacy") }

@@ -146,12 +146,17 @@
     if (['g', 'kg', 'ml', 'l', 'oz', 'lb'].indexOf(unit) >= 0) grams = null; // "180g (6oz) chicken": the first weight wins
     // a unit after the food ("1 garlic clove", "2 garlic cloves", "5 stems choy sum")
     if (!unit) { var after = /\b(cloves?|slices?|stems?|stalks?|sprigs?|pieces?)\b/i.exec(s);
-      if (after) { unit = /^clove/i.test(after[1]) ? 'clove' : /^slice/i.test(after[1]) ? 'slice' : /^piece/i.test(after[1]) ? 'piece' : null; s = s.replace(after[0], ' '); } }
+      if (after) { unit = /^clove/i.test(after[1]) ? 'clove' : /^slice/i.test(after[1]) ? 'slice' : /^piece/i.test(after[1]) ? 'piece' : after[1].toLowerCase().replace(/s$/, ''); s = s.replace(after[0], ' '); } }
     var name = s.split(/,|;| - | – /)[0].replace(/\b(fresh(ly)?|chopped|diced|minced|sliced|grated|optional|to taste|divided|plus more|for serving|finely|roughly|thinly|about|approximately|packed|heaping|level|warm|hot|cold|chilled|smooth|softened|melted|room temperature|large|medium|small)\b/gi, ' ')
       .replace(/[.]+$/, '').replace(/\s+(plus|for (frying|greasing|brushing|dusting|the pan))\b.*$/i, '').replace(/\s+/g, ' ').trim();
     // British and kitchen names the food list knows by another name
     name = name.replace(/\bcorn ?flour\b/i, 'cornstarch').replace(/\bbi-?carb(onate)?( of soda)?\b/i, 'baking soda')
       .replace(/\b(light|dark|low[- ]sodium|all[- ]purpose)\s+soy\b/i, 'soy').replace(/\bplain flour\b/i, 'all-purpose flour');
+    name = name.replace(/\bchoy sum\b/i, 'pak choi').replace(/\b(kosher|sea|flaky|table|fine|coarse)\s+salt\b/i, 'salt');
+    // a salt named by its brand ("Diamond Crystal or Morton kosher salt"): it's salt
+    if (/\b(diamond crystal|morton)\b/i.test(s) && /\bsalt\b/i.test(s)) name = 'salt';
+    // tomatoes from a can or tin are canned tomatoes (not fresh ones)
+    if (/tomato/i.test(name) && (unit === 'can' || /\b(canned|tinned)\b/i.test(s))) name = 'canned tomatoes';
     // "sunflower or vegetable oil", "baking soda / bi-carb": other ways the recipe names it, tried in turn
     var alts = [];
     var or = /^(.+?)\s+or\s+(.+)$/i.exec(name);
@@ -159,7 +164,10 @@
     if (name.indexOf('/') > 0) { alts = name.split('/').map(function (x) { return x.trim(); }).filter(Boolean); name = alts[0]; }
     // Arabic plurals the food list doesn't know (بيضات → بيض)
     var stem = /[\u0600-\u06FF]/.test(name) ? name.replace(/(ات|ة)(?=\s|$)/g, '') : null;
-    return { qty: qty, unit: unit, grams: grams, name: name || String(line), stem: stem !== name ? stem : null, alts: alts, skip: toTaste && qty == null };
+    if (name === 'salt') alts = [];
+    // seasoning with no amount ("salt and pepper", "black pepper"): nothing worth counting
+    var seasoning = qty == null && /^(salt|pepper|black pepper|white pepper|salt (and|&) (black )?pepper|ملح|فلفل|ملح وفلفل)$/i.test(name);
+    return { qty: qty, unit: unit, grams: grams, name: name || String(line), stem: stem !== name ? stem : null, alts: alts, skip: (toTaste || seasoning) && qty == null };
   }
   // The food's own unit for what the recipe said, and how many of them. null unit = use grams.
   function unitMatch(f, p) {
@@ -180,6 +188,10 @@
         var gPer = { cup: 240, tbsp: 15, tsp: 5 }[p.unit]; return { qty: q * gPer, unit: 'g', sure: false }; }
       case 'pinch': { var t = find(/^(tsp|teaspoon)\b/); return t ? { qty: q * 0.0625, unit: t.label, sure: true } : { qty: q * 0.4, unit: 'g', sure: true }; }
       case 'large': case 'medium': case 'small': { var z = find(new RegExp('\\b' + p.unit + '\\b', 'i')); if (z) return { qty: q, unit: z.label, sure: true }; break; }
+      // a stem of greens, a stalk of celery, a sprig of herbs: about this much (worth a check)
+      case 'stem': return { qty: q * 15, unit: 'g', sure: false };
+      case 'stalk': return { qty: q * 40, unit: 'g', sure: false };
+      case 'sprig': return { qty: q * 1, unit: 'g', sure: false };
       case 'clove': case 'slice': case 'can': { var c = find(new RegExp('\\b' + p.unit, 'i')); if (c) return { qty: q, unit: c.label, sure: true }; break; }
     }
     // a count with no unit ("2 eggs", "1 onion"): the food's natural piece (a medium one when sizes are listed)
@@ -324,7 +336,9 @@
         }
         // a cup of flour needs a food that knows what a cup weighs: prefer one of the top matches with that unit
         var wants = { cup: /^cup\b/, tbsp: /^(tbsp|tablespoon)\b/, tsp: /^(tsp|teaspoon)\b/, clove: /clove/i, slice: /slice/i, large: /\blarge\b/i, medium: /\bmedium\b/i, small: /\bsmall\b/i }[p.unit];
-        var f = (wants && !p.grams && foods.find(function (x) { return unitsFor(x).some(function (u) { return wants.test(u.label); }); })) || foods[0];
+        // a food named exactly what the recipe says ("tahini" → Tahini) beats a dish that happens to have the unit
+        var exact = foods.find(function (x) { return isVerified(x) && normText(String(L(x.name)).split(/[,·(]/)[0]).trim() === normText(p.name); });
+        var f = exact || (wants && !p.grams && foods.find(function (x) { return unitsFor(x).some(function (u) { return wants.test(u.label); }); })) || foods[0];
         if (!f) return { line: line, ok: false };
         var u = unitMatch(f, p), it = itemFor(f, u.qty, u.unit, 'lunch');
         return { line: line, ok: true, sure: u.sure && !loose, id: f.id, name: L(f.name), kind: ftKind(f), qty: it.qty, unit: it.unit, amt: L(fmtAmt(it.qty, it.unit)), kcal: it.kcal,

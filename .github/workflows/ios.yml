@@ -166,6 +166,11 @@ jobs:
           # the front door: welcome, create account, sign in
           xcrun simctl ui "$UDID" appearance dark
           shot -tab you -open legal; xcrun simctl io "$UDID" screenshot out/legal-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab progress -open nutrition; sleep 2; xcrun simctl io "$UDID" screenshot out/progress-nutrition-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab progress -open body; sleep 2; xcrun simctl io "$UDID" screenshot out/progress-body-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open fasting; sleep 1; xcrun simctl io "$UDID" screenshot out/fasting-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab you -open ramadan; sleep 2; xcrun simctl io "$UDID" screenshot out/ramadan-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
+          shot -tab diary -open leftover; sleep 1; xcrun simctl io "$UDID" screenshot out/leftover-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           shot -tab foods -open importrecipe; sleep 3; xcrun simctl io "$UDID" screenshot out/import-recipe-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true
           node ../tools/check-recipe-import.js > out/recipe-import.txt 2>&1 || true
           shot -tab you -open legal -legal terms; xcrun simctl io "$UDID" screenshot out/legal-terms-dark.png; xcrun simctl terminate "$UDID" app.setpoint.ios || true

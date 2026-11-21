@@ -113,7 +113,7 @@ struct DeviceSettingsView: View {
     @State private var denied = false
     @State private var confirmErase = false
     @AppStorage(Health.writeKey) private var healthWrite = false
-    @State private var ramadan = false
+    @State private var ramadan = UserDefaults.standard.string(forKey: "open") == "ramadan" // build-server screenshots (with -tab you -open settings… see ios.yml)
     @State private var healthBusy = false
     @State private var healthNote: String?
 

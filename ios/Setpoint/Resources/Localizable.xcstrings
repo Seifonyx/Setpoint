@@ -411,6 +411,16 @@
         }
       }
     },
+    "%lld foods from %@ are still planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أكلات من %@ لسه متخططة"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "ar": {
@@ -457,6 +467,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%lld دقيقة"
+          }
+        }
+      }
+    },
+    "%lld more": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "و%lld كمان"
           }
         }
       }
@@ -727,6 +747,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتضافت أكلة"
+          }
+        }
+      }
+    },
+    "1 food from %@ is still planned": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلة من %@ لسه متخططة"
           }
         }
       }
@@ -2471,6 +2501,16 @@
         }
       }
     },
+    "Copied to %lld days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتنسخ لـ %lld أيام"
+          }
+        }
+      }
+    },
     "Copper": {
       "localizations": {
         "ar": {
@@ -2487,6 +2527,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نسخ"
+          }
+        }
+      }
+    },
+    "Copy %lld foods": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انسخ %lld أكلات"
           }
         }
       }
@@ -2531,12 +2581,32 @@
         }
       }
     },
+    "Copy this day to…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انسخ اليوم ده لـ…"
+          }
+        }
+      }
+    },
     "Copy to": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "نسخ إلى"
+          }
+        }
+      }
+    },
+    "Copy to %lld days": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "انسخ لـ %lld أيام"
           }
         }
       }
@@ -4261,6 +4331,26 @@
         }
       }
     },
+    "I ate them": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلتهم"
+          }
+        }
+      }
+    },
+    "I didn't": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ما أكلتهمش"
+          }
+        }
+      }
+    },
     "Iftar": {
       "localizations": {
         "ar": {
@@ -4947,6 +5037,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "نفحص طبقك…"
+          }
+        }
+      }
+    },
+    "Looking for the recipe on this page…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بندوّر على الوصفة في الصفحة دي…"
           }
         }
       }
@@ -5821,6 +5921,16 @@
         }
       }
     },
+    "No recipe found on this page yet. If the site shows a check, finish it; or go back and paste the ingredients.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "لسه ما لقيناش وصفة في الصفحة دي. لو الموقع طلب تأكيد كمّله، أو ارجع والصق المكونات."
+          }
+        }
+      }
+    },
     "No target": {
       "localizations": {
         "ar": {
@@ -5941,6 +6051,16 @@
         }
       }
     },
+    "Not now": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مش دلوقتي"
+          }
+        }
+      }
+    },
     "Not planned": {
       "localizations": {
         "ar": {
@@ -6047,6 +6167,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "لم تسجّل شيئًا بعد. اضغط لإضافة أول طعام."
+          }
+        }
+      }
+    },
+    "Nothing planned for today. Plan foods in Setpoint and tick them off here.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش حاجة متخططة النهارده. خطّط أكلك في Setpoint وعلّم عليه من هنا."
           }
         }
       }
@@ -6661,6 +6791,16 @@
         }
       }
     },
+    "Pick one day or several. Days still to come get them as planned, to tick off when you eat them.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اختار يوم أو كذا يوم. الأيام الجاية بتتضاف فيها متخططة، وتعلّم عليها لما تاكلها."
+          }
+        }
+      }
+    },
     "Pick what you ate": {
       "localizations": {
         "ar": {
@@ -6723,6 +6863,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "خطّط يومي"
+          }
+        }
+      }
+    },
+    "Plan tomorrow like today": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "خطّط بكرة زي النهارده"
           }
         }
       }
@@ -7047,6 +7197,16 @@
         }
       }
     },
+    "Reading the recipe…": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بنقرا الوصفة…"
+          }
+        }
+      }
+    },
     "Recent": {
       "localizations": {
         "ar": {
@@ -7193,6 +7353,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اتشال %@"
+          }
+        }
+      }
+    },
+    "Removed what wasn't eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتشال اللي ما اتاكلش"
           }
         }
       }
@@ -7353,6 +7523,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "استئناف"
+          }
+        }
+      }
+    },
+    "Review": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "راجع"
           }
         }
       }
@@ -8973,6 +9153,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "اليوم"
+          }
+        }
+      }
+    },
+    "Today's planned foods. Tick one when you eat it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الأكل المتخطط النهارده. علّم عليه لما تاكله."
           }
         }
       }
@@ -10733,6 +10923,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "سنة"
+          }
+        }
+      }
+    },
+    "yesterday": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "امبارح"
           }
         }
       }

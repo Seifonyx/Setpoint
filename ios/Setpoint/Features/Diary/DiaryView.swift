@@ -7,6 +7,9 @@ struct DiaryView: View {
     @State private var weightSheet = false
     @State private var waterSheet = false
     @State private var pickDay = false
+    @AppStorage("leftoverSeen") private var leftoverSeen = ""
+    /// Build-server screenshots show the card only when asked (-open leftover), so the other Diary shots stay the same.
+    private static let showLeftovers = !ProcessInfo.processInfo.arguments.contains("-demo") || UserDefaults.standard.string(forKey: "open") == "leftover"
     @State private var copying: [FoodItem]?
     @State private var adding: AddJob?
     @State private var openFood: FoodItem?
@@ -33,6 +36,12 @@ struct DiaryView: View {
                 }
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
                     Section { RamadanBanner() }
+                }
+                if day == Day.today, leftoverSeen != Day.today, Self.showLeftovers, let left = store.leftoverPlanned().first {
+                    Section { LeftoverCard(day: left.day, items: left.items) { review in
+                        leftoverSeen = Day.today
+                        if review { day = left.day }
+                    } }
                 }
                 Section {
                     SummaryPager(day: day, totals: store.totals(day), plan: store.plans[day] ?? store.plan(day)) { nutrientRoute = $0 }
@@ -82,7 +91,19 @@ struct DiaryView: View {
                 }
                 ToolbarItemGroup(placement: .topBarTrailing) {
                     ShareLink(item: shareText) { Label("Share day", systemImage: "square.and.arrow.up") }
-                    Button("Choose day", systemImage: "calendar") { pickDay = true }
+                    // the calendar: go to a day, or plan ahead from this one
+                    Menu {
+                        Button("Choose day", systemImage: "calendar") { pickDay = true }
+                        let all = store.items(day).filter { !$0.isDailyTotal }
+                        if !all.isEmpty {
+                            if day == Day.today {
+                                Button("Plan tomorrow like today", systemImage: "calendar.badge.plus") {
+                                    store.copy(all, to: [Day.add(day, 1)])
+                                }
+                            }
+                            Button("Copy this day to…", systemImage: "calendar.badge.clock") { copying = all }
+                        }
+                    } label: { Label("Choose day", systemImage: "calendar") }
                     Button("Add food", systemImage: "plus") { adding = AddJob(meal: mealNow) }
                         .buttonStyle(.glassProminent).tint(Brand.green)
                 }
@@ -584,5 +605,49 @@ struct FreshDay: View {
     private var greeting: LocalizedStringKey {
         let h = Calendar.current.component(.hour, from: Date())
         return h < 12 ? "A fresh morning" : h < 18 ? "A fresh afternoon" : "A fresh evening"
+    }
+}
+
+/// Planned foods from an earlier day that were never ticked: did you eat them? Shown once a day on today's Diary,
+/// so past days don't quietly count less than you ate.
+struct LeftoverCard: View {
+    @Environment(Store.self) private var store
+    let day: String
+    let items: [FoodItem]
+    /// Closed: true to go and look at that day.
+    let done: (_ review: Bool) -> Void
+
+    private var when: String {
+        day == Day.add(Day.today, -1) ? String(localized: "yesterday") : Day.date(day).formatted(.dateTime.weekday(.wide))
+    }
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(alignment: .top) {
+                Image(systemName: "checklist").font(.title3).foregroundStyle(Brand.blue)
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(items.count == 1 ? String(localized: "1 food from \(when) is still planned") : String(localized: "\(items.count) foods from \(when) are still planned"))
+                        .font(.brand(.headline))
+                    Text(items.prefix(3).map(\.displayName).joined(separator: ", ") + (items.count > 3 ? "…" : ""))
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink2).lineLimit(2)
+                }
+                Spacer(minLength: 0)
+                Button { withAnimation { done(false) } } label: {
+                    Image(systemName: "xmark").font(.caption.weight(.bold)).foregroundStyle(Brand.ink2).frame(width: 28, height: 28)
+                }
+                .buttonStyle(.plain).accessibilityLabel(Text("Not now"))
+            }
+            HStack(spacing: 8) {
+                Button("I ate them") { withAnimation { store.markEaten(ids: Set(items.map(\.id)), on: day); done(false) } }
+                    .buttonStyle(.glassProminent).tint(Brand.green)
+                Button("I didn't") { withAnimation { store.removePlanned(on: day); done(false) } }
+                    .buttonStyle(.glass)
+                Button("Review") { done(true) }
+                    .buttonStyle(.glass)
+            }
+            .font(.brand(.subheadline, .semibold))
+        }
+        .padding(.vertical, 4)
+        .accessibilityIdentifier("leftover-card")
     }
 }

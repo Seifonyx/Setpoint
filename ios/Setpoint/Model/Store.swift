@@ -512,7 +512,10 @@ final class Store {
     }
     /// Every planned food in a meal ticked off at once (one undo).
     func markAllEaten(meal: String, on day: String) {
-        let ids = Set(items(day).filter { $0.isPlanned && mealKey(of: $0) == meal }.map(\.id))
+        markEaten(ids: Set(items(day).filter { $0.isPlanned && mealKey(of: $0) == meal }.map(\.id)), on: day)
+    }
+    /// Several planned foods ticked off at once (one undo). On today they get the time you ticked them.
+    func markEaten(ids: Set<String>, on day: String) {
         guard !ids.isEmpty else { return }
         remember(String(localized: "Marked \(ids.count) as eaten"), .edit)
         let c = Calendar.current.dateComponents([.hour, .minute], from: Date())
@@ -524,6 +527,20 @@ final class Store {
             return g
         }
         save()
+    }
+    /// Planned foods on a past day that were never ticked: the ones you didn't eat after all.
+    func removePlanned(on day: String) {
+        guard items(day).contains(where: \.isPlanned) else { return }
+        remember(String(localized: "Removed what wasn't eaten"), .remove)
+        food[day]?.removeAll { $0.isPlanned }
+        save()
+    }
+    /// Planned and never ticked, on the last few days (yesterday first).
+    func leftoverPlanned(days: Int = 3) -> [(day: String, items: [FoodItem])] {
+        (1...days).map { Day.add(Day.today, -$0) }.compactMap { d in
+            let p = items(d).filter { $0.isPlanned && !$0.isDailyTotal }
+            return p.isEmpty ? nil : (d, p)
+        }
     }
     /// Start or change a repeating food. It begins tomorrow (or today, at a time still to come), as in the web app.
     func saveRepeat(_ rec: [String: JSONValue], startsToday: Bool) {
@@ -553,11 +570,20 @@ final class Store {
         r["meal"] = .string(meal)
         add([r], to: day, label: String(localized: "Copied \(item.displayName)"))
     }
-    func copy(_ items: [FoodItem], to day: String) {
-        let copies = items.filter { !$0.isDailyTotal }.map { f -> FoodItem in var c = f.copy(); stamp(&c); return c }
-        guard !copies.isEmpty else { return }
-        remember(String(localized: "Copied \(copies.count) foods"), .add)
-        food[day, default: []].append(contentsOf: copies)
+    func copy(_ items: [FoodItem], to day: String) { copy(items, to: [day]) }
+    /// Copies to several days at once (one undo). A day still to come gets them as planned, to tick off on the day.
+    func copy(_ items: [FoodItem], to days: [String]) {
+        let source = items.filter { !$0.isDailyTotal }
+        guard !source.isEmpty, !days.isEmpty else { return }
+        remember(days.count == 1 ? String(localized: "Copied \(source.count) foods") : String(localized: "Copied to \(days.count) days"), .add)
+        for day in days {
+            let copies = source.map { f -> FoodItem in
+                var c = f.copy(); stamp(&c)
+                if day > Day.today { c.isPlanned = true; c.raw.removeValue(forKey: "t") }
+                return c
+            }
+            food[day, default: []].append(contentsOf: copies)
+        }
         save()
     }
     func copyFromYesterday(meal: String, to day: String) -> Int {

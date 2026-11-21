@@ -1,5 +1,6 @@
 import SwiftUI
 import UIKit
+import WebKit
 
 /// Import a recipe from a link (or from its pasted ingredient list): most recipe sites describe their recipe in a
 /// standard way (schema.org Recipe), so Setpoint reads its name, servings and ingredients, matches each ingredient to
@@ -19,6 +20,7 @@ struct ImportRecipeSheet: View {
     @State private var working = false
     @State private var error: String?
     @State private var swapping: Int?
+    @State private var browsing: URL?   // a site that turned the quick read away: opened in a real browser view instead
     @FocusState private var focused: Bool
 
     struct Row: Identifiable {
@@ -52,6 +54,12 @@ struct ImportRecipeSheet: View {
                     }
                 }
             }
+            .sheet(item: Binding(get: { browsing.map(Browse.init) }, set: { browsing = $0?.url })) { b in
+                RecipeBrowser(url: b.url) { r in
+                    browsing = nil
+                    Task { await match(r.lines, title: r.name, serves: r.servings ?? 4) }
+                }
+            }
             .sheet(item: Binding(get: { swapping.map(Swap.init) }, set: { swapping = $0?.index })) { s in
                 IngredientPicker { item in replace(s.index, with: item) }
             }
@@ -59,6 +67,7 @@ struct ImportRecipeSheet: View {
         }
     }
     private struct Swap: Identifiable { let index: Int; var id: Int { index } }
+    private struct Browse: Identifiable { let url: URL; var id: String { url.absoluteString } }
 
     // MARK: Where the recipe comes from
 
@@ -166,10 +175,13 @@ struct ImportRecipeSheet: View {
         var req = URLRequest(url: url); req.timeoutInterval = 15
         // recipe sites serve their full page to a normal iPhone browser
         req.setValue("Mozilla/5.0 (iPhone; CPU iPhone OS 26_0 like Mac OS X) AppleWebKit/605.1.15 (KHTML, like Gecko) Version/26.0 Mobile/15E148 Safari/604.1", forHTTPHeaderField: "User-Agent")
-        guard let (data, _) = try? await URLSession.shared.data(for: req) else { error = String(localized: "Couldn't open that page. Check your connection and the link."); return }
-        let html = String(data: data, encoding: .utf8) ?? String(decoding: data, as: UTF8.self)
-        guard let r = await store.engineRef.recipe(fromHTML: html), !r.lines.isEmpty else {
-            error = String(localized: "This page doesn't share its recipe in a way Setpoint can read. Paste the ingredients instead.")
+        let got = try? await URLSession.shared.data(for: req)
+        let status = (got?.1 as? HTTPURLResponse)?.statusCode ?? 0
+        let html = got.map { String(data: $0.0, encoding: .utf8) ?? String(decoding: $0.0, as: UTF8.self) } ?? ""
+        guard status < 400, let r = await store.engineRef.recipe(fromHTML: html), !r.lines.isEmpty else {
+            // Many big recipe sites turn away a quick read like this (it looks like a robot). Open the page in a real
+            // browser view instead: it gets through, and the recipe is read from there.
+            browsing = url
             return
         }
         await match(r.lines, title: r.name, serves: r.servings ?? 4)
@@ -209,4 +221,60 @@ struct ImportRecipeSheet: View {
         done(["name": .string(nm.isEmpty ? String(localized: "Imported recipe") : String(nm.prefix(60))), "servings": .number(Double(servings)), "items": .array(items)])
         dismiss()
     }
+}
+
+/// A recipe page opened in a real browser view, for sites that turn a quick read away. Each time the page finishes
+/// loading (and every couple of seconds while it settles), Setpoint looks for the recipe in it; if the site asks you
+/// to prove you're a person, you can do that right here.
+struct RecipeBrowser: View {
+    @Environment(Store.self) private var store
+    @Environment(\.dismiss) private var dismiss
+    let url: URL
+    let found: (PageRecipe) -> Void
+    @State private var page = RecipePageBox()
+    @State private var tries = 0
+
+    var body: some View {
+        NavigationStack {
+            RecipeWebView(page: page, url: url)
+                .ignoresSafeArea(edges: .bottom)
+                .navigationTitle("Reading the recipe…")
+                .navigationBarTitleDisplayMode(.inline)
+                .toolbar { ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } } }
+                .safeAreaInset(edge: .bottom) {
+                    Label(tries > 12 ? "No recipe found on this page yet. If the site shows a check, finish it; or go back and paste the ingredients."
+                                     : "Looking for the recipe on this page…", systemImage: tries > 12 ? "exclamationmark.circle" : "magnifyingglass")
+                        .font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
+                        .padding(12).frame(maxWidth: .infinity).glassEffect(.regular, in: .rect(cornerRadius: 18)).padding(12)
+                }
+                .task {
+                    while !Task.isCancelled {
+                        try? await Task.sleep(for: .seconds(2))
+                        tries += 1
+                        if let html = await page.html(), let r = await store.engineRef.recipe(fromHTML: html), !r.lines.isEmpty { found(r); return }
+                    }
+                }
+        }
+    }
+}
+
+/// The browser view's page, kept so the sheet can ask it for its HTML.
+@MainActor
+final class RecipePageBox {
+    let view: WKWebView = {
+        let c = WKWebViewConfiguration()
+        c.websiteDataStore = .default()
+        return WKWebView(frame: .zero, configuration: c)
+    }()
+    func html() async -> String? {
+        guard !view.isLoading else { return nil }
+        return try? await view.evaluateJavaScript("document.documentElement.outerHTML") as? String
+    }
+}
+
+struct RecipeWebView: UIViewRepresentable {
+    let page: RecipePageBox
+    let url: URL
+    func makeUIView(context: Context) -> WKWebView { page.view.load(URLRequest(url: url)); return page.view }
+    func updateUIView(_ v: WKWebView, context: Context) {}
 }

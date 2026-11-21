@@ -20,6 +20,7 @@ enum SharedBox {
     static var defaults: UserDefaults? { UserDefaults(suiteName: groupID) }
     static let dayKey = "widgetDay"
     static let pendingWaterKey = "pendingWater"
+    static let pendingTicksKey = "pendingTicks"
 }
 
 /// Today, as the widgets and the Live Activity show it. Weights are in kg.
@@ -35,6 +36,8 @@ struct WidgetDay: Codable, Equatable, Sendable {
     var recent: [Double]        // the last weigh-ins, oldest first
     var unit: String
     var trackCalories: Bool
+    /// Today's planned foods, not ticked yet (missing in summaries written before this existed).
+    var planned: [WidgetPlanned]? = nil
 
     static func load() -> WidgetDay? {
         guard let data = SharedBox.defaults?.data(forKey: SharedBox.dayKey) else { return nil }
@@ -47,7 +50,7 @@ struct WidgetDay: Codable, Equatable, Sendable {
     func on(_ today: String) -> WidgetDay {
         guard today != day else { return self }
         var d = self
-        d.day = today; d.eaten = 0; d.protein = 0; d.carbs = 0; d.fat = 0; d.water = 0
+        d.day = today; d.eaten = 0; d.protein = 0; d.carbs = 0; d.fat = 0; d.water = 0; d.planned = []
         return d
     }
     var left: Double { target - eaten }
@@ -74,6 +77,37 @@ struct WidgetWaterIntent: AppIntent {
         var pending = (d?.dictionary(forKey: SharedBox.pendingWaterKey) as? [String: Double]) ?? [:]
         pending[day.day, default: 0] += day.waterStep
         d?.set(pending, forKey: SharedBox.pendingWaterKey)
+        WidgetCenter.shared.reloadAllTimelines()
+        return .result()
+    }
+}
+
+/// A planned food on the widget: tick it when you eat it.
+struct WidgetPlanned: Codable, Equatable, Sendable, Identifiable {
+    var id: String
+    var name: String
+    var kcal: Double
+    var meal: String
+}
+
+/// The tick on the Planned widget. Like the water button, it runs in the widget: the food counts on the widget at once,
+/// and the app ticks it off in the diary the next time it opens.
+struct WidgetTickIntent: AppIntent {
+    static let title: LocalizedStringResource = "Mark as eaten"
+    static let isDiscoverable = false
+    @Parameter(title: "Food") var id: String
+    init() {}
+    init(id: String) { self.id = id }
+
+    func perform() async throws -> some IntentResult {
+        guard var day = WidgetDay.load()?.on(Day.today), let f = day.planned?.first(where: { $0.id == id }) else { return .result() }
+        day.planned?.removeAll { $0.id == id }
+        day.eaten += f.kcal
+        day.save()
+        let d = SharedBox.defaults
+        var pending = (d?.dictionary(forKey: SharedBox.pendingTicksKey) as? [String: [String]]) ?? [:]
+        pending[day.day, default: []].append(id)
+        d?.set(pending, forKey: SharedBox.pendingTicksKey)
         WidgetCenter.shared.reloadAllTimelines()
         return .result()
     }

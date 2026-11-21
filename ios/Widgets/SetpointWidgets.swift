@@ -10,6 +10,7 @@ struct SetpointWidgets: WidgetBundle {
     var body: some Widget {
         TodayWidget()
         WeightWidget()
+        PlannedWidget()
         DayLiveActivity()
         AddFoodLockWidget()
         ScanLockWidget()
@@ -414,6 +415,69 @@ struct LiveLockView: View {
                 }
                 .foregroundStyle(Brand.water)
             }
+        }
+    }
+}
+
+// MARK: Planned: today's planned foods, ticked off right on the Home Screen
+
+struct PlannedWidget: Widget {
+    var body: some WidgetConfiguration {
+        StaticConfiguration(kind: "planned", provider: DayProvider()) { entry in
+            PlannedView(day: entry.day)
+                .containerBackground(Brand.card, for: .widget)
+                .widgetURL(URL(string: "setpoint://diary"))
+        }
+        .configurationDisplayName("Planned")
+        .description("Today's planned foods. Tick one when you eat it.")
+        .supportedFamilies([.systemMedium, .systemLarge])
+    }
+}
+
+struct PlannedView: View {
+    var day: WidgetDay?
+    @Environment(\.widgetFamily) private var family
+
+    var body: some View {
+        if let day {
+            let list = day.planned ?? []
+            let shown = Array(list.prefix(family == .systemLarge ? 7 : 3))
+            VStack(alignment: .leading, spacing: 8) {
+                HStack {
+                    Text("Planned").font(WFont.display(15))
+                    Spacer()
+                    if !list.isEmpty {
+                        Text(verbatim: "+" + Fmt.kcal(list.reduce(0) { $0 + $1.kcal }) + " kcal").font(WFont.text(12, .semibold)).foregroundStyle(Brand.blue).monospacedDigit()
+                    }
+                }
+                if list.isEmpty {
+                    Spacer()
+                    Text("Nothing planned for today. Plan foods in Setpoint and tick them off here.").font(WFont.text(12)).foregroundStyle(Brand.ink2)
+                    Spacer()
+                } else {
+                    ForEach(shown) { f in
+                        HStack(spacing: 8) {
+                            Button(intent: WidgetTickIntent(id: f.id)) {
+                                Image(systemName: "circle").font(.system(size: 20)).foregroundStyle(Brand.ink2)
+                            }
+                            .buttonStyle(.plain)
+                            .accessibilityLabel(Text("Mark \(f.name) as eaten"))
+                            VStack(alignment: .leading, spacing: 0) {
+                                Text(verbatim: f.name).font(WFont.text(13, .medium)).lineLimit(1)
+                                if !f.meal.isEmpty { Text(verbatim: f.meal).font(WFont.text(11)).foregroundStyle(Brand.ink2) }
+                            }
+                            Spacer(minLength: 4)
+                            Text(verbatim: Fmt.kcal(f.kcal)).font(WFont.text(13, .semibold)).monospacedDigit().foregroundStyle(Brand.ink2)
+                        }
+                    }
+                    if list.count > shown.count {
+                        Text("\(list.count - shown.count) more").font(WFont.text(11)).foregroundStyle(Brand.ink2)
+                    }
+                    Spacer(minLength: 0)
+                }
+            }
+        } else {
+            SetUpNote()
         }
     }
 }

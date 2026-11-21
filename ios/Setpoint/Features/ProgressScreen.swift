@@ -5,7 +5,7 @@ import Charts
 /// The trend and weeks come from the web app's own maths (via the engine).
 struct ProgressScreen: View {
     @Environment(Store.self) private var store
-    @State private var page = "weight"
+    @State private var page = ["nutrition", "body"].first { $0 == UserDefaults.standard.string(forKey: "open") } ?? "weight" // -open nutrition|body: build-server screenshots
     @AppStorage("progressRange") private var range = 90
     @State private var data: ProgressData?
     @State private var nutrition: [NutritionDay] = []

@@ -141,28 +141,47 @@ struct DayPickerSheet: View {
     }
 }
 
-/// Copy one food or a whole meal to another day.
+/// Copy foods, a meal or a whole day to one day or several (plan a week in one go). Days still to come get them as
+/// planned, to tick off on the day.
 struct CopyDaySheet: View {
     @Environment(Store.self) private var store
     @Environment(\.dismiss) private var dismiss
     let items: [FoodItem]
     let from: String
-    @State private var date = Date()
+    @State private var days: Set<DateComponents> = []
+
+    private var picked: [String] {
+        days.compactMap { Calendar.current.date(from: $0) }.map(Day.iso).filter { $0 != from }.sorted()
+    }
 
     var body: some View {
         NavigationStack {
-            DatePicker("Copy to", selection: $date, displayedComponents: .date)
-                .datePickerStyle(.graphical)
-                .padding(.horizontal)
-                .brandList()
-                .navigationTitle(items.count == 1 ? "Copy food" : "Copy meal")
-                .navigationBarTitleDisplayMode(.inline)
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
-                    ToolbarItem(placement: .confirmationAction) { Button("Copy") { store.copy(items, to: Day.iso(date)); dismiss() }.buttonStyle(.glassProminent).tint(Brand.green) }
+            List {
+                Section {
+                    MultiDatePicker("Copy to", selection: $days)
+                        .tint(Brand.green)
+                } footer: {
+                    Text("Pick one day or several. Days still to come get them as planned, to tick off when you eat them.")
                 }
-                .onAppear { date = Day.date(from == Day.today ? Day.add(from, 1) : Day.today) }
+            }
+            .brandList()
+            .navigationTitle(items.count == 1 ? "Copy food" : "Copy \(items.count) foods")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) { Button("Cancel", role: .cancel) { dismiss() } }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button(picked.count > 1 ? String(localized: "Copy to \(picked.count) days") : String(localized: "Copy")) {
+                        store.copy(items, to: picked); dismiss()
+                    }
+                    .disabled(picked.isEmpty)
+                    .buttonStyle(.glassProminent).tint(Brand.green)
+                }
+            }
+            .onAppear {
+                let start = Day.date(from == Day.today ? Day.add(from, 1) : Day.today)
+                days = [Calendar.current.dateComponents([.calendar, .era, .year, .month, .day], from: start)]
+            }
         }
-        .presentationDetents([.medium])
+        .presentationDetents([.large])
     }
 }
