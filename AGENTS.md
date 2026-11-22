@@ -87,6 +87,13 @@ Non-negotiable principle: think like an experienced product engineer, not an AI 
 the app, research proven solutions, anticipate mistakes, implement carefully, and verify the result. Never substitute
 assumptions or generic AI suggestions for evidence.
 
+## Setpoint's own identity (set by the user; applies to every change)
+
+When the user shows another app (Cronometer, MyFitnessPal, MacroFactor, anything) as a reference ("make it like this"),
+copy the behaviour, layout and interaction, but always in Setpoint's own identity: its fonts (Figtree / Bricolage
+Grotesque), Brand colours (green for main actions, red for delete and warnings, blue for planned), Liquid Glass,
+card style and its own wording. Never clone another app's look, colours, icons or names. The user won't repeat this.
+
 ## Release policy (set by the user; in force until the user changes it)
 
 Publish first, then test, then fix:
