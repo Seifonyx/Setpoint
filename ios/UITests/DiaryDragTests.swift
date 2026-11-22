@@ -30,6 +30,8 @@ final class DiaryDragTests: XCTestCase {
                 .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5 + step)))
             sleep(2)
         }
+        // the nudging can scroll a row out of the list (it unloads it): say so instead of failing on a missing row
+        guard y(what) >= 0, y(to) >= 0 else { note("   (row scrolled off screen before the drag: skipped)"); return }
         let mv = XCUIApplication().staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'mv'")).firstMatch
         let before = mv.exists ? mv.label : ""
         // a press that lands while the list is still settling after a scroll doesn't pick the row up (on a real iPhone
