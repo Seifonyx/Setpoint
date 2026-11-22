@@ -269,7 +269,7 @@ final class DiaryDragTests: XCTestCase {
                 let opts = ["Plan", "Mark as eaten", "Repeat", "Edit a copy of food", "Edit original food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
                 note("food options: \(opts.joined(separator: ", "))")
                 shot(sw, "food-options")
-                sw.buttons["Cancel"].firstMatch.exists ? sw.buttons["Cancel"].firstMatch.tap() : sw.tap()
+                sw.swipeDown(velocity: .fast) // close the options sheet
                 sleep(1)
             } else { note("food options: no More button after swiping") }
             let header = el(sw, "meal-lunch")

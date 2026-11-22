@@ -156,7 +156,6 @@ struct MealHeader: View {
     let addFood: () -> Void
 
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
-    private var plannedCount: Int { day > Day.today ? 0 : foods.filter(\.isPlanned).count }
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -172,16 +171,11 @@ struct MealHeader: View {
                     if !expanded && !foods.isEmpty {
                         Text("\(foods.count)").font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                     }
-                    // still to eat in this meal: swipe right › Mark all as eaten when you've had them
-                    if plannedCount > 0 {
-                        Text("\(plannedCount) planned").font(.brand(.caption, .semibold)).foregroundStyle(Brand.blue)
-                            .padding(.horizontal, 7).padding(.vertical, 2).background(Brand.blue.opacity(0.12), in: Capsule())
-                    }
                 }
                 // what's in it so far, small, under the name
                 if !counted.isEmpty {
                     let t = counted.reduce(into: (k: 0.0, p: 0.0, c: 0.0, f: 0.0)) { $0.k += $1.kcal; $0.p += $1.protein; $0.c += $1.carbs; $0.f += $1.fat }
-                    Text("\(Fmt.kcal(t.k)) kcal · \(Fmt.grams(t.p)) g protein · \(Fmt.grams(t.c)) g carbs · \(Fmt.grams(t.f)) g fat")
+                    Text(verbatim: "\(Fmt.kcal(t.k)) kcal • \(Fmt.grams(t.p)) g P • \(Fmt.grams(t.c)) g C • \(Fmt.grams(t.f)) g F")
                         .font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit().lineLimit(1).minimumScaleFactor(0.8)
                 }
             }
@@ -284,8 +278,48 @@ struct MealDialogs: ViewModifier {
         if let g = f.raw["g"]?.number { v["g"] = .number((g * 10).rounded() / 10) }
         return v
     }
-    /// The dialog closes first, then the sheet opens.
-    private func later(_ open: @escaping @MainActor () -> Void) { Task { try? await Task.sleep(for: .milliseconds(350)); open() } }
+    /// Everything you can do to a logged food (swipe right on it), in the order you'd want it.
+    private func foodOptions(_ f: FoodItem) -> [OptionRow] {
+        var o: [OptionRow] = []
+        if f.isPlanned && day <= Day.today { o.append(.init("Mark as eaten", "checkmark.circle") { store.markEaten(f, on: day) }) }
+        else if day <= Day.today { o.append(.init(text: String(localized: "Plan (verb)", defaultValue: "Plan"), "calendar.badge.clock") { withAnimation(.snappy) { store.markPlanned(f, on: day) } }) }
+        o.append(.init("Repeat", "repeat") { actions.repeating = f })
+        switch Self.kind(of: f, store) {
+        case .meal(let rec):
+            o.append(.init("Explode meal", "square.split.2x2") { withAnimation { store.explode(f, into: f.raw["mi"]?.array?.compactMap(\.object) ?? [], on: day) } })
+            if let rec {
+                o.append(.init("Edit original meal", "pencil") { actions.editMeal = .init(value: rec) })
+                o.append(.init("Edit a copy of meal", "doc.on.doc") { actions.editMeal = .init(value: Self.copy(rec, prefix: "m", named: rec["name"]?.string)) })
+            }
+        case .recipe(let rec):
+            o.append(.init("Explode recipe", "square.split.2x2") { Task { await explodeRecipe(f, rec) } })
+            o.append(.init("Edit original recipe", "pencil") { actions.editRecipe = .init(value: rec) })
+            o.append(.init("Edit a copy of recipe", "doc.on.doc") { actions.editRecipe = .init(value: Self.copy(rec, prefix: "r", named: rec["name"]?.string)) })
+        case .custom(let rec):
+            o.append(.init("Edit original food", "pencil") { actions.editFood = .init(value: rec) })
+            o.append(.init("Edit a copy of food", "doc.on.doc") { actions.editFood = .init(value: Self.copy(rec, prefix: "c", named: rec["name"]?.string)) })
+        case .food:
+            o.append(.init("Edit a copy of food", "doc.on.doc") { actions.editFood = .init(value: Self.customCopy(of: f)) })
+        }
+        o.append(.init("Copy", "calendar.badge.plus") { copying = [f] })
+        o.append(.init("Delete", "trash", destructive: true) { withAnimation { store.delete(f, on: day) } })
+        return o
+    }
+    /// A meal's options (swipe right on its name).
+    private func mealOptions(_ m: MealCategory) -> [OptionRow] {
+        let foods = store.items(day).filter { store.mealKey(of: $0) == m.key && !$0.isDailyTotal }
+        var o: [OptionRow] = []
+        if day <= Day.today && foods.contains(where: \.isPlanned) {
+            o.append(.init("Mark all as eaten", "checkmark.circle") { withAnimation(.snappy) { store.markAllEaten(meal: m.key, on: day) } })
+        }
+        o.append(.init("Copy from yesterday", "arrow.uturn.backward") { withAnimation { _ = store.copyFromYesterday(meal: m.key, to: day) } })
+        if !foods.isEmpty {
+            o.append(.init("Copy to another day", "calendar.badge.plus") { copying = foods })
+            o.append(.init("Save as meal", "square.and.arrow.down.on.square") { actions.mealName = m.name; actions.naming = m })
+            o.append(.init("Remove all", "trash", destructive: true) { withAnimation { store.removeMeal(m.key, on: day) } })
+        }
+        return o
+    }
     /// A recipe you ate, as its ingredients: each one at the share of the recipe you had.
     private func explodeRecipe(_ f: FoodItem, _ rec: [String: JSONValue]) async {
         let ings = (rec["items"]?.array ?? []).compactMap(\.object)
@@ -313,42 +347,8 @@ struct MealDialogs: ViewModifier {
             .sheet(item: $actions.editFood) { e in CustomFoodSheet(food: e.value) }
             .sheet(item: $actions.editMeal) { e in MealEditor(meal: e.value) }
             .sheet(item: $actions.editRecipe) { e in RecipeEditor(recipe: e.value) }
-            .confirmationDialog(actions.mealMore?.name ?? "", isPresented: Binding(get: { actions.mealMore != nil }, set: { if !$0 { actions.mealMore = nil } }), titleVisibility: .visible, presenting: actions.mealMore) { m in
-                let foods = store.items(day).filter { store.mealKey(of: $0) == m.key && !$0.isDailyTotal }
-                if day <= Day.today && foods.contains(where: \.isPlanned) {
-                    Button("Mark all as eaten") { withAnimation(.snappy) { store.markAllEaten(meal: m.key, on: day) } }
-                }
-                Button("Copy from yesterday") { withAnimation { _ = store.copyFromYesterday(meal: m.key, to: day) } }
-                if !foods.isEmpty {
-                    Button("Copy to another day") { copying = foods }
-                    Button("Save as meal") { actions.mealName = m.name; later { actions.naming = m } }
-                    Button("Remove all", role: .destructive) { withAnimation { store.removeMeal(m.key, on: day) } }
-                }
-            }
-            .confirmationDialog(actions.more?.displayName ?? "", isPresented: Binding(get: { actions.more != nil }, set: { if !$0 { actions.more = nil } }), titleVisibility: .visible, presenting: actions.more) { f in
-                let kind = Self.kind(of: f, store)
-                // plan: not eaten yet (or, when it's planned, tick it off)
-                if f.isPlanned && day <= Day.today { Button("Mark as eaten") { store.markEaten(f, on: day) } }
-                else if day <= Day.today { Button(String(localized: "Plan (verb)", defaultValue: "Plan")) { withAnimation(.snappy) { store.markPlanned(f, on: day) } } }
-                Button("Repeat") { actions.repeating = f }
-                switch kind {
-                case .meal(let rec):
-                    Button("Explode meal") { withAnimation { store.explode(f, into: f.raw["mi"]?.array?.compactMap(\.object) ?? [], on: day) } }
-                    if let rec { Button("Edit original meal") { later { actions.editMeal = .init(value: rec) } } }
-                    if let rec { Button("Edit a copy of meal") { later { actions.editMeal = .init(value: Self.copy(rec, prefix: "m", named: rec["name"]?.string)) } } }
-                case .recipe(let rec):
-                    Button("Explode recipe") { Task { await explodeRecipe(f, rec) } }
-                    Button("Edit original recipe") { later { actions.editRecipe = .init(value: rec) } }
-                    Button("Edit a copy of recipe") { later { actions.editRecipe = .init(value: Self.copy(rec, prefix: "r", named: rec["name"]?.string)) } }
-                case .custom(let rec):
-                    Button("Edit original food") { later { actions.editFood = .init(value: rec) } }
-                    Button("Edit a copy of food") { later { actions.editFood = .init(value: Self.copy(rec, prefix: "c", named: rec["name"]?.string)) } }
-                case .food:
-                    Button("Edit a copy of food") { later { actions.editFood = .init(value: Self.customCopy(of: f)) } }
-                }
-                Button("Copy") { copying = [f] }
-                Button("Delete", role: .destructive) { withAnimation { store.delete(f, on: day) } }
-            }
+            .sheet(item: $actions.mealMore) { m in OptionsSheet(title: m.name, options: mealOptions(m)) }
+            .sheet(item: $actions.more) { f in OptionsSheet(title: f.displayName, options: foodOptions(f)) }
             .confirmationDialog("Move to", isPresented: Binding(get: { actions.moving != nil }, set: { if !$0 { actions.moving = nil } }), titleVisibility: .visible, presenting: actions.moving) { f in
                 ForEach(store.meals.filter { $0.key != store.mealKey(of: f) }) { m in
                     Button(m.name) { withAnimation { store.move(f, to: m.key, on: day) } }
@@ -400,10 +400,6 @@ struct FoodRow: View {
         var parts: [String] = []
         if let t = food.time { parts.append(t) }
         if let q = food.qty, let u = food.unit, food.ref != nil { parts.append(Fmt.amount(q, u)) }
-        else {
-            let m = [("P", food.protein), ("C", food.carbs), ("F", food.fat)].filter { $0.1 > 0 }.map { "\($0.0) \(Fmt.grams($0.1))" }
-            if !m.isEmpty { parts.append(m.joined(separator: " · ")) }
-        }
         return parts.joined(separator: " · ")
     }
 }
@@ -491,5 +487,59 @@ struct MealSummarySheet: View {
             Text("\(Fmt.grams(g)) g").font(Brand.num(22, .semibold)).monospacedDigit()
         }
         .frame(maxWidth: .infinity, alignment: .leading)
+    }
+}
+
+/// One choice in an options sheet.
+struct OptionRow: Identifiable {
+    let id = UUID()
+    let title: String
+    let icon: String
+    var destructive = false
+    let run: @MainActor () -> Void
+    init(text title: String, _ icon: String, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
+        self.title = title; self.icon = icon; self.destructive = destructive; self.run = run
+    }
+    init(_ title: LocalizedStringResource, _ icon: String, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
+        self.init(text: String(localized: title), icon, destructive: destructive, run: run)
+    }
+}
+
+/// A food's or a meal's options: a small sheet from the bottom, one neat row each (not a menu floating wherever
+/// the list happens to be).
+struct OptionsSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    let title: String
+    let options: [OptionRow]
+
+    var body: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            Text(title).font(.brand(.headline)).lineLimit(1).padding(.horizontal, 22).padding(.top, 22).padding(.bottom, 10)
+            VStack(spacing: 0) {
+                ForEach(Array(options.enumerated()), id: \.element.id) { i, o in
+                    Button {
+                        dismiss()
+                        // the sheet goes first, then the choice runs (some open another sheet)
+                        Task { try? await Task.sleep(for: .milliseconds(320)); o.run() }
+                    } label: {
+                        HStack(spacing: 14) {
+                            Image(systemName: o.icon).font(.system(size: 16, weight: .semibold)).frame(width: 24)
+                                .foregroundStyle(o.destructive ? Brand.danger : Brand.ink2)
+                            Text(o.title).font(.brand(.body)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
+                            Spacer()
+                        }
+                        .padding(.horizontal, 18).frame(height: 46).contentShape(.rect)
+                    }
+                    .buttonStyle(.plain)
+                    if i < options.count - 1 { Divider().padding(.leading, 56) }
+                }
+            }
+            .background(Brand.card, in: .rect(cornerRadius: Radius.card))
+            .padding(.horizontal, 14)
+            Spacer(minLength: 0)
+        }
+        .presentationDetents([.height(CGFloat(options.count) * 46.5 + 78)])
+        .presentationDragIndicator(.visible)
+        .presentationBackground(Brand.bg)
     }
 }
