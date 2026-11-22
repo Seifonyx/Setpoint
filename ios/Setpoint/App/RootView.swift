@@ -110,8 +110,9 @@ struct RootView: View {
         // From a Control Centre control (its intent runs in the app and leaves the action in the inbox)
         .onReceive(NotificationCenter.default.publisher(for: QuickActionInbox.posted)) { _ in if let a = QuickActionInbox.take() { open(a) } }
         .task { if let a = QuickActionInbox.take() { open(a) } }
+        .task { await UpdateCheck.shared.check() } // a newer build in SideStore
         .onChange(of: phase) { _, p in
-            if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store) } }
+            if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store); await UpdateCheck.shared.check() } }
             if p != .active { store.flushSave() } // nothing waiting to be written when the app is left
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet
         }

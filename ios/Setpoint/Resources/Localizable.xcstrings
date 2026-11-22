@@ -1991,6 +1991,16 @@
         }
       }
     },
+    "Build %lld is ready. Open SideStore and tap Update on Setpoint.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "النسخة %lld جاهزة. افتح SideStore ودوس Update على Setpoint."
+          }
+        }
+      }
+    },
     "Build a meal from the foods you usually have together, then log it in one tap. Tap + to make one, or save one from the Diary (a meal's ⋯ › Save as meal).": {
       "localizations": {
         "ar": {
@@ -4801,6 +4811,16 @@
         }
       }
     },
+    "Later": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "بعدين"
+          }
+        }
+      }
+    },
     "Latest change": {
       "localizations": {
         "ar": {
@@ -6697,6 +6717,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "افتح Setpoint مرة واحدة لإعداد هذه الأداة."
+          }
+        }
+      }
+    },
+    "Open SideStore": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "افتح SideStore"
           }
         }
       }
@@ -9623,6 +9653,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأيام اللي مش متسجلة بتخبّي اللي كلته، فممكن الرقم يطلع أقل. بيتحسب بوزن أقل لحد ما تسجل أيام أكتر."
+          }
+        }
+      }
+    },
+    "Update available": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "في تحديث جديد"
           }
         }
       }

@@ -34,6 +34,9 @@ struct DiaryView: View {
                             .font(.brand(.subheadline, .semibold)).frame(maxWidth: .infinity)
                     }
                 }
+                if day == Day.today, let build = UpdateCheck.shared.available {
+                    Section { UpdateBanner(build: build) }
+                }
                 if day == Day.today && (store.ramadanOn || Calendar(identifier: .islamicUmmAlQura).component(.month, from: Date()) == 9) {
                     Section { RamadanBanner() }
                 }
