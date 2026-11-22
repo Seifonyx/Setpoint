@@ -77,12 +77,12 @@ jobs:
           mkdir -p out
           TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test-without-building -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$UDID" \
             -derivedDataPath simbuild -only-testing:SetpointUITests CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
-          grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" uitest.log | tail -40 || true
+          grep -E "error:|Test Case|TEST (EXECUTE )?(SUCCEEDED|FAILED)" uitest.log | tail -40 || true
           cp uitest.log out/uitest-log.txt || true
           # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at
           for f in $(ls -t ~/Library/Logs/DiagnosticReports/Setpoint*.ips 2>/dev/null | head -3); do cp "$f" "out/crash-$(basename "$f" .ips).txt"; done || true
           # released only when the UI tests passed and nothing crashed
-          if grep -q "TEST SUCCEEDED" uitest.log && ! grep -q "crashed" uitest.log && ! ls out/crash-*.txt >/dev/null 2>&1; then
+          if grep -qE "TEST (EXECUTE )?SUCCEEDED" uitest.log && ! grep -q "crashed" uitest.log && ! ls out/crash-*.txt >/dev/null 2>&1; then
             echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; echo "Tests failed: not released"; fi
       - name: Publish to the ios-latest release
         if: env.RELEASE == 'true' && steps.tests.outputs.passed == 'true'
