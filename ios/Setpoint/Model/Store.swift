@@ -535,6 +535,21 @@ final class Store {
         }
         save()
     }
+    /// A meal or recipe eaten as one entry, split into its foods in its place (same meal, time and planned state).
+    func explode(_ item: FoodItem, into parts: [[String: JSONValue]], on day: String) {
+        guard !parts.isEmpty, var list = food[day], let i = list.firstIndex(where: { $0.id == item.id }) else { return }
+        remember(String(localized: "Split into \(parts.count) foods"), .edit)
+        let made = parts.map { raw -> FoodItem in
+            var r = raw
+            r["id"] = .string(Ids.new()); r["meal"] = .string(item.meal)
+            if let t = item.time { r["t"] = .string(t) } else { r.removeValue(forKey: "t") }
+            if item.isPlanned { r["plan"] = .bool(true) } else { r.removeValue(forKey: "plan") }
+            var f = FoodItem(raw: r); stamp(&f); return f
+        }
+        list.remove(at: i); list.insert(contentsOf: made, at: i)
+        food[day] = list
+        save()
+    }
     /// Planned foods on a past day that were never ticked: the ones you didn't eat after all.
     func removePlanned(on day: String) {
         guard items(day).contains(where: \.isPlanned) else { return }

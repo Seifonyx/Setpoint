@@ -81,6 +81,16 @@
         }
       }
     },
+    "%@ copy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "نسخة من %@"
+          }
+        }
+      }
+    },
     "%@ g": {
       "localizations": {
         "ar": {
@@ -217,6 +227,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "%@ سعرة تحت الهدف"
+          }
+        }
+      }
+    },
+    "%@ kcal · %@ g protein · %@ g carbs · %@ g fat": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ سعر · %@ جم بروتين · %@ جم كربوهيدرات · %@ جم دهون"
           }
         }
       }
@@ -3231,6 +3251,36 @@
         }
       }
     },
+    "Edit a copy of food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل نسخة من الأكلة"
+          }
+        }
+      }
+    },
+    "Edit a copy of meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل نسخة من الوجبة"
+          }
+        }
+      }
+    },
+    "Edit a copy of recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل نسخة من الوصفة"
+          }
+        }
+      }
+    },
     "Edit food": {
       "localizations": {
         "ar": {
@@ -3247,6 +3297,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعديل الوجبة"
+          }
+        }
+      }
+    },
+    "Edit original food": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل الأكلة الأصلية"
+          }
+        }
+      }
+    },
+    "Edit original meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل الوجبة الأصلية"
+          }
+        }
+      }
+    },
+    "Edit original recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل الوصفة الأصلية"
           }
         }
       }
@@ -3517,6 +3597,26 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحرق مع الوقت"
+          }
+        }
+      }
+    },
+    "Explode meal": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فكّ الوجبة"
+          }
+        }
+      }
+    },
+    "Explode recipe": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فكّ الوصفة"
           }
         }
       }

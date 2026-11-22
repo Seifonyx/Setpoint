@@ -254,6 +254,35 @@ final class DiaryDragTests: XCTestCase {
         } else { note("filter menu: no sort button"); shot(fm, "filter-missing") }
         fm.terminate()
 
+        // swipe right on a food: its options; on a meal's name: the meal's options
+        let sw = XCUIApplication()
+        sw.launchArguments = ["-demo", "YES", "-tab", "diary"]
+        sw.launch()
+        let oatsRow = el(sw, "food-a0")
+        if oatsRow.waitForExistence(timeout: 10) {
+            sw.swipeUp(velocity: .slow); sleep(2)
+            oatsRow.swipeRight(); sleep(1)
+            shot(sw, "swipe-food")
+            let more = sw.buttons["More"].firstMatch
+            if more.exists {
+                more.tap(); sleep(1)
+                let opts = ["Plan", "Mark as eaten", "Repeat", "Edit a copy of food", "Edit original food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
+                note("food options: \(opts.joined(separator: ", "))")
+                shot(sw, "food-options")
+                sw.buttons["Cancel"].firstMatch.exists ? sw.buttons["Cancel"].firstMatch.tap() : sw.tap()
+                sleep(1)
+            } else { note("food options: no More button after swiping") }
+            let header = el(sw, "meal-lunch")
+            if header.exists {
+                header.swipeRight(); sleep(1)
+                shot(sw, "swipe-meal")
+                let mo = sw.buttons["Lunch options"].firstMatch
+                note("meal options button after swiping = \(mo.exists)")
+                if mo.exists { mo.tap(); sleep(1); shot(sw, "meal-options") }
+            }
+        } else { note("swipe: no food rows"); shot(sw, "swipe-missing") }
+        sw.terminate()
+
         // ⋯ then New: a food, a recipe or a meal
         let nw = XCUIApplication()
         nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
