@@ -177,13 +177,12 @@ def off_rows(path):
         q = amount(p.get('quantity'))
         if q: por.append([container(p, q), q[0]])
         sq = num(p.get('serving_quantity'))
-        if sq and 0 < sq <= 2000 and (not q or abs(sq - q[0]) > 1): por.append(['1 serving (%g %s)' % (sq, q[1] if q else 'g'), sq])
+        # the serving's unit: from its own text ("250 ml"), else the pack's, else ml for drinks
+        su = (amount(p.get('serving_size')) or q or (0, 'ml' if re.search(r'beverage|drink', ' '.join(p.get('categories_tags') or [])) else 'g'))[1]
+        if sq and 5 <= sq <= 2000 and (not q or abs(sq - q[0]) > 1): por.append(['1 serving (%g %s)' % (sq, su), sq])
         if not por: por.append(['100 g', 100])
         ar = (p.get('product_name_ar') or '').strip()
-        disp = name if brand.lower() in name.lower() else name + ' · ' + brand
-        row = ['b' + p['code'], disp + ('' if brand.lower() in name.lower() else ''), PACK, n, por, 0, brand, ar]
-        if brand.lower() in name.lower(): row[1] = name
-        else: row[1] = name + ' · ' + brand
+        row = ['b' + p['code'], name if brand.lower() in name.lower() else name + ' · ' + brand, PACK, n, por, 0, brand, ar]
         key = (norm(name), norm(brand), round((n[K['kcal']] or 0) / 3))
         scans = p.get('unique_scans_n') or 0
         if key not in best or scans > best[key][0]: best[key] = (scans, row)
