@@ -96,11 +96,13 @@ card style and its own wording. Never clone another app's look, colours, icons o
 
 ## Release policy (set by the user; in force until the user changes it)
 
-Publish first, then test, then fix:
-1. Push finished changes straight to `main` without `[preview]`, so they are released to SideStore right away.
-2. After every release, check the build's results: the build itself, the simulator screenshots (on the `ios-preview`
-   release) and the UI test results (`drag-results.txt`, `uitest-log.txt`, and any other check files the build writes).
-3. If anything looks wrong or a check fails, fix it and publish again, then check again. Repeat until it's clean.
+Test first, then publish, then check:
+1. Push finished changes straight to `main` without `[preview]`. The build tests every push before it's released: the UI
+   tests and the simulator screenshots run first (two simulators at once, to keep it quick), and the update goes to
+   SideStore only if the UI tests pass and the app didn't crash. A failing push is not released.
+2. After every build, check its results: the build itself, the simulator screenshots (on the `ios-preview` release) and
+   the UI test results (`drag-results.txt`, `uitest-log.txt`, any `crash-*.txt`, and any other check files it writes).
+3. If anything looks wrong or a check fails, fix it and push again, then check again. Repeat until it's clean.
 4. Report what was released, what the checks showed, and what was fixed. Say plainly what couldn't be checked
    (for example, anything that needs the real phone).
 Only use `[preview]` again if the user asks to see something before it's released.
