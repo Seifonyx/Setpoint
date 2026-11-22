@@ -25,6 +25,9 @@ final class MealActions {
     /// What a food's and a meal's options are (set up by MealDialogs, shown in a small menu under the row).
     @ObservationIgnored var foodOptions: (FoodItem) -> [OptionRow] = { _ in [] }
     @ObservationIgnored var mealOptions: (MealCategory) -> [OptionRow] = { _ in [] }
+    /// Where the row whose menu is open sits on screen (the menu opens right under it, or above when there's no room).
+    var anchor: CGRect = .zero
+    func close() { more = nil; mealMore = nil }
 }
 
 /// The Diary's meals as one run of rows: each meal's name, then its foods. Each meal still looks like its own card
@@ -159,6 +162,7 @@ struct MealHeader: View {
     let addFood: () -> Void
 
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
+    @State private var rowFrame: CGRect = .zero
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -188,9 +192,10 @@ struct MealHeader: View {
                 .frame(width: 28, height: 28)
         }
         .padding(.vertical, 2)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { rowFrame = $0 }
         // swipe right for its options, left to clear it (like the foods in it)
         .swipeActions(edge: .leading) {
-            Button { actions.mealMore = meal } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
+            Button { actions.anchor = rowFrame; actions.mealMore = meal } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
                 .labelStyle(.iconOnly).tint(Brand.blue)
         }
         .swipeActions(edge: .trailing) {
@@ -203,11 +208,6 @@ struct MealHeader: View {
         .onTapGesture(perform: toggle)
         .accessibilityElement(children: .contain)
         .accessibilityIdentifier("meal-\(meal.key)")
-        // its options: a small menu right under the name
-        .popover(isPresented: Binding(get: { actions.mealMore?.key == meal.key }, set: { if !$0 { actions.mealMore = nil } }),
-                 attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-            OptionsMenu(options: actions.mealOptions(meal)) { actions.mealMore = nil }
-        }
         .accessibilityAddTraits(.isButton)
         .accessibilityHint(Text(expanded ? "Collapse \(meal.name)" : "Expand \(meal.name)"))
     }
@@ -226,6 +226,7 @@ struct MealFoodRow: View {
     let actions: MealActions
 
     @State private var ticked = false
+    @State private var rowFrame: CGRect = .zero
     private var tickable: Bool { food.isPlanned && day <= Day.today }
 
     var body: some View {
@@ -249,18 +250,14 @@ struct MealFoodRow: View {
                 .buttonStyle(.plain)
         }
             .accessibilityIdentifier("food-\(food.id)")
-            // its options: a small menu right under the food (like a context menu, not a sheet over everything)
-            .popover(isPresented: Binding(get: { actions.more?.id == food.id }, set: { if !$0 { actions.more = nil } }),
-                     attachmentAnchor: .rect(.bounds), arrowEdge: .top) {
-                OptionsMenu(options: actions.foodOptions(food)) { actions.more = nil }
-            }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { rowFrame = $0 }
             .swipeActions(edge: .trailing) {
                 Button(role: .destructive) { store.delete(food, on: day) } label: { Label("Delete", systemImage: "trash") }
                     .labelStyle(.iconOnly).tint(Brand.danger)
             }
             .swipeActions(edge: .leading) {
                 // swipe right: ⋯ with everything you can do to it
-                Button { actions.more = food } label: { Label("More", systemImage: "ellipsis") }
+                Button { actions.anchor = rowFrame; actions.more = food } label: { Label("More", systemImage: "ellipsis") }
                     .labelStyle(.iconOnly).tint(Brand.blue)
             }
     }
@@ -517,36 +514,83 @@ struct OptionRow: Identifiable {
     }
 }
 
-/// A food's or a meal's options: a compact menu card that opens right under the row, one line each with its icon on
-/// the right (close to Cronometer's, in Setpoint's own look).
-struct OptionsMenu: View {
-    let options: [OptionRow]
-    let close: () -> Void
+/// A food's or a meal's options: Setpoint's own menu, opening right under the row it belongs to (or above it when
+/// there isn't room), always fully on screen. Frosted glass, one line each with its icon on the right, Delete set
+/// apart at the bottom; the page dims a little behind it, and a tap anywhere closes it.
+struct OptionsMenuLayer: View {
+    @Bindable var actions: MealActions
+    private static let rowH: CGFloat = 46, width: CGFloat = 262, gap: CGFloat = 8
+
+    private var options: [OptionRow] {
+        if let f = actions.more { return actions.foodOptions(f) }
+        if let m = actions.mealMore { return actions.mealOptions(m) }
+        return []
+    }
 
     var body: some View {
-        VStack(spacing: 0) {
-            ForEach(Array(options.enumerated()), id: \.element.id) { i, o in
-                Button {
-                    close()
-                    // the menu goes first, then the choice runs (some open a sheet)
-                    Task { try? await Task.sleep(for: .milliseconds(300)); o.run() }
-                } label: {
-                    HStack(spacing: 12) {
-                        Text(o.title).font(.brand(.subheadline)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
-                            .lineLimit(1).minimumScaleFactor(0.85)
-                        Spacer(minLength: 8)
-                        Image(systemName: o.icon).font(.system(size: 15, weight: .medium)).frame(width: 22)
-                            .foregroundStyle(o.destructive ? Brand.danger : Brand.ink2)
+        GeometryReader { geo in
+            let opts = options
+            if !opts.isEmpty {
+                let origin = geo.frame(in: .global).origin
+                let row = actions.anchor.offsetBy(dx: -origin.x, dy: -origin.y)
+                let main = opts.filter { !$0.destructive }, danger = opts.filter(\.destructive)
+                let h = CGFloat(opts.count) * Self.rowH + (danger.isEmpty || main.isEmpty ? 0 : Self.gap)
+                // below the row if it fits above the tab bar, otherwise above it; never off the screen
+                let bottomLimit = geo.size.height - geo.safeAreaInsets.bottom - 70
+                let below = row.maxY + 6 + h <= bottomLimit
+                let y = min(max(below ? row.maxY + 6 : row.minY - 6 - h, geo.safeAreaInsets.top + 8), bottomLimit - h)
+                let x = min(max(row.minX + 16, 12), geo.size.width - Self.width - 12)
+                ZStack(alignment: .topLeading) {
+                    Color.black.opacity(0.18).ignoresSafeArea()
+                        .onTapGesture { withAnimation(.snappy(duration: 0.2)) { actions.close() } }
+                    VStack(spacing: 0) {
+                        group(main)
+                        if !danger.isEmpty && !main.isEmpty { Color.clear.frame(height: Self.gap) }
+                        group(danger)
                     }
-                    .padding(.horizontal, 16).frame(height: 42).contentShape(.rect)
+                    .frame(width: Self.width)
+                    .offset(x: x, y: y)
+                    .transition(.scale(scale: 0.85, anchor: below ? .top : .bottom).combined(with: .opacity))
                 }
-                .buttonStyle(.plain)
-                .accessibilityLabel(Text(o.title))
-                if i < options.count - 1 { Divider().padding(.leading, 16) }
             }
         }
-        .frame(width: 250)
-        .presentationCompactAdaptation(.popover)
-        .presentationBackground(Brand.card)
+        .ignoresSafeArea()
+        .allowsHitTesting(actions.more != nil || actions.mealMore != nil)
+        .animation(.snappy(duration: 0.22), value: actions.more?.id ?? actions.mealMore?.key)
+        .sensoryFeedback(.selection, trigger: actions.more?.id ?? actions.mealMore?.key) { _, now in now != nil }
+    }
+
+    @ViewBuilder private func group(_ rows: [OptionRow]) -> some View {
+        if !rows.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.element.id) { i, o in
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { actions.close() }
+                        // the menu goes first, then the choice runs (some open a sheet)
+                        Task { try? await Task.sleep(for: .milliseconds(220)); o.run() }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text(o.title).font(.brand(.body)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink).lineLimit(1)
+                            Spacer(minLength: 8)
+                            Image(systemName: o.icon).font(.system(size: 16, weight: .regular)).frame(width: 22)
+                                .foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
+                        }
+                        .padding(.horizontal, 18).frame(height: Self.rowH).contentShape(.rect)
+                    }
+                    .buttonStyle(MenuRowStyle())
+                    .accessibilityLabel(Text(o.title))
+                    if i < rows.count - 1 { Rectangle().fill(Brand.ink.opacity(0.08)).frame(height: 0.5).padding(.leading, 18) }
+                }
+            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 22))
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
+        }
+    }
+}
+
+/// A menu line lights up while your finger is on it.
+private struct MenuRowStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label.background(Brand.ink.opacity(configuration.isPressed ? 0.08 : 0))
     }
 }

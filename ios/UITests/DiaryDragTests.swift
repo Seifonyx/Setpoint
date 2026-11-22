@@ -269,7 +269,7 @@ final class DiaryDragTests: XCTestCase {
                 let opts = ["Plan", "Mark as eaten", "Repeat", "Edit a copy of food", "Edit original food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
                 note("food options: \(opts.joined(separator: ", "))")
                 shot(sw, "food-options")
-                sw.coordinate(withNormalizedOffset: CGVector(dx: 0.5, dy: 0.06)).tap() // close the options menu
+                sw.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.5)).tap() // close the options menu (tap beside it)
                 sleep(1)
             } else { note("food options: no More button after swiping") }
             let header = el(sw, "meal-lunch")
