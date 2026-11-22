@@ -15,6 +15,13 @@ final class DiaryDragTests: XCTestCase {
         log.append(s)
         try? log.joined(separator: "\n").write(to: out.appendingPathComponent(resultsFile), atomically: true, encoding: .utf8)
     }
+    /// A short pause for the screen to settle (the app runs with animations sped up in these checks).
+    private func settle(_ seconds: Double = 0.4) { Thread.sleep(forTimeInterval: seconds) }
+    /// Waits until an element's text changes (or appears), instead of a fixed pause.
+    @MainActor private func waitForChange(_ e: XCUIElement, from old: String, timeout: Double) {
+        let end = Date().addingTimeInterval(timeout)
+        while Date() < end { if e.exists && e.label != old { return }; Thread.sleep(forTimeInterval: 0.25) }
+    }
     private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     /// Where a row is (its middle), or -1 when it isn't on screen. Read from a snapshot, which can't fail the test
     /// when the list unloads the row between asking and reading (e.frame would).
@@ -128,26 +135,26 @@ final class DiaryDragTests: XCTestCase {
         r.terminate()
         // the tab bar shrinking while the app is open (names should fade)
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "YES", "-tab", "diary"]
+        app.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
         app.launch()
-        sleep(3)
+        settle(1)
         app.swipeUp(velocity: .slow)
-        sleep(1)
+        settle()
         shot(app, "bar-runtime-compact")
         app.swipeDown(velocity: .slow)
         app.swipeDown(velocity: .fast)
-        sleep(1)
+        settle()
         shot(app, "bar-runtime-full")
         app.terminate()
 
         // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
         let f = XCUIApplication()
-        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food"]
+        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food", "-fastAnimations"]
         f.launch()
         let row = el(f, "amount-row")
         if row.waitForExistence(timeout: 10) {
             row.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
-            sleep(2)
+            _ = f.keyboards.firstMatch.waitForExistence(timeout: 3)
             note("amount: keypad after tapping the middle of the line = \(f.keyboards.firstMatch.exists)")
             shot(f, "amount-keyboard")
         } else { note("amount: no amount line"); shot(f, "amount-missing") }
@@ -155,12 +162,12 @@ final class DiaryDragTests: XCTestCase {
 
         // number fields in forms: tapping the label opens the keypad
         let n = XCUIApplication()
-        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood"]
+        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood", "-fastAnimations"]
         n.launch()
         let cal = n.staticTexts["Calories"].firstMatch
         if cal.waitForExistence(timeout: 10) {
             cal.tap()
-            sleep(2)
+            _ = n.keyboards.firstMatch.waitForExistence(timeout: 3)
             note("form: keypad after tapping the Calories label = \(n.keyboards.firstMatch.exists)")
             shot(n, "form-keyboard")
         } else { note("form: no Calories label"); shot(n, "form-missing") }
@@ -191,14 +198,14 @@ final class DiaryDragTests: XCTestCase {
         c.terminate()
 
         let t = XCUIApplication()
-        t.launchArguments = ["-demo", "YES", "-tab", "diary"]
+        t.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
         t.launch()
         // found by what VoiceOver says (the row's own test name covers the circle's)
         let tick = t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch
-        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); sleep(2); return tick.exists }() {
-            if !tick.isHittable { t.swipeUp(velocity: .slow); sleep(2) }
+        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); settle(); return tick.exists }() {
+            if !tick.isHittable { t.swipeUp(velocity: .slow); settle() }
             shot(t, "tick-0-planned")
-            tick.tap(); sleep(2)
+            tick.tap(); _ = tick.waitForNonExistence(timeout: 3)
             note("tick: planned protein bar ticked off = \(!t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch.exists) · app running = \(t.state == .runningForeground)")
             shot(t, "tick-1-eaten")
         } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing") }
@@ -206,17 +213,17 @@ final class DiaryDragTests: XCTestCase {
 
         // the microphone: allow the permission prompts and see that the app keeps going
         let m = XCUIApplication()
-        m.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        m.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
         m.launch()
         let mic = el(m, "add-voice")
         if mic.waitForExistence(timeout: 10) {
             mic.tap()
             let springboard = XCUIApplication(bundleIdentifier: "com.apple.springboard")
             for _ in 0..<3 {
-                sleep(2)
+                settle(1)
                 for label in ["Allow", "OK", "Allow While Using App"] where springboard.buttons[label].exists { springboard.buttons[label].tap(); break }
             }
-            sleep(4)
+            settle(2)
             let words = m.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'listen' OR label CONTAINS[c] 'speech' OR label CONTAINS[c] 'microphone' OR label CONTAINS[c] 'type'")).firstMatch
             note("voice: app running after the microphone = \(m.state == .runningForeground) · says: \(words.exists ? words.label : "(nothing)")")
             shot(m, "voice-1")
@@ -229,11 +236,11 @@ final class DiaryDragTests: XCTestCase {
         resultsFile = "check-results-menus.txt"
         // the camera button lists its three ways in
         let cm = XCUIApplication()
-        cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
         cm.launch()
         let cam = cm.buttons["Camera"].firstMatch
         if cam.waitForExistence(timeout: 10) {
-            cam.tap(); sleep(1)
+            cam.tap(); _ = cm.buttons["Snap your plate"].firstMatch.waitForExistence(timeout: 3)
             let ways = ["Snap your plate", "Scan barcode", "Scan a nutrition label"].filter { cm.buttons[$0].firstMatch.exists }
             note("camera menu: \(ways.count) of 3 options (\(ways.joined(separator: ", ")))")
             shot(cm, "camera-menu")
@@ -242,18 +249,18 @@ final class DiaryDragTests: XCTestCase {
 
         // selecting several in My foods takes a recipe and a saved meal too, and plans them
         let sp = XCUIApplication()
-        sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine"]
+        sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine", "-fastAnimations"]
         sp.launch()
         let several = sp.buttons["Select several"].firstMatch
         if several.waitForExistence(timeout: 10) {
-            several.tap(); sleep(1)
+            several.tap(); _ = sp.staticTexts["Oven potatoes"].firstMatch.waitForExistence(timeout: 3)
             for name in ["Oven potatoes", "Usual breakfast"] { sp.staticTexts[name].firstMatch.tap() }
-            sleep(1)
+            settle()
             let tray = sp.staticTexts.containing(NSPredicate(format: "label ENDSWITH 'selected'")).firstMatch
             note("select several: \(tray.exists ? tray.label : "(no tray)")")
             shot(sp, "select-meal-recipe")
-            sp.buttons["Plan"].firstMatch.tap(); sleep(2)
-            (sp.buttons["Done"].firstMatch.exists ? sp.buttons["Done"] : sp.buttons["Cancel"]).firstMatch.tap(); sleep(2) // back to the Diary
+            sp.buttons["Plan"].firstMatch.tap(); settle(1)
+            (sp.buttons["Done"].firstMatch.exists ? sp.buttons["Done"] : sp.buttons["Cancel"]).firstMatch.tap(); settle(1) // back to the Diary
             let badge = sp.staticTexts.containing(NSPredicate(format: "label ENDSWITH 'planned'")).count
             note("select several: planned labels in the Diary after Plan = \(badge)")
             shot(sp, "select-planned-diary")
@@ -262,11 +269,11 @@ final class DiaryDragTests: XCTestCase {
 
         // the sort and filter menu, open (Verified only should be a normal choice)
         let fm = XCUIApplication()
-        fm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        fm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
         fm.launch()
         let pill = fm.buttons["Sort"].firstMatch
         if pill.waitForExistence(timeout: 10) {
-            pill.tap(); sleep(1)
+            pill.tap(); _ = fm.buttons["Verified only"].firstMatch.waitForExistence(timeout: 3)
             let v = fm.buttons["Verified only"].firstMatch
             note("filter menu: Verified only exists = \(v.exists) · enabled = \(v.exists && v.isEnabled)")
             shot(fm, "filter-menu")
@@ -275,44 +282,44 @@ final class DiaryDragTests: XCTestCase {
 
         // swipe right on a food: its options; on a meal's name: the meal's options
         let sw = XCUIApplication()
-        sw.launchArguments = ["-demo", "YES", "-tab", "diary"]
+        sw.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
         sw.launch()
         let oatsRow = el(sw, "food-a0")
         if oatsRow.waitForExistence(timeout: 10) {
-            sw.swipeUp(velocity: .slow); sleep(2)
-            oatsRow.swipeRight(); sleep(1)
+            sw.swipeUp(velocity: .slow); settle(1)
+            oatsRow.swipeRight(); _ = sw.buttons["More"].firstMatch.waitForExistence(timeout: 3)
             shot(sw, "swipe-food")
             let more = sw.buttons["More"].firstMatch
             if more.exists {
-                more.tap(); sleep(1)
+                more.tap(); _ = sw.buttons["Copy"].firstMatch.waitForExistence(timeout: 3)
                 let opts = ["Plan", "Mark as eaten", "Repeat", "Edit a copy of food", "Edit original food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
                 note("food options: \(opts.joined(separator: ", "))")
                 shot(sw, "food-options")
                 sw.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.5)).tap() // close it (tap beside it)
-                sleep(1)
-                sleep(1)
+                settle()
+                
             } else { note("food options: no More button after swiping") }
             let header = el(sw, "meal-lunch")
             if header.exists {
-                header.swipeRight(); sleep(1)
+                header.swipeRight(); _ = sw.buttons["Lunch options"].firstMatch.waitForExistence(timeout: 3)
                 shot(sw, "swipe-meal")
                 let mo = sw.buttons["Lunch options"].firstMatch
                 note("meal options button after swiping = \(mo.exists)")
-                if mo.exists { mo.tap(); sleep(1); shot(sw, "meal-options") }
+                if mo.exists { mo.tap(); settle(); shot(sw, "meal-options") }
             }
         } else { note("swipe: no food rows"); shot(sw, "swipe-missing") }
         sw.terminate()
 
         // ⋯ then New: a food, a recipe or a meal
         let nw = XCUIApplication()
-        nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
+        nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
         nw.launch()
         let more = nw.buttons["More ways to add"].firstMatch
         if more.waitForExistence(timeout: 10) {
-            more.tap(); sleep(1)
+            more.tap()
             let new = nw.buttons["New"].firstMatch
             if new.waitForExistence(timeout: 3) {
-                new.tap(); sleep(1)
+                new.tap(); _ = nw.buttons["Recipe"].firstMatch.waitForExistence(timeout: 3)
                 let kinds = ["Food", "Recipe", "Meal"].filter { nw.buttons[$0].firstMatch.exists }
                 note("new menu: \(kinds.count) of 3 (\(kinds.joined(separator: ", ")))")
                 shot(nw, "new-menu")
@@ -322,11 +329,11 @@ final class DiaryDragTests: XCTestCase {
 
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
-        a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
+        a.launchArguments = ["-demo", "YES", "-auth", "welcome", "-fastAnimations"]
         a.launch()
         let toSignIn = el(a, "auth-signin")
         if toSignIn.waitForExistence(timeout: 10) {
-            sleep(2)
+            settle()
             toSignIn.tap()
             let submit = el(a, "auth-submit"), err = el(a, "auth-error")
             _ = submit.waitForExistence(timeout: 5)
@@ -334,14 +341,14 @@ final class DiaryDragTests: XCTestCase {
             note("auth: empty form says: \(err.waitForExistence(timeout: 3) ? err.label : "(nothing)")")
             let mail = a.textFields["auth-email"].firstMatch
             mail.tap(); mail.typeText("not-an-email")
-            submit.tap(); sleep(1)
+            submit.tap(); settle()
             note("auth: bad email says: \(err.exists ? err.label : "(nothing)")")
             mail.tap(); mail.typeText("@example.com")
             let pw = a.secureTextFields["auth-password"].firstMatch
             pw.tap(); pw.typeText("wrong-password-1")
             shot(a, "auth-filled")
             submit.tap()
-            sleep(6)
+            waitForChange(err, from: err.exists ? err.label : "", timeout: 10) // the server answers (a refusal)
             note("auth: refused sign-in says: \(err.exists ? err.label : "(nothing)") · still on the form = \(submit.exists)")
             shot(a, "auth-refused")
         } else { note("auth: no welcome screen"); shot(a, "auth-missing") }
