@@ -353,6 +353,7 @@
     rkf8: { kcal: 150, p: 1.1, c: 6.1, f: 13, sat: 1, na: 228, sug: 5.3 }, rf4: { per: 'rkf8' },
     rkf9: { kcal: 261, p: 3.1, c: 38, f: 9.8, sat: 0.8, na: 296, sug: 0.5 }
   };
+  const LAB_LOCAL = { 2706916: 'rmc1', 173297: 'rmc6', 170745: 'rkf3', 170737: 'rkf7' }; // Big Mac, McNuggets, KFC drumstick, popcorn chicken
   const SAME_ITEM = { rf3: 'rkf5', rf4: 'rkf8' }; // KFC Twister wrap = Twister, Coleslaw regular = Coleslaw
   const RESTAURANTS = [
     ['rk1', 'Koshary, small', 'Koshary El Tahrir', 350, 600, 18, 110, 10, 'small box', 'كشري التحرير koshary koshari'],
@@ -510,6 +511,11 @@
           if (o) { ['sat', 'trans', 'chol', 'na', 'fib', 'sug'].forEach(function (x) { if (o[x] != null) f.m[x] = o[x] * k; }); f.chk = 'maker'; f.cat = 'Restaurants'; }
           f.w = wordsOf(f.name + ' ' + (r[9] || '')); f.first = mainWords(r[1]); f.len = wordsOf(r[1]).length; f.heads = [f.first[0]];
           list.push(f); byId[f.id] = f;
+        });
+        // USDA's US version of an item we have the chain's own local numbers for: the local one is used (its id opens it).
+        Object.keys(LAB_LOCAL).forEach(function (lid) {
+          const a = byId['u' + lid], b = byId['u' + LAB_LOCAL[lid]]; if (!a || !b || a === b) return;
+          b.w = b.w.concat(a.w.filter(function (x) { return b.w.indexOf(x) < 0; })); byId['u' + lid] = b; const i = list.indexOf(a); if (i >= 0) list.splice(i, 1);
         });
         // Two entries for one menu item (the same official numbers): keep one, the other's id opens it.
         Object.keys(SAME_ITEM).forEach(function (o) {

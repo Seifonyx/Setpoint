@@ -26,6 +26,35 @@ def lab(r): return isinstance(r[0], int) and r[0] < 9000000
 def fill(r, k, v, why):
     if r[3][K[k]] is None: r[3][K[k]] = v; bump(why)
 
+# ---------- 0. values and products that can't be true (packaged label data only; USDA's lab data is left alone) ----------
+SALTY = re.compile(r'\b(sel|salt|sal|bouillon|kub|cube|stock|masala|curry|soja|soy|maggi|arome|herbamare|seasoning|levure|baking|powder|paste|pate|sauce|miso|anchov|olive|pickle|torshi|fesikh|feseekh|rennet)\b', re.I)
+DRINK = re.compile(r'\b(cola|coke|soda|pepsi|sprite|fanta|7 ?up|mirinda|schweppes|tonic|energy drink|mountain dew)\b', re.I)
+NOT_A_DRINK = re.compile(r'gumm|jell|candy|bonbon|sweets|spaghettini|pre.?workout|fizz|lolli|chips|ketchup|lupin', re.I)
+BAD_SCRIPT = re.compile(r'[\u0370-\u03FF\u0400-\u04FF\u0590-\u05FF\u0E00-\u0E7F\u3040-\u30FF\u4E00-\u9FFF\uAC00-\uD7AF]')
+false_ids = set()
+for r in d['foods']:
+    if not isinstance(r[0], str): continue
+    n = r[3]; g = lambda k: n[K[k]]
+    kc, p, c, f = g('kcal'), g('p'), g('c'), g('f')
+    name = r[1].split(' · ')[0]
+    why = None
+    if None not in (p, c, f) and p + c + f > 105: why = 'protein, carbs and fat over 100 g per 100 g'
+    elif kc is not None and kc < 20 and None not in (p, c, f) and 4 * p + 4 * c + 9 * f > 60: why = 'almost no calories, but its protein, carbs and fat say otherwise'
+    elif kc is not None and kc > 80 and DRINK.search(name) and not NOT_A_DRINK.search(r[1]): why = 'a soft drink over 80 kcal per 100 ml (a serving typed in as 100 ml)'
+    # the butter or the oil itself (not biscuits, spreads, tuna or salads that mention one), at calories none could have
+    elif re.fullmatch(r'(?:(?:salted|unsalted|sweet|cream|pure|dairy|real|fresh)\s+)*(butter|beurre|mantequilla|ghee|burro)(?:\s+(?:doux|demi.sel|salted|unsalted|tendre|sin sal|con sal))*', name.strip(), re.I) and kc is not None and kc < 300: why = 'a butter under 300 kcal per 100 g'
+    elif (re.search(r'\boil\s*$', name.strip(), re.I) or re.match(r'(huile|aceite|olio)\b', name.strip(), re.I)) and not re.search(r'spray|\bin\b|\bà\b|with|tuna|thon|sardin', name, re.I) and kc is not None and kc < 400: why = 'an oil under 400 kcal per 100 g (a spoonful typed in as 100 g)'
+    elif BAD_SCRIPT.search(name): why = 'named in a script the app doesn\'t use'
+    elif re.fullmatch(r'[\d\s.,-]+', name.strip()): why = 'no name (only a number)'
+    if why: false_ids.add(r[0]); bump('removed: ' + why); continue
+    # one wrong value in an otherwise sound product: cleared, so it isn't counted
+    if g('na') is not None and (g('na') > 39300 or g('na') > 6000 and not SALTY.search(r[1])): n[K['na']] = None; bump('cleared: impossible sodium')
+    if g('sat') is not None and f is not None and g('sat') > f + 1: n[K['sat']] = None; bump('cleared: saturated fat above total fat')
+    if g('sug') is not None and c is not None and g('sug') > c * 1.1 + 1: n[K['sug']] = None; bump('cleared: sugar above carbs')
+    if g('fib') is not None and c is not None and g('fib') > c + 50: n[K['fib']] = None; bump('cleared: fibre far above carbs')
+    if g('caff') is not None and g('caff') > 4000 and (kc or 0) < 200: n[K['caff']] = None; bump('cleared: impossible caffeine')
+d['foods'] = [r for r in d['foods'] if r[0] not in false_ids]
+
 # ---------- 1. certain zeros ----------
 PLANT_CATS = {'Vegetables and Vegetable Products', 'Fruits and Fruit Juices', 'Legumes and Legume Products', 'Nut and Seed Products',
               'Cereal Grains and Pasta', 'Spices and Herbs', 'Citrus fruits', 'Apples', 'Bananas', 'Melons', 'Grapes', 'Mango and papaya',
@@ -70,7 +99,7 @@ DROP = re.compile(r'\b\d+([.,]\d+)?\s*(ml|cl|l|g|gr|kg|oz|fl)\b|\b\d+\s*x\b|\bx\
 STOP = {'energy', 'drink', 'drinks', 'boisson', 'energisante', 'energetica', 'the', 'edition', 'flavor', 'flavour', 'flavoured', 'soda', 'soft',
         'and', 'with', 'de', 'a', 'original', 'classic', 'regular', 'taste', 'gout', 'sabor', 'rasa', 'asli', 'sugar', 'cookies', 'cookie',
         'biscuits', 'biscuit', 'bar', 'bars', 'candy', 'single', 'singles', 'imp'}
-SYN = {'coke': 'coca cola', 'cocacola': 'coca cola', 'kitkat': 'kit kat'}
+SYN = {'coke': 'coca cola', 'cocacola': 'coca cola', 'kitkat': 'kit kat', 'redbull': 'red bull'}
 def words(s):
     t = unicodedata.normalize('NFKD', s).encode('ascii', 'ignore').decode().lower().replace('-', ' ')
     t = DROP.sub(' ', t)
@@ -104,30 +133,39 @@ def same(a, b):
         ba = set(words(brand(a) + ' ' + (a[1].split(' · ')[1] if ' · ' in a[1] else ''))) - GENERIC
         bb = set(words(brand(b) + ' ' + (b[1].split(' · ')[1] if ' · ' in b[1] else ''))) - GENERIC
         if ba and bb and not (ba & bb): return False
-    for k, rel, ab in (('kcal', 0.15, 5), ('sug', 0.2, 1.5), ('f', 0.25, 1.5), ('p', 0.25, 1.5)):
+    for k, rel, ab in (('kcal', 0.15, 5), ('sug', 0.2, 1.5), ('f', 0.25, 2.5), ('p', 0.3, 2.5)):
         x, y = a[3][K[k]], b[3][K[k]]
         if x is not None and y is not None and abs(x - y) > max(ab, rel * max(x, y)): return False
     return a[3][K['kcal']] is not None and b[3][K['kcal']] is not None
-def rank(r):  # which copy to keep: checked with USDA, then with the maker, then the most complete, with real sizes
-    return ({'usda': 2, 'maker': 1}.get(r[9] if len(r) > 9 else None, 0), sum(v is not None for v in r[3]),
+def branded_lab(r):  # USDA's own entry for a brand's product: "Energy drink (Red Bull)"
+    return lab(r) and bool(re.search(r'\([^)]*[A-Z][^)]*\)\s*$', r[1]))
+def good_one(r): return checked(r) or branded_lab(r)
+def rank(r):  # which copy to keep: USDA's lab entry, then checked with USDA, then with the maker, then the most complete, with real sizes
+    return (3 if lab(r) else {'usda': 2, 'maker': 1}.get(r[9] if len(r) > 9 else None, 0), sum(v is not None for v in r[3]),
             sum(1 for s_ in r[4] if s_[0] not in ('100 g', '1 serving')))
-groups = {}
-for r in d['foods']:
-    if isinstance(r[0], str) and key(r): groups.setdefault(key(r), []).append(r)
+def allwords(r):  # every word of its name and brand, brand names included ("Mountain dew · Pepsi" = "Pepsi · Mountain Dew")
+    w = set(x for x in words(re.sub(r'[()]', ' ', r[1]) + ' ' + brand(r)) if x not in STOP)
+    return tuple(sorted(w))
 alias = d.setdefault('alias', {})
 gone = set()
-for g in groups.values():
-    if len(g) < 2 or not any(checked(r) for r in g): continue
-    g.sort(key=rank, reverse=True)
-    for i_, a in enumerate(g):
-        if a[0] in gone or not checked(a): continue
-        for b in g[i_ + 1:]:
-            if b[0] in gone or not same(a, b): continue
-            gone.add(b[0]); alias[b[0]] = a[0]
-            for s_ in b[4]:  # its sizes, if the kept one lacks them
-                if s_[0] not in [x[0] for x in a[4]] and s_[0] not in ('100 g', '1 serving'): a[4].append(s_)
-            if not a[7] if len(a) > 7 else False: a[7] = b[7] if len(b) > 7 else a[7]
-            bump('copy removed (verified %s kept)' % ('one also' if checked(b) else 'one'))
+def merge(groups):
+    for g in groups.values():
+        if len(g) < 2 or not any(good_one(r) for r in g): continue
+        g.sort(key=rank, reverse=True)
+        for i_, a in enumerate(g):
+            if a[0] in gone or not good_one(a): continue
+            for b in g[i_ + 1:]:
+                if b[0] in gone or lab(b) or not same(a, b): continue  # USDA's lab foods are never removed
+                gone.add(b[0]); alias[b[0]] = a[0]
+                for s_ in b[4]:  # its sizes, if the kept one lacks them
+                    if s_[0] not in [x[0] for x in a[4]] and s_[0] not in ('100 g', '1 serving'): a[4].append(s_)
+                if len(a) > 7 and not a[7] and len(b) > 7 and b[7]: a[7] = b[7]
+                bump('copy removed (%s kept)' % ('USDA lab entry' if lab(a) else 'verified one'))
+g1, g2 = {}, {}
+for r in d['foods']:
+    if isinstance(r[0], str) and key(r): g1.setdefault(key(r), []).append(r)
+    if isinstance(r[0], str) or branded_lab(r): g2.setdefault(allwords(r), []).append(r)
+merge(g1); merge(g2)
 d['foods'] = [r for r in d['foods'] if r[0] not in gone]
 # an alias whose food is back in the list (imported again) does nothing: drop it
 ids = {r[0] for r in d['foods']}
