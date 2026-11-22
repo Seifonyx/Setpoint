@@ -25,45 +25,9 @@ final class MealActions {
     /// What a food's and a meal's options are (set up by MealDialogs, shown in a small menu under the row).
     @ObservationIgnored var foodOptions: (FoodItem) -> [OptionRow] = { _ in [] }
     @ObservationIgnored var mealOptions: (MealCategory) -> [OptionRow] = { _ in [] }
-    /// Where each row sits on screen right now (not observed: it changes on every scroll).
-    @ObservationIgnored var frames: [String: CGRect] = [:]
-    /// The part of the screen a menu can use (set by the menu layer): below the top bar, above the tab bar.
-    @ObservationIgnored var roomTop: CGFloat = 0
-    @ObservationIgnored var roomBottom: CGFloat = 10_000
-    /// The row the open menu belongs to, and where it was when the menu opened.
+    /// Where the row whose menu is open sits on screen (the menu opens right under it, or above when there's no room).
     var anchor: CGRect = .zero
-    /// A row the list should scroll to first, so its menu fits right under it.
-    var scrollTarget: String?
-
-    /// Opens a row's menu: always left-aligned, right under the row. If there isn't room (near the tab bar, or the
-    /// row is under the top bar), the list scrolls the row up first, then the menu opens.
-    func open(row id: String, count: Int, show: @escaping @MainActor () -> Void) {
-        let h = OptionsMenuLayer.height(count)
-        let f = frames[id] ?? .zero
-        if f.maxY + 8 + h <= roomBottom && f.minY >= roomTop {
-            anchor = f; show(); return
-        }
-        scrollTarget = id
-        Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(380))
-            scrollTarget = nil
-            anchor = frames[id] ?? f
-            show()
-        }
-    }
     func close() { more = nil; mealMore = nil }
-}
-
-/// Scrolls the Diary so a row's menu fits under it.
-struct MenuScroller: ViewModifier {
-    let actions: MealActions
-    func body(content: Content) -> some View {
-        ScrollViewReader { proxy in
-            content.onChange(of: actions.scrollTarget) { _, id in
-                if let id { withAnimation(.snappy(duration: 0.3)) { proxy.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.22)) } }
-            }
-        }
-    }
 }
 
 /// The Diary's meals as one run of rows: each meal's name, then its foods. Each meal still looks like its own card
@@ -198,6 +162,7 @@ struct MealHeader: View {
     let addFood: () -> Void
 
     private var counted: [FoodItem] { foods.filter { !$0.isPlanned || day > Day.today } }
+    @State private var rowFrame: CGRect = .zero
 
     var body: some View {
         HStack(alignment: .center, spacing: 8) {
@@ -227,10 +192,10 @@ struct MealHeader: View {
                 .frame(width: 28, height: 28)
         }
         .padding(.vertical, 2)
-        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { actions.frames["meal-" + meal.key] = $0 }
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { rowFrame = $0 }
         // swipe right for its options, left to clear it (like the foods in it)
         .swipeActions(edge: .leading) {
-            Button { actions.open(row: "meal-" + meal.key, count: actions.mealOptions(meal).count) { actions.mealMore = meal } } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
+            Button { actions.anchor = rowFrame; actions.mealMore = meal } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
                 .labelStyle(.iconOnly).tint(Brand.blue)
         }
         .swipeActions(edge: .trailing) {
@@ -261,6 +226,7 @@ struct MealFoodRow: View {
     let actions: MealActions
 
     @State private var ticked = false
+    @State private var rowFrame: CGRect = .zero
     private var tickable: Bool { food.isPlanned && day <= Day.today }
 
     var body: some View {
@@ -284,14 +250,14 @@ struct MealFoodRow: View {
                 .buttonStyle(.plain)
         }
             .accessibilityIdentifier("food-\(food.id)")
-            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { actions.frames["food-" + food.id] = $0 }
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { rowFrame = $0 }
             .swipeActions(edge: .trailing) {
                 Button(role: .destructive) { store.delete(food, on: day) } label: { Label("Delete", systemImage: "trash") }
                     .labelStyle(.iconOnly).tint(Brand.danger)
             }
             .swipeActions(edge: .leading) {
                 // swipe right: ⋯ with everything you can do to it
-                Button { actions.open(row: "food-" + food.id, count: actions.foodOptions(food).count) { actions.more = food } } label: { Label("More", systemImage: "ellipsis") }
+                Button { actions.anchor = rowFrame; actions.more = food } label: { Label("More", systemImage: "ellipsis") }
                     .labelStyle(.iconOnly).tint(Brand.blue)
             }
     }
@@ -548,93 +514,77 @@ struct OptionRow: Identifiable {
     }
 }
 
-/// A food's or a meal's options: Setpoint's own menu. Always in the same place relative to its row: left-aligned,
-/// right under it (the list scrolls first when there isn't room). One frosted-glass card like iOS's own menus: the
-/// food's name on top, a line per option with its icon on the right, Delete in its own section at the bottom.
+/// A food's or a meal's options: Setpoint's own menu, opening right under the row it belongs to (or above it when
+/// there isn't room), always fully on screen. Frosted glass, one line each with its icon on the right, Delete set
+/// apart at the bottom; the page dims a little behind it, and a tap anywhere closes it.
 struct OptionsMenuLayer: View {
     @Bindable var actions: MealActions
-    static let rowH: CGFloat = 48, headH: CGFloat = 52, band: CGFloat = 8
-    static func height(_ count: Int) -> CGFloat { headH + CGFloat(count) * rowH + band }
+    private static let rowH: CGFloat = 46, width: CGFloat = 262, gap: CGFloat = 8
 
-    private var content: (title: String, sub: String?, options: [OptionRow])? {
-        if let f = actions.more { return (f.displayName, "\(Fmt.kcal(f.kcal)) kcal", actions.foodOptions(f)) }
-        if let m = actions.mealMore { return (m.name, nil, actions.mealOptions(m)) }
-        return nil
+    private var options: [OptionRow] {
+        if let f = actions.more { return actions.foodOptions(f) }
+        if let m = actions.mealMore { return actions.mealOptions(m) }
+        return []
     }
 
     var body: some View {
         GeometryReader { geo in
-            let origin = geo.frame(in: .global).origin
-            let top = geo.safeAreaInsets.top + 52, bottom = geo.size.height - geo.safeAreaInsets.bottom - 74
-            Color.clear
-                // plain numbers, not a range: on the first layout pass the size can still be zero (top below bottom)
-                .onAppear { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
-                .onChange(of: geo.size) { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
-            if let c = content {
+            let opts = options
+            if !opts.isEmpty {
+                let origin = geo.frame(in: .global).origin
                 let row = actions.anchor.offsetBy(dx: -origin.x, dy: -origin.y)
-                let width = min(geo.size.width - 32, 320)
-                let h = Self.height(c.options.count)
-                let y = min(row.maxY + 8, bottom - h) // right under the row (only ever nudged if the list can't scroll further)
+                let main = opts.filter { !$0.destructive }, danger = opts.filter(\.destructive)
+                let h = CGFloat(opts.count) * Self.rowH + (danger.isEmpty || main.isEmpty ? 0 : Self.gap)
+                // below the row if it fits above the tab bar, otherwise above it; never off the screen
+                let bottomLimit = geo.size.height - geo.safeAreaInsets.bottom - 70
+                let below = row.maxY + 6 + h <= bottomLimit
+                let y = min(max(below ? row.maxY + 6 : row.minY - 6 - h, geo.safeAreaInsets.top + 8), bottomLimit - h)
+                let x = min(max(row.minX + 16, 12), geo.size.width - Self.width - 12)
                 ZStack(alignment: .topLeading) {
-                    Rectangle().fill(.black.opacity(0.22)).ignoresSafeArea()
+                    Color.black.opacity(0.18).ignoresSafeArea()
                         .onTapGesture { withAnimation(.snappy(duration: 0.2)) { actions.close() } }
-                    card(c, width: width)
-                        .offset(x: 16, y: y)
-                        .transition(.scale(scale: 0.9, anchor: .topLeading).combined(with: .opacity))
+                    VStack(spacing: 0) {
+                        group(main)
+                        if !danger.isEmpty && !main.isEmpty { Color.clear.frame(height: Self.gap) }
+                        group(danger)
+                    }
+                    .frame(width: Self.width)
+                    .offset(x: x, y: y)
+                    .transition(.scale(scale: 0.85, anchor: below ? .top : .bottom).combined(with: .opacity))
                 }
             }
         }
         .ignoresSafeArea()
-        .allowsHitTesting(content != nil)
-        .animation(.spring(response: 0.28, dampingFraction: 0.86), value: actions.more?.id ?? actions.mealMore?.key)
-        .sensoryFeedback(.impact(weight: .light), trigger: actions.more?.id ?? actions.mealMore?.key) { _, now in now != nil }
+        .allowsHitTesting(actions.more != nil || actions.mealMore != nil)
+        .animation(.snappy(duration: 0.22), value: actions.more?.id ?? actions.mealMore?.key)
+        .sensoryFeedback(.selection, trigger: actions.more?.id ?? actions.mealMore?.key) { _, now in now != nil }
     }
 
-    private func card(_ c: (title: String, sub: String?, options: [OptionRow]), width: CGFloat) -> some View {
-        let main = c.options.filter { !$0.destructive }, danger = c.options.filter(\.destructive)
-        return VStack(spacing: 0) {
-            // what it's for, so you know which food you swiped
-            HStack(alignment: .firstTextBaseline) {
-                Text(c.title).font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink).lineLimit(1)
-                Spacer(minLength: 8)
-                if let sub = c.sub { Text(sub).font(.brand(.caption)).foregroundStyle(Brand.ink2).monospacedDigit() }
+    @ViewBuilder private func group(_ rows: [OptionRow]) -> some View {
+        if !rows.isEmpty {
+            VStack(spacing: 0) {
+                ForEach(Array(rows.enumerated()), id: \.element.id) { i, o in
+                    Button {
+                        withAnimation(.snappy(duration: 0.2)) { actions.close() }
+                        // the menu goes first, then the choice runs (some open a sheet)
+                        Task { try? await Task.sleep(for: .milliseconds(220)); o.run() }
+                    } label: {
+                        HStack(spacing: 12) {
+                            Text(o.title).font(.brand(.body)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink).lineLimit(1)
+                            Spacer(minLength: 8)
+                            Image(systemName: o.icon).font(.system(size: 16, weight: .regular)).frame(width: 22)
+                                .foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
+                        }
+                        .padding(.horizontal, 18).frame(height: Self.rowH).contentShape(.rect)
+                    }
+                    .buttonStyle(MenuRowStyle())
+                    .accessibilityLabel(Text(o.title))
+                    if i < rows.count - 1 { Rectangle().fill(Brand.ink.opacity(0.08)).frame(height: 0.5).padding(.leading, 18) }
+                }
             }
-            .padding(.horizontal, 18).frame(height: Self.headH)
-            line(full: true)
-            ForEach(Array(main.enumerated()), id: \.element.id) { i, o in
-                item(o)
-                if i < main.count - 1 { line(full: false) }
-            }
-            if !danger.isEmpty {
-                Rectangle().fill(Brand.ink.opacity(0.07)).frame(height: Self.band) // a section break, as in iOS menus
-                ForEach(danger) { item($0) }
-            }
+            .glassEffect(.regular, in: .rect(cornerRadius: 22))
+            .shadow(color: .black.opacity(0.18), radius: 24, y: 10)
         }
-        .frame(width: width)
-        .glassEffect(.regular, in: .rect(cornerRadius: 26))
-        .shadow(color: .black.opacity(0.25), radius: 30, y: 14)
-    }
-
-    private func line(full: Bool) -> some View {
-        Rectangle().fill(Brand.ink.opacity(0.1)).frame(height: 0.5).padding(.leading, full ? 0 : 18)
-    }
-
-    private func item(_ o: OptionRow) -> some View {
-        Button {
-            withAnimation(.snappy(duration: 0.2)) { actions.close() }
-            // the menu goes first, then the choice runs (some open a sheet)
-            Task { try? await Task.sleep(for: .milliseconds(220)); o.run() }
-        } label: {
-            HStack(spacing: 12) {
-                Text(o.title).font(.brand(.body)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink).lineLimit(1)
-                Spacer(minLength: 8)
-                Image(systemName: o.icon).font(.system(size: 17)).frame(width: 24)
-                    .foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
-            }
-            .padding(.horizontal, 18).frame(height: Self.rowH).contentShape(.rect)
-        }
-        .buttonStyle(MenuRowStyle())
-        .accessibilityLabel(Text(o.title))
     }
 }
 
