@@ -10,11 +10,12 @@
   function L(s) { return lang === 'ar' && typeof s === 'string' && s ? (tr(s) || s) : s; }
   function setMeals() { MEALS = state.settings.meals && state.settings.meals.length ? state.settings.meals.map(function (x) { return [x.k, x.n]; }) : DEFAULT_MEALS; }
   // Verified: lab-measured USDA data only (not estimates such as restaurant dishes or Egyptian recipes, label data or your own foods).
-  function isVerified(f) { if (f.est || f.custom || f.recipe || f.off) return false; var m = /^u(\d+)$/.exec(f.id); return !!m && +m[1] < 9000000; }
+  function isVerified(f) { if (f.est || f.custom || f.recipe || f.off) return false; if (f.chk) return true; /* checked against the maker's figures */ var m = /^u(\d+)$/.exec(f.id); return !!m && +m[1] < 9000000; }
   // Where a food's numbers come from, said plainly: measured in a lab, read off the label, worked out (an estimate), yours or a recipe.
   var offStash = {};
   function trustOf(f) {
     if (f.recipe) return 'recipe'; if (f.custom) return 'yours';
+    if (f.chk && isVerified(f)) return 'checked';
     if (isVerified(f)) return 'lab';
     if (f.est || f.place || /^ur|^uex/.test(f.id) || /^u9\d{6}$/.test(f.id) || /estimate|Egyptian dishes/.test(f.cat || '')) return 'estimate';
     return 'label';
