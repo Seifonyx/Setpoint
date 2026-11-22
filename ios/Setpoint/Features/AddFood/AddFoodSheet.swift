@@ -14,6 +14,7 @@ struct AddFoodSheet: View {
     @State private var query = UserDefaults.standard.string(forKey: "search") ?? "" // build-server screenshots can open with a search
     @State private var tab = Tab(rawValue: UserDefaults.standard.string(forKey: "addtab") ?? "") ?? .all // -addtab: build-server screenshots
     @State private var hits: [FoodHit] = []
+    @State private var online: [FoodHit] = []   // Open Food Facts, when the built-in list has little
     @State private var recents: [FoodHit] = []
     @State private var frequent: [FoodHit] = []
     @State private var mealRecents: [FoodHit] = []   // the same, at this meal only (the All tab's "This meal")
@@ -145,7 +146,7 @@ struct AddFoodSheet: View {
             .alert(scanMessage ?? "", isPresented: Binding(get: { scanMessage != nil }, set: { if !$0 { scanMessage = nil } })) { Button("OK", role: .cancel) {} }
             .task(id: "\(meal)|\(store.version)|\(store.foodsReady)|\(favSort)|\(favVerified)|\(mineSort)") { await loadLists() }
             .task(id: "\(query)|\(meal)|\(store.foodsReady)|\(sort)|\(verifiedOnly)|\(tab)|\(favSort)|\(favVerified)|\(mineSort)|\(store.version)") {
-                guard !query.isEmpty else { hits = []; return }
+                guard !query.isEmpty else { hits = []; online = []; return }
                 try? await Task.sleep(for: .milliseconds(150)) // wait for typing to pause
                 // search stays inside the tab you're on: All searches everything, Favorites and My foods only themselves
                 switch tab {
@@ -153,6 +154,7 @@ struct AddFoodSheet: View {
                 case .favorites: hits = await store.engineRef.searchIn(query, meal: meal, kind: "favorites", sort: favSort, verifiedOnly: favVerified)
                 case .mine: hits = await store.engineRef.searchIn(query, meal: meal, kind: "mine", sort: mineSort, verifiedOnly: false)
                 }
+                await searchOnline()
             }
             .onAppear { if startIDs.isEmpty { startIDs = Set(store.items(day).map(\.id)) } }
         }
@@ -355,7 +357,15 @@ struct AddFoodSheet: View {
             Section { SkeletonRows(count: 5).padding(.vertical, 6) }
         }
         if !hits.isEmpty { Section { ForEach(hits) { row($0) } } }
-        if store.foodsReady && hits.isEmpty {
+        // more from Open Food Facts when the built-in list has little: a product picked here is kept, and works offline after
+        if !online.isEmpty {
+            Section {
+                ForEach(online) { h in
+                    Button { Task { await openOnline(h) } } label: { FoodHitRow(hit: h).contentShape(Rectangle()) }.buttonStyle(.plain)
+                }
+            } header: { Text("Online · Open Food Facts") }
+        }
+        if store.foodsReady && hits.isEmpty && online.isEmpty {
             Section {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("No matches for “\(query)”").font(.brand(.headline))
@@ -570,6 +580,31 @@ struct AddFoodSheet: View {
     private func relogQuick(_ h: FoodHit) {
         withAnimation { store.add([quickRaw(h)], to: day, label: String(localized: "Added \(h.name)")) }
     }
+    /// Packaged products from Open Food Facts for a search the built-in list has few answers to (a brand it doesn't have).
+    private func searchOnline() async {
+        let q = query.trimmingCharacters(in: .whitespaces)
+        guard tab == .all, q.count >= 3, hits.count < 8 else { online = []; return }
+        try? await Task.sleep(for: .milliseconds(450)) // only once typing has stopped
+        guard !Task.isCancelled else { return }
+        var c = URLComponents(string: "https://world.openfoodfacts.org/cgi/search.pl")!
+        c.queryItems = [.init(name: "search_terms", value: q), .init(name: "search_simple", value: "1"), .init(name: "action", value: "process"),
+                        .init(name: "json", value: "1"), .init(name: "page_size", value: "15"), .init(name: "sort_by", value: "unique_scans_n"),
+                        .init(name: "fields", value: "code,product_name,product_name_en,brands,nutriments,serving_quantity,quantity")]
+        guard let url = c.url else { return }
+        var req = URLRequest(url: url); req.timeoutInterval = 10
+        req.setValue("Setpoint iOS", forHTTPHeaderField: "User-Agent")
+        guard let (data, _) = try? await URLSession.shared.data(for: req), !Task.isCancelled else { return }
+        let have = Set(hits.map(\.id))
+        let rows = await store.engineRef.offSearchRows(String(decoding: data, as: UTF8.self))
+        guard !Task.isCancelled else { return }
+        online = rows.filter { !have.contains("b" + $0.id.dropFirst(4)) }
+    }
+    private func openOnline(_ h: FoodHit) async {
+        let e = store.engineRef
+        guard let id = await e.offPick(String(h.id.dropFirst(4))) else { scanMessage = String(localized: "Couldn't open that product."); return }
+        if let off = await e.part("offFoods") { store.setRoot("offFoods", off) }
+        path.append(id)
+    }
     /// A scanned barcode: your foods and the built-in packaged list first (works offline), then Open Food Facts.
     private func lookUp(_ code: String) async {
         let e = store.engineRef
@@ -635,8 +670,9 @@ struct FoodHitRow: View {
         if hit.quick == true { return "Quick add" }
         if hit.recipe == true { return "Recipe" }
         if hit.custom == true { return "Mine" }
-        if hit.off == true { return "Barcode" }
-        if hit.est == true { return "Estimate" }
+        // where the numbers come from (lab data shows the seal instead)
+        if hit.trust == "estimate" || hit.est == true { return "Estimate" }
+        if hit.trust == "label" || hit.off == true { return "Label" }
         return nil
     }
     private var detail: String {

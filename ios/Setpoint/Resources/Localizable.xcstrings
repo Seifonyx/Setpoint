@@ -2681,6 +2681,16 @@
         }
       }
     },
+    "Couldn't open that product.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مقدرناش نفتح المنتج ده."
+          }
+        }
+      }
+    },
     "Couldn't reach Open Food Facts. Check your connection.": {
       "localizations": {
         "ar": {
@@ -4721,6 +4731,16 @@
         }
       }
     },
+    "Label": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من العلبة"
+          }
+        }
+      }
+    },
     "Language": {
       "localizations": {
         "ar": {
@@ -6657,6 +6677,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "انتبه لهذا"
+          }
+        }
+      }
+    },
+    "Online · Open Food Facts": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أونلاين · Open Food Facts"
           }
         }
       }

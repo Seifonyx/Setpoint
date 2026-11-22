@@ -29,6 +29,8 @@ jobs:
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
+      - name: Search check (common searches must put the right food first)
+        run: mkdir -p ios/out && node tools/search-check.js ios/out/search-check.txt
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate
       - name: Build for iPhone (unsigned, SideStore signs it)

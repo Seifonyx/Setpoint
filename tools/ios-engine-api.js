@@ -9,15 +9,26 @@
   var lang = 'en';
   function L(s) { return lang === 'ar' && typeof s === 'string' && s ? (tr(s) || s) : s; }
   function setMeals() { MEALS = state.settings.meals && state.settings.meals.length ? state.settings.meals.map(function (x) { return [x.k, x.n]; }) : DEFAULT_MEALS; }
-  // Verified: lab-measured USDA data or a restaurant's own published numbers (not estimates, community barcode data or your own foods).
-  function isVerified(f) { if (f.est || f.custom || f.recipe || f.off) return false; var m = /^u(\d+)$/.exec(f.id); return m ? +m[1] < 9000000 : /^ur/.test(f.id); }
-  function row(f, meal) {
-    // Your usual amount (or a sensible serving), with its numbers, so the list can add it in one tap.
+  // Verified: lab-measured USDA data only (not estimates such as restaurant dishes or Egyptian recipes, label data or your own foods).
+  function isVerified(f) { if (f.est || f.custom || f.recipe || f.off) return false; var m = /^u(\d+)$/.exec(f.id); return !!m && +m[1] < 9000000; }
+  // Where a food's numbers come from, said plainly: measured in a lab, read off the label, worked out (an estimate), yours or a recipe.
+  var offStash = {};
+  function trustOf(f) {
+    if (f.recipe) return 'recipe'; if (f.custom) return 'yours';
+    if (isVerified(f)) return 'lab';
+    if (f.est || f.place || /^ur|^uex/.test(f.id) || /^u9\d{6}$/.test(f.id) || /estimate|Egyptian dishes/.test(f.cat || '')) return 'estimate';
+    return 'label';
+  }
+  function row(f, meal, want) {
+    // Your usual amount (or a sensible serving), with its numbers, so the list can add it in one tap. An amount typed
+    // into the search ("150 g chicken", "2 eggs") is used instead.
     var us = unitsFor(f), lp = lastPortion(f.id, meal), u = lp && us.find(function (x) { return x.label === lp.unit; }), q, lbl, g;
-    if (u) { q = lp.qty; lbl = lp.unit; g = q * u.g; } else { var ds = defaultServing(f); q = ds.qty; lbl = ds.unit.label; g = q * ds.unit.g; }
+    var w = want && unitMatch(f, want), wu = w && (w.unit === 'g' ? { g: 1 } : us.find(function (x) { return x.label === w.unit; }));
+    if (wu) { q = w.qty; lbl = w.unit; g = q * wu.g; u = null; }
+    else if (u) { q = lp.qty; lbl = lp.unit; g = q * u.g; } else { var ds = defaultServing(f); q = ds.qty; lbl = ds.unit.label; g = q * ds.unit.g; }
     var m = macrosFor(f, g);
     return { id: f.id, name: L(f.name), sub: L(servingLine(f, meal)), via: f.via || null, fav: isFav(f.id), est: !!f.est, recipe: !!f.recipe, custom: !!f.custom,
-      off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), verified: isVerified(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
+      off: !!f.off || f.cat === 'Packaged foods', kind: ftKind(f), verified: isVerified(f), trust: trustOf(f), q: q, u: lbl, amt: L(fmtAmt(q, lbl)), usual: !!u && lp.n >= 2,
       kcal: m.kcal, protein: m.protein, carbs: m.carbs, fat: m.fat };
   }
   function sortRows(list, sort, verifiedOnly) {
@@ -218,11 +229,29 @@
       var fu = foodUse(), rec = {}, mu = {}, from = dayNum(todayISO()) - 90;
       fu.order.forEach(function (o, i) { if (o.item.ref && rec[o.item.ref] == null) rec[o.item.ref] = i; });
       Object.keys(state.food).forEach(function (dt) { if (dayNum(dt) >= from) state.food[dt].forEach(function (it) { if (it.ref && it.meal === meal && !it.plan) mu[it.ref] = (mu[it.ref] || 0) + 1; }); });
+      // an amount at the start ("150g chicken", "2 eggs", "1 cup rice"): search the food, and offer that amount
+      var want = null, pl = /^\s*[\d½¼¾⅓⅔.,\/-]+(\s|(g|gm|gr|kg|ml|l|oz|lb)\b)/i.test(q) ? parseLine(q) : null; // not \"7up\"
+      if (pl && pl.qty != null && pl.name && pl.name !== String(q)) { want = pl; q = pl.name; }
       var intent = intentOf(q);
       var all = intent && !intent.rest ? intentFoods(intent.it, intent.snack, intent.bf) : searchFoods(intent ? intent.rest : q, fu.use, { recent: rec, mem: qMemFor(q), mealUse: mu, limit: 60 });
       if (intent && intent.rest) all = all.filter(function (f) { return intentScore(f, intent.it) != null; }).sort(function (a, b) { return (intentScore(a, intent.it) - intentScore(b, intent.it)) * intent.it.dir; });
-      return J(all.slice(0, 60).map(function (f) { return row(f, meal); }));
+      return J(all.slice(0, 60).map(function (f) { return row(f, meal, want); }));
     },
+    // Open Food Facts results for a search (the app fetches them when the list has little): shown, not saved, until picked.
+    offSearchRows: function (txt) {
+      var d = JSON.parse(txt || '{}'); offStash = {};
+      return J((d.products || []).map(function (p) {
+        var n = offNutrients(p.nutriments || {}), name = String(p.product_name_en || p.product_name || '').trim().slice(0, 60), brand = String(p.brands || '').split(',')[0].trim().slice(0, 40);
+        if (!name || n.kcal == null || n.p == null || n.c == null || n.f == null || !p.code) return null;
+        offStash[p.code] = p;
+        var sv = Number(p.serving_quantity), g = isFinite(sv) && sv > 0 && sv < 2000 ? sv : 100;
+        return { id: 'off:' + p.code, name: name + (brand && name.toLowerCase().indexOf(brand.toLowerCase()) < 0 ? ' · ' + brand : ''), sub: brand || null, off: true, kind: 'pack', verified: false, trust: 'label',
+          q: g === 100 ? 100 : 1, u: g === 100 ? 'g' : 'serving', amt: g === 100 ? '100 g' : '1 serving (' + Math.round(g) + ' g)',
+          kcal: n.kcal * g / 100, protein: n.p * g / 100, carbs: n.c * g / 100, fat: n.f * g / 100 };
+      }).filter(Boolean).slice(0, 12));
+    },
+    // One of those picked: kept like a scanned product (works offline from then on); its id to open.
+    offPick: function (code) { var p = offStash[code]; return p ? this.offProduct(JSON.stringify({ status: 1, product: p }), code) : 'null'; },
     // What you ate lately (foods from the list, and quick adds), newest first.
     recents: function (meal) {
       var fu = foodUse(), out = [];

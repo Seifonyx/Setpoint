@@ -112,6 +112,10 @@ actor Engine {
     func barcodeLocal(_ code: String) -> String? { decode(String.self, "barcodeLocal", [code]) }
     func validBarcode(_ code: String) -> Bool { sp.invokeMethod("validBarcode", withArguments: [code])?.toBool() ?? false }
     /// An Open Food Facts answer, read the way the web app reads it. Returns the food's id, or nil if it isn't usable.
+    /// Open Food Facts search results, as rows (not saved until one is picked).
+    func offSearchRows(_ json: String) -> [FoodHit] { decode([FoodHit].self, "offSearchRows", [json]) ?? [] }
+    /// The online product you picked, kept like a scanned one: its id to open.
+    func offPick(_ code: String) -> String? { decode(JSONValue.self, "offPick", [code])?["id"]?.string }
     func offProduct(_ json: String, code: String) -> String? {
         guard let r = decode(JSONValue.self, "offProduct", [json, code]) else { return nil }
         return r["id"]?.string
@@ -200,13 +204,15 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
     let amt: String?
     let usual: Bool?
     let verified: Bool?
+    /// Where its numbers come from: lab, label, estimate, yours or recipe.
+    let trust: String?
     // in My foods: what it is (mine, recipe or meal), a saved meal's id and size, and how often you've logged it
     let type: String?
     let mealId: String?
     let count: Int?
     let uses: Int?
 
-    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual, verified, type, mealId, count, uses }
+    enum CodingKeys: String, CodingKey { case id, name, sub, via, fav, est, recipe, custom, kind, quick, kcal, protein, carbs, fat, off, q, u, amt, usual, verified, trust, type, mealId, count, uses }
     init(from d: Decoder) throws {
         let c = try d.container(keyedBy: CodingKeys.self)
         name = try c.decodeIfPresent(String.self, forKey: .name) ?? ""
@@ -230,6 +236,7 @@ struct FoodHit: Decodable, Identifiable, Hashable, Sendable {
         amt = try c.decodeIfPresent(String.self, forKey: .amt)
         usual = try c.decodeIfPresent(Bool.self, forKey: .usual)
         verified = try c.decodeIfPresent(Bool.self, forKey: .verified)
+        trust = try c.decodeIfPresent(String.self, forKey: .trust)
         type = try c.decodeIfPresent(String.self, forKey: .type)
         mealId = try c.decodeIfPresent(String.self, forKey: .mealId)
         count = try c.decodeIfPresent(Int.self, forKey: .count)
