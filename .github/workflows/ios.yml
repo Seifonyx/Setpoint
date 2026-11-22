@@ -184,6 +184,8 @@ jobs:
           TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$UDID" \
             -derivedDataPath simbuild -only-testing:SetpointUITests CODE_SIGNING_ALLOWED=NO 2>&1 | tee uitest.log | grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" || true
           cp uitest.log out/uitest-log.txt || true
+          # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/Setpoint*.ips 2>/dev/null | head -3); do cp "$f" "out/crash-$(basename "$f" .ips).txt"; done || true
       - name: Publish a preview (screenshots and .ipa, not sent to SideStore)
         if: always() && steps.build.outcome == 'success'
         run: |
