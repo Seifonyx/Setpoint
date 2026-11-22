@@ -25,10 +25,45 @@ final class MealActions {
     /// What a food's and a meal's options are (set up by MealDialogs, shown in a small menu under the row).
     @ObservationIgnored var foodOptions: (FoodItem) -> [OptionRow] = { _ in [] }
     @ObservationIgnored var mealOptions: (MealCategory) -> [OptionRow] = { _ in [] }
-    /// The row whose action tray is open ("food-<id>" or "meal-<key>"): the tray opens inside the list, right under it.
-    var tray: String?
-    func toggle(_ row: String) { withAnimation(.snappy(duration: 0.28)) { tray = tray == row ? nil : row } }
-    func close() { if tray != nil { withAnimation(.snappy(duration: 0.25)) { tray = nil } } }
+    /// Where each row sits on screen right now (not observed: it changes on every scroll).
+    @ObservationIgnored var frames: [String: CGRect] = [:]
+    /// The part of the screen a menu can use (set by the menu layer): below the top bar, above the tab bar.
+    @ObservationIgnored var roomTop: CGFloat = 0
+    @ObservationIgnored var roomBottom: CGFloat = 10_000
+    /// The row the open menu belongs to, and where it was when the menu opened.
+    var anchor: CGRect = .zero
+    /// A row the list should scroll to first, so its menu fits right under it.
+    var scrollTarget: String?
+
+    /// Opens a row's menu: always left-aligned, right under the row. If there isn't room (near the tab bar, or the
+    /// row is under the top bar), the list scrolls the row up first, then the menu opens.
+    func open(row id: String, count: Int, show: @escaping @MainActor () -> Void) {
+        let h = OptionsMenuLayer.height(count)
+        let f = frames[id] ?? .zero
+        if f.maxY + 8 + h <= roomBottom && f.minY >= roomTop {
+            anchor = f; show(); return
+        }
+        scrollTarget = id
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(380))
+            scrollTarget = nil
+            anchor = frames[id] ?? f
+            show()
+        }
+    }
+    func close() { more = nil; mealMore = nil }
+}
+
+/// Scrolls the Diary so a row's menu fits under it.
+struct MenuScroller: ViewModifier {
+    let actions: MealActions
+    func body(content: Content) -> some View {
+        ScrollViewReader { proxy in
+            content.onChange(of: actions.scrollTarget) { _, id in
+                if let id { withAnimation(.snappy(duration: 0.3)) { proxy.scrollTo(id, anchor: UnitPoint(x: 0.5, y: 0.22)) } }
+            }
+        }
+    }
 }
 
 /// The Diary's meals as one run of rows: each meal's name, then its foods. Each meal still looks like its own card
@@ -50,10 +85,8 @@ struct MealRows: View {
         case food(FoodItem, MealCategory)
         /// The bottom of a meal's card: a thin row that stays put, so a food can be dropped into an empty or folded meal.
         case end(MealCategory)
-        /// A food's or a meal's actions, opened (swipe right › ⋯) right under it, inside the list.
-        case tray(String)
         var id: String {
-            switch self { case .header(let m): "meal-" + m.key; case .food(let f, _): "food-" + f.id; case .end(let m): "end-" + m.key; case .tray(let r): "tray-" + r }
+            switch self { case .header(let m): "meal-" + m.key; case .food(let f, _): "food-" + f.id; case .end(let m): "end-" + m.key }
         }
     }
 
@@ -67,10 +100,7 @@ struct MealRows: View {
 
     private var rows: [Row] {
         store.meals.flatMap { m -> [Row] in
-            let t = actions.tray
-            let head: [Row] = [.header(m)] + (t == "meal-" + m.key ? [.tray(t!)] : [])
-            let body: [Row] = isOpen(m.key) ? foods(m.key).flatMap { f -> [Row] in [.food(f, m)] + (t == "food-" + f.id ? [.tray(t!)] : []) } : []
-            return head + body + [.end(m)]
+            [.header(m)] + (isOpen(m.key) ? foods(m.key).map { .food($0, m) } : []) + [.end(m)]
         }
     }
 
@@ -92,15 +122,6 @@ struct MealRows: View {
                 MealFoodRow(food: food, meal: m, day: day, kind: kinds[food.id], copying: $copying, open: $open, actions: actions)
                     .listRowBackground(MealCard(top: false, bottom: false, tint: store.justAdded.contains(food.id) ? Brand.greenSoft : Brand.card))
                     .listRowSeparator(last ? .hidden : .visible, edges: .bottom)
-            case .tray(let r):
-                ActionTray(options: r.hasPrefix("meal-")
-                           ? store.meals.first { "meal-" + $0.key == r }.map(actions.mealOptions) ?? []
-                           : store.items(day).first { "food-" + $0.id == r }.map(actions.foodOptions) ?? []) { actions.close() }
-                    .listRowInsets(EdgeInsets(top: 4, leading: 14, bottom: 10, trailing: 14))
-                    .listRowBackground(MealCard(top: false, bottom: false))
-                    .listRowSeparator(.hidden)
-                    .moveDisabled(true)
-                    .transition(.opacity.combined(with: .scale(scale: 0.96, anchor: .top)))
             case .end:
                 Color.clear.frame(height: 6)
                     .listRowInsets(EdgeInsets())
@@ -112,7 +133,6 @@ struct MealRows: View {
         }
         // press, hold and drag a food: it lands in the meal whose name is above where you let go, before the food below
         .onMove { from, to in
-            actions.close()
             MoveLog.shared.text = "mv \(from.first ?? -1)>\(to) of \(rows.count)"
             guard let i = from.first, rows.indices.contains(i), case .food(let food, _) = rows[i] else { return }
             var moved = rows
@@ -207,9 +227,10 @@ struct MealHeader: View {
                 .frame(width: 28, height: 28)
         }
         .padding(.vertical, 2)
+        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { actions.frames["meal-" + meal.key] = $0 }
         // swipe right for its options, left to clear it (like the foods in it)
         .swipeActions(edge: .leading) {
-            Button { actions.toggle("meal-" + meal.key) } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
+            Button { actions.open(row: "meal-" + meal.key, count: actions.mealOptions(meal).count) { actions.mealMore = meal } } label: { Label("\(meal.name) options", systemImage: "ellipsis") }
                 .labelStyle(.iconOnly).tint(Brand.blue)
         }
         .swipeActions(edge: .trailing) {
@@ -263,13 +284,14 @@ struct MealFoodRow: View {
                 .buttonStyle(.plain)
         }
             .accessibilityIdentifier("food-\(food.id)")
-                .swipeActions(edge: .trailing) {
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { actions.frames["food-" + food.id] = $0 }
+            .swipeActions(edge: .trailing) {
                 Button(role: .destructive) { store.delete(food, on: day) } label: { Label("Delete", systemImage: "trash") }
                     .labelStyle(.iconOnly).tint(Brand.danger)
             }
             .swipeActions(edge: .leading) {
                 // swipe right: ⋯ with everything you can do to it
-                Button { actions.toggle("food-" + food.id) } label: { Label("More", systemImage: "ellipsis") }
+                Button { actions.open(row: "food-" + food.id, count: actions.foodOptions(food).count) { actions.more = food } } label: { Label("More", systemImage: "ellipsis") }
                     .labelStyle(.iconOnly).tint(Brand.blue)
             }
     }
@@ -303,27 +325,27 @@ struct MealDialogs: ViewModifier {
     /// Everything you can do to a logged food (swipe right on it), in the order you'd want it.
     private func foodOptions(_ f: FoodItem) -> [OptionRow] {
         var o: [OptionRow] = []
-        if f.isPlanned && day <= Day.today { o.append(.init("Eaten", "checkmark.circle", tint: Brand.green) { store.markEaten(f, on: day) }) }
-        else if day <= Day.today { o.append(.init(text: String(localized: "Plan (verb)", defaultValue: "Plan"), "calendar.badge.clock", tint: Brand.blue) { withAnimation(.snappy) { store.markPlanned(f, on: day) } }) }
-        o.append(.init("Repeat", "repeat", tint: Brand.amber) { actions.repeating = f })
+        if f.isPlanned && day <= Day.today { o.append(.init("Mark as eaten", "checkmark.circle") { store.markEaten(f, on: day) }) }
+        else if day <= Day.today { o.append(.init(text: String(localized: "Plan (verb)", defaultValue: "Plan"), "calendar.badge.clock") { withAnimation(.snappy) { store.markPlanned(f, on: day) } }) }
+        o.append(.init("Repeat", "repeat") { actions.repeating = f })
         switch Self.kind(of: f, store) {
         case .meal(let rec):
-            o.append(.init("Explode", "square.split.2x2", tint: Brand.fat) { withAnimation { store.explode(f, into: f.raw["mi"]?.array?.compactMap(\.object) ?? [], on: day) } })
+            o.append(.init("Explode meal", "square.split.2x2") { withAnimation { store.explode(f, into: f.raw["mi"]?.array?.compactMap(\.object) ?? [], on: day) } })
             if let rec {
-                o.append(.init("Edit meal", "pencil", tint: Brand.ink) { actions.editMeal = .init(value: rec) })
-                o.append(.init("Edit a copy", "plus.square.on.square", tint: Brand.ink) { actions.editMeal = .init(value: Self.copy(rec, prefix: "m", named: rec["name"]?.string)) })
+                o.append(.init("Edit original meal", "pencil") { actions.editMeal = .init(value: rec) })
+                o.append(.init("Edit a copy of meal", "doc.on.doc") { actions.editMeal = .init(value: Self.copy(rec, prefix: "m", named: rec["name"]?.string)) })
             }
         case .recipe(let rec):
-            o.append(.init("Explode", "square.split.2x2", tint: Brand.fat) { Task { await explodeRecipe(f, rec) } })
-            o.append(.init("Edit recipe", "pencil", tint: Brand.ink) { actions.editRecipe = .init(value: rec) })
-            o.append(.init("Edit a copy", "plus.square.on.square", tint: Brand.ink) { actions.editRecipe = .init(value: Self.copy(rec, prefix: "r", named: rec["name"]?.string)) })
+            o.append(.init("Explode recipe", "square.split.2x2") { Task { await explodeRecipe(f, rec) } })
+            o.append(.init("Edit original recipe", "pencil") { actions.editRecipe = .init(value: rec) })
+            o.append(.init("Edit a copy of recipe", "doc.on.doc") { actions.editRecipe = .init(value: Self.copy(rec, prefix: "r", named: rec["name"]?.string)) })
         case .custom(let rec):
-            o.append(.init("Edit food", "pencil", tint: Brand.ink) { actions.editFood = .init(value: rec) })
-            o.append(.init("Edit a copy", "plus.square.on.square", tint: Brand.ink) { actions.editFood = .init(value: Self.copy(rec, prefix: "c", named: rec["name"]?.string)) })
+            o.append(.init("Edit original food", "pencil") { actions.editFood = .init(value: rec) })
+            o.append(.init("Edit a copy of food", "doc.on.doc") { actions.editFood = .init(value: Self.copy(rec, prefix: "c", named: rec["name"]?.string)) })
         case .food:
-            o.append(.init("Edit a copy", "plus.square.on.square", tint: Brand.ink) { actions.editFood = .init(value: Self.customCopy(of: f)) })
+            o.append(.init("Edit a copy of food", "doc.on.doc") { actions.editFood = .init(value: Self.customCopy(of: f)) })
         }
-        o.append(.init("Copy", "calendar.badge.plus", tint: Brand.water) { copying = [f] })
+        o.append(.init("Copy", "calendar.badge.plus") { copying = [f] })
         o.append(.init("Delete", "trash", destructive: true) { withAnimation { store.delete(f, on: day) } })
         return o
     }
@@ -332,13 +354,13 @@ struct MealDialogs: ViewModifier {
         let foods = store.items(day).filter { store.mealKey(of: $0) == m.key && !$0.isDailyTotal }
         var o: [OptionRow] = []
         if day <= Day.today && foods.contains(where: \.isPlanned) {
-            o.append(.init("All eaten", "checkmark.circle", tint: Brand.green) { withAnimation(.snappy) { store.markAllEaten(meal: m.key, on: day) } })
+            o.append(.init("Mark all as eaten", "checkmark.circle") { withAnimation(.snappy) { store.markAllEaten(meal: m.key, on: day) } })
         }
-        o.append(.init("From yesterday", "arrow.uturn.backward", tint: Brand.amber) { withAnimation { _ = store.copyFromYesterday(meal: m.key, to: day) } })
+        o.append(.init("Copy from yesterday", "arrow.uturn.backward") { withAnimation { _ = store.copyFromYesterday(meal: m.key, to: day) } })
         if !foods.isEmpty {
-            o.append(.init("Copy", "calendar.badge.plus", tint: Brand.water) { copying = foods })
-            o.append(.init("Save as meal", "square.and.arrow.down.on.square", tint: Brand.blue) { actions.mealName = m.name; actions.naming = m })
-            o.append(.init("Clear", "trash", destructive: true) { withAnimation { store.removeMeal(m.key, on: day) } })
+            o.append(.init("Copy to another day", "calendar.badge.plus") { copying = foods })
+            o.append(.init("Save as meal", "square.and.arrow.down.on.square") { actions.mealName = m.name; actions.naming = m })
+            o.append(.init("Remove all", "trash", destructive: true) { withAnimation { store.removeMeal(m.key, on: day) } })
         }
         return o
     }
@@ -517,58 +539,96 @@ struct OptionRow: Identifiable {
     let title: String
     let icon: String
     var destructive = false
-    var tint: Color = Brand.ink2
     let run: @MainActor () -> Void
-    init(text title: String, _ icon: String, tint: Color = Brand.ink2, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
-        self.title = title; self.icon = icon; self.tint = destructive ? Brand.danger : tint; self.destructive = destructive; self.run = run
+    init(text title: String, _ icon: String, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
+        self.title = title; self.icon = icon; self.destructive = destructive; self.run = run
     }
-    init(_ title: LocalizedStringResource, _ icon: String, tint: Color = Brand.ink2, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
-        self.init(text: String(localized: title), icon, tint: tint, destructive: destructive, run: run)
+    init(_ title: LocalizedStringResource, _ icon: String, destructive: Bool = false, run: @escaping @MainActor () -> Void) {
+        self.init(text: String(localized: title), icon, destructive: destructive, run: run)
     }
 }
 
+/// A food's or a meal's options, as a menu card: always left-aligned, right under its row (the list scrolls first
+/// when there isn't room below). One line per option, name on the left and icon on the right, Delete last in red;
+/// a tap anywhere else closes it. Laid out like Cronometer's, drawn in Setpoint's own colours and type.
+struct OptionsMenuLayer: View {
+    @Bindable var actions: MealActions
+    static let rowH: CGFloat = 46
+    static func height(_ count: Int) -> CGFloat { CGFloat(count) * rowH }
 
-/// A food's or a meal's actions: a tray of small tiles that opens inside the list, right under its row (swipe right ›
-/// ⋯). Part of the list, so it's always in the same place, scrolls with it and can never be cut off. Each tile has its
-/// own colour; Delete is red.
-struct ActionTray: View {
-    let options: [OptionRow]
-    let close: () -> Void
-    /// Up to five on one line; more split evenly over two (never one tile left alone on a line)
-    private var columns: [GridItem] {
-        let n = options.count <= 5 ? max(options.count, 1) : (options.count + 1) / 2
-        return Array(repeating: GridItem(.flexible(), spacing: 8), count: n)
+    private var options: [OptionRow] {
+        if let f = actions.more { return actions.foodOptions(f) }
+        if let m = actions.mealMore { return actions.mealOptions(m) }
+        return []
     }
 
     var body: some View {
-        LazyVGrid(columns: columns, spacing: 8) {
-            ForEach(options) { o in
-                Button {
-                    close()
-                    // the tray folds away first, then the choice runs (some open a sheet)
-                    Task { try? await Task.sleep(for: .milliseconds(250)); o.run() }
-                } label: {
-                    VStack(spacing: 6) {
-                        Image(systemName: o.icon).font(.system(size: 18, weight: .semibold)).foregroundStyle(o.tint)
-                            .frame(height: 22)
-                        Text(o.title).font(.brand(.caption, .medium)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
-                            .lineLimit(1).minimumScaleFactor(0.75)
-                    }
-                    .frame(maxWidth: .infinity, minHeight: 64)
-                    .background(o.tint.opacity(o.destructive ? 0.12 : 0.1), in: .rect(cornerRadius: 16, style: .continuous))
-                    .contentShape(.rect)
+        GeometryReader { geo in
+            let origin = geo.frame(in: .global).origin
+            let top = geo.safeAreaInsets.top + 52, bottom = geo.size.height - geo.safeAreaInsets.bottom - 74
+            Color.clear
+                // plain numbers, not a range: on the first layout pass the size can still be zero (top below bottom)
+                .onAppear { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
+                .onChange(of: geo.size) { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
+            let opts = options
+            if !opts.isEmpty {
+                let row = actions.anchor.offsetBy(dx: -origin.x, dy: -origin.y)
+                let width = min(max(geo.size.width * 0.66, 250), 300)
+                let y = min(row.maxY + 4, max(bottom - Self.height(opts.count), top)) // under the row
+                ZStack(alignment: .topLeading) {
+                    // catches a tap anywhere else (without darkening the page)
+                    Color.black.opacity(0.001).ignoresSafeArea()
+                        .onTapGesture { withAnimation(.easeOut(duration: 0.15)) { actions.close() } }
+                    card(opts, width: width)
+                        .offset(x: 16, y: y)
+                        .transition(.asymmetric(insertion: .scale(scale: 0.94, anchor: .topLeading).combined(with: .opacity),
+                                                removal: .opacity))
                 }
-                .buttonStyle(TileStyle())
-                .accessibilityLabel(Text(o.title))
             }
         }
-        .sensoryFeedback(.impact(weight: .light), trigger: options.count)
+        .ignoresSafeArea()
+        .allowsHitTesting(actions.more != nil || actions.mealMore != nil)
+        .animation(.easeOut(duration: 0.18), value: actions.more?.id ?? actions.mealMore?.key)
+        .sensoryFeedback(.impact(weight: .light), trigger: actions.more?.id ?? actions.mealMore?.key) { _, now in now != nil }
+    }
+
+    private func card(_ opts: [OptionRow], width: CGFloat) -> some View {
+        VStack(spacing: 0) {
+            ForEach(Array(opts.enumerated()), id: \.element.id) { i, o in
+                item(o)
+                if i < opts.count - 1 { Rectangle().fill(Brand.line).frame(height: 0.5) }
+            }
+        }
+        .frame(width: width)
+        .background(Brand.dyn(0xFFFDF8, 0x2A2824), in: .rect(cornerRadius: 14, style: .continuous)) // raised above the cards
+        .clipShape(.rect(cornerRadius: 14, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: 14, style: .continuous).strokeBorder(Brand.line, lineWidth: 0.5))
+        .shadow(color: .black.opacity(0.28), radius: 18, y: 8)
+    }
+
+    private func item(_ o: OptionRow) -> some View {
+        Button {
+            withAnimation(.easeOut(duration: 0.15)) { actions.close() }
+            // the menu goes first, then the choice runs (some open a sheet)
+            Task { try? await Task.sleep(for: .milliseconds(200)); o.run() }
+        } label: {
+            HStack(spacing: 12) {
+                Text(o.title).font(.brand(.body)).foregroundStyle(o.destructive ? Brand.danger : Brand.ink)
+                    .lineLimit(1).minimumScaleFactor(0.85)
+                Spacer(minLength: 8)
+                Image(systemName: o.icon).font(.system(size: 16, weight: .regular)).frame(width: 22)
+                    .foregroundStyle(o.destructive ? Brand.danger : Brand.ink2)
+            }
+            .padding(.horizontal, 16).frame(height: Self.rowH).contentShape(.rect)
+        }
+        .buttonStyle(MenuRowStyle())
+        .accessibilityLabel(Text(o.title))
     }
 }
 
-/// A tile sinks a little while your finger is on it.
-private struct TileStyle: ButtonStyle {
+/// A menu line lights up while your finger is on it.
+private struct MenuRowStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
-        configuration.label.scaleEffect(configuration.isPressed ? 0.94 : 1).animation(.snappy(duration: 0.15), value: configuration.isPressed)
+        configuration.label.background(Brand.ink.opacity(configuration.isPressed ? 0.08 : 0))
     }
 }

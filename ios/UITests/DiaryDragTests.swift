@@ -268,9 +268,11 @@ final class DiaryDragTests: XCTestCase {
             let more = sw.buttons["More"].firstMatch
             if more.exists {
                 more.tap(); sleep(1)
-                let opts = ["Plan", "Eaten", "Repeat", "Edit a copy", "Edit food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
+                let opts = ["Plan", "Mark as eaten", "Repeat", "Edit a copy of food", "Edit original food", "Copy", "Delete"].filter { sw.buttons[$0].firstMatch.exists }
                 note("food options: \(opts.joined(separator: ", "))")
                 shot(sw, "food-options")
+                sw.coordinate(withNormalizedOffset: CGVector(dx: 0.96, dy: 0.5)).tap() // close it (tap beside it)
+                sleep(1)
                 sleep(1)
             } else { note("food options: no More button after swiping") }
             let header = el(sw, "meal-lunch")
