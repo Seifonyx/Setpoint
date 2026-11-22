@@ -14,7 +14,9 @@ final class DiaryDragTests: XCTestCase {
         try? log.joined(separator: "\n").write(to: out.appendingPathComponent("drag-results.txt"), atomically: true, encoding: .utf8)
     }
     private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
-    private func y(_ e: XCUIElement) -> Int { e.exists ? Int(e.frame.midY) : -1 }
+    /// Where a row is (its middle), or -1 when it isn't on screen. Read from a snapshot, which can't fail the test
+    /// when the list unloads the row between asking and reading (e.frame would).
+    private func y(_ e: XCUIElement) -> Int { (try? e.snapshot()).map { Int($0.frame.midY) } ?? -1 }
     /// Press and hold `what`, then drag it to a point inside `to` (dy: 0 = its top edge, 1 = its bottom edge).
     private func drag(_ what: XCUIElement, to: XCUIElement, dy: CGFloat) {
         // both ends in the open middle of the screen (not under the top bar or the tab bar): how far a swipe scrolls
