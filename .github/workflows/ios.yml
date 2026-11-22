@@ -1,7 +1,7 @@
 # Stuck in "queued" with no job? A new push replaces it (previews cancel older previews).
 # Builds the native iPhone app on GitHub's Mac servers: an unsigned .ipa for SideStore, plus simulator screenshots.
-# Three Macs work at once: one builds the app for iPhone, one runs the search check and the UI tests, one takes the
-# screenshots. The update is released to "ios-latest" and the SideStore source as soon as the iPhone build and the tests
+# A quick Linux job runs the search check and sees what changed; Macs build the app for iPhone, run the UI tests (three
+# at once; skipped when only the food list changed) and take the screenshots, reusing the last build's compiled files. The update is released to "ios-latest" and the SideStore source as soon as the iPhone build and the tests
 # are done, and only if the tests passed and the app didn't crash; the screenshots land on "ios-preview" when they're
 # ready. A commit message with [preview] is never released.
 # A failed build posts its log to "ios-log".
@@ -19,6 +19,36 @@ concurrency:
   group: ios-${{ (github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))) && 'release' || 'preview' }}
   cancel-in-progress: true
 jobs:
+  check:
+    # quick, on Linux: the food list and search must work, and which tests this push needs
+    name: Search check and what changed
+    runs-on: ubuntu-latest
+    outputs:
+      ui: ${{ steps.what.outputs.ui }}
+    steps:
+      - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Build the shared engine (web app search and maths) and food list
+        run: node tools/ios-engine.js
+      - name: Search check (common searches must put the right food first)
+        run: mkdir -p ios/out && node tools/search-check.js ios/out/search-check.txt
+      - uses: actions/upload-artifact@v4
+        if: always()
+        with: { name: search-check, path: ios/out/search-check.txt, retention-days: 3 }
+      - name: Does this push need the UI tests?
+        id: what
+        run: |
+          # only the food list or its tools changed: the search check above covers it, the UI tests are skipped.
+          # Anything else (the app's code, the search code, this file), a manual run, or no history to compare: all tests.
+          before="${{ github.event.before }}"
+          if [ "${{ github.event_name }}" = "push" ] && [ -n "$before" ] && ! echo "$before" | grep -q '^0*$' && git cat-file -e "$before" 2>/dev/null; then
+            changed=$(git diff --name-only "$before" "$GITHUB_SHA")
+            echo "$changed"
+            if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '^(foods\.json|tools/foods/|tools/search-check\.js$)'; then
+              echo "Only the food list changed: UI tests skipped"; echo "ui=false" >> "$GITHUB_OUTPUT"; exit 0
+            fi
+          fi
+          echo "ui=true" >> "$GITHUB_OUTPUT"
   device:
     name: Build for iPhone
     runs-on: macos-26
@@ -28,12 +58,31 @@ jobs:
       RELEASE: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Files dated by their last commit (so Xcode only recompiles what changed since the cached build)
+        run: |
+          git ls-files -z ios | python3 -c '
+          import os, subprocess, sys
+          files = sys.stdin.read().split("\0")[:-1]
+          out = subprocess.run(["git", "log", "--name-only", "--format=%ct", "--", "ios"], capture_output=True, text=True).stdout
+          when, seen = 0, {}
+          for line in out.splitlines():
+              if line.isdigit(): when = int(line)
+              elif line and line not in seen: seen[line] = when
+          for f in files:
+              if f in seen and os.path.exists(f): os.utime(f, (seen[f], seen[f]))'
+      - name: Reuse the last build's compiled files
+        uses: actions/cache@v4
+        with:
+          path: ios/build
+          key: dd-device-${{ hashFiles('ios/project.yml') }}-${{ github.sha }}
+          restore-keys: dd-device-${{ hashFiles('ios/project.yml') }}-
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
-        run: brew install xcodegen && cd ios && xcodegen generate
+        run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: Build for iPhone (unsigned, SideStore signs it)
         run: |
           cd ios
@@ -65,7 +114,9 @@ jobs:
           ls logs | grep -q . || echo "No build output (failed before compiling)" > logs/build.log
           gh release create ios-log logs/* --target "$GITHUB_SHA" --prerelease --title "iOS build log (failed: iPhone build)" --notes "Build ${{ github.run_number }} failed."
   test:
-    # the UI tests split three ways, each on its own Mac at the same time; the search check runs with the first
+    # the UI tests split three ways, each on its own Mac at the same time (skipped when only the food list changed)
+    needs: check
+    if: needs.check.outputs.ui == 'true'
     name: UI tests (${{ matrix.test }})
     strategy:
       fail-fast: false
@@ -78,6 +129,25 @@ jobs:
       RELEASE: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Files dated by their last commit (so Xcode only recompiles what changed since the cached build)
+        run: |
+          git ls-files -z ios | python3 -c '
+          import os, subprocess, sys
+          files = sys.stdin.read().split("\0")[:-1]
+          out = subprocess.run(["git", "log", "--name-only", "--format=%ct", "--", "ios"], capture_output=True, text=True).stdout
+          when, seen = 0, {}
+          for line in out.splitlines():
+              if line.isdigit(): when = int(line)
+              elif line and line not in seen: seen[line] = when
+          for f in files:
+              if f in seen and os.path.exists(f): os.utime(f, (seen[f], seen[f]))'
+      - name: Reuse the last build's compiled files
+        uses: actions/cache@v4
+        with:
+          path: ios/simbuild
+          key: dd-sim-test-${{ hashFiles('ios/project.yml') }}-${{ github.sha }}
+          restore-keys: dd-sim-test-${{ hashFiles('ios/project.yml') }}-
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
       - name: Pick the simulator
@@ -92,10 +162,7 @@ jobs:
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
-        run: brew install xcodegen && cd ios && xcodegen generate
-      - name: Search check (common searches must put the right food first)
-        if: matrix.test == 'testDragFoods'
-        run: mkdir -p ios/out && node tools/search-check.js ios/out/search-check.txt
+        run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: UI tests (the update is released only if they pass)
         id: tests
         run: |
@@ -142,6 +209,25 @@ jobs:
       RELEASE: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) }}
     steps:
       - uses: actions/checkout@v4
+        with: { fetch-depth: 0 }
+      - name: Files dated by their last commit (so Xcode only recompiles what changed since the cached build)
+        run: |
+          git ls-files -z ios | python3 -c '
+          import os, subprocess, sys
+          files = sys.stdin.read().split("\0")[:-1]
+          out = subprocess.run(["git", "log", "--name-only", "--format=%ct", "--", "ios"], capture_output=True, text=True).stdout
+          when, seen = 0, {}
+          for line in out.splitlines():
+              if line.isdigit(): when = int(line)
+              elif line and line not in seen: seen[line] = when
+          for f in files:
+              if f in seen and os.path.exists(f): os.utime(f, (seen[f], seen[f]))'
+      - name: Reuse the last build's compiled files
+        uses: actions/cache@v4
+        with:
+          path: ios/simbuild
+          key: dd-sim-shots-${{ hashFiles('ios/project.yml') }}-${{ github.sha }}
+          restore-keys: dd-sim-shots-${{ hashFiles('ios/project.yml') }}-
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
       - name: Pick the simulator
@@ -156,7 +242,7 @@ jobs:
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
-        run: brew install xcodegen && cd ios && xcodegen generate
+        run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: Screenshots
         run: |
           cd ios
@@ -241,8 +327,8 @@ jobs:
         with: { name: shots, path: ios/out/, retention-days: 3 }
   release:
     name: Release to SideStore
-    needs: [device, test]
-    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))
+    needs: [check, device, test]
+    if: always() && needs.check.result == 'success' && needs.device.result == 'success' && (needs.test.result == 'success' || needs.test.result == 'skipped') && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}
@@ -292,7 +378,7 @@ jobs:
           git pull --rebase origin main && git push origin HEAD:main
   preview:
     name: Publish a preview (screenshots and checks, not sent to SideStore)
-    needs: [device, test, shots, release]
+    needs: [check, device, test, shots, release]
     if: always() && needs.device.result == 'success'
     runs-on: ubuntu-latest
     env:
