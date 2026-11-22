@@ -98,7 +98,8 @@ card style and its own wording. Never clone another app's look, colours, icons o
 
 Test first, then publish, then check:
 1. Push finished changes straight to `main` without `[preview]`. The build tests every push before it's released: the UI
-   tests and the search check run first (one simulator: two at once proved slower on GitHub's runner), and the update goes to
+   tests and the search check run first (on their own Mac, while a second builds the iPhone app and a third takes the
+   screenshots; never two simulators on one Mac, which proved slower), and the update goes to
    SideStore only if the UI tests pass and the app didn't crash. A failing push is not released.
 2. After every build, check its results: the build itself, the simulator screenshots (on the `ios-preview` release) and
    the UI test results (`drag-results.txt`, `uitest-log.txt`, any `crash-*.txt`, and any other check files it writes).
