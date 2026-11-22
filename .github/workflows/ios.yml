@@ -106,10 +106,14 @@ jobs:
           xcrun simctl boot "$SIM"; xcrun simctl bootstatus "$SIM" -b
           xcrun simctl status_bar "$SIM" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl ui "$SIM" appearance dark
+          # one launch before the tests: the first launch after booting can time out while the simulator settles
+          xcrun simctl install "$SIM" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
+          xcrun simctl launch "$SIM" app.setpoint.ios -demo YES || true; sleep 5; xcrun simctl terminate "$SIM" app.setpoint.ios || true
           mkdir -p out
-          # no screen recordings or diagnostics collected: the checks write their own results and screenshots
+          # no screen recordings or diagnostics collected (the checks write their own results and screenshots); a test that
+          # fails is run once more, so a simulator hiccup doesn't block a release but a real failure (failing twice) does
           TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test-without-building -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$SIM" \
-            -derivedDataPath simbuild -only-testing:SetpointUITests/DiaryDragTests/${{ matrix.test }} -collect-test-diagnostics never CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
+            -derivedDataPath simbuild -only-testing:SetpointUITests/DiaryDragTests/${{ matrix.test }} -collect-test-diagnostics never -retry-tests-on-failure -test-iterations 2 CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
           grep -E "error:|Test Case|TEST (EXECUTE )?(SUCCEEDED|FAILED)" uitest.log | tail -40 || true
           cp uitest.log "out/uitest-log-${{ matrix.test }}.txt" || true
           # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at

@@ -102,10 +102,16 @@ final class DiaryDragTests: XCTestCase {
 
     // Three tests that run at the same time on three Macs (about equally long): keep them independent.
 
-    /// Dragging foods in the Diary, reordering recipe ingredients, and the tab bar shrinking.
+    /// Dragging foods in the Diary: reordering, between meals, into an empty meal.
     @MainActor func testDragFoods() {
         resultsFile = "drag-results.txt"
         run("drag", [])
+    }
+
+    /// Reordering recipe ingredients, the tab bar shrinking, typing amounts, the crash checks, ticking off a planned
+    /// food, and the microphone.
+    @MainActor func testInputsAndCrashes() {
+        resultsFile = "check-results-inputs.txt"
         // recipe ingredients: press, hold and drag the potatoes above the oil
         let r = XCUIApplication()
         r.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "recipe"]
@@ -133,11 +139,6 @@ final class DiaryDragTests: XCTestCase {
         sleep(1)
         shot(app, "bar-runtime-full")
         app.terminate()
-    }
-
-    /// Typing amounts, the crash checks, ticking off a planned food, and the microphone.
-    @MainActor func testInputsAndCrashes() {
-        resultsFile = "check-results-inputs.txt"
 
         // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
         let f = XCUIApplication()
