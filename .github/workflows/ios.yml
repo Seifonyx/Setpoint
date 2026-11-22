@@ -65,19 +65,22 @@ jobs:
           ls logs | grep -q . || echo "No build output (failed before compiling)" > logs/build.log
           gh release create ios-log logs/* --target "$GITHUB_SHA" --prerelease --title "iOS build log (failed: iPhone build)" --notes "Build ${{ github.run_number }} failed."
   test:
-    name: Search check and UI tests
+    # the UI tests split three ways, each on its own Mac at the same time; the search check runs with the first
+    name: UI tests (${{ matrix.test }})
+    strategy:
+      fail-fast: false
+      matrix:
+        test: [testDragFoods, testInputsAndCrashes, testMenusAndSignIn]
     runs-on: macos-26
-    timeout-minutes: 40
+    timeout-minutes: 30
     env:
       GH_TOKEN: ${{ github.token }}
       RELEASE: ${{ github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]')) }}
-    outputs:
-      passed: ${{ steps.tests.outputs.passed }}
     steps:
       - uses: actions/checkout@v4
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
-      - name: Start the simulator now (it boots while the app compiles)
+      - name: Pick the simulator
         run: |
           UDID=$(xcrun simctl list devices available -j | python3 -c '
           import json, sys
@@ -86,12 +89,12 @@ jobs:
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
           echo "SIM=$UDID" >> "$GITHUB_ENV"
-          xcrun simctl boot "$UDID"
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate
       - name: Search check (common searches must put the right food first)
+        if: matrix.test == 'testDragFoods'
         run: mkdir -p ios/out && node tools/search-check.js ios/out/search-check.txt
       - name: UI tests (the update is released only if they pass)
         id: tests
@@ -100,23 +103,23 @@ jobs:
           set -o pipefail
           xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Debug -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath simbuild CODE_SIGNING_ALLOWED=NO build-for-testing 2>&1 | tee sim.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
-          xcrun simctl bootstatus "$SIM" -b
+          xcrun simctl boot "$SIM"; xcrun simctl bootstatus "$SIM" -b
           xcrun simctl status_bar "$SIM" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl ui "$SIM" appearance dark
           mkdir -p out
           # no screen recordings or diagnostics collected: the checks write their own results and screenshots
           TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test-without-building -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$SIM" \
-            -derivedDataPath simbuild -only-testing:SetpointUITests -collect-test-diagnostics never CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
+            -derivedDataPath simbuild -only-testing:SetpointUITests/DiaryDragTests/${{ matrix.test }} -collect-test-diagnostics never CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
           grep -E "error:|Test Case|TEST (EXECUTE )?(SUCCEEDED|FAILED)" uitest.log | tail -40 || true
-          cp uitest.log out/uitest-log.txt || true
+          cp uitest.log "out/uitest-log-${{ matrix.test }}.txt" || true
           # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at
           for f in $(ls -t ~/Library/Logs/DiagnosticReports/Setpoint*.ips 2>/dev/null | head -3); do cp "$f" "out/crash-$(basename "$f" .ips).txt"; done || true
           # released only when the UI tests passed and nothing crashed
-          if grep -qE "TEST (EXECUTE )?SUCCEEDED" uitest.log && ! grep -q "crashed" uitest.log && ! ls out/crash-*.txt >/dev/null 2>&1; then
-            echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; echo "Tests failed: not released"; fi
+          if ! grep -qE "TEST (EXECUTE )?SUCCEEDED" uitest.log || grep -q "crashed" uitest.log || ls out/crash-*.txt >/dev/null 2>&1; then
+            echo "Tests failed: not released"; exit 1; fi
       - uses: actions/upload-artifact@v4
         if: always()
-        with: { name: tests, path: ios/out/, retention-days: 3 }
+        with: { name: "tests-${{ matrix.test }}", path: ios/out/, retention-days: 3 }
       - name: Post the log if the build failed
         if: failure()
         run: |
@@ -137,7 +140,7 @@ jobs:
       - uses: actions/checkout@v4
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
-      - name: Start the simulator now (it boots while the app compiles)
+      - name: Pick the simulator
         run: |
           UDID=$(xcrun simctl list devices available -j | python3 -c '
           import json, sys
@@ -146,7 +149,6 @@ jobs:
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
           echo "SIM=$UDID" >> "$GITHUB_ENV"
-          xcrun simctl boot "$UDID"
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
@@ -157,7 +159,7 @@ jobs:
           set -o pipefail
           xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Debug -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath simbuild CODE_SIGNING_ALLOWED=NO build 2>&1 | tee shots.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
-          xcrun simctl bootstatus "$SIM" -b
+          xcrun simctl boot "$SIM"; xcrun simctl bootstatus "$SIM" -b
           xcrun simctl status_bar "$SIM" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           S="$SIM"; mkdir -p out
           xcrun simctl install "$S" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
@@ -236,7 +238,7 @@ jobs:
   release:
     name: Release to SideStore
     needs: [device, test]
-    if: needs.test.outputs.passed == 'true' && github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))
+    if: github.ref == 'refs/heads/main' && (github.event_name == 'workflow_dispatch' || !contains(github.event.head_commit.message, '[preview]'))
     runs-on: ubuntu-latest
     env:
       GH_TOKEN: ${{ github.token }}

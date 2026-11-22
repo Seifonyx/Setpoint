@@ -5,13 +5,15 @@ import XCTest
 final class DiaryDragTests: XCTestCase {
     private var out: URL { URL(fileURLWithPath: ProcessInfo.processInfo.environment["SHOTS"] ?? NSTemporaryDirectory()) }
     private var log: [String] = []
+    /// Each test writes its own results file (the three run on separate Macs at once).
+    private var resultsFile = "drag-results.txt"
 
     private func shot(_ app: XCUIApplication, _ name: String) {
         try? app.screenshot().pngRepresentation.write(to: out.appendingPathComponent("\(name).png"))
     }
     private func note(_ s: String) {
         log.append(s)
-        try? log.joined(separator: "\n").write(to: out.appendingPathComponent("drag-results.txt"), atomically: true, encoding: .utf8)
+        try? log.joined(separator: "\n").write(to: out.appendingPathComponent(resultsFile), atomically: true, encoding: .utf8)
     }
     private func el(_ app: XCUIApplication, _ id: String) -> XCUIElement { app.descendants(matching: .any).matching(identifier: id).firstMatch }
     /// Where a row is (its middle), or -1 when it isn't on screen. Read from a snapshot, which can't fail the test
@@ -98,7 +100,11 @@ final class DiaryDragTests: XCTestCase {
         app.terminate()
     }
 
+    // Three tests that run at the same time on three Macs (about equally long): keep them independent.
+
+    /// Dragging foods in the Diary, reordering recipe ingredients, and the tab bar shrinking.
     @MainActor func testDragFoods() {
+        resultsFile = "drag-results.txt"
         run("drag", [])
         // recipe ingredients: press, hold and drag the potatoes above the oil
         let r = XCUIApplication()
@@ -127,6 +133,11 @@ final class DiaryDragTests: XCTestCase {
         sleep(1)
         shot(app, "bar-runtime-full")
         app.terminate()
+    }
+
+    /// Typing amounts, the crash checks, ticking off a planned food, and the microphone.
+    @MainActor func testInputsAndCrashes() {
+        resultsFile = "check-results-inputs.txt"
 
         // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
         let f = XCUIApplication()
@@ -210,8 +221,11 @@ final class DiaryDragTests: XCTestCase {
             shot(m, "voice-1")
         } else { note("voice: no microphone button"); shot(m, "voice-missing") }
         m.terminate()
+    }
 
-
+    /// The add sheet's menus, selecting several, the filter, swipe options, and the sign-in form.
+    @MainActor func testMenusAndSignIn() {
+        resultsFile = "check-results-menus.txt"
         // the camera button lists its three ways in
         let cm = XCUIApplication()
         cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
