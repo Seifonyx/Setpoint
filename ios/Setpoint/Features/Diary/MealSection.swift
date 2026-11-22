@@ -534,7 +534,11 @@ struct OptionRow: Identifiable {
 struct ActionTray: View {
     let options: [OptionRow]
     let close: () -> Void
-    private let columns = Array(repeating: GridItem(.flexible(), spacing: 8), count: 4)
+    /// Up to five on one line; more split evenly over two (never one tile left alone on a line)
+    private var columns: [GridItem] {
+        let n = options.count <= 5 ? max(options.count, 1) : (options.count + 1) / 2
+        return Array(repeating: GridItem(.flexible(), spacing: 8), count: n)
+    }
 
     var body: some View {
         LazyVGrid(columns: columns, spacing: 8) {
