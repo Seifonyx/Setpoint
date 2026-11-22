@@ -1531,6 +1531,16 @@
         }
       }
     },
+    "All eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الكل اتاكل"
+          }
+        }
+      }
+    },
     "All good": {
       "localizations": {
         "ar": {
@@ -3231,6 +3241,16 @@
         }
       }
     },
+    "Eaten": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتاكل"
+          }
+        }
+      }
+    },
     "Eating window · Suhoor until %@": {
       "localizations": {
         "ar": {
@@ -3247,6 +3267,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تعديل"
+          }
+        }
+      }
+    },
+    "Edit a copy": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "عدّل نسخة"
           }
         }
       }
@@ -3597,6 +3627,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الحرق مع الوقت"
+          }
+        }
+      }
+    },
+    "Explode": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "فكّها"
           }
         }
       }
@@ -4077,6 +4117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "من Apple Health"
+          }
+        }
+      }
+    },
+    "From yesterday": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "من امبارح"
           }
         }
       }
