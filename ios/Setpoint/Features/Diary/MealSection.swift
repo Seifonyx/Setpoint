@@ -28,7 +28,8 @@ final class MealActions {
     /// Where each row sits on screen right now (not observed: it changes on every scroll).
     @ObservationIgnored var frames: [String: CGRect] = [:]
     /// The part of the screen a menu can use (set by the menu layer): below the top bar, above the tab bar.
-    @ObservationIgnored var room: ClosedRange<CGFloat> = 0...10_000
+    @ObservationIgnored var roomTop: CGFloat = 0
+    @ObservationIgnored var roomBottom: CGFloat = 10_000
     /// The row the open menu belongs to, and where it was when the menu opened.
     var anchor: CGRect = .zero
     /// A row the list should scroll to first, so its menu fits right under it.
@@ -39,7 +40,7 @@ final class MealActions {
     func open(row id: String, count: Int, show: @escaping @MainActor () -> Void) {
         let h = OptionsMenuLayer.height(count)
         let f = frames[id] ?? .zero
-        if f.maxY + 8 + h <= room.upperBound && f.minY >= room.lowerBound {
+        if f.maxY + 8 + h <= roomBottom && f.minY >= roomTop {
             anchor = f; show(); return
         }
         scrollTarget = id
@@ -566,8 +567,9 @@ struct OptionsMenuLayer: View {
             let origin = geo.frame(in: .global).origin
             let top = geo.safeAreaInsets.top + 52, bottom = geo.size.height - geo.safeAreaInsets.bottom - 74
             Color.clear
-                .onAppear { actions.room = (origin.y + top)...(origin.y + bottom) }
-                .onChange(of: geo.size) { actions.room = (origin.y + top)...(origin.y + bottom) }
+                // plain numbers, not a range: on the first layout pass the size can still be zero (top below bottom)
+                .onAppear { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
+                .onChange(of: geo.size) { actions.roomTop = origin.y + top; actions.roomBottom = origin.y + bottom }
             if let c = content {
                 let row = actions.anchor.offsetBy(dx: -origin.x, dy: -origin.y)
                 let width = min(geo.size.width - 32, 320)
