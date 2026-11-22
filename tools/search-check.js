@@ -33,7 +33,7 @@ const CASES = [
   ['coke', /^Cola/], ['coca cola', /^Cola/], ['cocacola', /^Cola/], ['pepsi', /^Pepsi/], ['sprite', /^Sprite/], ['7up', /lemon-lime|7 ?up|seven up/i],
   ['fanta', /^Orange soda|^Fanta/], ['mountain dew', /^Mountain Dew/], ['red bull', /Red ?Bull/i], ['redbull', /Red ?Bull/i],
   ['monster', /Monster/], ['monster energy', /Monster/], ['gatorade', /Gatorade/i], ['energy drink', /^Energy drink/i],
-  ['kitkat', /kit ?kat/i], ['snickers', /^Snickers/], ['twix', /^Twix/], ['oreo', /^Oreo/], ['pringles', /Pringles/], ['doritos', /^Doritos/],
+  ['kitkat', /kit ?kat/i], ['snickers', /^Snickers/], ['twix', /^Twix/], ['oreo', /^Oreo/], ['pringles', /pringles/i], ['doritos', /^Doritos/],
   ['galaxy', /^Galaxy/], ['nescafe', /^Nescaf/i], ['indomie', /Indomie/i], ['chipsy', /Chipsy/i], ['molto', /Molto/i], ['juhayna', /Juhayna/i],
   ['almarai', /Almarai/i], ['domty', /Domty/i], ['big mac', /^Big Mac/], ['whopper', /^Whopper/], ['chicken nuggets', /nuggets/i],
   ['frappuccino', /Frappuccino/],

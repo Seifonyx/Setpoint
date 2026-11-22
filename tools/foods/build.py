@@ -150,7 +150,9 @@ ASCIIISH = re.compile(r"^[A-Za-z0-9 '&.,%+\-/()!éèêàâîôûçÉ®™]+$")
 def clean_name(p):
     for k in ('product_name_en', 'product_name'):
         n = (p.get(k) or '').strip()
-        if n and ASCIIISH.match(n): return re.sub(r'\s+', ' ', n)[:70]
+        if n and ASCIIISH.match(n):
+            n = re.sub(r'\s+', ' ', n)[:70]
+            return n[0].upper() + n[1:] if n.islower() else n  # "pringles hot" → "Pringles hot"
     return None
 def container(p, qty):
     v, u = qty; cs = ' '.join(p.get('categories_tags') or [])
