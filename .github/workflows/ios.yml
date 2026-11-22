@@ -18,7 +18,7 @@ concurrency:
 jobs:
   build:
     runs-on: macos-26
-    timeout-minutes: 45
+    timeout-minutes: 60
     env:
       GH_TOKEN: ${{ github.token }}
       # only main releases; other branches (a redesign waiting for approval) are always previews
@@ -54,7 +54,7 @@ jobs:
           codesign --force --sign - --entitlements Setpoint/Setpoint-plain.entitlements plain/Payload/Setpoint.app
           (cd out && zip -qry Setpoint.ipa Payload && rm -rf Payload)
           (cd plain && zip -qry ../out/Setpoint-no-health.ipa Payload) && rm -rf plain
-      - name: Test (UI tests and screenshots, two simulators at once)
+      - name: Test (UI tests; the update is released only if they pass)
         id: tests
         if: steps.build.outcome == 'success'
         continue-on-error: true
@@ -69,16 +69,72 @@ jobs:
           phones = [x for k, v in sorted(d.items(), reverse=True) if "iOS-26" in k for x in v if x["name"].startswith("iPhone")]
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
-          # two simulators: the UI tests run in one while the other takes the screenshots
-          S=$(xcrun simctl clone "$UDID" Shots)
-          for D in "$UDID" "$S"; do
-            xcrun simctl boot "$D" && xcrun simctl bootstatus "$D" -b
-            xcrun simctl status_bar "$D" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
-          done
-          xcrun simctl install "$S" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
+          # one simulator (a second one starts slowly and halves the speed of both on this runner)
+          echo "SIM=$UDID" >> "$GITHUB_ENV"
+          xcrun simctl boot "$UDID" && xcrun simctl bootstatus "$UDID" -b
+          xcrun simctl status_bar "$UDID" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl ui "$UDID" appearance dark
-          (TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test-without-building -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$UDID" \
-            -derivedDataPath simbuild -only-testing:SetpointUITests CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1; echo done > uitest.done) &
+          mkdir -p out
+          TEST_RUNNER_SHOTS="$PWD/out" xcodebuild test-without-building -project Setpoint.xcodeproj -scheme Setpoint -destination "id=$UDID" \
+            -derivedDataPath simbuild -only-testing:SetpointUITests CODE_SIGNING_ALLOWED=NO > uitest.log 2>&1 || true
+          grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" uitest.log | tail -40 || true
+          cp uitest.log out/uitest-log.txt || true
+          # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at
+          for f in $(ls -t ~/Library/Logs/DiagnosticReports/Setpoint*.ips 2>/dev/null | head -3); do cp "$f" "out/crash-$(basename "$f" .ips).txt"; done || true
+          # released only when the UI tests passed and nothing crashed
+          if grep -q "TEST SUCCEEDED" uitest.log && ! grep -q "crashed" uitest.log && ! ls out/crash-*.txt >/dev/null 2>&1; then
+            echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; echo "Tests failed: not released"; fi
+      - name: Publish to the ios-latest release
+        if: env.RELEASE == 'true' && steps.tests.outputs.passed == 'true'
+        run: |
+          gh release delete ios-latest -y --cleanup-tag || true
+          gh release create ios-latest ios/out/*.ipa ios/out/*.png --prerelease --title "Setpoint for iPhone (latest build)" \
+            --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
+      - name: Update the SideStore source (sidestore.json)
+        if: env.RELEASE == 'true' && steps.tests.outputs.passed == 'true'
+        run: |
+          python3 - <<'PY'
+          import json, os, datetime
+          run = os.environ["GITHUB_RUN_NUMBER"]
+          raw = "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/"
+          rel = "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/"
+          src = {
+            "name": "Setpoint", "identifier": "app.setpoint.source", "sourceURL": raw + "sidestore.json",
+            "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+            "website": "https://setpoint-tracker.web.app", "tintColor": "1C1C1E",
+            "apps": [{
+              "name": "Setpoint", "bundleIdentifier": "app.setpoint.ios", "developerName": "Seifonyx",
+              "subtitle": "Food, nutrition and weight tracker", "tintColor": "1C1C1E",
+              "localizedDescription": "Track food, nutrients and your weight trend, with targets that learn from your results.",
+              "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
+              "screenshots": [rel + n for n in ("diary-light.png", "progress-light.png", "foods-light.png", "you-light.png")],
+              "versions": [{
+                "version": "0.1." + run, "buildVersion": run,
+                "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
+                "localizedDescription": "Build " + run + ".", "downloadURL": rel + "Setpoint.ipa",
+                "size": os.path.getsize("ios/out/Setpoint.ipa"), "minOSVersion": "26.0"
+              }],
+              "appPermissions": {"entitlements": [], "privacy": {}}
+            }],
+            "news": []
+          }
+          json.dump(src, open("sidestore.json", "w"), indent=2)
+          PY
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add sidestore.json
+          git commit -m "SideStore source: build ${{ github.run_number }}" || exit 0
+          git pull --rebase origin main && git push origin HEAD:main
+      - name: Screenshots of every screen (after the release, for the preview)
+        if: always() && steps.build.outcome == 'success' && env.SIM != ''
+        continue-on-error: true
+        run: |
+          cd ios
+          S="$SIM"
+          # a fresh install, so what the UI tests left behind doesn't show
+          xcrun simctl terminate "$S" app.setpoint.ios || true
+          xcrun simctl uninstall "$S" app.setpoint.ios || true
+          xcrun simctl install "$S" simbuild/Build/Products/Debug-iphonesimulator/Setpoint.app
           shot() { xcrun simctl launch "$S" app.setpoint.ios -demo YES "$@"; sleep 3; }
           for mode in light dark; do
             xcrun simctl ui "$S" appearance $mode
@@ -148,56 +204,6 @@ jobs:
           shot -auth signup -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$S" screenshot out/auth-signup-dark-ar.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           xcrun simctl ui "$S" appearance light
           for m in welcome signin; do shot -auth $m; xcrun simctl io "$S" screenshot out/auth-$m-light.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
-          # wait for the UI tests (running alongside)
-          while [ ! -f uitest.done ]; do sleep 5; done
-          grep -E "error:|Test Case|TEST (SUCCEEDED|FAILED)" uitest.log | tail -40 || true
-          cp uitest.log out/uitest-log.txt || true
-          # crash reports from the simulator (the app's own stack trace), so a crash can be read, not guessed at
-          for f in $(ls -t ~/Library/Logs/DiagnosticReports/Setpoint*.ips 2>/dev/null | head -3); do cp "$f" "out/crash-$(basename "$f" .ips).txt"; done || true
-          # released only when the UI tests passed and nothing crashed
-          if grep -q "TEST SUCCEEDED" uitest.log && ! grep -q "crashed" uitest.log && ! ls out/crash-*.txt >/dev/null 2>&1; then
-            echo "passed=true" >> "$GITHUB_OUTPUT"; else echo "passed=false" >> "$GITHUB_OUTPUT"; echo "Tests failed: not released"; fi
-      - name: Publish to the ios-latest release
-        if: env.RELEASE == 'true' && steps.tests.outputs.passed == 'true'
-        run: |
-          gh release delete ios-latest -y --cleanup-tag || true
-          gh release create ios-latest ios/out/*.ipa ios/out/*.png --prerelease --title "Setpoint for iPhone (latest build)" \
-            --notes "Build ${{ github.run_number }} · ${{ github.sha }}. On your iPhone: download Setpoint.ipa, then open it in SideStore."
-      - name: Update the SideStore source (sidestore.json)
-        if: env.RELEASE == 'true' && steps.tests.outputs.passed == 'true'
-        run: |
-          python3 - <<'PY'
-          import json, os, datetime
-          run = os.environ["GITHUB_RUN_NUMBER"]
-          raw = "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/"
-          rel = "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/"
-          src = {
-            "name": "Setpoint", "identifier": "app.setpoint.source", "sourceURL": raw + "sidestore.json",
-            "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
-            "website": "https://setpoint-tracker.web.app", "tintColor": "1C1C1E",
-            "apps": [{
-              "name": "Setpoint", "bundleIdentifier": "app.setpoint.ios", "developerName": "Seifonyx",
-              "subtitle": "Food, nutrition and weight tracker", "tintColor": "1C1C1E",
-              "localizedDescription": "Track food, nutrients and your weight trend, with targets that learn from your results.",
-              "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
-              "screenshots": [rel + n for n in ("diary-light.png", "progress-light.png", "foods-light.png", "you-light.png")],
-              "versions": [{
-                "version": "0.1." + run, "buildVersion": run,
-                "date": datetime.datetime.now(datetime.timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ"),
-                "localizedDescription": "Build " + run + ".", "downloadURL": rel + "Setpoint.ipa",
-                "size": os.path.getsize("ios/out/Setpoint.ipa"), "minOSVersion": "26.0"
-              }],
-              "appPermissions": {"entitlements": [], "privacy": {}}
-            }],
-            "news": []
-          }
-          json.dump(src, open("sidestore.json", "w"), indent=2)
-          PY
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add sidestore.json
-          git commit -m "SideStore source: build ${{ github.run_number }}" || exit 0
-          git pull --rebase origin main && git push origin HEAD:main
       - name: Publish a preview (screenshots and .ipa, not sent to SideStore)
         if: always() && steps.build.outcome == 'success'
         run: |
