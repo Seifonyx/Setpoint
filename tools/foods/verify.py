@@ -77,6 +77,20 @@ for i, x in usda.items():
     for k, v in n.items(): r[3][K[k]] = round(v, 3)
     mark(r, 'usda'); bump('verified with USDA Branded Foods')
 
+# Checked one by one (USDA's calories disagreed with ours): here USDA's per-100 g label is right and ours was a serving
+# typed in as 100 g/ml, or simply wrong (a "reduced fat" cream cheese at 728 kcal, mayonnaise at 35 kcal).
+TAKE_USDA = ['b0075925300221', 'b0052000047011', 'b0049000045239', 'b0049000045758', 'b0025000061516', 'b0025000030680',
+             'b0025000058011', 'b0025000049484', 'b0050255021008', 'b0034000996650', 'b02119401', 'b0021000642199',
+             'b0021000604654', 'b0021000049196', 'b0021000744343', 'b02174408', 'b0041757018627', 'b0043000032275',
+             'b0078004161515']
+BOTH_WRONG = ['b0021000615421']  # grated parmesan: 20 kcal per 100 g here, 80 in USDA; neither can be right
+for i in TAKE_USDA:
+    r, x = by.get(i), usda.get(i)
+    if not r or not x or (len(r) > 9 and r[9]): continue
+    for k, v in x['n'].items(): r[3][K[FDC[k]]] = round(v, 3)
+    mark(r, 'usda'); bump('verified with USDA Branded Foods (checked by hand: ours was wrong)')
+d['foods'] = [r for r in d['foods'] if r[0] not in BOTH_WRONG]; bump('removed: impossible in both sources', len(BOTH_WRONG))
+
 # ---------- 2. caffeine from the makers ----------
 # (pattern, not these, caffeine mg/100 ml, label check {kcal ranges}, verified?, the brand alone is enough?, source)
 # Brands that sell many other drinks (Coca-Cola, Pepsi) must be named in the product name itself, so their teas,
@@ -109,6 +123,14 @@ for r in packaged():
         if strong and any(lo <= kc <= hi for lo, hi in kranges) and not (len(r) > 9 and r[9]):  # calories match the maker's label
             mark(r, 'maker'); bump("verified with the maker's figures")
         break
+
+# Instant coffee powder: Nescafé states 50-90 mg of caffeine per 2 g serving of Gold and Original (nescafe.com FAQ);
+# the middle, 70 mg per 2 g, for plain Nescafé powder (not decaf or 3-in-1 mixes). A range, so not marked verified.
+for r in packaged():
+    t = (r[1] + ' ' + (r[6] if len(r) > 6 and isinstance(r[6], str) else '')).lower(); kc = r[3][K['kcal']]
+    if re.search(r'nescaf', t) and not re.search(r'decaf|3 ?in ?1|latte|cappuccino|mocha|mix|cream|creamer|ice|frappe|milk|caramel|vanilla|hazelnut|sugar', t) \
+            and kc is not None and 100 <= kc <= 400 and r[3][K["caff"]] is None:
+        r[3][K['caff']] = 3500; bump('caffeine filled in (Nescafé instant coffee, 70 mg per 2 g)')
 
 json.dump(d, open(FOODS, 'w'), separators=(',', ':'), ensure_ascii=False)
 print(json.dumps(report, indent=1, ensure_ascii=False))

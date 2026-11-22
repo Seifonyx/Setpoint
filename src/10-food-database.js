@@ -351,7 +351,23 @@
     rkf5: { kcal: 520, p: 28.4, c: 46.1, f: 24, sat: 4, na: 1040, sug: 5.1 }, rf3: { per: 'rkf5' },
     rkf7: { kcal: 307, p: 18, c: 18, f: 18, sat: 1.8, na: 520, sug: 0.5 },
     rkf8: { kcal: 150, p: 1.1, c: 6.1, f: 13, sat: 1, na: 228, sug: 5.3 }, rf4: { per: 'rkf8' },
-    rkf9: { kcal: 261, p: 3.1, c: 38, f: 9.8, sat: 0.8, na: 296, sug: 0.5 }
+    rkf9: { kcal: 261, p: 3.1, c: 38, f: 9.8, sat: 0.8, na: 296, sug: 0.5 },
+    // Starbucks: starbucks.co.uk nutrition books (2026), Grande with whole milk; caffeine as Starbucks states it there
+    rxs1: { kcal: 200, p: 10.6, c: 14.7, f: 11, sat: 6.9, sug: 13.9, fib: 0.3, na: 128, caff: 89.1 },
+    rxs2: { kcal: 171, p: 9.1, c: 12.7, f: 9.3, sat: 5.9, sug: 11.8, fib: 0.3, na: 108, caff: 89.1 },
+    rxs3: { kcal: 261, p: 10.6, c: 28.6, f: 11.7, sat: 7.4, sug: 27.3, fib: 0.3, na: 136, caff: 89.1 },
+    rxs7: { kcal: 362, p: 4.9, c: 45.5, f: 17.7, sat: 12.2, sug: 43.8, fib: 0.2, na: 240, caff: 30.8 },
+    rxs8: { kcal: 393, p: 6.2, c: 46.3, f: 19.8, sat: 14.1, sug: 43.1, fib: 2.3, na: 240, caff: 39.9 },
+    rxs9: { kcal: 11, p: 0.6, c: 1.4, f: 0.2, sat: 0.1, sug: 0.1, fib: 0.4, na: 0, caff: 133.7 },
+    rxs10: { kcal: 259, p: 5.6, c: 27, f: 14, sat: 9, sug: 5.4, fib: 1.4, na: 144 },
+    rxs11: { kcal: 314, p: 6.2, c: 33, f: 17, sat: 11, sug: 9.8, fib: 2, na: 148 },
+    rxs12: { kcal: 485, p: 6.4, c: 66, f: 21, sat: 2.1, sug: 31, fib: 3, na: 240 },
+    // Dunkin': its nutrition guide (dunkindonuts.com, October 2026)
+    rxn1: { kcal: 240, p: 4, c: 33, f: 11, sat: 4.5, trans: 0, chol: 0, na: 270, fib: 1, sug: 13 },
+    rxn2: { kcal: 260, p: 4, c: 34, f: 11, sat: 4.5, trans: 0, chol: 0, na: 290, fib: 1, sug: 13 },
+    rxn3: { kcal: 270, p: 5, c: 39, f: 11, sat: 4.5, trans: 0, chol: 0, na: 320, fib: 1, sug: 18 },
+    rxn4: { kcal: 260, p: 4, c: 35, f: 11, sat: 4.5, trans: 0, chol: 0, na: 280, fib: 1, sug: 14 },
+    rxn5: { kcal: 300, p: 5, c: 35, f: 15, sat: 7.5, trans: 0, chol: 0, na: 300, fib: 0, sug: 15 } // 5 glazed Munchkins (60 kcal each)
   };
   const LAB_LOCAL = { 2706916: 'rmc1', 173297: 'rmc6', 170745: 'rkf3', 170737: 'rkf7' }; // Big Mac, McNuggets, KFC drumstick, popcorn chicken
   const SAME_ITEM = { rf3: 'rkf5', rf4: 'rkf8' }; // KFC Twister wrap = Twister, Coleslaw regular = Coleslaw
@@ -508,7 +524,7 @@
           if (o) { r = r.slice(); if (o.g) r[3] = o.g; r[4] = o.kcal; r[5] = o.p; r[6] = o.c; r[7] = o.f; }
           const g = r[3], k = 100 / g, f = { id: 'u' + r[0], place: r[2] || null, palt: r[9] || '', name: r[1] + (r[2] ? ' · ' + r[2] : ''), cat: r[2] ? 'Restaurants (estimate)' : r[0].indexOf('ex') === 0 ? 'Dishes (estimate)' : 'Egyptian dishes', m: { kcal: r[4] * k, p: r[5] * k, c: r[6] * k, f: r[7] * k }, por: [['1 ' + (r[8] || 'serving'), g]], pop: 0.6 };
           const ex = SERVING_EXTRA[r[0]]; if (ex) Object.keys(ex).forEach(function (x) { f.m[x] = ex[x] * k; }); // e.g. a coffee's caffeine
-          if (o) { ['sat', 'trans', 'chol', 'na', 'fib', 'sug'].forEach(function (x) { if (o[x] != null) f.m[x] = o[x] * k; }); f.chk = 'maker'; f.cat = 'Restaurants'; }
+          if (o) { ['sat', 'trans', 'chol', 'na', 'fib', 'sug', 'caff'].forEach(function (x) { if (o[x] != null) f.m[x] = o[x] * k; }); f.chk = 'maker'; f.cat = 'Restaurants'; }
           f.w = wordsOf(f.name + ' ' + (r[9] || '')); f.first = mainWords(r[1]); f.len = wordsOf(r[1]).length; f.heads = [f.first[0]];
           list.push(f); byId[f.id] = f;
         });
