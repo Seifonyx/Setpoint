@@ -1,13 +1,14 @@
 # Stuck in "queued" with no job? A new push replaces it (previews cancel older previews).
 # Builds the native iPhone app on GitHub's Mac servers: an unsigned .ipa for SideStore, plus simulator screenshots.
-# Every push is tested first (UI tests and screenshots, in two simulators at once) and only released to "ios-latest" and
-# the SideStore source if the tests pass and the app didn't crash. A commit message with [preview] is never released.
+# Every push is tested first (search check, then the UI tests in one simulator) and only released to "ios-latest" and
+# the SideStore source if the tests pass and the app didn't crash; screenshots follow, for "ios-preview". A commit message with [preview] is never released.
 # A failed build posts its log to "ios-log".
 name: iOS
 on:
   push:
     branches: [main, redesign]
-    paths: ['ios/**', '.github/workflows/ios.yml']
+    # the app also bundles the food list and the web app's search and maths (see tools/ios-engine.js)
+    paths: ['ios/**', '.github/workflows/ios.yml', 'foods.json', 'src/**', 'ar.js', 'tools/ios-engine.js', 'tools/ios-engine-api.js', 'tools/search-check.js']
   workflow_dispatch:
 permissions:
   contents: write
