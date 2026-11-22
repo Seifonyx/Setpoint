@@ -322,13 +322,38 @@
     ['eg50', 'Ataif with cream', '', 70, 230, 4, 30, 10, 'piece', 'قطايف بالقشطة']
   ];
   // Chain items USDA measured in its lab (same product, calories within about 15%): the lab food replaces the estimate.
-  const LAB_TWIN = { rmc1: 2706916, rmc2: 2706892, rmc3: 173305, rmc5: 173297, rmc6: 173297, rmc8: 170721, rmc9: 170721,
+  const LAB_TWIN = { rmc2: 2706892, rmc3: 173305, rmc8: 170721, rmc9: 170721,
     rkf1: 170744, rkf2: 170346, rxb1: 170727, rxb3: 170729, rxb8: 170327, rph2: 173279, rxd1: 173282, rxd2: 172044, rxp1: 173284, rxp2: 173285 };
   // More numbers per serving for estimates: caffeine in chain coffees (Starbucks's published grande amounts; Costa's from
   // Which?'s 2026 lab tests of a medium; Dunkin's from caffeine guides, medium).
   const SERVING_EXTRA = { rxs1: { caff: 150 }, rxs2: { caff: 150 }, rxs3: { caff: 150 }, rxs4: { caff: 175 }, rxs5: { caff: 150 },
     rxs6: { caff: 150 }, rxs9: { caff: 225 }, rxc2: { caff: 325 }, rxc3: { caff: 241 }, rxc4: { caff: 325 },
     rxn6: { caff: 166 }, rxn7: { caff: 297 } };
+  // The chain's own published numbers for an item (per serving; g = its weight when the chain gives it). These replace the
+  // estimate and make it verified. McDonald's: mcdonalds.com.lb (McDonald's Lebanon, the region's menu and recipes);
+  // Hardee's: hardees.com 2025 US nutrition table; KFC: kfc.co.uk nutrition (salt × 400 = sodium, mg).
+  const OFFICIAL = {
+    rmc1: { g: 223.1, kcal: 556.45, p: 28.28, c: 53.59, f: 25.52, sat: 11.51, trans: 0.81, na: 1009.6, fib: 1.76, sug: 9.01 },
+    rmc4: { g: 341.33, kcal: 845.98, p: 45.14, c: 60.37, f: 47.37, sat: 23.21, trans: 1.99, na: 1415.54, fib: 2.81, sug: 11.26 },
+    rmc5: { g: 96, per: 'rmc6' }, // 6 pieces: the same nuggets as the 9
+    rmc6: { g: 144, kcal: 349.92, p: 25.92, c: 20.53, f: 18.72, sat: 4.32, trans: 0, na: 714.24, fib: 2.88, sug: 0 },
+    rmc7: { g: 150.4, kcal: 386.07, p: 18.39, c: 43.13, f: 15.42, sat: 3.41, trans: 0.31, na: 785.53, fib: 1.63, sug: 4.76 },
+    rmc10: { g: 213, kcal: 404.14, p: 7.85, c: 62.99, f: 13.57, sat: 8.06, trans: 0.45, na: 245.54, fib: 1.78, sug: 49.6 },
+    rmc12: { g: 359.55, kcal: 975.03, p: 40.2, c: 66.01, f: 61.36, sat: 21.18, trans: 0.68, na: 2038.7, fib: 6.29, sug: 10.73 },
+    rmc13: { g: 243.4, kcal: 575.77, p: 30.09, c: 41.71, f: 26.74, sat: 13.14, trans: 1.08, na: 928.12, fib: 2.33, sug: 8.47 },
+    rhd2: { g: 254, kcal: 580, p: 28, c: 43, f: 39, sat: 13, trans: 1.5, chol: 85, na: 1130, fib: 3, sug: 11 },
+    rhd3: { g: 215, kcal: 580, p: 31, c: 40, f: 38, sat: 14, trans: 1.5, chol: 100, na: 1280, fib: 2, sug: 9 },
+    rhd4: { g: 128, kcal: 260, p: 25, c: 13, f: 13, sat: 3, trans: 0, chol: 70, na: 770, fib: 2, sug: 0 },
+    rhd5: { g: 108, kcal: 340, p: 4, c: 43, f: 17, sat: 4, trans: 0, chol: 0, na: 840, fib: 4, sug: 0 },
+    rhd6: { g: 223, kcal: 560, p: 30, c: 48, f: 32, sat: 6, trans: 0, chol: 80, na: 2490, fib: 2, sug: 8 },
+    rkf3: { kcal: 179, p: 14, c: 8, f: 10, sat: 1.5, na: 296, sug: 0.5 },
+    rkf4: { kcal: 468, p: 23, c: 43, f: 22, sat: 2.2, na: 800, sug: 6.5 },
+    rkf5: { kcal: 520, p: 28.4, c: 46.1, f: 24, sat: 4, na: 1040, sug: 5.1 }, rf3: { per: 'rkf5' },
+    rkf7: { kcal: 307, p: 18, c: 18, f: 18, sat: 1.8, na: 520, sug: 0.5 },
+    rkf8: { kcal: 150, p: 1.1, c: 6.1, f: 13, sat: 1, na: 228, sug: 5.3 }, rf4: { per: 'rkf8' },
+    rkf9: { kcal: 261, p: 3.1, c: 38, f: 9.8, sat: 0.8, na: 296, sug: 0.5 }
+  };
+  const SAME_ITEM = { rf3: 'rkf5', rf4: 'rkf8' }; // KFC Twister wrap = Twister, Coleslaw regular = Coleslaw
   const RESTAURANTS = [
     ['rk1', 'Koshary, small', 'Koshary El Tahrir', 350, 600, 18, 110, 10, 'small box', 'كشري التحرير koshary koshari'],
     ['rk2', 'Koshary, medium', 'Koshary El Tahrir', 500, 860, 25, 158, 14, 'medium box', 'كشري التحرير koshary koshari'],
@@ -474,10 +499,22 @@
             if (best && sc(best) > 0 && best !== twin.por[0]) twin.por = [best].concat(twin.por.filter(function (p) { return p !== best; }));
             return;
           }
+          let o = OFFICIAL[r[0]];
+          if (o && o.per) { // a size of an item we have official numbers for: scaled by weight (or the same serving)
+            const base = OFFICIAL[o.per], sc = o.g && base.g ? o.g / base.g : 1, gg = o.g;
+            o = {}; Object.keys(base).forEach(function (x) { o[x] = x === 'g' ? gg : base[x] * sc; }); if (!gg) delete o.g;
+          }
+          if (o) { r = r.slice(); if (o.g) r[3] = o.g; r[4] = o.kcal; r[5] = o.p; r[6] = o.c; r[7] = o.f; }
           const g = r[3], k = 100 / g, f = { id: 'u' + r[0], place: r[2] || null, palt: r[9] || '', name: r[1] + (r[2] ? ' · ' + r[2] : ''), cat: r[2] ? 'Restaurants (estimate)' : r[0].indexOf('ex') === 0 ? 'Dishes (estimate)' : 'Egyptian dishes', m: { kcal: r[4] * k, p: r[5] * k, c: r[6] * k, f: r[7] * k }, por: [['1 ' + (r[8] || 'serving'), g]], pop: 0.6 };
           const ex = SERVING_EXTRA[r[0]]; if (ex) Object.keys(ex).forEach(function (x) { f.m[x] = ex[x] * k; }); // e.g. a coffee's caffeine
+          if (o) { ['sat', 'trans', 'chol', 'na', 'fib', 'sug'].forEach(function (x) { if (o[x] != null) f.m[x] = o[x] * k; }); f.chk = 'maker'; f.cat = 'Restaurants'; }
           f.w = wordsOf(f.name + ' ' + (r[9] || '')); f.first = mainWords(r[1]); f.len = wordsOf(r[1]).length; f.heads = [f.first[0]];
           list.push(f); byId[f.id] = f;
+        });
+        // Two entries for one menu item (the same official numbers): keep one, the other's id opens it.
+        Object.keys(SAME_ITEM).forEach(function (o) {
+          const a = byId['u' + o], b = byId['u' + SAME_ITEM[o]]; if (!a || !b) return;
+          b.w = b.w.concat(a.w.filter(function (x) { return b.w.indexOf(x) < 0; })); byId['u' + o] = b; list.splice(list.indexOf(a), 1);
         });
         // Egyptian packaged products: typical label values, marked as estimates.
         PACKAGED_EG.forEach(function (r) {

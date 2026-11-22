@@ -587,7 +587,7 @@
     // A logged item's (or an edited one's) vitamins, minerals and fiber against your daily targets, most covered first.
     itemNutrientRows: function (txt) {
       var it = JSON.parse(txt), v = itemNutrients(it); if (!v) return '[]';
-      var tg = nutTargets(todayISO()), keys = ['fib', 'sug', 'sat', 'na', 'k', 'ca', 'fe', 'mg', 'zn', 'vA', 'vC', 'vD', 'vE', 'vK', 'b1', 'b2', 'b3', 'b6', 'b12', 'fol', 'chol'];
+      var tg = nutTargets(todayISO()), keys = ['caff', 'fib', 'sug', 'sat', 'trans', 'na', 'k', 'ca', 'fe', 'mg', 'zn', 'vA', 'vC', 'vD', 'vE', 'vK', 'b1', 'b2', 'b3', 'b6', 'b12', 'fol', 'chol', 'alc'];
       return J(keys.filter(function (k) { return v[k] != null && NUT[k]; }).map(function (k) {
         var t = tg[k] || {};
         return { key: k, label: L(NUT[k].label), unit: NUT[k].unit, v: v[k], goal: t.goal == null ? null : t.goal, hi: t.hi == null ? null : t.hi };
