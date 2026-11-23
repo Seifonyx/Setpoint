@@ -131,8 +131,10 @@ final class DiaryDragTests: XCTestCase {
             if potato.frame.minY > r.frame.height - 200 { r.swipeUp(velocity: .slow); sleep(1) }
             shot(r, "recipe-0-start")
             drag(potato, to: oil, dy: 0.0)
+            if y(potato) > y(oil) { note("   (recipe drag didn't take, once more)"); sleep(2); drag(potato, to: oil, dy: 0.0) }
             shot(r, "recipe-1-reorder")
             note("recipe reorder: potatoes above oil = \(y(potato) < y(oil)) (potato \(y(potato)) oil \(y(oil)))")
+            XCTAssertLessThan(y(potato), y(oil), "dragging the potatoes above the oil in a recipe")
         } else { note("recipe: ingredients not found"); shot(r, "recipe-missing") }
         r.terminate()
         // the tab bar shrinking while the app is open (names should fade)
@@ -158,6 +160,7 @@ final class DiaryDragTests: XCTestCase {
             row.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
             _ = f.keyboards.firstMatch.waitForExistence(timeout: 3)
             note("amount: keypad after tapping the middle of the line = \(f.keyboards.firstMatch.exists)")
+            XCTAssertTrue(f.keyboards.firstMatch.exists, "tapping an amount's line brings up the keypad")
             shot(f, "amount-keyboard")
         } else { note("amount: no amount line"); shot(f, "amount-missing") }
         f.terminate()
@@ -171,6 +174,7 @@ final class DiaryDragTests: XCTestCase {
             cal.tap()
             _ = n.keyboards.firstMatch.waitForExistence(timeout: 3)
             note("form: keypad after tapping the Calories label = \(n.keyboards.firstMatch.exists)")
+            XCTAssertTrue(n.keyboards.firstMatch.exists, "tapping a form label brings up the keypad")
             shot(n, "form-keyboard")
         } else { note("form: no Calories label"); shot(n, "form-missing") }
         n.terminate()
@@ -200,17 +204,19 @@ final class DiaryDragTests: XCTestCase {
         c.terminate()
 
         let t = XCUIApplication()
-        t.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
+        t.launchArguments = ["-demo", "YES", "-tab", "diary"]
         t.launch()
         // found by what VoiceOver says (the row's own test name covers the circle's)
         let tick = t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch
-        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); settle(); return tick.exists }() {
-            if !tick.isHittable { t.swipeUp(velocity: .slow); settle() }
+        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); sleep(2); return tick.waitForExistence(timeout: 3) }() {
+            if !tick.isHittable { t.swipeUp(velocity: .slow); sleep(2) }
             shot(t, "tick-0-planned")
             tick.tap(); _ = tick.waitForNonExistence(timeout: 3)
-            note("tick: planned protein bar ticked off = \(!t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch.exists) · app running = \(t.state == .runningForeground)")
+            let ticked = !t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch.exists
+            note("tick: planned protein bar ticked off = \(ticked) · app running = \(t.state == .runningForeground)")
+            XCTAssertTrue(ticked && t.state == .runningForeground, "ticking off a planned food")
             shot(t, "tick-1-eaten")
-        } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing") }
+        } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing"); XCTFail("no tick circle on the planned food") }
         t.terminate()
 
         // the microphone: allow the permission prompts and see that the app keeps going
@@ -245,6 +251,7 @@ final class DiaryDragTests: XCTestCase {
             cam.tap(); _ = cm.buttons["Snap your plate"].firstMatch.waitForExistence(timeout: 3)
             let ways = ["Snap your plate", "Scan barcode", "Scan a nutrition label"].filter { cm.buttons[$0].firstMatch.exists }
             note("camera menu: \(ways.count) of 3 options (\(ways.joined(separator: ", ")))")
+            XCTAssertEqual(ways.count, 3, "the camera menu's three ways in")
             shot(cm, "camera-menu")
         } else { note("camera menu: no camera button"); shot(cm, "camera-missing") }
         cm.terminate()
@@ -324,6 +331,7 @@ final class DiaryDragTests: XCTestCase {
                 new.tap(); _ = nw.buttons["Recipe"].firstMatch.waitForExistence(timeout: 3)
                 let kinds = ["Food", "Recipe", "Meal"].filter { nw.buttons[$0].firstMatch.exists }
                 note("new menu: \(kinds.count) of 3 (\(kinds.joined(separator: ", ")))")
+                XCTAssertEqual(kinds.count, 3, "New offers a food, a recipe and a meal")
                 shot(nw, "new-menu")
             } else { note("new menu: no New in ⋯"); shot(nw, "new-missing") }
         } else { note("new menu: no ⋯ button"); shot(nw, "new-missing") }
