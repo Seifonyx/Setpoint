@@ -15,6 +15,8 @@ final class DiaryDragTests: XCTestCase {
         log.append(s)
         try? log.joined(separator: "\n").write(to: out.appendingPathComponent(resultsFile), atomically: true, encoding: .utf8)
     }
+    /// An element's text, read in one step (it can disappear between asking whether it exists and reading it).
+    @MainActor private func label(_ e: XCUIElement) -> String? { (try? e.snapshot())?.label }
     /// A short pause for the screen to settle (the app runs with animations sped up in these checks).
     private func settle(_ seconds: Double = 0.4) { Thread.sleep(forTimeInterval: seconds) }
     /// Waits until an element's text changes (or appears), instead of a fixed pause.
@@ -225,7 +227,7 @@ final class DiaryDragTests: XCTestCase {
             }
             settle(2)
             let words = m.staticTexts.containing(NSPredicate(format: "label CONTAINS[c] 'listen' OR label CONTAINS[c] 'speech' OR label CONTAINS[c] 'microphone' OR label CONTAINS[c] 'type'")).firstMatch
-            note("voice: app running after the microphone = \(m.state == .runningForeground) · says: \(words.exists ? words.label : "(nothing)")")
+            note("voice: app running after the microphone = \(m.state == .runningForeground) · says: \(label(words) ?? "(nothing)")")
             shot(m, "voice-1")
         } else { note("voice: no microphone button"); shot(m, "voice-missing") }
         m.terminate()
