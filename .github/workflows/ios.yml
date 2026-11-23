@@ -159,6 +159,8 @@ jobs:
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
           echo "SIM=$UDID" >> "$GITHUB_ENV"
+          # boot now, while the cached build is restored and compiled (a ~30 s compile; the boot takes ~2 minutes)
+          xcrun simctl boot "$UDID"
       - name: Build the shared engine (web app search and maths) and food list
         run: node tools/ios-engine.js
       - name: Generate the Xcode project
@@ -170,7 +172,7 @@ jobs:
           set -o pipefail
           xcodebuild -project Setpoint.xcodeproj -scheme Setpoint -configuration Debug -sdk iphonesimulator \
             -destination 'generic/platform=iOS Simulator' -derivedDataPath simbuild CODE_SIGNING_ALLOWED=NO build-for-testing 2>&1 | tee sim.log | grep -E "error:|BUILD (SUCCEEDED|FAILED)"
-          xcrun simctl boot "$SIM"; xcrun simctl bootstatus "$SIM" -b
+          xcrun simctl bootstatus "$SIM" -b
           xcrun simctl status_bar "$SIM" override --time 9:41 --batteryState charged --batteryLevel 100 --wifiBars 3 --cellularBars 4
           xcrun simctl ui "$SIM" appearance dark
           # one launch before the tests: the first launch after booting can time out while the simulator settles
