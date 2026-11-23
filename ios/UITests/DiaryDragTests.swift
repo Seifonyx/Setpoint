@@ -117,8 +117,7 @@ final class DiaryDragTests: XCTestCase {
         run("drag", [])
     }
 
-    /// Reordering recipe ingredients, the tab bar shrinking, typing amounts, the crash checks, ticking off a planned
-    /// food, and the microphone.
+    /// Reordering recipe ingredients, the crash checks, ticking off a planned food, and the microphone.
     @MainActor func testInputsAndCrashes() {
         resultsFile = "check-results-inputs.txt"
         // recipe ingredients: press, hold and drag the potatoes above the oil
@@ -137,48 +136,6 @@ final class DiaryDragTests: XCTestCase {
             XCTAssertLessThan(y(potato), y(oil), "dragging the potatoes above the oil in a recipe")
         } else { note("recipe: ingredients not found"); shot(r, "recipe-missing") }
         r.terminate()
-        // the tab bar shrinking while the app is open (names should fade)
-        let app = XCUIApplication()
-        app.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
-        app.launch()
-        settle(1)
-        app.swipeUp(velocity: .slow)
-        settle()
-        shot(app, "bar-runtime-compact")
-        app.swipeDown(velocity: .slow)
-        app.swipeDown(velocity: .fast)
-        settle()
-        shot(app, "bar-runtime-full")
-        app.terminate()
-
-        // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
-        let f = XCUIApplication()
-        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food", "-fastAnimations"]
-        f.launch()
-        let row = el(f, "amount-row")
-        if row.waitForExistence(timeout: 10) {
-            row.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
-            _ = f.keyboards.firstMatch.waitForExistence(timeout: 3)
-            note("amount: keypad after tapping the middle of the line = \(f.keyboards.firstMatch.exists)")
-            XCTAssertTrue(f.keyboards.firstMatch.exists, "tapping an amount's line brings up the keypad")
-            shot(f, "amount-keyboard")
-        } else { note("amount: no amount line"); shot(f, "amount-missing") }
-        f.terminate()
-
-        // number fields in forms: tapping the label opens the keypad
-        let n = XCUIApplication()
-        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood", "-fastAnimations"]
-        n.launch()
-        let cal = n.staticTexts["Calories"].firstMatch
-        if cal.waitForExistence(timeout: 10) {
-            cal.tap()
-            _ = n.keyboards.firstMatch.waitForExistence(timeout: 3)
-            note("form: keypad after tapping the Calories label = \(n.keyboards.firstMatch.exists)")
-            XCTAssertTrue(n.keyboards.firstMatch.exists, "tapping a form label brings up the keypad")
-            shot(n, "form-keyboard")
-        } else { note("form: no Calories label"); shot(n, "form-missing") }
-        n.terminate()
-
         // the crashes you reported: dropping into a folded meal (Snacks), and below the last card; then ticking off a
         // planned food. After each, is the app still running?
         let c = XCUIApplication()
@@ -239,9 +196,52 @@ final class DiaryDragTests: XCTestCase {
         m.terminate()
     }
 
-    /// The add sheet's menus, selecting several, the filter, swipe options, and the sign-in form.
+    /// The tab bar shrinking, typing amounts, the add sheet's menus, selecting several, the filter, swipe options, and
+    /// the sign-in form.
     @MainActor func testMenusAndSignIn() {
         resultsFile = "check-results-menus.txt"
+        // the tab bar shrinking while the app is open (names should fade)
+        let app = XCUIApplication()
+        app.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
+        app.launch()
+        settle(1)
+        app.swipeUp(velocity: .slow)
+        settle()
+        shot(app, "bar-runtime-compact")
+        app.swipeDown(velocity: .slow)
+        app.swipeDown(velocity: .fast)
+        settle()
+        shot(app, "bar-runtime-full")
+        app.terminate()
+
+        // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
+        let f = XCUIApplication()
+        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food", "-fastAnimations"]
+        f.launch()
+        let row = el(f, "amount-row")
+        if row.waitForExistence(timeout: 10) {
+            row.coordinate(withNormalizedOffset: CGVector(dx: 0.35, dy: 0.5)).tap()
+            _ = f.keyboards.firstMatch.waitForExistence(timeout: 3)
+            note("amount: keypad after tapping the middle of the line = \(f.keyboards.firstMatch.exists)")
+            XCTAssertTrue(f.keyboards.firstMatch.exists, "tapping an amount's line brings up the keypad")
+            shot(f, "amount-keyboard")
+        } else { note("amount: no amount line"); shot(f, "amount-missing") }
+        f.terminate()
+
+        // number fields in forms: tapping the label opens the keypad
+        let n = XCUIApplication()
+        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood", "-fastAnimations"]
+        n.launch()
+        let cal = n.staticTexts["Calories"].firstMatch
+        if cal.waitForExistence(timeout: 10) {
+            cal.tap()
+            _ = n.keyboards.firstMatch.waitForExistence(timeout: 3)
+            note("form: keypad after tapping the Calories label = \(n.keyboards.firstMatch.exists)")
+            XCTAssertTrue(n.keyboards.firstMatch.exists, "tapping a form label brings up the keypad")
+            shot(n, "form-keyboard")
+        } else { note("form: no Calories label"); shot(n, "form-missing") }
+        n.terminate()
+
         // the camera button lists its three ways in
         let cm = XCUIApplication()
         cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
