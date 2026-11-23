@@ -17,7 +17,7 @@ final class DiaryDragTests: XCTestCase {
     }
     /// An element's text, read in one step (it can disappear between asking whether it exists and reading it).
     @MainActor private func label(_ e: XCUIElement) -> String? { (try? e.snapshot())?.label }
-    /// A short pause for the screen to settle (the app runs with animations sped up in these checks).
+    /// A short pause for the screen to settle.
     private func settle(_ seconds: Double = 0.4) { Thread.sleep(forTimeInterval: seconds) }
     /// Waits until an element's text changes (or appears), instead of a fixed pause.
     @MainActor private func waitForChange(_ e: XCUIElement, from old: String, timeout: Double) {
@@ -165,8 +165,10 @@ final class DiaryDragTests: XCTestCase {
         t.launch()
         // found by what VoiceOver says (the row's own test name covers the circle's)
         let tick = t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch
-        if tick.waitForExistence(timeout: 10) || { t.swipeUp(velocity: .slow); sleep(2); return tick.waitForExistence(timeout: 3) }() {
-            if !tick.isHittable { t.swipeUp(velocity: .slow); sleep(2) }
+        // it sits further down the Diary: scroll until it's on screen (how far one swipe goes varies)
+        _ = tick.waitForExistence(timeout: 10)
+        for _ in 0..<3 where !(tick.exists && tick.isHittable) { t.swipeUp(velocity: .slow); sleep(2) }
+        if tick.exists && tick.isHittable {
             shot(t, "tick-0-planned")
             tick.tap(); _ = tick.waitForNonExistence(timeout: 3)
             let ticked = !t.buttons.matching(NSPredicate(format: "label BEGINSWITH 'Mark Protein bar'")).firstMatch.exists
@@ -178,7 +180,7 @@ final class DiaryDragTests: XCTestCase {
 
         // the microphone: allow the permission prompts and see that the app keeps going
         let m = XCUIApplication()
-        m.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
+        m.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
         m.launch()
         let mic = el(m, "add-voice")
         if mic.waitForExistence(timeout: 10) {
@@ -202,7 +204,7 @@ final class DiaryDragTests: XCTestCase {
         resultsFile = "check-results-menus.txt"
         // the tab bar shrinking while the app is open (names should fade)
         let app = XCUIApplication()
-        app.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
+        app.launchArguments = ["-demo", "YES", "-tab", "diary"]
         app.launch()
         settle(1)
         app.swipeUp(velocity: .slow)
@@ -216,7 +218,7 @@ final class DiaryDragTests: XCTestCase {
 
         // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
         let f = XCUIApplication()
-        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food", "-fastAnimations"]
+        f.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "food"]
         f.launch()
         let row = el(f, "amount-row")
         if row.waitForExistence(timeout: 10) {
@@ -230,7 +232,7 @@ final class DiaryDragTests: XCTestCase {
 
         // number fields in forms: tapping the label opens the keypad
         let n = XCUIApplication()
-        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood", "-fastAnimations"]
+        n.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "newfood"]
         n.launch()
         let cal = n.staticTexts["Calories"].firstMatch
         if cal.waitForExistence(timeout: 10) {
@@ -244,7 +246,7 @@ final class DiaryDragTests: XCTestCase {
 
         // the camera button lists its three ways in
         let cm = XCUIApplication()
-        cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
+        cm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
         cm.launch()
         let cam = cm.buttons["Camera"].firstMatch
         if cam.waitForExistence(timeout: 10) {
@@ -258,7 +260,7 @@ final class DiaryDragTests: XCTestCase {
 
         // selecting several in My foods takes a recipe and a saved meal too, and plans them
         let sp = XCUIApplication()
-        sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine", "-fastAnimations"]
+        sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine"]
         sp.launch()
         let several = sp.buttons["Select several"].firstMatch
         if several.waitForExistence(timeout: 10) {
@@ -278,7 +280,7 @@ final class DiaryDragTests: XCTestCase {
 
         // the sort and filter menu, open (Verified only should be a normal choice)
         let fm = XCUIApplication()
-        fm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
+        fm.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
         fm.launch()
         let pill = fm.buttons["Sort"].firstMatch
         if pill.waitForExistence(timeout: 10) {
@@ -291,7 +293,7 @@ final class DiaryDragTests: XCTestCase {
 
         // swipe right on a food: its options; on a meal's name: the meal's options
         let sw = XCUIApplication()
-        sw.launchArguments = ["-demo", "YES", "-tab", "diary", "-fastAnimations"]
+        sw.launchArguments = ["-demo", "YES", "-tab", "diary"]
         sw.launch()
         let oatsRow = el(sw, "food-a0")
         if oatsRow.waitForExistence(timeout: 10) {
@@ -321,7 +323,7 @@ final class DiaryDragTests: XCTestCase {
 
         // ⋯ then New: a food, a recipe or a meal
         let nw = XCUIApplication()
-        nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-fastAnimations"]
+        nw.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add"]
         nw.launch()
         let more = nw.buttons["More ways to add"].firstMatch
         if more.waitForExistence(timeout: 10) {
@@ -339,7 +341,7 @@ final class DiaryDragTests: XCTestCase {
 
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
-        a.launchArguments = ["-demo", "YES", "-auth", "welcome", "-fastAnimations"]
+        a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
         a.launch()
         let toSignIn = el(a, "auth-signin")
         if toSignIn.waitForExistence(timeout: 10) {
