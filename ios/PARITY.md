@@ -39,7 +39,7 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 
 ## Foods
 - ✅ My foods and recipes (make, edit, delete), saved meals (delete), favorites (remove)
-- ⬜ Find duplicates
+- ✅ Find duplicates (My foods › Possible duplicates, shown when there are any; merge with undo)
 
 ## You and settings
 - ✅ Account sign-in (email, Google) and sync with the web app

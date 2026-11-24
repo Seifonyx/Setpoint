@@ -280,6 +280,8 @@ jobs:
           shot -tab diary -bar compact; xcrun simctl io "$S" screenshot out/bar-compact-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab foods -open recipe; sleep 2; xcrun simctl io "$S" screenshot out/recipe-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab foods -open mine; xcrun simctl io "$S" screenshot out/mine-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
+          shot -tab foods -open dups; xcrun simctl io "$S" screenshot out/dups-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
+          shot -tab foods -open dups -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$S" screenshot out/dups-dark-ar.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab diary -open nutrient; xcrun simctl io "$S" screenshot out/sources-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab diary -open highin; sleep 2; xcrun simctl io "$S" screenshot out/highin-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab you -open targets -AppleLanguages "(ar)"; xcrun simctl io "$S" screenshot out/targets-dark-ar.png; xcrun simctl terminate "$S" app.setpoint.ios || true

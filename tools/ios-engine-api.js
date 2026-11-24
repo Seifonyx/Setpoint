@@ -375,6 +375,25 @@
           item: { ref: it.ref, name: it.name, g: it.g, qty: it.qty, unit: it.unit, kcal: it.kcal } };
       }));
     },
+    // Your own foods that look like copies (the web app's dupGroups: same name and serving, calories within 5%),
+    // each group most-logged first, so the one you use most is ticked to keep.
+    dupGroups: function () {
+      var use = foodUse().use, n = function (x) { return Number(x) || 0; };
+      return J(dupGroups().map(function (g) {
+        return g.slice().sort(function (a, b) { return (use[b.id] || 0) - (use[a.id] || 0); }).map(function (c) {
+          return { id: String(c.id), name: String(c.name || ''), unit: String(c.unit || ''), g: c.g ? n(c.g) : null,
+            kcal: n(c.kcal), p: n(c.p), c: n(c.c), f: n(c.f), uses: use[c.id] || 0 };
+        });
+      }));
+    },
+    // Keep one, point the diary, recipes, meals and favorites at it, remove the others (the web app's mergeFoods).
+    mergeFoods: function (keepId, dropTxt) {
+      var ids = JSON.parse(dropTxt), keep = state.myFoods.find(function (c) { return c.id === keepId; });
+      var drop = state.myFoods.filter(function (c) { return c.id !== keepId && ids.indexOf(c.id) >= 0; });
+      if (!keep || !drop.length) return 'null';
+      mergeFoods(keep, drop); dataVer++;
+      return J({ kept: keep.name, n: drop.length });
+    },
     savedMeals: function () { return J(state.meals.map(function (m) { return { id: m.id, name: m.name, kcal: mealTotal(m.items), n: m.items.length }; })); },
     // One food: its units, a starting amount (your usual, else a sensible serving) and its numbers per 100 g.
     food: function (id, meal) {

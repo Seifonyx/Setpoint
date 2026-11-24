@@ -468,6 +468,23 @@ final class Store {
     }
     func clearUndo() { undoSnap = nil; undoAction = nil; undoLabel = nil }
 
+    /// Possible duplicates: keep one of your foods and move your diary, recipes, meals and favorites over to it.
+    /// Undo puts every food and every link back as it was.
+    func mergeFoods(keep: DupFood, drop: [DupFood]) async {
+        let before = root
+        guard await eng.mergeFoods(keep: keep.id, drop: drop.map(\.id)) else { return }
+        await adoptEngineState()
+        changeKind = .edit
+        changeCount += 1
+        undoSnap = nil
+        undoLabel = String(localized: "Merged into \(keep.name)")
+        undoAction = { [weak self] in
+            guard let self, let data = try? JSONEncoder().encode(JSONValue.object(before)) else { return }
+            self.load(data)
+            self.save(); self.flushSave()
+        }
+    }
+
     private func stamp(_ item: inout FoodItem) { item.raw["u"] = .number((Date().timeIntervalSince1970 * 1000).rounded()) }
 
     private func edit(_ day: String, _ id: String, _ change: (inout FoodItem) -> Void) {

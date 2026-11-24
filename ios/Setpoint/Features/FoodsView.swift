@@ -10,6 +10,7 @@ struct FoodLists: View {
     @State private var mealEdit: MealJob?
     struct MealJob: Identifiable { let id = UUID(); let meal: [String: JSONValue]? }
     @State private var favorites: [FoodHit] = []
+    @State private var dupGroups = 0
 
     private var title: LocalizedStringKey {
         switch kind { case .mine: "My foods"; case .recipes: "Recipes"; case .meals: "Meals"; case .favorites: "Favorites" }
@@ -27,6 +28,23 @@ struct FoodLists: View {
             List {
                 switch kind {
                 case .mine:
+                // only when there's something to merge, like Photos' Duplicates album
+                if dupGroups > 0 {
+                    Section {
+                        NavigationLink { DuplicatesView() } label: {
+                            HStack(spacing: 12) {
+                                Image(systemName: "square.on.square").font(.system(size: 17, weight: .semibold))
+                                    .foregroundStyle(Brand.amber).frame(width: 32)
+                                VStack(alignment: .leading, spacing: 2) {
+                                    Text("Possible duplicates").font(.brand(.body, .semibold)).foregroundStyle(Brand.ink)
+                                    Text(dupGroups == 1 ? LocalizedStringKey("1 food looks like it's saved twice") : "\(dupGroups) foods look like they're saved twice")
+                                        .font(.brand(.footnote)).foregroundStyle(Brand.ink2)
+                                }
+                            }
+                        }
+                        .accessibilityIdentifier("dup-row")
+                    }
+                }
                 Section {
                     let mine = list("myFoods")
                     if mine.isEmpty { Text("Foods you make show up here, like a protein shake or your mum's lasagna.").foregroundStyle(.secondary) }
@@ -132,7 +150,10 @@ struct FoodLists: View {
                 }
             }
             .hidesTabBar()
-            .task(id: "\(store.version)|\(store.foodsReady)") { favorites = await store.engineRef.list("favorites", meal: "snacks") }
+            .task(id: "\(store.version)|\(store.foodsReady)") {
+                if kind == .mine { dupGroups = await store.engineRef.dupGroups().count }
+                if kind == .favorites { favorites = await store.engineRef.list("favorites", meal: "snacks") }
+            }
             .sheet(item: $editing) { e in CustomFoodSheet(food: e.food) }
             .sheet(item: $recipeEdit) { e in RecipeEditor(recipe: e.food) }
             .task { // build-server screenshots: -open recipe opens the first recipe
@@ -288,6 +309,7 @@ struct FoodsView: View {
     @State private var imported: Imported?
     struct Imported: Identifiable { let id = UUID(); let recipe: [String: JSONValue] }
     @State private var shotList: FoodLists.Kind?   // build-server screenshots
+    @State private var openDups = false            // build-server screenshots
     private func count(_ k: String) -> Int { store.root[k]?.array?.count ?? 0 }
 
     var body: some View {
@@ -312,6 +334,7 @@ struct FoodsView: View {
             .navigationDestination(isPresented: $openPlanner) { DayPlannerView() }
             .navigationDestination(isPresented: $openRepeating) { RepeatingView() }
             .navigationDestination(item: $shotList) { FoodLists(kind: $0) }
+            .navigationDestination(isPresented: $openDups) { DuplicatesView() }
             .sheet(isPresented: $newFood) { CustomFoodSheet(food: nil) }
             .sheet(isPresented: $newRecipe) { RecipeEditor(recipe: nil) }
             // imported: the import sheet closes, then the recipe opens in the editor to save
@@ -320,12 +343,12 @@ struct FoodsView: View {
             }
             .sheet(item: $imported) { RecipeEditor(recipe: $0.recipe) }
             .sheet(isPresented: $newMeal) { MealEditor(meal: nil) }
-            .task { // build-server screenshots: -open planner / repeating / recipe / mine / newfood / newmeal
+            .task { // build-server screenshots: -open planner / repeating / recipe / mine / dups / newfood / newmeal
                 SavedDays.moveOld(store)
                 let o = UserDefaults.standard.string(forKey: "open")
                 openPlanner = o == "planner"; openRepeating = o == "repeating"
                 shotList = o == "recipe" ? .recipes : o == "mine" ? .mine : nil
-                newFood = o == "newfood"; newMeal = o == "newmeal"
+                newFood = o == "newfood"; newMeal = o == "newmeal"; openDups = o == "dups"
             }
         }
     }

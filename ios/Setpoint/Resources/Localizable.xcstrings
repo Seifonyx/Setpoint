@@ -441,6 +441,16 @@
         }
       }
     },
+    "%lld foods look like they're saved twice": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%lld أكلات شكلها متسجّلة مرتين"
+          }
+        }
+      }
+    },
     "%lld h": {
       "localizations": {
         "ar": {
@@ -751,6 +761,16 @@
         }
       }
     },
+    "1 %@ · %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "1 %@ · %@ جم"
+          }
+        }
+      }
+    },
     "1 food": {
       "localizations": {
         "ar": {
@@ -777,6 +797,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أكلة من %@ لسه متخططة"
+          }
+        }
+      }
+    },
+    "1 food looks like it's saved twice": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلة واحدة شكلها متسجّلة مرتين"
           }
         }
       }
@@ -5211,6 +5241,26 @@
         }
       }
     },
+    "Logged %lld times": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتسجّلت %lld مرة"
+          }
+        }
+      }
+    },
+    "Logged once": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتسجّلت مرة واحدة"
+          }
+        }
+      }
+    },
     "Look up": {
       "localizations": {
         "ar": {
@@ -5577,6 +5627,36 @@
           "stringUnit": {
             "state": "translated",
             "value": "القياسات"
+          }
+        }
+      }
+    },
+    "Merge into the ticked one": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ادمج في اللي معلّم عليها"
+          }
+        }
+      }
+    },
+    "Merged into %@": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "اتدمجت في %@"
+          }
+        }
+      }
+    },
+    "Merging keeps the ticked food and moves your diary, recipes, meals and favorites over to it.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الدمج بيسيب الأكلة اللي معلّم عليها، وبينقل لها يومياتك ووصفاتك ووجباتك والمفضلة."
           }
         }
       }
@@ -6037,6 +6117,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "مفيش تغيير الأسبوع ده: هدفك لسه مناسب لحركة وزنك."
+          }
+        }
+      }
+    },
+    "No copies left": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "مفيش نسخ مكررة"
           }
         }
       }
@@ -7173,6 +7263,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الوضعية"
+          }
+        }
+      }
+    },
+    "Possible duplicates": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تكرارات محتملة"
           }
         }
       }
@@ -10443,6 +10543,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "أطعمتك"
+          }
+        }
+      }
+    },
+    "Your foods are nice and tidy.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أكلاتك متظبطة ومترتبة."
           }
         }
       }

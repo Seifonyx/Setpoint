@@ -177,6 +177,30 @@ actor Engine {
     /// Writes today's target from your current plan; true when it changed.
     func recordGoal() -> Bool { call("recordGoal") == "changed" }
     func undoTune() { _ = call("undoTune") }
+
+    // MARK: Possible duplicates (the web app's own rules)
+
+    /// Your own foods that look like copies of each other, each group most-logged first.
+    func dupGroups() -> [[DupFood]] { decode([[DupFood]].self, "dupGroups") ?? [] }
+    /// Keeps one food and moves everything that used the others over to it. True when something was merged.
+    func mergeFoods(keep: String, drop: [String]) -> Bool {
+        guard let d = try? JSONEncoder().encode(drop) else { return false }
+        return call("mergeFoods", [keep, String(decoding: d, as: UTF8.self)]) != nil
+    }
+}
+
+/// One of your own foods in a group of possible copies.
+struct DupFood: Decodable, Identifiable, Hashable, Sendable {
+    let id: String
+    let name: String
+    let unit: String
+    let g: Double?
+    let kcal: Double
+    let p: Double
+    let c: Double
+    let f: Double
+    /// Times logged in the last 120 days.
+    let uses: Int
 }
 
 // MARK: - What the engine sends back

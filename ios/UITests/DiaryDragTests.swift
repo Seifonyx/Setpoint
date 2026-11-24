@@ -258,6 +258,31 @@ final class DiaryDragTests: XCTestCase {
         } else { note("camera menu: no camera button"); shot(cm, "camera-missing") }
         cm.terminate()
 
+        // Possible duplicates (the demo has a protein shake saved twice): Merge leaves no copies, Undo brings it back
+        let dp = XCUIApplication()
+        dp.launchArguments = ["-demo", "YES", "-tab", "foods", "-open", "mine"]
+        dp.launch()
+        let dupRow = el(dp, "dup-row")
+        if dupRow.waitForExistence(timeout: 10) {
+            dupRow.tap()
+            let merge = el(dp, "dup-merge")
+            _ = merge.waitForExistence(timeout: 5)
+            shot(dp, "duplicates")
+            merge.tap()
+            let tidy = dp.staticTexts["No copies left"].firstMatch
+            _ = tidy.waitForExistence(timeout: 5)
+            let undo = dp.buttons["Undo"].firstMatch
+            note("duplicates: merged = \(tidy.exists) · undo offered = \(undo.exists)")
+            XCTAssertTrue(tidy.exists, "merging the demo's two protein shakes leaves no copies")
+            if undo.exists { undo.tap(); _ = merge.waitForExistence(timeout: 5) }
+            note("duplicates: copy back after Undo = \(merge.exists)")
+            XCTAssertTrue(merge.exists, "Undo brings the copy back")
+        } else {
+            note("duplicates: no Possible duplicates row in My foods"); shot(dp, "duplicates-missing")
+            XCTFail("My foods shows Possible duplicates for the demo's copy")
+        }
+        dp.terminate()
+
         // selecting several in My foods takes a recipe and a saved meal too, and plans them
         let sp = XCUIApplication()
         sp.launchArguments = ["-demo", "YES", "-tab", "diary", "-sheet", "add", "-addtab", "mine"]
