@@ -31,6 +31,16 @@
         }
       }
     },
+    "%@ %@ · %@ g": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "%@ %@ · %@ جم"
+          }
+        }
+      }
+    },
     "%@ / %@ g": {
       "localizations": {
         "ar": {
@@ -757,16 +767,6 @@
           "stringUnit": {
             "state": "translated",
             "value": "/أسبوع"
-          }
-        }
-      }
-    },
-    "1 %@ · %@ g": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "1 %@ · %@ جم"
           }
         }
       }

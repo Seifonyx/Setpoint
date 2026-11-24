@@ -10,6 +10,8 @@ struct DuplicatesView: View {
     @State private var loaded = false
     /// The ticked food in each group, by the group's first id (the most-logged one when it opens).
     @State private var keep: [String: String] = [:]
+    /// The undo banner here is only for a merge made on this screen (not, say, a target change from earlier).
+    @State private var merged = false
 
     var body: some View {
         List {
@@ -37,7 +39,7 @@ struct DuplicatesView: View {
                     }
                     Button {
                         guard let k = g.first(where: { $0.id == picked }) else { return }
-                        Task { await store.mergeFoods(keep: k, drop: g.filter { $0.id != k.id }) }
+                        Task { await store.mergeFoods(keep: k, drop: g.filter { $0.id != k.id }); merged = true }
                     } label: {
                         Label("Merge into the ticked one", systemImage: "arrow.triangle.merge")
                             .font(.brand(.body, .semibold)).foregroundStyle(Brand.green)
@@ -50,7 +52,7 @@ struct DuplicatesView: View {
         .navigationTitle("Possible duplicates")
         .navigationBarTitleDisplayMode(.inline)
         .hidesTabBar()
-        .overlay(alignment: .bottom) { UndoBanner().animation(.snappy, value: store.undoLabel) }
+        .overlay(alignment: .bottom) { if merged { UndoBanner().animation(.snappy, value: store.undoLabel) } }
         .task(id: "\(store.version)|\(store.foodsReady)") {
             let gs = await store.engineRef.dupGroups()
             withAnimation(loaded ? Animation.snappy : nil) { groups = gs }
@@ -64,7 +66,7 @@ struct DuplicatesView: View {
                 .foregroundStyle(picked ? Brand.green : Brand.ink2)
             VStack(alignment: .leading, spacing: 2) {
                 Text(f.name).font(.brand(.body)).foregroundStyle(Brand.ink).lineLimit(2)
-                Group { if let g = f.g { Text("1 \(f.unit) · \(Fmt.grams(g)) g") } else { Text(verbatim: "1 \(f.unit)") } }
+                Group { if let g = f.g { Text("\(Fmt.grams(1)) \(f.unit) · \(Fmt.grams(g)) g") } else { Text(verbatim: "\(Fmt.grams(1)) \(f.unit)") } }
                     .font(.brand(.subheadline)).foregroundStyle(Brand.ink2)
                 Text("\(Fmt.kcal(f.kcal)) kcal · P \(Fmt.grams(f.p)) · C \(Fmt.grams(f.c)) · F \(Fmt.grams(f.f))")
                     .font(.brand(.subheadline)).monospacedDigit().foregroundStyle(Brand.ink2)
