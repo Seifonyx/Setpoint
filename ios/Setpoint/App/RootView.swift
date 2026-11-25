@@ -87,13 +87,7 @@ struct RootView: View {
         // Setpoint needs an account: nobody signed in means the welcome and sign-in screens, over everything
         .overlay { if needsAccount { AuthFlow().environment(account).transition(.opacity) } }
         .animation(.easeInOut(duration: 0.35), value: needsAccount)
-        .overlay { if handoff.flying { FlyingDial(handoff: handoff) } }
-        .onChange(of: needsAccount) { if needsAccount { handoff.flying = false } } // signed out: never leave the Diary dial hidden
-        .task {
-            guard demoAuth else { return }
-            try? await Task.sleep(for: .seconds(1.5))
-            demoAuth = false; tab = .diary; startHandoff()
-        }
+        .modifier(DialFlight(handoff: handoff, needsAccount: needsAccount, demoAuth: $demoAuth, start: { tab = .diary; startHandoff() }))
         .overlay { if launching { LaunchDial { launching = false } } }
         .fullScreenCover(isPresented: $shotStory) { WeekStory().environment(store) } // build-server screenshots
         .sheet(isPresented: $shotTarget) { TargetExplainer().environment(store) }
@@ -124,7 +118,7 @@ struct RootView: View {
         .task { await UpdateCheck.shared.check() } // a newer build in SideStore
         .onChange(of: phase) { _, p in
             if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store); await UpdateCheck.shared.check() } }
-            if p != .active { handoff.flying = false; store.flushSave() } // nothing waiting to be written when the app is left
+            if p != .active { store.flushSave() } // nothing waiting to be written when the app is left
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
@@ -172,6 +166,26 @@ struct RootView: View {
 
 #Preview {
     RootView()
+}
+
+/// The sign-in dial in the air above everything (kept out of RootView.body, which the compiler can't type-check in time).
+private struct DialFlight: ViewModifier {
+    let handoff: DialHandoff
+    let needsAccount: Bool
+    @Binding var demoAuth: Bool
+    let start: () -> Void
+    @Environment(\.scenePhase) private var phase
+    func body(content: Content) -> some View {
+        content
+            .overlay { if handoff.flying { FlyingDial(handoff: handoff) } }
+            .onChange(of: needsAccount) { if needsAccount { handoff.flying = false } } // signed out: never leave the Diary dial hidden
+            .onChange(of: phase) { if phase != .active { handoff.flying = false } }
+            .task {
+                guard demoAuth else { return }
+                try? await Task.sleep(for: .seconds(1.5))
+                demoAuth = false; start()
+            }
+    }
 }
 
 /// After signing in: go to the Diary; and once the account's data has arrived, only a truly new account goes on to set
