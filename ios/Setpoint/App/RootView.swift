@@ -24,11 +24,15 @@ struct RootView: View {
     @State private var shotStory = UserDefaults.standard.string(forKey: "open") == "story"
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
     @State private var tabBar = TabBarState.shared
+    @State private var handoff = DialHandoff.shared
+    @Environment(\.accessibilityReduceMotion) private var reduceMotion
+    // build-server screenshot: `-open handoff` shows the welcome, then acts as if you signed in (the dial flight)
+    @State private var demoAuth = UserDefaults.standard.string(forKey: "open") == "handoff"
 
     /// Nobody is signed in (screenshots use demo data without an account; -auth shows the sign-in screens anyway).
     private var needsAccount: Bool {
         let args = ProcessInfo.processInfo.arguments
-        return args.contains("-auth") || (!args.contains("-demo") && !account.signedIn)
+        return demoAuth || args.contains("-auth") || (!args.contains("-demo") && !account.signedIn)
     }
     /// A signed-in account with nothing logged and no plan yet: it's new, so it sets up its plan first.
     private var needsPlan: Bool {
@@ -83,6 +87,13 @@ struct RootView: View {
         // Setpoint needs an account: nobody signed in means the welcome and sign-in screens, over everything
         .overlay { if needsAccount { AuthFlow().environment(account).transition(.opacity) } }
         .animation(.easeInOut(duration: 0.35), value: needsAccount)
+        .overlay { if handoff.flying { FlyingDial(handoff: handoff) } }
+        .onChange(of: needsAccount) { if needsAccount { handoff.flying = false } } // signed out: never leave the Diary dial hidden
+        .task {
+            guard demoAuth else { return }
+            try? await Task.sleep(for: .seconds(1.5))
+            demoAuth = false; tab = .diary; startHandoff()
+        }
         .overlay { if launching { LaunchDial { launching = false } } }
         .fullScreenCover(isPresented: $shotStory) { WeekStory().environment(store) } // build-server screenshots
         .sheet(isPresented: $shotTarget) { TargetExplainer().environment(store) }
@@ -91,7 +102,7 @@ struct RootView: View {
             // the build server's -onboarding screenshot, or an account that never finished setting up its plan
             if ProcessInfo.processInfo.arguments.contains("-onboarding") || needsPlan { onboarding = true }
         }
-        .modifier(SignInWatch(account: account, signedIn: { tab = .diary }, arrived: { if needsPlan && !account.failed { onboarding = true } }))
+        .modifier(SignInWatch(account: account, signedIn: { tab = .diary; startHandoff() }, arrived: { if needsPlan && !account.failed { onboarding = true } }))
         .tint(Brand.ink) // one quiet colour for controls; green is kept for the ring and the main actions
         .toggleStyle(SwitchToggleStyle(tint: Brand.green)) // switches stay green, as on the iPhone itself
         .font(.brand(.body))
@@ -113,7 +124,7 @@ struct RootView: View {
         .task { await UpdateCheck.shared.check() } // a newer build in SideStore
         .onChange(of: phase) { _, p in
             if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store); await UpdateCheck.shared.check() } }
-            if p != .active { store.flushSave() } // nothing waiting to be written when the app is left
+            if p != .active { handoff.flying = false; store.flushSave() } // nothing waiting to be written when the app is left
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet
         }
         .fileImporter(isPresented: $importing, allowedContentTypes: [.json, .data]) { result in
@@ -131,6 +142,20 @@ struct RootView: View {
         }
         .alert(message ?? "", isPresented: Binding(get: { message != nil }, set: { if !$0 { message = nil } })) {
             Button("OK", role: .cancel) {}
+        }
+    }
+
+    /// A returning account's sign-in: the sign-in dial flies into the Diary's. New accounts, Reduce Motion and anything
+    /// unmeasured get the plain fade. However it goes, `flying` always ends false, so the Diary dial can't stay hidden.
+    private func startHandoff() {
+        guard !reduceMotion, !handoff.skipNext, handoff.source != .zero else { handoff.skipNext = false; return }
+        handoff.flying = true; handoff.arrived = false
+        Task { @MainActor in
+            try? await Task.sleep(for: .milliseconds(60)) // let the Diary lay out and report its frame
+            guard handoff.flying, handoff.target != .zero else { handoff.flying = false; return }
+            withAnimation(.spring(response: 0.55, dampingFraction: 0.85)) { handoff.arrived = true }
+            try? await Task.sleep(for: .milliseconds(560))
+            handoff.flying = false
         }
     }
 

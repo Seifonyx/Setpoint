@@ -415,5 +415,18 @@ final class DiaryDragTests: XCTestCase {
             shot(a, "auth-refused")
         } else { note("auth: no welcome screen"); shot(a, "auth-missing") }
         a.terminate()
+
+        // signing in carries the welcome dial into the Diary's dial (-open handoff acts out a sign-in after 1.5 s)
+        let h = XCUIApplication()
+        h.launchArguments = ["-demo", "YES", "-open", "handoff"]
+        h.launch()
+        let dial = el(h, "diary-dial")
+        let seen = dial.waitForExistence(timeout: 10)
+        sleep(3)
+        note("handoff: diary dial there = \(seen) · hittable = \(dial.exists && dial.isHittable) · welcome gone = \(!el(h, "auth-signin").exists)")
+        XCTAssertTrue(seen, "The Diary shows after the sign-in")
+        XCTAssertFalse(el(h, "auth-signin").exists, "The welcome screen leaves after the sign-in")
+        shot(h, "dial-handoff")
+        h.terminate()
     }
 }

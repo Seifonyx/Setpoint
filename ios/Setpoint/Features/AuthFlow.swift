@@ -23,6 +23,7 @@ struct AuthFlow: View {
     @State private var shown = 0.0
     @State private var arrived = false
     @State private var lastUsed = UserDefaults.standard.string(forKey: "lastSignInMethod") // "google" | "email"
+    @State private var handoff = DialHandoff.shared
     @FocusState private var field: Field?
     enum Field { case email, password }
 
@@ -57,6 +58,8 @@ struct AuthFlow: View {
                 .frame(width: 200, height: 200)
                 .environment(\.layoutDirection, .leftToRight)
                 .accessibilityHidden(true)
+                .opacity(handoff.flying ? 0 : 1)
+                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { handoff.source = $0 }
                 .onAppear {
                     if reduceMotion { shown = 78; arrived = true; return }
                     withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 }
@@ -98,10 +101,20 @@ struct AuthFlow: View {
         let creating = mode == .signUp
         return ScrollView {
             VStack(alignment: .leading, spacing: 0) {
-                Button { go(.welcome) } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)).frame(width: 22, height: 22) }
-                    .buttonStyle(.glass).buttonBorderShape(.circle)
-                    .accessibilityLabel(Text("Back"))
-                    .padding(.top, 8)
+                HStack {
+                    Button { go(.welcome) } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)).frame(width: 22, height: 22) }
+                        .buttonStyle(.glass).buttonBorderShape(.circle)
+                        .accessibilityLabel(Text("Back"))
+                    Spacer()
+                    // the brand on the form too; it's also what flies into the Diary's dial after signing in
+                    CalorieDial(eaten: 78, target: 100, protein: (62, 100), carbs: (74, 100), fat: (47, 100), lineWidth: 6, ringWidth: 2, ringGap: 3)
+                        .frame(width: 44, height: 44)
+                        .environment(\.layoutDirection, .leftToRight)
+                        .accessibilityHidden(true)
+                        .opacity(handoff.flying ? 0 : 1)
+                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { handoff.source = $0 }
+                }
+                .padding(.top, 8)
                 VStack(alignment: .leading, spacing: 8) {
                     Text(creating ? LocalizedStringKey("Create your account") : LocalizedStringKey("Welcome back"))
                         .font(Brand.display(34, .heavy))
@@ -277,6 +290,7 @@ struct AuthFlow: View {
         if password.isEmpty { fail(String(localized: "Enter your password"), .password); return }
         if mode == .signUp && password.count < 6 { fail(String(localized: "Use at least 6 characters for the password."), .password); return }
         let creating = mode == .signUp, pw = password
+        handoff.skipNext = creating // a new account gets the plain fade, not the dial flight
         act { [self] in
             if creating { try await account.signUp(email: e, password: pw) } else { try await account.signIn(email: e, password: pw) }
             remember("email")
