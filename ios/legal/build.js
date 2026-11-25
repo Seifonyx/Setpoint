@@ -1,11 +1,11 @@
 // The iPhone app's own copy of the legal pages, so it never needs the website to show them.
-// Reads terms.html, privacy.html, cookies.html and refunds.html (or the app's own version of a page in ios/legal/,
-// e.g. ios/legal/privacy.html, which wins) and writes ios/Setpoint/Resources/Legal.json:
+// Reads the app's legal pages here in ios/legal (privacy.html, terms.html, cookies.html, refunds.html) and writes
+// ios/Setpoint/Resources/Legal.json:
 // { pages: [{ id, title, meta, sections: [{ heading, blocks: [{ p: "markdown" } | { list: ["markdown", …] }] }] }] }
-// Run after changing a legal page: node tools/ios-legal.js
+// Run after changing a legal page: node ios/legal/build.js
 const fs = require('fs');
 const path = require('path');
-const ROOT = path.join(__dirname, '..');
+const ROOT = path.join(__dirname, '..', '..'), DIR = __dirname;
 
 const PAGES = ['privacy', 'terms', 'cookies', 'refunds'];
 
@@ -33,8 +33,7 @@ function inline(html) {
 }
 
 function page(id) {
-  const own = path.join(ROOT, 'ios/legal', `${id}.html`);
-  const html = fs.readFileSync(fs.existsSync(own) ? own : path.join(ROOT, `${id}.html`), 'utf8');
+  const html = fs.readFileSync(path.join(DIR, `${id}.html`), 'utf8');
   const main = (html.match(/<main[^>]*>([\s\S]*?)<\/main>/i) || [, html])[1];
   const title = inline((main.match(/<h1[^>]*>([\s\S]*?)<\/h1>/i) || [, id])[1]);
   const meta = inline((main.match(/<p class="meta"[^>]*>([\s\S]*?)<\/p>/i) || [, ''])[1]);
@@ -52,7 +51,7 @@ function page(id) {
   return { id, title, meta, sections };
 }
 
-const out = { pages: PAGES.filter(p => fs.existsSync(path.join(ROOT, `${p}.html`))).map(page) };
+const out = { pages: PAGES.filter(p => fs.existsSync(path.join(DIR, `${p}.html`))).map(page) };
 const dest = path.join(ROOT, 'ios/Setpoint/Resources/Legal.json');
 fs.writeFileSync(dest, JSON.stringify(out, null, 1) + '\n');
 console.log(`Legal.json: ${out.pages.map(p => `${p.id} (${p.sections.length} sections)`).join(', ')}`);

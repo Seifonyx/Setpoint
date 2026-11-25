@@ -101,7 +101,7 @@ Test first, then publish, then check:
    tests run first, split in three on three Macs at once (with the search check), while another Mac builds the iPhone app
    and another takes the screenshots (never two simulators on one Mac, which proved slower), and the update goes to
    SideStore only if the UI tests pass and the app didn't crash. A failing push is not released. A push that changes only
-   the food list (`foods.json`, `tools/foods/`, `tools/search-check.js`) skips the UI tests: the search check and the
+   the food list (`foods.json`, `tools/foods/`, `engine/search-check.js`) skips the UI tests: the search check and the
    build must still pass (set by the user, for speed).
 2. After every build, check its results: the build itself, the simulator screenshots (on the `ios-preview` release) and
    the UI test results (`drag-results.txt`, `check-results-*.txt`, `uitest-log-*.txt`, any `crash-*.txt`, and any other check

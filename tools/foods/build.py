@@ -31,7 +31,7 @@ RANK = {'fdn': 0, 'sr': 1, 'fndds': 2}
 def filled(r): return sum(1 for v in r[3] if v is not None)
 
 # Names the app's own code points to (top picks, popular foods): these entries always stay.
-app = open(os.path.join(ROOT, 'src', '10-food-database.js')).read()
+app = open(os.path.join(ROOT, 'engine', 'src', '06-food-database.js')).read()
 tp = re.search(r"const TOP_PICKS = \{(.*?)\};", app).group(1)
 pp = re.search(r"const POPULAR = \{\}; \[(.*?)\]\.forEach", app).group(1)
 PINNED = set(x.replace("\\'", "'") for x in re.findall(r":\s*'((?:[^'\\]|\\.)*)'", tp)) | set(x.replace("\\'", "'") for x in re.findall(r"'((?:[^'\\]|\\.)*)'", pp))

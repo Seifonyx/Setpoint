@@ -1,6 +1,6 @@
-# iPhone app vs web app
+# Setpoint features
 
-Phase 8 checklist: everything the web app does, and whether the native app has it yet.
+What the app does, and what's still to come. (The web-parity checklist is finished; the web app is abandoned.)
 ✅ done · 🟡 partly · ⬜ not yet
 
 ## Diary
@@ -9,11 +9,10 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Food details: amount, time, meal, note, delete
 - ✅ Share a day as text
 - ✅ Day score
-- ✅ Repeating foods are added to today (set them up in the web app for now)
 - ✅ Repeating foods (Repeat on a logged food; Settings › Repeating foods), log a day as a total (weigh-in sheet)
 
 ## Adding food
-- ✅ Search (the web app's own search), recents, favorites, my foods, meals, recipes
+- ✅ Search (Setpoint's own ranking, plus Open Food Facts online), recents, favorites, my foods, meals, recipes
 - ✅ Amounts and units, quick add, barcode with Open Food Facts
 - ✅ Nutrition label scanning; describe what you ate (on-device model)
 - ✅ Making recipes (Foods) and saving a meal (Diary › meal ⋯ › Save as meal)
@@ -33,7 +32,7 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Body measurements
 - ✅ Progress photos (add, view, compare, delete; in backups)
 - ✅ Body fat estimate from measurements (and use it in your plan)
-- ✅ Photo sync with the web app
+- ✅ Photo sync across devices
 - ✅ Week review, achievements, streak (You)
 - ✅ Weight factors (salt, carbs, fiber, big days, training vs next-morning weight)
 
@@ -42,19 +41,19 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Find duplicates (My foods › Possible duplicates, shown when there are any; merge with undo)
 
 ## You and settings
-- ✅ Account sign-in (email, Google) and sync with the web app
+- ✅ Account sign-in (email, Google) and sync across devices
 - ✅ Units, week start, track calories (synced)
-- One Setpoint look instead of themes (warm & editorial; the web app's themes are ignored)
+- One Setpoint look (warm & editorial)
 - ✅ Reminders, Face ID lock, haptics (this iPhone only)
 - ✅ Fasting timer
-- ✅ Import web backup, back up, erase data
+- ✅ Import a backup (including old web backups), back up, erase data
 - ✅ Log meals as separate foods
-- (Pure black, tab bar position and number pad are web-only: iOS handles these natively)
 - ✅ Delete account
 
 ## iPhone only
 - ✅ Siri and Shortcuts: log water, log weight, add food
 - ✅ Arabic (follows the iPhone's language setting for Setpoint)
-- ⬜ Apple Health, widgets, Live Activity (need a paid Apple developer account; skipped for now)
+- ✅ Widgets and Live Activity
+- 🟡 Apple Health (built; being tested on the phone, needs SideStore to keep the HealthKit permission)
 
 _Design: warm & editorial, approved 2026-11-11._

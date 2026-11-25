@@ -1,7 +1,7 @@
 import SwiftUI
 
 /// The legal pages (Privacy Policy, Terms of Use, Cookies & Storage, Refund Policy), read from the app's own copy
-/// (Resources/Legal.json, made from the website's pages by tools/ios-legal.js), so they open without the internet.
+/// (Resources/Legal.json, made from ios/legal by ios/legal/build.js), so they open without the internet.
 struct LegalDoc: Decodable, Sendable {
     struct Page: Decodable, Sendable, Identifiable, Hashable {
         let id: String

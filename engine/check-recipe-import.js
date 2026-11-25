@@ -1,6 +1,6 @@
 // Build server check: download real recipe pages and run them through the app's own recipe import (the engine),
 // to see which sites import and how well the ingredients match. Prints a report; never fails the build.
-// node tools/check-recipe-import.js > out/recipe-import.txt
+// node engine/check-recipe-import.js > out/recipe-import.txt
 const fs = require('fs');
 const path = require('path');
 const vm = require('vm');

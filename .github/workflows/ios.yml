@@ -9,8 +9,9 @@ name: iOS
 on:
   push:
     branches: [main, redesign]
-    # the app also bundles the food list and the web app's search and maths (see tools/ios-engine.js)
-    paths: ['ios/**', '.github/workflows/ios.yml', 'foods.json', 'src/**', 'ar.js', 'tools/ios-engine.js', 'tools/ios-engine-api.js', 'tools/search-check.js']
+    # the app also bundles the food list and its own search and maths (engine/, built by engine/build.js).
+    # The old web app (src/, ar.js and the other root files) is frozen and never triggers a build.
+    paths: ['ios/**', '.github/workflows/ios.yml', 'foods.json', 'engine/**']
   workflow_dispatch:
 permissions:
   contents: write
@@ -28,10 +29,10 @@ jobs:
     steps:
       - uses: actions/checkout@v4
         with: { fetch-depth: 0 }
-      - name: Build the shared engine (web app search and maths) and food list
-        run: node tools/ios-engine.js
+      - name: Build the app's engine (search and maths) and food list
+        run: node engine/build.js
       - name: Search check (common searches must put the right food first)
-        run: mkdir -p ios/out && node tools/search-check.js ios/out/search-check.txt
+        run: mkdir -p ios/out && node engine/search-check.js ios/out/search-check.txt
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: search-check, path: ios/out/search-check.txt, retention-days: 3 }
@@ -44,7 +45,7 @@ jobs:
           if [ "${{ github.event_name }}" = "push" ] && [ -n "$before" ] && ! echo "$before" | grep -q '^0*$' && git cat-file -e "$before" 2>/dev/null; then
             changed=$(git diff --name-only "$before" "$GITHUB_SHA")
             echo "$changed"
-            if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '^(foods\.json|tools/foods/|tools/search-check\.js$)'; then
+            if [ -n "$changed" ] && ! echo "$changed" | grep -qvE '^(foods\.json|tools/foods/|engine/search-check\.js$)'; then
               echo "Only the food list changed: UI tests skipped"; echo "ui=false" >> "$GITHUB_OUTPUT"; exit 0
             fi
           fi
@@ -79,8 +80,8 @@ jobs:
           restore-keys: dd-device-${{ hashFiles('ios/project.yml') }}-
       - name: Xcode 26
         run: sudo xcode-select -s /Applications/Xcode_26.6.app && xcodebuild -version
-      - name: Build the shared engine (web app search and maths) and food list
-        run: node tools/ios-engine.js
+      - name: Build the app's engine (search and maths) and food list
+        run: node engine/build.js
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: Build for iPhone (unsigned, SideStore signs it)
@@ -159,8 +160,8 @@ jobs:
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
           echo "SIM=$UDID" >> "$GITHUB_ENV"
-      - name: Build the shared engine (web app search and maths) and food list
-        run: node tools/ios-engine.js
+      - name: Build the app's engine (search and maths) and food list
+        run: node engine/build.js
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: UI tests (the update is released only if they pass)
@@ -240,8 +241,8 @@ jobs:
           pro = [x for x in phones if "Pro" in x["name"] and "Max" not in x["name"]]
           print((pro or phones)[0]["udid"])')
           echo "SIM=$UDID" >> "$GITHUB_ENV"
-      - name: Build the shared engine (web app search and maths) and food list
-        run: node tools/ios-engine.js
+      - name: Build the app's engine (search and maths) and food list
+        run: node engine/build.js
       - name: Generate the Xcode project
         run: brew install xcodegen && cd ios && xcodegen generate && touch -r project.yml Setpoint.xcodeproj/project.pbxproj # dated like its source, so it doesn't force a full rebuild
       - name: Screenshots
@@ -320,7 +321,7 @@ jobs:
           shot -tab you -open ramadan; sleep 2; xcrun simctl io "$S" screenshot out/ramadan-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab diary -open leftover; sleep 1; xcrun simctl io "$S" screenshot out/leftover-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab foods -open importrecipe; sleep 3; xcrun simctl io "$S" screenshot out/import-recipe-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
-          node ../tools/check-recipe-import.js > out/recipe-import.txt 2>&1 || true
+          node ../engine/check-recipe-import.js > out/recipe-import.txt 2>&1 || true
           shot -tab you -open legal -legal terms; xcrun simctl io "$S" screenshot out/legal-terms-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab diary -sheet add -addtab mine; xcrun simctl io "$S" screenshot out/add-mine-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           for m in welcome signup signin; do shot -auth $m; xcrun simctl io "$S" screenshot out/auth-$m-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
@@ -357,7 +358,7 @@ jobs:
           src = {
             "name": "Setpoint", "identifier": "app.setpoint.source", "sourceURL": raw + "sidestore.json",
             "iconURL": raw + "ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
-            "website": "https://setpoint-tracker.web.app", "tintColor": "1C1C1E",
+            "website": "https://github.com/Seifonyx/Setpoint", "tintColor": "1C1C1E",
             "apps": [{
               "name": "Setpoint", "bundleIdentifier": "app.setpoint.ios", "developerName": "Seifonyx",
               "subtitle": "Food, nutrition and weight tracker", "tintColor": "1C1C1E",

@@ -6,18 +6,64 @@ evidence, and verify the actual behaviour afterwards). They are imported here:
 
 @AGENTS.md
 
-Weight and food tracker PWA. Live at https://setpoint-tracker.web.app (Firebase project `setpoint-tracker`).
+Setpoint is a native iPhone app (SwiftUI, iOS 26+) for tracking food, nutrients and weight, with targets that learn
+from your results. It stands on its own: it never needs the website to run or to build.
 
-- Code lives in `src/*.js`; `node tools/build.js` joins them into `app.js` and stamps the sw.js cache.
-- Every new user-facing string needs an Arabic entry in `ar.js` (keyed by the English text).
-- Release: bump `APP_VERSION` and add a plain-words CHANGES entry in `src/01-version.js`, bump `?v=` in index.html and `version` in package.json, build, run `npm test`, then deploy with `node tools/deploy.js` (Firebase Hosting REST API; credentials come from the session proxy).
-- Test at phone size (iPhone 13+) in light and dark, English and Arabic.
-- Commit and push to `main` after each shipped update.
+## Where things are
+| Folder | What it is |
+|---|---|
+| `ios/` | The app: `project.yml` (XcodeGen), `Setpoint/` (App, Features, Model, Resources, Shared), `Widgets/`, `UITests/`, `icon/`, `legal/` |
+| `engine/` | The app's own search and maths in JavaScript, run inside the app by JavaScriptCore. `src/NN-*.js` in order, `ar.js` (Egyptian Arabic for text the engine hands out), `build.js`, `search-check.js`, `check-recipe-import.js` |
+| `foods.json` | The built-in food list, copied into the app by `engine/build.js` |
+| `tools/foods/` | Rebuilds `foods.json` (see Food list) |
+| `ios/legal/` | The app's legal pages (HTML); `node ios/legal/build.js` turns them into `ios/Setpoint/Resources/Legal.json` |
+| `firestore.rules`, `firebase.json` | The cloud backend (Firebase Auth + Firestore, project `setpoint-tracker`) the app syncs with |
+| `.github/workflows/ios.yml` | Build, tests, screenshots and release |
+| Everything else at the root (`src/`, `index.html`, `app.js`, root `ar.js`, `tests/`, `tools/build.js`, `tools/deploy.js`…) | **The old web app: abandoned and frozen.** Don't edit, build or deploy it, and never copy changes into it. The app doesn't use any of it. |
 
-## iPhone app (ios/)
-- Native SwiftUI app, minimum iOS 26. There's no Mac: code is built by GitHub Actions (`.github/workflows/ios.yml`) from `ios/project.yml` via XcodeGen.
-- Results: the `ios-latest` release (Setpoint.ipa + simulator screenshots); a failed build posts `build.log`/`sim.log` to the `ios-log` release. Both are public downloads.
-- The user installs the .ipa with SideStore. The web app is retired (the user calls it useless): don't update or deploy it, and don't hold the iPhone app back to stay compatible with it. The iPhone app is the product; aim for exceptional. The data can grow iPhone-only parts (kept under root["ios"], preserved through migrate/sync by the engine wrapper), as long as existing synced data keeps working.
-- Progress: Phase 0 done (build pipeline, SideStore source at sidestore.json). Phase 1 done (web-format Store, backup import/export, Diary with targets/meals/weight/water/actions/undo, food details, day swipe, daily totals). Phase 2 + 3 done (Add food sheet, barcode/OFF, Plan screens). Phase 4 (Progress: Swift Charts), Phase 5 (Account.swift: Firebase REST auth + Firestore, same docs as web, merge via engine `syncMerge`; Google sign-in through `ios-signin.html` on the site, which is in deploy.js), Phase 6 (App/Extras.swift: reminders, Face ID lock, haptics, settings; App/Intents.swift: Siri/Shortcuts) done. Phase 7: Health is being tested (needs SideStore to keep the HealthKit permission); widgets + Live Activity done for free (ios/Widgets, App Group shared with the app via Shared/WidgetShared.swift; SideStore renames the group, read from ALTAppGroups). Phase 8 in progress: see ios/PARITY.md. Design: warm & editorial (App/Design.swift, Brand), dial icon with dark variant (ios/icon/). Every push to main is tested first: `check` (Linux) bundles the engine, runs the search check and decides whether the UI tests are needed (not for food-list-only pushes); jobs run at once on separate Macs, reusing cached build folders (files dated by their last commit) (`device` builds the .ipa, `test` is three jobs, one per UI test method (testDragFoods with `tools/search-check.js`, testInputsAndCrashes, testMenusAndSignIn; keep them independent and about equally long), `shots` takes the screenshots), then `release` (needs device + test) publishes to ios-latest + sidestore.json only if the tests pass and nothing crashed, and `preview` collects everything; results always land on ios-preview. The user's standing release policy is in AGENTS.md (test, then publish, then check). Only when the user asks to see an update first, put [preview] in the commit message (then it stays on ios-preview until a manual run or a normal push). Bigger work awaiting approval lives on its own branch (e.g. `redesign`): pushes there only make previews; merge to main to release. Search and maths are the web app's own JS: `node tools/ios-engine.js` bundles src/02-05,10 + ar.js + `tools/ios-engine-api.js` into `ios/Setpoint/Resources/engine.js` (and copies foods.json); CI runs it, both are gitignored. Next: the ⬜ items in ios/PARITY.md.
-- Food list (foods.json): rebuilt by `tools/foods/` in order: `off_fetch.py` (Open Food Facts brands, slow: rate-limited) → `build.py <off-raw.jsonl>` (merge, clean, import, Egyptian dishes) → `verify.py` (USDA Branded Foods by barcode + makers' caffeine; marks row[9] 'usda'/'maker' = verified) → `complete.py` (certain zeros, Foundation gaps, removes copies of verified foods with aliases). Never invent values: a blank means the label didn't say. `tools/search-check.js` must stay green.
-- Plan: 0 foundation · 1 diary · 2 adding food · 3 plan & maths (golden tests vs web) · 4 progress · 5 Firebase account & sync (same data as web) · 6 free iPhone extras · 7 paid extras (Health, widgets, Live Activity) · 8 parity & switch-over.
+## The app
+- There's no Mac: GitHub Actions builds it from `ios/project.yml` with XcodeGen.
+- Screens are native SwiftUI; search, targets, expenditure, sync merging, nutrients and the planner come from
+  `engine/` (`Engine.swift` calls `SP.*` in `engine/src/16-api.js`). `engine/build.js` writes
+  `ios/Setpoint/Resources/engine.js` and copies `foods.json`; CI runs it, and both outputs are gitignored. To change
+  search or maths, edit `engine/src/` and run `node engine/build.js && node engine/search-check.js`.
+- Every user-facing string needs Egyptian Arabic: Swift text in `ios/Setpoint/Resources/Localizable.xcstrings`
+  (sorted keys, 2-space JSON), text from the engine in `engine/ar.js` (keyed by the English text).
+- Data: one JSON document (`Store.root`) in the original Setpoint format, so existing synced accounts keep working.
+  iPhone-only parts live under `root["ios"]`. Account and sync: `Model/Account.swift` (Firebase REST; Google sign-in
+  straight from the app with ASWebAuthenticationSession, email sign-in), merged with the engine's `syncMerge`.
+- Other services the app talks to: Open Food Facts (barcodes and online search), and GitHub for update checks
+  (`sidestore.json`, `App/UpdateCheck.swift`).
+- Design: warm & editorial (`App/Design.swift`, `Brand`); dial icon with a dark variant (`ios/icon/`).
+- Screenshot hooks (launch arguments): `-demo YES` (demo data from `Resources/Demo.json`), `-tab diary|progress|foods|you`,
+  `-sheet …`, `-open …` (e.g. `plan`, `guest`, `mine`, `dups`, `recipe`, `planner`). Use them to reach a screen you changed.
+- Features and what's left: `ios/FEATURES.md`.
+
+## Build, test, release
+Every push to `main` that touches `ios/`, `engine/`, `foods.json` or the workflow is tested before it's released:
+- `check` (Linux): builds the engine, runs the search check (`engine/search-check.js`, must stay green) and decides
+  whether UI tests are needed (not when only the food list changed).
+- On separate Macs at once, reusing cached build folders (files dated by their last commit): `device` builds the .ipa;
+  `test` is three jobs, one per UI test method (`testDragFoods`, `testInputsAndCrashes`, `testMenusAndSignIn`; keep
+  them independent and about equally long); `shots` takes the screenshots.
+- `release` (needs device + test) publishes to `ios-latest` and `sidestore.json` only if the tests pass and nothing
+  crashed; `preview` collects everything on `ios-preview`. A failed build posts `build.log`/`sim.log` to `ios-log`.
+- Results to check after every build (read via REST: `gh api repos/Seifonyx/Setpoint/releases/tags/ios-preview`, then
+  asset ids; `gh release` GraphQL commands are blocked in sessions): `drag-results.txt`, `check-results-*.txt`,
+  `uitest-log-*.txt`, `search-check.txt`, any `crash-*.txt`, and the screenshots.
+- The standing release policy is in AGENTS.md (test, then publish, then check). Put `[preview]` in the commit message
+  only when the user asks to see something first. Bigger work awaiting approval goes on its own branch (e.g.
+  `redesign`): pushes there only make previews; merge to `main` to release.
+- The user installs with SideStore. A separate project is making a SideStore fork with auto-update; when it has a URL
+  scheme, `UpdateCheck.openSideStore()` should try it before `sidestore://`.
+
+## Food list (foods.json)
+Rebuilt by `tools/foods/` in order: `off_fetch.py` (Open Food Facts brands; slow, rate-limited) → `build.py
+<off-raw.jsonl>` (merge, clean, import, Egyptian dishes; reads `TOP_PICKS`/`POPULAR` from
+`engine/src/06-food-database.js`) → `verify.py` (USDA Branded Foods by barcode + makers' caffeine; marks row[9]
+'usda'/'maker' = verified) → `complete.py` (certain zeros, Foundation gaps, removes copies of verified foods with
+aliases). Never invent values: a blank means the label didn't say. Restaurant numbers (`LAB_TWIN`, `OFFICIAL`, …) are
+in `engine/src/06-food-database.js`.
+
+## Working on Windows
+The repo is LF-only (`.gitattributes`). If an old clone shows CRLF, run `git config core.autocrlf false` and re-check it out.

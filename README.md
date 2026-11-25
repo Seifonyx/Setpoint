@@ -1,12 +1,20 @@
 # Setpoint
 
-A food and weight tracker (PWA). Published at https://setpoint-tracker.web.app.
+A native iPhone app for tracking food, nutrients and weight, with targets that learn from your real results.
+Egyptian Arabic and English. iOS 26 or later.
 
-## Working on the code
-- The app's code lives in `src/` as modules (diary, add food, sync, targets and so on).
-- `npm run build` joins them into `app.js`, which is what the app loads. It stops if there's a syntax error.
-- `npm test` runs the smoke tests (`tests/smoke.js`) in Chromium at phone size, in light and dark mode.
-- `ar.js` holds the Arabic interface text. It is only loaded when the language is set to Arabic.
-- `foods.json` is the built-in food list (USDA SR28 and FNDDS, Egyptian dishes, and packaged products from Open Food Facts).
+## Install
+On the iPhone, open the [ios-latest release](https://github.com/Seifonyx/Setpoint/releases/tag/ios-latest), download
+`Setpoint.ipa` and open it in SideStore, or add this repo's `sidestore.json` as a SideStore source to get updates.
 
-Each release: bump `APP_VERSION` and add a `CHANGES` entry in `src/01-version.js`, bump `CACHE` and the `?v=` numbers in `sw.js`, the `?v=` numbers in `index.html` and `version` in `package.json`.
+## Repository
+- `ios/`: the app (SwiftUI, built with XcodeGen). See [ios/README.md](ios/README.md) and [ios/FEATURES.md](ios/FEATURES.md).
+- `engine/`: the app's food search and maths (JavaScript run inside the app). `node engine/build.js` builds it,
+  `node engine/search-check.js` checks that common searches find the right food.
+- `foods.json` and `tools/foods/`: the built-in food list (USDA, Egyptian dishes, packaged products from Open Food
+  Facts) and the scripts that rebuild it.
+- `firestore.rules`: the cloud sync backend's security rules.
+- Every push to `main` is built, tested and released by GitHub Actions (`.github/workflows/ios.yml`).
+
+The root files `index.html`, `app.js`, `src/` and the rest are the old web app. It's abandoned and kept as it was;
+the iPhone app doesn't use it.

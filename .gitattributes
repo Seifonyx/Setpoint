@@ -1,0 +1,8 @@
+# Keep LF line endings on every machine (a Windows clone with CRLF breaks engine/build.js and the shell steps in CI).
+* text=auto eol=lf
+*.png binary
+*.jpg binary
+*.ttf binary
+*.otf binary
+*.woff2 binary
+*.ipa binary

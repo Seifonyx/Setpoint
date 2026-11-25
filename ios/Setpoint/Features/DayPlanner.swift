@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Plan my day: a whole day of food for your targets, from tools/ios-planner.js. It fills your vitamins and minerals
+/// Plan my day: a whole day of food for your targets, from engine/src/15-planner.js. It fills your vitamins and minerals
 /// first, learns from what you log, and keeps it sensible (one protein per meal, meat or fish at most twice a day).
 /// Add it to a day as planned food, or save it to use again.
 struct DayPlannerView: View {

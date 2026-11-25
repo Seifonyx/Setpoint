@@ -1,8 +1,8 @@
 import Foundation
 import JavaScriptCore
 
-/// The web app's own food search and maths, run in JavaScriptCore (built by tools/ios-engine.js). The screens are
-/// native SwiftUI; this keeps search results, amounts, targets and expenditure identical to the web app.
+/// Setpoint's food search and maths (engine/src), run in JavaScriptCore (built by engine/build.js). The screens are
+/// native SwiftUI; all search results, amounts, targets and expenditure come from this one place.
 /// An actor, so it works off the main thread and one thing at a time.
 actor Engine {
     static let shared = Engine()
@@ -91,7 +91,7 @@ actor Engine {
     }
     /// My foods as one list: your own foods, recipes and saved meals together, in one sort order.
     func mineAll(meal: String, sort: String) -> [FoodHit] { decode([FoodHit].self, "mineAll", [meal, sort]) ?? [] }
-    /// A whole day of food for your targets (tools/ios-planner.js).
+    /// A whole day of food for your targets (engine/src/15-planner.js).
     func planDay(target: DayPlan, meals: [String], seeds: [String: Int], seed: Int, mine: Bool, today: Bool = false) -> DayPlanResult? {
         let o: [String: Any] = ["target": ["kcal": target.kcal, "p": target.protein, "c": target.carbs, "f": target.fat],
                                 "meals": meals, "seeds": seeds, "seed": seed, "mine": mine, "today": today]

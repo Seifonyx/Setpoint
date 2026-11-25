@@ -1,5 +1,5 @@
 // Search quality check: common English, Arabic and Egyptian searches must put the right food first.
-// Runs on every iPhone build (after `node tools/ios-engine.js`); a failure stops the release.
+// Runs on every iPhone build (after `node engine/build.js`); a failure stops the release.
 // Each case: [what you type, pattern the FIRST result's name must match]. Add a case whenever a search goes wrong.
 const fs = require('fs'), vm = require('vm'), path = require('path');
 const root = path.join(__dirname, '..');
