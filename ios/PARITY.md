@@ -23,7 +23,7 @@ Phase 8 checklist: everything the web app does, and whether the native app has i
 - ✅ Custom protein and fat per kg (Target breakdown)
 - ✅ Your week (next 7 days' targets), training days, flexible week, cycle and weight (shaded on the chart)
 - ✅ Ramadan mode (Settings): Suhoor/Iftar, prayer times by city, Diary banner, offer during Ramadan
-- ⬜ Plan for someone else
+- ✅ Plan for someone else (Plan › Someone else; same maths, kept apart from your profile)
 - ✅ Vitamins and minerals (Diary), often low
 
 ## Progress

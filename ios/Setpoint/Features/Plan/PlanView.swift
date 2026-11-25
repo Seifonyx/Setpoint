@@ -7,6 +7,7 @@ struct PlanView: View {
     @State private var activity = false
     @State private var goalWeight = false
     @State private var measured = false
+    @State private var openGuest = false
 
     enum Page: Hashable { case goal, week, energy }
     /// nil: the overview (target and categories); otherwise one category's page.
@@ -46,6 +47,9 @@ struct PlanView: View {
                         Button { about = true } label: { row("About you", aboutSummary(o), "person.text.rectangle", Brand.blue) }
                     }
                     .tint(.primary)
+                    Section {
+                        NavigationLink { GuestPlanView() } label: { row("Someone else", guestSummary, "person.2.fill", Brand.amber) }
+                    } footer: { Text("Targets for a friend or family member. Your own plan stays the same.") }
                 case .goal?:
                     if let p = o.plan { goalSection(p, o) }
                 case .week?:
@@ -60,11 +64,16 @@ struct PlanView: View {
         }
         .brandList()
         .navigationTitle(pageTitle)
+        .navigationDestination(isPresented: $openGuest) { GuestPlanView() }
         .sheet(isPresented: $about) { AboutYouSheet() }
         .sheet(isPresented: $activity) { ActivitySheet() }
         .sheet(isPresented: $goalWeight) { GoalWeightSheet() }
         .sheet(isPresented: $measured) { MeasuredSheet() }
-        .task { await store.refreshOverview() }
+        .task {
+            await store.refreshOverview()
+            // build-server screenshots: -open guest goes on to Someone else
+            if page == nil, UserDefaults.standard.string(forKey: "open") == "guest" { openGuest = true }
+        }
     }
 
     // MARK: Sections
@@ -206,6 +215,14 @@ struct PlanView: View {
                 if !sub.isEmpty { Text(sub).font(.brand(.subheadline)).foregroundStyle(.secondary).lineLimit(1) }
             }
         }
+    }
+    /// The last person you worked out a plan for, in short ("Female · 34"), or nothing yet.
+    private var guestSummary: String {
+        guard let g = store.root["guest"]?.object, let a = g["age"]?.number else { return "" }
+        var parts: [String] = []
+        if let sx = g["sex"]?.string { parts.append(NSLocalizedString(sx.capitalized, comment: "")) }
+        parts.append(Int(a).formatted())
+        return parts.joined(separator: " · ")
     }
     private var pageTitle: LocalizedStringKey {
         switch page { case nil: "Plan"; case .goal?: "Goal"; case .week?: "Your week"; case .energy?: "Energy expenditure" }

@@ -9,7 +9,7 @@ struct YouView: View {
     @State private var shareURL: URL?
     @State private var error: String?
     @State private var explain = false
-    @State private var showPlan = UserDefaults.standard.string(forKey: "open") == "plan" // build-server screenshots
+    @State private var showPlan = ["plan", "guest"].contains(UserDefaults.standard.string(forKey: "open") ?? "") // build-server screenshots
     @State private var showSettings = ["settings", "ramadan"].contains(UserDefaults.standard.string(forKey: "open") ?? "")
     @State private var showFasting = UserDefaults.standard.string(forKey: "open") == "fasting"
     @State private var showExport = UserDefaults.standard.string(forKey: "open") == "export"

@@ -1391,6 +1391,16 @@
         }
       }
     },
+    "Add sex, age, weight and height": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "ضيف الجنس والعمر والوزن والطول"
+          }
+        }
+      }
+    },
     "Add the foods you have most days, like your morning coffee or the same lunch. They go into your diary by themselves on the days you choose.": {
       "localizations": {
         "ar": {
@@ -5391,6 +5401,16 @@
         }
       }
     },
+    "Maintenance": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الثبات"
+          }
+        }
+      }
+    },
     "Make and edit recipes in the web app for now. They show up here and in Add food.": {
       "localizations": {
         "ar": {
@@ -8637,6 +8657,16 @@
         }
       }
     },
+    "Someone else": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "حد تاني"
+          }
+        }
+      }
+    },
     "Something missing? Add it": {
       "localizations": {
         "ar": {
@@ -9017,6 +9047,16 @@
         }
       }
     },
+    "Target": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "الهدف"
+          }
+        }
+      }
+    },
     "Target breakdown": {
       "localizations": {
         "ar": {
@@ -9053,6 +9093,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأهداف"
+          }
+        }
+      }
+    },
+    "Targets for a friend or family member. Your own plan stays the same.": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أهداف لصاحبك أو حد من العيلة. خطتك انت مش هتتغير."
           }
         }
       }
@@ -9437,12 +9487,32 @@
         }
       }
     },
+    "To gain": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للزيادة"
+          }
+        }
+      }
+    },
     "To gain %@ a week": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
             "value": "عشان تزيد %@ في الأسبوع"
+          }
+        }
+      }
+    },
+    "To lose": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "للخسارة"
           }
         }
       }

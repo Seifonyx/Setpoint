@@ -178,6 +178,14 @@ actor Engine {
     func recordGoal() -> Bool { call("recordGoal") == "changed" }
     func undoTune() { _ = call("undoTune") }
 
+    // MARK: Plan for someone else (the web app's guest calculator)
+
+    /// Targets for someone else from their numbers (never your profile). `ready` is false until sex, age, height and weight are in.
+    func guestPlan(_ guest: [String: JSONValue]) -> GuestPlan? {
+        guard let t = text(guest) else { return nil }
+        return decode(GuestPlan.self, "guestPlan", [t])
+    }
+
     // MARK: Possible duplicates (the web app's own rules)
 
     /// Your own foods that look like copies of each other, each group most-logged first.
@@ -461,4 +469,20 @@ struct ImportedLine: Decodable, Sendable, Identifiable {
     let kcal: Double?
     let item: [String: JSONValue]?
     enum CodingKeys: String, CodingKey { case line, ok, skip, sure, food = "id", name, kind, qty, unit, amt, kcal, item }
+}
+
+/// Someone else's plan: maintenance, target and macros, from the same maths as yours.
+struct GuestPlan: Decodable, Equatable, Sendable {
+    let ready: Bool
+    let dir: String
+    let i: Int
+    let rates: [String: [Double]]
+    let unit: String
+    var tdee: Double? = nil
+    var target: Double? = nil
+    var protein: Double? = nil
+    var carbs: Double? = nil
+    var fat: Double? = nil
+    var level: String? = nil
+    var warn: String? = nil
 }

@@ -503,6 +503,17 @@
       });
     },
     paceValue: function (dir, i) { return paceValue(dir, i); },
+    // Plan for someone else: the web app's guest calculator (energyFor + planFor on their numbers, never your profile).
+    // txt: { sex, age, heightCm, kg, steps, training, paceKg }. Not ready until sex, age, height and weight are in.
+    guestPlan: function (txt) {
+      var g = JSON.parse(txt) || {}, t = g.training || { days: 0, type: 'lifting', minutes: 60, intensity: 'moderate' };
+      var pace = snapPace(g.paceKg || 0), base = { dir: pace.dir, i: pace.i, rates: RATES[unit()], unit: unit() };
+      if (!g.sex || g.age == null || g.heightCm == null || g.kg == null) return J(Object.assign({ ready: false }, base));
+      var en = energyFor({ sex: g.sex, age: g.age, heightCm: g.heightCm, steps: g.steps == null ? 7000 : g.steps, training: t }, g.kg);
+      var plan = planFor({ tdee: en.tdee, bmr: en.bmr, kg: g.kg, pace: pace, goal: null, p: { sex: g.sex, heightCm: g.heightCm, bodyFat: null, macros: null, training: t } });
+      return J(Object.assign({ ready: true, tdee: roundKcal(en.tdee), target: roundKcal(plan.target), protein: plan.protein, carbs: plan.carbs, fat: plan.fat,
+        level: L(en.level), warn: L(plan.warn) }, base));
+    },
     // ---- Account sync (the web app's own merge; the iPhone app does the network part) ----
     // Two saves joined: weigh-ins and foods by date/id, the most recently changed copy winning, deletions kept.
     syncMerge: function (localTxt, cloudTxt, cloudNewer) {

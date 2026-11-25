@@ -29,20 +29,25 @@ final class DiaryDragTests: XCTestCase {
     /// when the list unloads the row between asking and reading (e.frame would).
     @MainActor private func y(_ e: XCUIElement) -> Int { (try? e.snapshot()).map { Int($0.frame.midY) } ?? -1 }
     /// Press and hold `what`, then drag it to a point inside `to` (dy: 0 = its top edge, 1 = its bottom edge).
-    @MainActor private func drag(_ what: XCUIElement, to: XCUIElement, dy: CGFloat) {
+    /// True when the list reported a move (its -movelog line changed).
+    @discardableResult
+    @MainActor private func drag(_ what: XCUIElement, to: XCUIElement, dy: CGFloat) -> Bool {
         // both ends in the open middle of the screen (not under the top bar or the tab bar): how far a swipe scrolls
         // varies from run to run, so nudge the list a little until they are
         let app = XCUIApplication()
+        // (a quick flick coasts on and overshot: once it left banana under the top bar, so the press hit the bar)
         for _ in 0..<5 {
             let top = min(y(what), y(to)), bottom = max(y(what), y(to))
             let step: CGFloat
-            if top < 190 { step = 0.1 } else if bottom > 690 && top > 260 { step = -0.1 } else { break }
+            if top < 170 { step = 0.1 } else if bottom > 740 && top > 260 { step = -0.1 } else { break }
+            // slow, and held at the end, so the list stops where it's put instead of coasting
             app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5))
-                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5 + step)))
+                .press(forDuration: 0.05, thenDragTo: app.coordinate(withNormalizedOffset: CGVector(dx: 0.92, dy: 0.5 + step)),
+                       withVelocity: .slow, thenHoldForDuration: 0.4)
             sleep(2)
         }
         // the nudging can scroll a row out of the list (it unloads it): say so instead of failing on a missing row
-        guard y(what) >= 0, y(to) >= 0 else { note("   (row scrolled off screen before the drag: skipped)"); return }
+        guard y(what) >= 0, y(to) >= 0 else { note("   (row scrolled off screen before the drag: skipped)"); return false }
         let mv = XCUIApplication().staticTexts.containing(NSPredicate(format: "label BEGINSWITH 'mv'")).firstMatch
         let before = mv.exists ? mv.label : ""
         // a press that lands while the list is still settling after a scroll doesn't pick the row up (on a real iPhone
@@ -56,6 +61,7 @@ final class DiaryDragTests: XCTestCase {
             if (mv.exists ? mv.label : "") != before || !mv.exists { break }
         }
         note("   list said: \(mv.exists ? mv.label : "(no log)")")
+        return !mv.exists || mv.label != before
     }
 
     @MainActor func run(_ tag: String, _ extra: [String]) {
@@ -71,21 +77,22 @@ final class DiaryDragTests: XCTestCase {
 
         // 1. reorder inside Breakfast: banana above oats. The very first drag after launch sometimes doesn't start
         // (the list is still settling), so it gets one more try, and the log says so.
-        let before = y(banana)
-        drag(banana, to: oats, dy: 0.4) // the upper part of oats that is on screen (its top can sit under the bar)
-        for attempt in 2...3 where y(banana) == before {
+        var moved = drag(banana, to: oats, dy: 0.4) // the upper part of oats that is on screen (its top can sit under the bar)
+        for attempt in 2...3 where !moved {
             note("\(tag) reorder: drag didn't start, try \(attempt)")
             sleep(3)
-            drag(banana, to: oats, dy: 0.4) // the upper part of oats that is on screen (its top can sit under the bar)
+            moved = drag(banana, to: oats, dy: 0.4)
         }
         shot(app, "drag-\(tag)-1-reorder")
         note("\(tag) reorder: banana above oats = \(y(banana) < y(oats)) (banana \(y(banana)) oats \(y(oats)))")
+        XCTAssertLessThan(y(banana), y(oats), "dragging banana above oats in Breakfast")
 
         // 2. into another meal, between its foods: oats just above the chicken in Lunch
         let lunch = el(app, "meal-lunch")
         drag(oats, to: chicken, dy: 0.15)
         shot(app, "drag-\(tag)-2-into-lunch")
         note("\(tag) into Lunch: oats below Lunch name = \(y(oats) > y(lunch)) (oats \(y(oats)) lunch \(y(lunch)))")
+        XCTAssertGreaterThan(y(oats), y(lunch), "dragging oats into Lunch")
 
         // 3. into an empty meal: banana just below Dinner's name
         let dinner = el(app, "meal-dinner")
@@ -93,13 +100,15 @@ final class DiaryDragTests: XCTestCase {
             drag(banana, to: dinner, dy: 1.0)
             shot(app, "drag-\(tag)-3-into-dinner")
             let next = el(app, "meal-snacks")
-            note("\(tag) into Dinner: banana between Dinner and Snacks = \(y(banana) > y(dinner) && (y(next) < 0 || y(banana) < y(next))) (banana \(y(banana)) dinner \(y(dinner)) snacks \(y(next)))")
+            let intoDinner = y(banana) > y(dinner) && (y(next) < 0 || y(banana) < y(next))
+            note("\(tag) into Dinner: banana between Dinner and Snacks = \(intoDinner) (banana \(y(banana)) dinner \(y(dinner)) snacks \(y(next)))")
+            XCTAssertTrue(intoDinner, "dragging banana into the empty Dinner")
             if !(y(banana) > y(dinner)) {
                 drag(banana, to: dinner, dy: 0.5)
                 shot(app, "drag-\(tag)-4-onto-dinner-name")
                 note("\(tag) onto Dinner name: banana below Dinner = \(y(banana) > y(dinner)) (banana \(y(banana)) dinner \(y(dinner)))")
             }
-        } else { note("\(tag): no Dinner name found") }
+        } else { note("\(tag): no Dinner name found"); XCTFail("no Dinner name in the Diary") }
         do { // picking up a meal's name moves nothing
             let d = el(app, "meal-dinner"), b = el(app, "meal-breakfast")
             drag(d, to: b, dy: 0.5)
@@ -177,6 +186,22 @@ final class DiaryDragTests: XCTestCase {
             shot(t, "tick-1-eaten")
         } else { note("tick: no tick circle on the planned protein bar"); shot(t, "tick-missing"); XCTFail("no tick circle on the planned food") }
         t.terminate()
+
+        // Plan for someone else: the demo's saved person shows their numbers; Clear starts again (your plan untouched)
+        let gp = XCUIApplication()
+        gp.launchArguments = ["-demo", "YES", "-tab", "you", "-open", "guest"]
+        gp.launch()
+        let card = el(gp, "guest-result")
+        if card.waitForExistence(timeout: 10) {
+            note("someone else: numbers shown = \(label(card) ?? "(none)")")
+            shot(gp, "guest-0-filled")
+            gp.buttons["Clear"].firstMatch.tap()
+            let empty = gp.staticTexts["Add sex, age, weight and height"].firstMatch
+            _ = empty.waitForExistence(timeout: 5)
+            note("someone else: Clear empties it = \(empty.exists) · app running = \(gp.state == .runningForeground)")
+            XCTAssertTrue(empty.exists, "Clear starts the someone-else plan again")
+        } else { note("someone else: no numbers for the demo's saved person"); shot(gp, "guest-missing"); XCTFail("Plan › Someone else shows the saved person's numbers") }
+        gp.terminate()
 
         // the microphone: allow the permission prompts and see that the app keeps going
         let m = XCUIApplication()
