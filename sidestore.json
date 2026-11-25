@@ -3,7 +3,7 @@
   "identifier": "app.setpoint.source",
   "sourceURL": "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/sidestore.json",
   "iconURL": "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/ios/Setpoint/Resources/Assets.xcassets/AppIcon.appiconset/icon-1024.png",
-  "website": "https://setpoint-tracker.web.app",
+  "website": "https://github.com/Seifonyx/Setpoint",
   "tintColor": "1C1C1E",
   "apps": [
     {
@@ -22,12 +22,12 @@
       ],
       "versions": [
         {
-          "version": "0.1.190",
-          "buildVersion": "190",
-          "date": "2026-11-25T10:40:57Z",
-          "localizedDescription": "Build 190.",
+          "version": "0.1.191",
+          "buildVersion": "191",
+          "date": "2026-11-25T15:37:27Z",
+          "localizedDescription": "Build 191.",
           "downloadURL": "https://github.com/Seifonyx/Setpoint/releases/download/ios-latest/Setpoint.ipa",
-          "size": 11654810,
+          "size": 11654846,
           "minOSVersion": "26.0"
         }
       ],
