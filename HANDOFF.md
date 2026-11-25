@@ -1,8 +1,7 @@
 # Setpoint — handoff (25 Nov 2026)
 
 Read `CLAUDE.md` and `AGENTS.md` first: they hold the standing rules (inspect first, research top apps, Setpoint's own
-identity, Egyptian Arabic for every string, test → publish → check release policy). **The up-to-date `CLAUDE.md` is on
-the `standalone-engine` branch** (main still has the old web-era one until that branch is merged).
+identity, Egyptian Arabic for every string, test → publish → check release policy).
 
 ## What the project is
 Setpoint is a native iPhone app (SwiftUI, iOS 26+) for tracking food, nutrients and weight, with targets that learn
@@ -21,14 +20,13 @@ not used by the app.
   - Build 190: the flaky Diary drag test fixed (slow, held nudges that don't coast a row under the top bar; retry when
     the list reports no move) and the three drag checks are now real assertions. All passed in 190.
   - UI checks added: duplicates merge + undo (testMenusAndSignIn), someone-else numbers + Clear (testInputsAndCrashes).
-- **Unreleased, on branch `standalone-engine`** (`918095d`, pushed, *not yet built by CI*): the app no longer builds
-  from the web sources (details below).
+- **`standalone-engine` is merged into `main`** (local, awaiting push): the app no longer builds from the web
+  sources (details below). The first CI build from `engine/` is still pending; update this file after it.
 
 ## Where everything lives
-- Repo `Seifonyx/Setpoint`. Branches: `main` (releases), `standalone-engine` (restructure awaiting merge),
-  `redesign` (last commit 13 Nov, previews only, already superseded by main) and `release` (last commit 11 Nov, old,
+- Repo `Seifonyx/Setpoint`. Branches: `main` (releases), `redesign` (last commit 13 Nov, previews only, already superseded by main) and `release` (last commit 11 Nov, old,
   unused by CI). CI only runs on `main` and `redesign` pushes (and manual runs).
-- After the `standalone-engine` merge:
+- Layout:
   - `ios/` the app (`project.yml` for XcodeGen; `Setpoint/App|Features|Model|Resources|Shared`, `Widgets/`, `UITests/`,
     `icon/`, `legal/` + `legal/build.js` → `Resources/Legal.json`). Feature list: `ios/FEATURES.md` (was PARITY.md).
   - `engine/` the app's search and maths in JS, run by JavaScriptCore: `src/01-…16-*.js` (16-api.js is what
@@ -36,7 +34,6 @@ not used by the app.
     + copies `foods.json`; both gitignored), `search-check.js`, `check-recipe-import.js`.
   - `foods.json` + `tools/foods/` food list pipeline (`off_fetch.py` → `build.py` → `verify.py` → `complete.py`).
   - `firestore.rules`, `firebase.json` backend config. Everything else at the root is the frozen web app.
-- Before the merge (current `main`): the engine is built by `tools/ios-engine.js` from web `src/*.js` + root `ar.js`.
 - Services: Firebase project `setpoint-tracker` (Auth via REST + Firestore; same documents/format the web used, so
   existing accounts keep working), Google sign-in straight from the app (ASWebAuthenticationSession, iOS OAuth client;
   `ios-signin.html` is **not** used), Open Food Facts (barcodes/online search), GitHub releases for install/updates
@@ -74,14 +71,11 @@ not used by the app.
 - No Mac: Swift only compiles in CI. Test engine changes locally with Node (`node engine/build.js` and a vm script
   calling `SP.*`); keep `engine/search-check.js` green.
 - Logged food links (`ref`) survive `migrate` only with `g`, `qty` and `unit`; ids must match `^[ucor][\w-]{1,23}$`.
-- `ios/Setpoint/Resources/Legal.json` is **newer than `ios/legal/privacy.html`** (the "describe your meal" / voice
-  wording was edited in the JSON only). Don't regenerate it until the HTML is updated to match, or the newer text is lost.
 - Never two simulators on one Mac (slower); fast-animations test mode was tried and dropped.
 - Session network allowlist includes the restaurant chains' sites, USDA FDC and Open Food Facts.
 
 ## Open bugs / loose ends
-- `standalone-engine` hasn't been through CI yet (its workflow changes only run on `main`).
-- Legal source/JSON mismatch above.
+- The first CI build from `engine/` (after the merge is pushed) hasn't run yet.
 - Someone else: typed boxes show Western digits while results use Arabic-Indic (cosmetic).
 - `ios/legal` HTML still links fonts from the old site's folder (harmless: only text is extracted).
 - SideStore fork with auto-update (separate project): when it has a URL scheme, `UpdateCheck.openSideStore()` must try
@@ -90,10 +84,9 @@ not used by the app.
   John's Egypt, local places.
 
 ## Next steps, in priority order
-1. Merge `standalone-engine` into `main` and push: CI builds from `engine/` for the first time. Check every result file;
-   expect identical behaviour (byte-identical engine). Delete the branch after.
-2. Bring `ios/legal/privacy.html` in line with `Legal.json`, then regenerate with `node ios/legal/build.js` and confirm
-   no diff.
+1. Done: `standalone-engine` merged into `main`. Still to do: push, check the first CI build from `engine/` (every
+   result file; expect identical behaviour, byte-identical engine), then delete the branch.
+2. Done: `ios/legal/privacy.html` now matches `Legal.json` (regenerating gives no diff).
 3. Confirm Apple Health on the real phone and mark it ✅ in `ios/FEATURES.md`.
 4. Optional, larger: port the engine from JavaScript to Swift (a local Swift package, e.g. `SetpointCore`), one area at
    a time, each proven against the JS engine's outputs on fixed inputs (golden tests), as Shopify did moving to native
