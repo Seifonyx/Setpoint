@@ -20,8 +20,11 @@ not used by the app.
   - Build 190: the flaky Diary drag test fixed (slow, held nudges that don't coast a row under the top bar; retry when
     the list reports no move) and the three drag checks are now real assertions. All passed in 190.
   - UI checks added: duplicates merge + undo (testMenusAndSignIn), someone-else numbers + Clear (testInputsAndCrashes).
-- **`standalone-engine` is merged into `main`** (local, awaiting push): the app no longer builds from the web
-  sources (details below). The first CI build from `engine/` is still pending; update this file after it.
+- **Build 191** (`2fd6a7f`, SideStore commit `5aa96e0`): `standalone-engine` merged; the app no longer builds from
+  the web sources (details below). First CI build from `engine/`: build, 3 UI tests, search check 181/181 all passed.
+  The release job failed once on a transient `gh release` error ("release not found" then "already exists") and
+  passed on a re-run of the failed job. The `standalone-engine` branch still exists on GitHub (sessions can't delete
+  branches); it's fully merged and can be deleted from GitHub.
 
 ## Where everything lives
 - Repo `Seifonyx/Setpoint`. Branches: `main` (releases), `redesign` (last commit 13 Nov, previews only, already superseded by main) and `release` (last commit 11 Nov, old,
@@ -75,7 +78,8 @@ not used by the app.
 - Session network allowlist includes the restaurant chains' sites, USDA FDC and Open Food Facts.
 
 ## Open bugs / loose ends
-- The first CI build from `engine/` (after the merge is pushed) hasn't run yet.
+- Some screenshots come out blank (black) at random in every build (190 and 191 alike: different screens each time);
+  the `shots` job captures before the screen draws. Not an app bug, but it hides screens from review.
 - Someone else: typed boxes show Western digits while results use Arabic-Indic (cosmetic).
 - `ios/legal` HTML still links fonts from the old site's folder (harmless: only text is extracted).
 - SideStore fork with auto-update (separate project): when it has a URL scheme, `UpdateCheck.openSideStore()` must try
@@ -84,8 +88,7 @@ not used by the app.
   John's Egypt, local places.
 
 ## Next steps, in priority order
-1. Done: `standalone-engine` merged into `main`. Still to do: push, check the first CI build from `engine/` (every
-   result file; expect identical behaviour, byte-identical engine), then delete the branch.
+1. Done: `standalone-engine` merged and released as build 191, all checks clean.
 2. Done: `ios/legal/privacy.html` now matches `Legal.json` (regenerating gives no diff).
 3. Confirm Apple Health on the real phone and mark it ✅ in `ios/FEATURES.md`.
 4. Optional, larger: port the engine from JavaScript to Swift (a local Swift package, e.g. `SetpointCore`), one area at
