@@ -22,6 +22,7 @@ struct AuthFlow: View {
     @State private var legal: String?   // a legal page open over the sign-in (the app's own copy)
     @State private var shown = 0.0
     @State private var arrived = false
+    @State private var lastUsed = UserDefaults.standard.string(forKey: "lastSignInMethod") // "google" | "email"
     @FocusState private var field: Field?
     enum Field { case email, password }
 
@@ -71,12 +72,13 @@ struct AuthFlow: View {
             .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 18)
             Spacer(minLength: 12)
             VStack(spacing: 12) {
-                primary("Create account") { go(.signUp) }
-                googleButton
+                googleButton(prominent: true)
+                secondary("Create account") { go(.signUp) }
                 Button { go(.signIn) } label: {
                     HStack(spacing: 6) {
                         Text("Already have an account?").foregroundStyle(Brand.ink2)
                         Text("Sign in").foregroundStyle(Brand.green).bold()
+                        if lastUsed == "email" { lastUsedBadge }
                     }
                     .font(.brand(.body)).frame(maxWidth: .infinity, minHeight: 44).contentShape(.rect)
                 }
@@ -159,7 +161,7 @@ struct AuthFlow: View {
                         Rectangle().fill(Brand.line).frame(height: 1)
                     }
                     .padding(.vertical, 2)
-                    googleButton
+                    googleButton(prominent: false)
                     Button { go(creating ? .signIn : .signUp) } label: {
                         HStack(spacing: 6) {
                             Text(creating ? LocalizedStringKey("Already have an account?") : LocalizedStringKey("New to Setpoint?")).foregroundStyle(Brand.ink2)
@@ -208,22 +210,42 @@ struct AuthFlow: View {
         .disabled(working)
     }
 
-    private var googleButton: some View {
+    /// The second way in on the welcome page: same shape as the main button, quiet colours.
+    private func secondary(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
+        Button(action: action) {
+            Text(title).font(.brand(.headline)).foregroundStyle(Brand.green)
+                .frame(maxWidth: .infinity, minHeight: 54)
+                .background(Brand.card, in: Capsule())
+                .overlay(Capsule().strokeBorder(Brand.green.opacity(0.5), lineWidth: 1.5))
+        }
+        .buttonStyle(.plain)
+        .disabled(working)
+    }
+
+    /// Google's own colour "G" needs a light background, so the button stays white; `prominent` gives it the heavier edge.
+    private func googleButton(prominent: Bool) -> some View {
         Button(action: withGoogle) {
             ZStack {
                 HStack(spacing: 10) {
-                    Text(verbatim: "G").font(.system(size: 19, weight: .bold, design: .rounded))
+                    Image("GoogleG").resizable().scaledToFit().frame(width: 20, height: 20).accessibilityHidden(true)
                     Text("Continue with Google").font(.brand(.headline))
+                    if lastUsed == "google" { lastUsedBadge }
                 }
                 .opacity(working && google ? 0 : 1)
                 if working && google { ProgressView() }
             }
             .foregroundStyle(Brand.ink).frame(maxWidth: .infinity, minHeight: 54)
             .background(Brand.card, in: Capsule())
-            .overlay(Capsule().strokeBorder(Brand.line, lineWidth: 1))
+            .overlay(Capsule().strokeBorder(prominent ? Brand.ink : Brand.line, lineWidth: prominent ? 1.5 : 1))
         }
         .buttonStyle(.plain)
         .disabled(working)
+    }
+
+    private var lastUsedBadge: some View {
+        Text("Last used").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.green)
+            .padding(.horizontal, 7).padding(.vertical, 2)
+            .background(Brand.green.opacity(0.14), in: Capsule())
     }
 
     private var terms: some View {
@@ -255,7 +277,10 @@ struct AuthFlow: View {
         if password.isEmpty { fail(String(localized: "Enter your password"), .password); return }
         if mode == .signUp && password.count < 6 { fail(String(localized: "Use at least 6 characters for the password."), .password); return }
         let creating = mode == .signUp, pw = password
-        act { if creating { try await account.signUp(email: e, password: pw) } else { try await account.signIn(email: e, password: pw) } }
+        act { [self] in
+            if creating { try await account.signUp(email: e, password: pw) } else { try await account.signIn(email: e, password: pw) }
+            remember("email")
+        }
     }
     private func forgot() {
         let e = email.trimmingCharacters(in: .whitespaces)
@@ -264,11 +289,15 @@ struct AuthFlow: View {
     }
     private func withGoogle() {
         google = true
-        act {
+        act { [self] in
             let req = Google.request()
             let back = try await webAuth.authenticate(using: req.url, callback: .customScheme(Google.scheme), preferredBrowserSession: .shared, additionalHeaderFields: [:])
             try await account.finishGoogle(back, req)
+            remember("google")
         }
+    }
+    private func remember(_ method: String) {
+        UserDefaults.standard.set(method, forKey: "lastSignInMethod"); lastUsed = method
     }
     private func fail(_ text: String, _ f: Field) {
         withAnimation(.snappy) { error = text }

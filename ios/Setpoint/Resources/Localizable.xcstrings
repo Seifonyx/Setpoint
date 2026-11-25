@@ -4821,6 +4821,16 @@
         }
       }
     },
+    "Last used": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "آخر استخدام"
+          }
+        }
+      }
+    },
     "Last week": {
       "localizations": {
         "ar": {
