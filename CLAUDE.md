@@ -9,6 +9,12 @@ evidence, and verify the actual behaviour afterwards). They are imported here:
 Setpoint is a native iPhone app (SwiftUI, iOS 26+) for tracking food, nutrients and weight, with targets that learn
 from your results. It stands on its own: it never needs the website to run or to build.
 
+## Working rules for threads
+- **Read `CODEMAP.md` before searching the code** (one line per folder and key file). **Keep it updated** when files are
+  added, moved or removed.
+- **Pass plans, reviews and status as short `.md` files in `handoff/`** (gitignored, in the project folder), and keep chat
+  messages between threads to one line that names the file.
+
 ## Where things are
 | Folder | What it is |
 |---|---|
