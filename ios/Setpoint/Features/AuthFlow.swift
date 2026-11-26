@@ -207,9 +207,16 @@ struct AuthFlow: View {
 
     /// Small and gray, pinned at the very bottom; hidden while you type so it doesn't ride up on the keyboard.
     private var terms: some View {
-        Text("By continuing you agree to the [Terms](setpoint-legal://terms) and [Privacy Policy](setpoint-legal://privacy).")
+        Text(termsText)
             .font(.brand(.caption2)).foregroundStyle(Brand.ink2).tint(Brand.ink2).multilineTextAlignment(.center)
             .frame(maxWidth: .infinity).padding(.horizontal, 24).padding(.bottom, 8)
+    }
+
+    /// The terms sentence (translated, with its two links), the links underlined so they read as links.
+    private var termsText: AttributedString {
+        var text = AttributedString(localized: "By continuing you agree to the [Terms](setpoint-legal://terms) and [Privacy Policy](setpoint-legal://privacy).")
+        for run in text.runs where run.link != nil { text[run.range].underlineStyle = .single }
+        return text
     }
 
     // MARK: Pieces
@@ -267,6 +274,7 @@ struct AuthFlow: View {
         act { try await account.resetPassword(email: e); note = String(localized: "Reset link sent to \(e)") }
     }
     private func withGoogle() {
+        handoff.skipNext = false // a failed sign-up must not turn a later Google sign-in into a "new account" fade
         google = true
         act { [self] in
             let req = Google.request()
@@ -288,7 +296,7 @@ struct AuthFlow: View {
         Task {
             do { try await work(); password = "" }
             catch let e as ASWebAuthenticationSessionError where e.code == .canceledLogin {}
-            catch { withAnimation(.snappy) { self.error = error.localizedDescription } }
+            catch { handoff.skipNext = false; withAnimation(.snappy) { self.error = error.localizedDescription } }
             working = false; google = false
         }
     }

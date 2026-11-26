@@ -149,6 +149,7 @@ struct RootView: View {
             let to = handoff.target
             // only fly to a dial you can fully see (below the top bar, above the tab bar); otherwise the plain fade
             guard handoff.flying, to != .zero, visibleArea.contains(to) else { handoff.reset(); return }
+            handoff.landingValues = handoff.targetValues
             handoff.landing = to // frozen: later layout changes (the synced data arriving) don't move the landing
             withAnimation(Motion.gentle) { handoff.arrived = true } // position, size and values morph together
             try? await Task.sleep(for: .milliseconds(480))

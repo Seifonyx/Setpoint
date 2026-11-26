@@ -36,12 +36,13 @@ struct DialValues: Equatable {
     var target: CGRect = .zero      // the Diary dial, live
     var landing: CGRect = .zero     // the Diary dial, frozen at take-off: later layout changes don't move the flight
     var targetValues: DialValues?   // what the Diary dial shows now
+    var landingValues: DialValues?  // ...frozen at take-off, so a sync mid-flight can't make the rings jump
     var flying = false              // the flying dial is on screen; both real dials hide
     var arrived = false             // the flying dial has reached the landing (drives the spring)
     var fading = false              // the flying dial fades out while the real one fades in under it
     var skipNext = false            // set by an email sign-up: a new account gets the plain fade
 
-    func reset() { flying = false; arrived = false; fading = false; landing = .zero }
+    func reset() { flying = false; arrived = false; fading = false; landing = .zero; landingValues = nil }
 }
 
 /// The one dial in the air. It starts as the sign-in dial, and on landing it shows the Diary dial's own values.
@@ -50,7 +51,7 @@ struct FlyingDial: View {
     var body: some View {
         let from = handoff.source, to = handoff.landing, done = handoff.arrived
         let box = done ? to : from
-        let v = done ? (handoff.targetValues ?? .placeholder) : .placeholder
+        let v = done ? (handoff.landingValues ?? .placeholder) : .placeholder
         GeometryReader { g in
             let origin = g.frame(in: .global).origin
             CalorieDial(eaten: v.eaten, target: v.target,
