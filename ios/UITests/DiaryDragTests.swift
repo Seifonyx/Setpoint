@@ -391,14 +391,12 @@ final class DiaryDragTests: XCTestCase {
 
         // the front door: from the welcome to sign in, the form's own checks, and a sign-in the server refuses
         let a = XCUIApplication()
-        a.launchArguments = ["-demo", "YES", "-auth", "welcome"]
+        a.launchArguments = ["-demo", "YES", "-auth", "signin"]
         a.launch()
-        let toSignIn = el(a, "auth-signin")
-        if toSignIn.waitForExistence(timeout: 10) {
+        let submit = el(a, "auth-submit")
+        if submit.waitForExistence(timeout: 10) {
             settle()
-            toSignIn.tap()
-            let submit = el(a, "auth-submit"), err = el(a, "auth-error")
-            _ = submit.waitForExistence(timeout: 5)
+            let err = el(a, "auth-error")
             submit.tap()
             note("auth: empty form says: \(err.waitForExistence(timeout: 3) ? err.label : "(nothing)")")
             let mail = a.textFields["auth-email"].firstMatch
@@ -413,7 +411,12 @@ final class DiaryDragTests: XCTestCase {
             waitForChange(err, from: err.exists ? err.label : "", timeout: 10) // the server answers (a refusal)
             note("auth: refused sign-in says: \(err.exists ? err.label : "(nothing)") · still on the form = \(submit.exists)")
             shot(a, "auth-refused")
-        } else { note("auth: no welcome screen"); shot(a, "auth-missing") }
+            // the switch under the card turns it into the create-account card
+            let switcher = el(a, "auth-switch")
+            if switcher.exists { switcher.tap(); settle() }
+            note("auth: after the switch the main button says: \(submit.exists ? submit.label : "(gone)") · google button there = \(el(a, "auth-google").exists)")
+            shot(a, "auth-switch")
+        } else { note("auth: no sign-in card"); shot(a, "auth-missing") }
         a.terminate()
 
         // signing in carries the welcome dial into the Diary's dial (-open handoff acts out a sign-in after 1.5 s)
@@ -422,10 +425,12 @@ final class DiaryDragTests: XCTestCase {
         h.launch()
         let dial = el(h, "diary-dial")
         let seen = dial.waitForExistence(timeout: 10)
+        let before = dial.exists ? NSCoder.string(for: dial.frame) : "(none)"
         sleep(3)
-        note("handoff: diary dial there = \(seen) · hittable = \(dial.exists && dial.isHittable) · welcome gone = \(!el(h, "auth-signin").exists)")
+        let after = dial.exists ? NSCoder.string(for: dial.frame) : "(none)"
+        note("handoff: diary dial there = \(seen) · hittable = \(dial.exists && dial.isHittable) · sign-in gone = \(!el(h, "auth-submit").exists) · frame before \(before) after \(after)")
         XCTAssertTrue(seen, "The Diary shows after the sign-in")
-        XCTAssertFalse(el(h, "auth-signin").exists, "The welcome screen leaves after the sign-in")
+        XCTAssertFalse(el(h, "auth-submit").exists, "The sign-in card leaves after the sign-in")
         shot(h, "dial-handoff")
         h.terminate()
     }

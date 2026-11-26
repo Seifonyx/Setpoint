@@ -143,14 +143,27 @@ struct RootView: View {
     /// unmeasured get the plain fade. However it goes, `flying` always ends false, so the Diary dial can't stay hidden.
     private func startHandoff() {
         guard !reduceMotion, !handoff.skipNext, handoff.source != .zero else { handoff.skipNext = false; return }
-        handoff.flying = true; handoff.arrived = false
+        handoff.reset(); handoff.flying = true
         Task { @MainActor in
-            try? await Task.sleep(for: .milliseconds(60)) // let the Diary lay out and report its frame
-            guard handoff.flying, handoff.target != .zero else { handoff.flying = false; return }
-            withAnimation(.spring(response: 0.55, dampingFraction: 0.85)) { handoff.arrived = true }
-            try? await Task.sleep(for: .milliseconds(560))
-            handoff.flying = false
+            try? await Task.sleep(for: .milliseconds(80)) // let the Diary lay out and report its frame
+            let to = handoff.target
+            // only fly to a dial you can fully see (below the top bar, above the tab bar); otherwise the plain fade
+            guard handoff.flying, to != .zero, visibleArea.contains(to) else { handoff.reset(); return }
+            handoff.landing = to // frozen: later layout changes (the synced data arriving) don't move the landing
+            withAnimation(Motion.gentle) { handoff.arrived = true } // position, size and values morph together
+            try? await Task.sleep(for: .milliseconds(480))
+            handoff.fading = true // the real dial fades in under the flying one
+            try? await Task.sleep(for: .milliseconds(180))
+            handoff.reset()
         }
+    }
+
+    /// Where a dial can land: the window, minus the top bar and the tab bar.
+    private var visibleArea: CGRect {
+        let scene = UIApplication.shared.connectedScenes.compactMap { $0 as? UIWindowScene }.first
+        let w = scene?.keyWindow
+        let b = w?.bounds ?? .zero, inset = w?.safeAreaInsets ?? .zero
+        return CGRect(x: b.minX, y: b.minY + inset.top + 56, width: b.width, height: b.height - inset.top - inset.bottom - 56 - 90)
     }
 
     private func apply(_ data: Data) {
@@ -178,8 +191,8 @@ private struct DialFlight: ViewModifier {
     func body(content: Content) -> some View {
         content
             .overlay { if handoff.flying { FlyingDial(handoff: handoff) } }
-            .onChange(of: needsAccount) { if needsAccount { handoff.flying = false } } // signed out: never leave the Diary dial hidden
-            .onChange(of: phase) { if phase != .active { handoff.flying = false } }
+            .onChange(of: needsAccount) { if needsAccount { handoff.reset() } } // signed out: never leave the Diary dial hidden
+            .onChange(of: phase) { if phase != .active { handoff.reset() } }
             .task {
                 guard demoAuth else { return }
                 try? await Task.sleep(for: .seconds(1.5))

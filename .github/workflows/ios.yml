@@ -324,10 +324,11 @@ jobs:
           node ../engine/check-recipe-import.js > out/recipe-import.txt 2>&1 || true
           shot -tab you -open legal -legal terms; xcrun simctl io "$S" screenshot out/legal-terms-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           shot -tab diary -sheet add -addtab mine; xcrun simctl io "$S" screenshot out/add-mine-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true
-          for m in welcome signup signin; do shot -auth $m; xcrun simctl io "$S" screenshot out/auth-$m-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
+          for m in signin signup; do shot -auth $m; xcrun simctl io "$S" screenshot out/auth-$m-dark.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
           shot -auth signup -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$S" screenshot out/auth-signup-dark-ar.png; xcrun simctl terminate "$S" app.setpoint.ios || true
+          shot -auth signin -lastUsed google -AppleLanguages "(ar)" -AppleLocale ar_EG; xcrun simctl io "$S" screenshot out/auth-signin-dark-ar.png; xcrun simctl terminate "$S" app.setpoint.ios || true
           xcrun simctl ui "$S" appearance light
-          for m in welcome signin; do shot -auth $m; xcrun simctl io "$S" screenshot out/auth-$m-light.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
+          for m in signin signup; do if [ $m = signin ]; then shot -auth $m -lastUsed google; else shot -auth $m; fi; xcrun simctl io "$S" screenshot out/auth-$m-light.png; xcrun simctl terminate "$S" app.setpoint.ios || true; done
       - uses: actions/upload-artifact@v4
         if: always()
         with: { name: shots, path: ios/out/, retention-days: 3 }

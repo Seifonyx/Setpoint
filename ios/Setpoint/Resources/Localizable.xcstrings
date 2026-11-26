@@ -6901,6 +6901,26 @@
         }
       }
     },
+    "Or continue with": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو كمّل بـ"
+          }
+        }
+      }
+    },
+    "Or sign in with": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "أو سجّل دخولك بـ"
+          }
+        }
+      }
+    },
     "Other": {
       "localizations": {
         "ar": {
@@ -8493,6 +8513,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "تسجيل الدخول"
+          }
+        }
+      }
+    },
+    "Sign in to Setpoint": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "سجّل دخولك على Setpoint"
           }
         }
       }

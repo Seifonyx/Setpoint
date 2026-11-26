@@ -2,16 +2,17 @@ import SwiftUI
 import AuthenticationServices
 
 /// The front door: Setpoint needs an account, so your log is saved and follows you to a new phone.
-/// A welcome page (the dial filling, what the app is, the two ways in), then one short form to create an account
-/// or sign in. Shown over the app whenever nobody is signed in.
+/// One centred card (the dial, the title, email and password, the main button, Google), with the switch between
+/// signing in and creating an account under it and the terms in gray at the very bottom.
+/// Shown over the app whenever nobody is signed in.
 struct AuthFlow: View {
-    enum Mode: String { case welcome, signUp = "signup", signIn = "signin" }
+    enum Mode: String { case signUp = "signup", signIn = "signin" }
 
     @Environment(Account.self) private var account
     @Environment(\.webAuthenticationSession) private var webAuth
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
-    // build-server screenshots: -auth welcome / signup / signin
-    @State private var mode = Mode(rawValue: UserDefaults.standard.string(forKey: "auth") ?? "") ?? .welcome
+    // build-server screenshots: -auth signin / signup (the old "welcome" is the sign-in card now)
+    @State private var mode = Mode(rawValue: UserDefaults.standard.string(forKey: "auth") ?? "") ?? .signIn
     @State private var email = ""
     @State private var password = ""
     @State private var reveal = false
@@ -21,26 +22,36 @@ struct AuthFlow: View {
     @State private var note: String?
     @State private var legal: String?   // a legal page open over the sign-in (the app's own copy)
     @State private var shown = 0.0
-    @State private var arrived = false
-    @State private var lastUsed = UserDefaults.standard.string(forKey: "lastSignInMethod") // "google" | "email"
+    // "google" | "email"; `-lastUsed google` shows the bubble in a build-server screenshot
+    @State private var lastUsed = UserDefaults.standard.string(forKey: "lastUsed") ?? UserDefaults.standard.string(forKey: "lastSignInMethod")
     @State private var handoff = DialHandoff.shared
     @FocusState private var field: Field?
     enum Field { case email, password }
 
+    private var creating: Bool { mode == .signUp }
+
     var body: some View {
         ZStack {
             PaperBackground().ignoresSafeArea()
-            if mode == .welcome {
-                welcome.transition(.asymmetric(insertion: .move(edge: .leading).combined(with: .opacity), removal: .move(edge: .leading).combined(with: .opacity)))
-            } else {
-                form.transition(.asymmetric(insertion: .move(edge: .trailing).combined(with: .opacity), removal: .move(edge: .trailing).combined(with: .opacity)))
+            GeometryReader { g in
+                ScrollView {
+                    VStack(spacing: 18) { card; switchLink }
+                        .frame(maxWidth: 420)
+                        .padding(.horizontal, 20).padding(.vertical, 24)
+                        .frame(maxWidth: .infinity, minHeight: g.size.height)
+                }
+                .scrollDismissesKeyboard(.interactively)
+                .scrollBounceBehavior(.basedOnSize)
             }
         }
+        .safeAreaInset(edge: .bottom) { if field == nil { terms } }
         .tint(Brand.ink)
         .font(.brand(.body))
         .foregroundStyle(Brand.ink)
         .sensoryFeedback(.selection, trigger: mode)
         .sensoryFeedback(.error, trigger: error) { _, new in new != nil }
+        .onChange(of: email) { if error != nil { withAnimation(.snappy) { error = nil } } } // fixing it clears the complaint
+        .onChange(of: password) { if error != nil { withAnimation(.snappy) { error = nil } } }
         .environment(\.openURL, OpenURLAction { url in
             if let id = LegalLink.page(url) { legal = id; return .handled }
             return .systemAction
@@ -49,222 +60,176 @@ struct AuthFlow: View {
         .alert(note ?? "", isPresented: Binding(get: { note != nil }, set: { if !$0 { note = nil } })) { Button("OK", role: .cancel) {} }
     }
 
-    // MARK: Welcome
+    // MARK: The card
 
-    private var welcome: some View {
-        VStack(spacing: 0) {
-            Spacer(minLength: 12)
-            CalorieDial(eaten: shown, target: 100, protein: (shown * 0.8, 100), carbs: (shown * 0.95, 100), fat: (shown * 0.6, 100))
-                .frame(width: 200, height: 200)
-                .environment(\.layoutDirection, .leftToRight)
-                .accessibilityHidden(true)
-                .opacity(handoff.flying ? 0 : 1)
-                .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { handoff.source = $0 }
-                .onAppear {
-                    if reduceMotion { shown = 78; arrived = true; return }
-                    withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 }
-                    withAnimation(.spring(response: 0.8, dampingFraction: 0.85).delay(0.55)) { arrived = true }
-                }
-            VStack(spacing: 10) {
-                Text("Setpoint").font(Brand.display(46, .heavy))
-                Text("Eat to your target. Watch your weight trend settle where you want it.")
-                    .font(.brand(.title3)).foregroundStyle(Brand.ink2).multilineTextAlignment(.center)
-                    .fixedSize(horizontal: false, vertical: true).padding(.horizontal, 30)
-            }
-            .padding(.top, 28)
-            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 18)
-            Spacer(minLength: 12)
+    private var card: some View {
+        VStack(spacing: 16) {
+            dial
+            Text(creating ? LocalizedStringKey("Create your account") : LocalizedStringKey("Sign in to Setpoint"))
+                .font(Brand.display(26, .heavy)).multilineTextAlignment(.center)
+                .fixedSize(horizontal: false, vertical: true)
+                .id(mode).transition(.opacity)
             VStack(spacing: 12) {
-                googleButton(prominent: true)
-                secondary("Create account") { go(.signUp) }
-                Button { go(.signIn) } label: {
-                    HStack(spacing: 6) {
-                        Text("Already have an account?").foregroundStyle(Brand.ink2)
-                        Text("Sign in").foregroundStyle(Brand.green).bold()
-                        if lastUsed == "email" { lastUsedBadge }
-                    }
-                    .font(.brand(.body)).frame(maxWidth: .infinity, minHeight: 44).contentShape(.rect)
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("auth-signin")
+                emailBox
+                passwordBox
+                belowPassword
                 if let error { errorLine(error) }
-                terms
             }
-            .padding(.horizontal, 24).padding(.bottom, 16)
-            .opacity(arrived ? 1 : 0).offset(y: arrived ? 0 : 24)
+            mainButton
+            divider
+            googleButton
         }
+        .modifier(BrandCardStyle(padding: 24))
     }
 
-    // MARK: Create account / Sign in
-
-    private var form: some View {
-        let creating = mode == .signUp
-        return ScrollView {
-            VStack(alignment: .leading, spacing: 0) {
-                HStack {
-                    Button { go(.welcome) } label: { Image(systemName: "chevron.backward").font(.body.weight(.semibold)).frame(width: 22, height: 22) }
-                        .buttonStyle(.glass).buttonBorderShape(.circle)
-                        .accessibilityLabel(Text("Back"))
-                    Spacer()
-                    // the brand on the form too; it's also what flies into the Diary's dial after signing in
-                    CalorieDial(eaten: 78, target: 100, protein: (62, 100), carbs: (74, 100), fat: (47, 100), lineWidth: 6, ringWidth: 2, ringGap: 3)
-                        .frame(width: 44, height: 44)
-                        .environment(\.layoutDirection, .leftToRight)
-                        .accessibilityHidden(true)
-                        .opacity(handoff.flying ? 0 : 1)
-                        .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { handoff.source = $0 }
-                }
-                .padding(.top, 8)
-                VStack(alignment: .leading, spacing: 8) {
-                    Text(creating ? LocalizedStringKey("Create your account") : LocalizedStringKey("Welcome back"))
-                        .font(Brand.display(34, .heavy))
-                    Text(creating ? LocalizedStringKey("Your log is saved to your account, so it's safe if you change phones.")
-                                  : LocalizedStringKey("Sign in to pick up where you left off."))
-                        .font(.brand(.body)).foregroundStyle(Brand.ink2).fixedSize(horizontal: false, vertical: true)
-                }
-                .padding(.top, 28)
-
-                VStack(spacing: 12) {
-                    box("envelope", focused: field == .email) {
-                        TextField("Email", text: $email)
-                            .textContentType(creating ? .emailAddress : .username).keyboardType(.emailAddress)
-                            .textInputAutocapitalization(.never).autocorrectionDisabled()
-                            .focused($field, equals: .email).submitLabel(.next).onSubmit { field = .password }
-                            .accessibilityIdentifier("auth-email")
-                    }
-                    box("lock", focused: field == .password) {
-                        Group {
-                            if reveal { TextField("Password", text: $password).textInputAutocapitalization(.never).autocorrectionDisabled() }
-                            else { SecureField("Password", text: $password) } // (iOS leaves hidden text out of screenshots: it looks empty there)
-                        }
-                        .textContentType(creating ? .newPassword : .password)
-                        .focused($field, equals: .password).submitLabel(.go).onSubmit(submit)
-                        .accessibilityIdentifier("auth-password")
-                        Button { reveal.toggle() } label: {
-                            Image(systemName: reveal ? "eye.slash" : "eye").foregroundStyle(Brand.ink2).frame(width: 32, height: 32).contentShape(.rect)
-                        }
-                        .buttonStyle(.plain)
-                        .accessibilityLabel(Text(reveal ? LocalizedStringKey("Hide password") : LocalizedStringKey("Show password")))
-                    }
-                    if creating {
-                        // the one rule, shown before you type and ticked off once you meet it (no second password box)
-                        HStack(spacing: 6) {
-                            Image(systemName: password.count >= 6 ? "checkmark.circle.fill" : "circle")
-                                .foregroundStyle(password.count >= 6 ? Brand.green : Brand.ink2)
-                            Text("At least 6 characters").foregroundStyle(Brand.ink2)
-                        }
-                        .font(.brand(.footnote)).frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
-                        .animation(.snappy, value: password.count >= 6)
-                    } else {
-                        Button("Forgot password?", action: forgot)
-                            .font(.brand(.subheadline, .semibold)).foregroundStyle(Brand.ink2).buttonStyle(.plain)
-                            .frame(maxWidth: .infinity, alignment: .trailing).frame(minHeight: 30)
-                            .disabled(working)
-                    }
-                    if let error { errorLine(error) }
-                }
-                .padding(.top, 26)
-
-                VStack(spacing: 12) {
-                    primary(creating ? "Create account" : "Sign in", busy: working && !google, action: submit)
-                        .accessibilityIdentifier("auth-submit")
-                    HStack(spacing: 12) {
-                        Rectangle().fill(Brand.line).frame(height: 1)
-                        Text("or").font(.brand(.footnote)).foregroundStyle(Brand.ink2)
-                        Rectangle().fill(Brand.line).frame(height: 1)
-                    }
-                    .padding(.vertical, 2)
-                    googleButton(prominent: false)
-                    Button { go(creating ? .signIn : .signUp) } label: {
-                        HStack(spacing: 6) {
-                            Text(creating ? LocalizedStringKey("Already have an account?") : LocalizedStringKey("New to Setpoint?")).foregroundStyle(Brand.ink2)
-                            Text(creating ? LocalizedStringKey("Sign in") : LocalizedStringKey("Create account")).foregroundStyle(Brand.green).bold()
-                        }
-                        .font(.brand(.body)).frame(maxWidth: .infinity, minHeight: 44).contentShape(.rect)
-                    }
-                    .buttonStyle(.plain)
-                    if creating { terms }
-                }
-                .padding(.top, 22)
+    /// The artwork: the dial filling. It's also the one that flies into the Diary's dial after signing in.
+    private var dial: some View {
+        CalorieDial(eaten: shown, target: 100, protein: (shown * 0.8, 100), carbs: (shown * 0.95, 100), fat: (shown * 0.6, 100),
+                    lineWidth: 9, ringWidth: 3, ringGap: 4)
+            .frame(width: 84, height: 84)
+            .environment(\.layoutDirection, .leftToRight)
+            .accessibilityHidden(true)
+            .opacity(handoff.flying ? 0 : 1)
+            .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { handoff.source = $0 }
+            .onAppear {
+                if reduceMotion { shown = 78; return }
+                withAnimation(.spring(response: 1.4, dampingFraction: 0.75).delay(0.2)) { shown = 78 }
             }
-            .padding(.horizontal, 24).padding(.bottom, 24)
-        }
-        .onChange(of: email) { if error != nil { withAnimation(.snappy) { error = nil } } } // fixing it clears the complaint
-        .onChange(of: password) { if error != nil { withAnimation(.snappy) { error = nil } } }
-        .scrollDismissesKeyboard(.interactively)
-        .scrollBounceBehavior(.basedOnSize)
     }
 
-    // MARK: Pieces
-
-    /// A text box: the app's card, an icon, and a green edge while you're typing in it.
-    private func box<C: View>(_ icon: String, focused: Bool, @ViewBuilder _ content: () -> C) -> some View {
-        HStack(spacing: 12) {
-            Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundStyle(focused ? Brand.green : Brand.ink2).frame(width: 22)
-            content()
+    private var emailBox: some View {
+        box("envelope.fill", label: "Email", focused: field == .email) {
+            TextField("", text: $email)
+                .textContentType(creating ? .emailAddress : .username).keyboardType(.emailAddress)
+                .textInputAutocapitalization(.never).autocorrectionDisabled()
+                .focused($field, equals: .email).submitLabel(.next).onSubmit { field = .password }
+                .accessibilityIdentifier("auth-email")
+                .accessibilityLabel(Text("Email"))
         }
-        .font(.brand(.body))
-        .padding(.horizontal, 16).frame(minHeight: 56)
-        .background(Brand.card, in: .rect(cornerRadius: 18, style: .continuous))
-        .overlay(RoundedRectangle(cornerRadius: 18, style: .continuous).strokeBorder(focused ? Brand.green : Brand.line, lineWidth: focused ? 1.5 : 1))
-        .animation(.snappy(duration: 0.2), value: focused)
     }
 
-    private func primary(_ title: LocalizedStringKey, busy: Bool = false, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
+    private var passwordBox: some View {
+        box("lock.fill", label: "Password", focused: field == .password) {
+            Group {
+                if reveal { TextField("", text: $password).textInputAutocapitalization(.never).autocorrectionDisabled() }
+                else { SecureField("", text: $password) } // (iOS leaves hidden text out of screenshots: it looks empty there)
+            }
+            .textContentType(creating ? .newPassword : .password)
+            .focused($field, equals: .password).submitLabel(.go).onSubmit(submit)
+            .accessibilityIdentifier("auth-password")
+            .accessibilityLabel(Text("Password"))
+        } trailing: {
+            Button { reveal.toggle() } label: {
+                Image(systemName: reveal ? "eye.slash" : "eye").foregroundStyle(Brand.ink2).frame(width: 32, height: 32).contentShape(.rect)
+            }
+            .buttonStyle(.plain)
+            .accessibilityLabel(Text(reveal ? LocalizedStringKey("Hide password") : LocalizedStringKey("Show password")))
+        }
+    }
+
+    @ViewBuilder private var belowPassword: some View {
+        if creating {
+            // the one rule, shown before you type and ticked off once you meet it (no second password box)
+            HStack(spacing: 6) {
+                Image(systemName: password.count >= 6 ? "checkmark.circle.fill" : "circle")
+                    .foregroundStyle(password.count >= 6 ? Brand.green : Brand.ink2)
+                Text("At least 6 characters").foregroundStyle(Brand.ink2)
+            }
+            .font(.brand(.footnote)).frame(maxWidth: .infinity, alignment: .leading).padding(.leading, 4)
+            .animation(.snappy, value: password.count >= 6)
+        } else {
+            Button("Forgot password?", action: forgot)
+                .font(.brand(.footnote, .semibold)).foregroundStyle(Brand.ink).buttonStyle(.plain)
+                .frame(maxWidth: .infinity, alignment: .trailing).frame(minHeight: 30)
+                .disabled(working)
+        }
+    }
+
+    private var mainButton: some View {
+        Button(action: submit) {
             ZStack {
-                Text(title).font(.brand(.headline)).opacity(busy ? 0 : 1)
-                if busy { ProgressView().tint(Brand.onGreen) }
+                Text(creating ? LocalizedStringKey("Create account") : LocalizedStringKey("Sign in"))
+                    .font(.brand(.headline)).opacity(working && !google ? 0 : 1)
+                if working && !google { ProgressView().tint(Brand.onGreen) }
             }
             .foregroundStyle(Brand.onGreen).frame(maxWidth: .infinity, minHeight: 54)
-            .background(Brand.green, in: Capsule())
+            .background(Brand.green, in: .rect(cornerRadius: Radius.chip, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(working)
+        .overlay(alignment: .topTrailing) { if lastUsed == "email" && !creating { LastUsedBubble() } }
+        .accessibilityValue(Text(lastUsed == "email" && !creating ? LocalizedStringKey("Last used") : ""))
+        .accessibilityIdentifier("auth-submit")
     }
 
-    /// The second way in on the welcome page: same shape as the main button, quiet colours.
-    private func secondary(_ title: LocalizedStringKey, action: @escaping () -> Void) -> some View {
-        Button(action: action) {
-            Text(title).font(.brand(.headline)).foregroundStyle(Brand.green)
-                .frame(maxWidth: .infinity, minHeight: 54)
-                .background(Brand.card, in: Capsule())
-                .overlay(Capsule().strokeBorder(Brand.green.opacity(0.5), lineWidth: 1.5))
+    private var divider: some View {
+        HStack(spacing: 12) {
+            Rectangle().fill(Brand.line).frame(height: 1)
+            Text(creating ? LocalizedStringKey("Or continue with") : LocalizedStringKey("Or sign in with"))
+                .font(.brand(.caption)).foregroundStyle(Brand.ink2).fixedSize()
+            Rectangle().fill(Brand.line).frame(height: 1)
         }
-        .buttonStyle(.plain)
-        .disabled(working)
     }
 
-    /// Google's own colour "G" needs a light background, so the button stays white; `prominent` gives it the heavier edge.
-    private func googleButton(prominent: Bool) -> some View {
+    private var googleButton: some View {
         Button(action: withGoogle) {
             ZStack {
                 HStack(spacing: 10) {
                     Image("GoogleG").resizable().scaledToFit().frame(width: 20, height: 20).accessibilityHidden(true)
-                    Text("Continue with Google").font(.brand(.headline))
-                    if lastUsed == "google" { lastUsedBadge }
+                    Text(verbatim: "Google").font(.brand(.headline))
                 }
                 .opacity(working && google ? 0 : 1)
                 if working && google { ProgressView() }
             }
-            .foregroundStyle(Brand.ink).frame(maxWidth: .infinity, minHeight: 54)
-            .background(Brand.card, in: Capsule())
-            .overlay(Capsule().strokeBorder(prominent ? Brand.ink : Brand.line, lineWidth: prominent ? 1.5 : 1))
+            .foregroundStyle(Brand.ink).frame(maxWidth: .infinity, minHeight: 50)
+            .background(Brand.card2, in: .rect(cornerRadius: Radius.chip, style: .continuous))
         }
         .buttonStyle(.plain)
         .disabled(working)
+        .overlay(alignment: .topTrailing) { if lastUsed == "google" { LastUsedBubble() } }
+        .accessibilityValue(Text(lastUsed == "google" ? LocalizedStringKey("Last used") : ""))
+        .accessibilityIdentifier("auth-google")
     }
 
-    private var lastUsedBadge: some View {
-        Text("Last used").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.green)
-            .padding(.horizontal, 7).padding(.vertical, 2)
-            .background(Brand.green.opacity(0.14), in: Capsule())
+    // MARK: Under the card
+
+    private var switchLink: some View {
+        Button { go(creating ? .signIn : .signUp) } label: {
+            HStack(spacing: 6) {
+                Text(creating ? LocalizedStringKey("Already have an account?") : LocalizedStringKey("New to Setpoint?")).foregroundStyle(Brand.ink2)
+                Text(creating ? LocalizedStringKey("Sign in") : LocalizedStringKey("Create account")).foregroundStyle(Brand.green).bold()
+            }
+            .font(.brand(.body)).frame(maxWidth: .infinity, minHeight: 44).contentShape(.rect)
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("auth-switch")
     }
 
+    /// Small and gray, pinned at the very bottom; hidden while you type so it doesn't ride up on the keyboard.
     private var terms: some View {
         Text("By continuing you agree to the [Terms](setpoint-legal://terms) and [Privacy Policy](setpoint-legal://privacy).")
-            .font(.brand(.caption)).foregroundStyle(Brand.ink2).tint(Brand.ink).multilineTextAlignment(.center)
-            .frame(maxWidth: .infinity).padding(.top, 2)
+            .font(.brand(.caption2)).foregroundStyle(Brand.ink2).tint(Brand.ink2).multilineTextAlignment(.center)
+            .frame(maxWidth: .infinity).padding(.horizontal, 24).padding(.bottom, 8)
+    }
+
+    // MARK: Pieces
+
+    /// A text well: an icon, a small label above the value, and a green edge while you're typing in it.
+    private func box<C: View, T: View>(_ icon: String, label: LocalizedStringKey, focused: Bool,
+                                        @ViewBuilder _ content: () -> C, @ViewBuilder trailing: () -> T = { EmptyView() }) -> some View {
+        HStack(spacing: 12) {
+            Image(systemName: icon).font(.system(size: 16, weight: .semibold)).foregroundStyle(focused ? Brand.green : Brand.ink2).frame(width: 22)
+            VStack(alignment: .leading, spacing: 2) {
+                Text(label).font(.brand(.caption)).foregroundStyle(Brand.ink2)
+                content()
+            }
+            trailing()
+        }
+        .font(.brand(.body))
+        .padding(.horizontal, 16).frame(minHeight: 60)
+        .background(Brand.card2, in: .rect(cornerRadius: Radius.chip, style: .continuous))
+        .overlay(RoundedRectangle(cornerRadius: Radius.chip, style: .continuous).strokeBorder(Brand.green, lineWidth: focused ? 1.5 : 0))
+        .animation(.snappy(duration: 0.2), value: focused)
     }
 
     private func errorLine(_ text: String) -> some View {
@@ -279,7 +244,7 @@ struct AuthFlow: View {
 
     private func go(_ m: Mode) {
         error = nil; field = nil
-        withAnimation(reduceMotion ? nil : .snappy(duration: 0.32)) { mode = m }
+        withAnimation(reduceMotion ? nil : Motion.snappy) { mode = m }
     }
 
     /// Checked here first, so the common slips get a plain answer without a trip to the server.
@@ -289,7 +254,7 @@ struct AuthFlow: View {
         if !e.contains("@") || !e.contains(".") { fail(String(localized: "That email doesn't look right."), .email); return }
         if password.isEmpty { fail(String(localized: "Enter your password"), .password); return }
         if mode == .signUp && password.count < 6 { fail(String(localized: "Use at least 6 characters for the password."), .password); return }
-        let creating = mode == .signUp, pw = password
+        let creating = self.creating, pw = password
         handoff.skipNext = creating // a new account gets the plain fade, not the dial flight
         act { [self] in
             if creating { try await account.signUp(email: e, password: pw) } else { try await account.signIn(email: e, password: pw) }
@@ -330,3 +295,15 @@ struct AuthFlow: View {
 }
 
 private struct LegalJob: Identifiable { let id: String }
+
+/// "Last used": a small bubble on the corner of the button you used last time. It takes no room in the row.
+private struct LastUsedBubble: View {
+    var body: some View {
+        Text("Last used").font(.brand(.caption2, .semibold)).foregroundStyle(Brand.onGreen)
+            .padding(.horizontal, 8).padding(.vertical, 3)
+            .background(Brand.green, in: Capsule())
+            .shadow(color: .black.opacity(0.12), radius: 4, y: 2)
+            .fixedSize().allowsHitTesting(false).accessibilityHidden(true)
+            .padding(.trailing, 12).offset(y: -9)
+    }
+}

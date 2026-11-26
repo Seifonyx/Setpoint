@@ -268,7 +268,9 @@ struct SummaryCard: View {
                             lineWidth: 15, ringWidth: 4, ringGap: 7)
                     .frame(width: Self.dial, height: Self.dial)
                     .environment(\.layoutDirection, .leftToRight) // a gauge fills the same way in Arabic (and keeps its end dot on the arc)
-                    .opacity(DialHandoff.shared.flying ? 0 : 1) // the sign-in dial lands here
+                    .opacity(DialHandoff.shared.flying && !DialHandoff.shared.fading ? 0 : 1) // the sign-in dial lands here, then this fades in under it
+                    .animation(.easeOut(duration: 0.18), value: DialHandoff.shared.fading)
+                    .onChange(of: DialValues(totals: totals, plan: plan), initial: true) { DialHandoff.shared.targetValues = $1 }
                     .onGeometryChange(for: CGRect.self) { $0.frame(in: .global) } action: { DialHandoff.shared.target = $0 }
                     .accessibilityIdentifier("diary-dial")
                 // inside the rings: what's left. The number sits on the ring's exact centre; its small label rides above it.
