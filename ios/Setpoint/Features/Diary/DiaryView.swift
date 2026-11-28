@@ -76,6 +76,7 @@ struct DiaryView: View {
                     MealRows(day: day, copying: $copying, kinds: kinds, open: $openFood, actions: mealActions) { adding = AddJob(meal: $0) }
                 }
             }
+            .tabRoot(.diary) // tapping Diary again comes back here (and to today)
             .modifier(MealDialogs(day: day, copying: $copying, open: $openFood, actions: mealActions))
             .overlay { OptionsMenuLayer(actions: mealActions) } // a food's or meal's options, right by its row
             .modifier(MenuScroller(actions: mealActions))
@@ -130,6 +131,10 @@ struct DiaryView: View {
                 handle(r)
             }
             .task { handle(store.request) }
+            // the Diary's tab tapped while it's already showing: back to today (the system scrolls it to the top)
+            .onChange(of: TabMemory.shared.diaryToday) {
+                if day != Day.today { withAnimation(.snappy) { day = Day.today }; store.clearUndo() }
+            }
             .task(id: "\(day)|\(store.version)") {
                 // runs after every save: only what really changed is set, so an unchanged day isn't redrawn (a redraw
                 // landing just as you start the next drag or swipe is what made it hitch)

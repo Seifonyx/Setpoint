@@ -327,6 +327,7 @@ struct FoodsView: View {
                 .padding(.horizontal, 16)
                 .padding(.bottom, 24)
             }
+            .tabRoot(.foods) // tapping Foods again comes back here
             .paperPage()
             .shrinksTabBar()
             .navigationTitle("Foods")

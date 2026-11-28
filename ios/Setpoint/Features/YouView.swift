@@ -96,6 +96,7 @@ struct YouView: View {
                         .frame(maxWidth: .infinity).multilineTextAlignment(.center)
                 }
             }
+            .tabRoot(.you) // tapping You again comes back here
             .brandList()
             .shrinksTabBar()
             .navigationTitle("You")

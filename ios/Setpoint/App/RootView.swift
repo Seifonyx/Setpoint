@@ -25,6 +25,7 @@ struct RootView: View {
     @State private var shotTarget = UserDefaults.standard.string(forKey: "open") == "target"
     @State private var tabBar = TabBarState.shared
     @State private var handoff = DialHandoff.shared
+    @State private var tabs = TabMemory.shared
     @Environment(\.accessibilityReduceMotion) private var reduceMotion
     // build-server screenshot: `-open handoff` shows the welcome, then acts as if you signed in (the dial flight)
     @State private var demoAuth = UserDefaults.standard.string(forKey: "open") == "handoff"
@@ -48,13 +49,33 @@ struct RootView: View {
 
     /// Go to the diary and start an action from outside the app (a widget, a control).
     private func open(_ a: QuickAction?) {
+        // back after a long time: start fresh first, so the fresh Diary is the one that opens what was asked for
+        let fresh = freshen()
         tab = .diary
-        switch a {
-        case .addFood: store.request = .addFood
-        case .scan: store.request = .scan
-        case .weight: store.request = .logWeight
-        case nil: break
+        let ask = {
+            switch a {
+            case .addFood: store.request = .addFood
+            case .scan: store.request = .scan
+            case .weight: store.request = .logWeight
+            case nil: break
+            }
         }
+        if fresh { Task { @MainActor in ask() } } else { ask() }
+    }
+
+    /// Back after an hour or more, or on a new day (and nothing left open): every tab on its main screen, the Diary
+    /// on today, and the app on the Diary, like opening it fresh. Checked once per return.
+    @discardableResult private func freshen() -> Bool {
+        guard tabs.returnIsStale() else { return false }
+        tabs.resetAll(); tab = .diary
+        return true
+    }
+
+    private var selection: Binding<AppTab> {
+        Binding(get: { tab }, set: { t in
+            if t == tab { tabs.reselected(t) }
+            tab = t
+        })
     }
 
     /// A tab's icon (filled on the open tab) and name; the name fades out while the bar is compact (TabBarShrinker).
@@ -66,12 +87,13 @@ struct RootView: View {
     }
 
     var body: some View {
-        TabView(selection: $tab) {
+        // a binding of its own so a tap on the tab you're already on is seen too (TabMemory: back to its main screen)
+        TabView(selection: selection) {
             // the system's own Liquid Glass tab bar; while you scroll down a page it shrinks in place (TabBarShrinker)
-            Tab(value: AppTab.diary) { DiaryView(importing: $importing) } label: { tabLabel("Diary", "book.pages", .diary) }
-            Tab(value: AppTab.progress) { ProgressScreen() } label: { tabLabel("Progress", "chart.bar", .progress) }
-            Tab(value: AppTab.foods) { FoodsView() } label: { tabLabel("Foods", "fork.knife.circle", .foods) }
-            Tab(value: AppTab.you) { YouView(importing: $importing) } label: { tabLabel("You", "person.crop.circle", .you) }
+            Tab(value: AppTab.diary) { DiaryView(importing: $importing).id(tabs.id(.diary)) } label: { tabLabel("Diary", "book.pages", .diary) }
+            Tab(value: AppTab.progress) { ProgressScreen().id(tabs.id(.progress)) } label: { tabLabel("Progress", "chart.bar", .progress) }
+            Tab(value: AppTab.foods) { FoodsView().id(tabs.id(.foods)) } label: { tabLabel("Foods", "fork.knife.circle", .foods) }
+            Tab(value: AppTab.you) { YouView(importing: $importing).id(tabs.id(.you)) } label: { tabLabel("You", "person.crop.circle", .you) }
                 .badge(weekReady ? 1 : 0) // your weekly check-in is waiting
         }
         .background(TabBarShrinker(compact: tabBar.compact))
@@ -117,6 +139,8 @@ struct RootView: View {
         .task { if let a = QuickActionInbox.take() { open(a) } }
         .task { await UpdateCheck.shared.check() } // a newer build in SideStore
         .onChange(of: phase) { _, p in
+            if p == .active { freshen() }
+            if p == .background { tabs.left() }
             if p == .active { WidgetBridge.publish(store); Task { await store.tick(); await account.syncNow(); await Health.autoImport(store); await UpdateCheck.shared.check() } }
             if p != .active { store.flushSave() } // nothing waiting to be written when the app is left
             if p == .background { Reminders.update(store) } // only remind about what isn't done yet

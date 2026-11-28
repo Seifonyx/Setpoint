@@ -39,6 +39,7 @@ struct ProgressScreen: View {
                     PhotosSection()
                 }
             }
+            .tabRoot(.progress) // tapping Progress again comes back here
             .brandList()
             .shrinksTabBar()
             .navigationTitle("Progress")

@@ -9,6 +9,7 @@ The old web app at the repo root is frozen: ignore it.
   - `SetpointApp.swift` entry point; `RootView.swift` tabs, sign-in overlay, dial flight, launch hooks (`-tab`, `-sheet`, `-open`).
   - `Design.swift` Brand colours, fonts, Radius/Motion, `CalorieDial`, `BrandCardStyle`, `PaperBackground`.
   - `Components.swift` shared views (incl. `LaunchDial`); `BrandSection.swift` section styling; `BrandTabBar.swift` tab bar.
+  - `TabMemory.swift` when tabs keep your place: tap the open tab to go back to its main screen (Diary: today); back after an hour or on a new day, every tab starts fresh.
   - `DialHandoff.swift` state + `FlyingDial` for the sign-in dial flying into the Diary dial.
   - `Health.swift` Apple Health; `Intents.swift` Siri/Control intents; `WidgetBridge.swift` data to widgets; `Sounds.swift`; `UpdateCheck.swift` SideStore update check; `Extras.swift` small helpers.
 - `ios/Setpoint/Features/` screens:

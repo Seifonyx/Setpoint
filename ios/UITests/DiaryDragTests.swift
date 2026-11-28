@@ -239,6 +239,24 @@ final class DiaryDragTests: XCTestCase {
         app.swipeDown(velocity: .fast)
         settle()
         shot(app, "bar-runtime-full")
+
+        // tapping the tab you're on: the Diary goes back to today; You comes back from a screen further in
+        app.buttons["Previous day"].firstMatch.tap(); settle(1)
+        app.tabBars.buttons["Diary"].firstMatch.tap(); settle(1)
+        let today = app.navigationBars["Today"].firstMatch.exists || app.staticTexts["Today"].firstMatch.exists
+        note("tabs: Diary tapped again on yesterday shows Today = \(today)")
+        XCTAssertTrue(today, "tapping the Diary tab again goes back to today")
+        app.tabBars.buttons["You"].firstMatch.tap(); settle(1)
+        let settingsRow = app.buttons["Settings"].firstMatch
+        if settingsRow.waitForExistence(timeout: 5) {
+            settingsRow.tap(); settle(1)
+            let inside = !app.buttons["Settings"].firstMatch.isHittable || app.navigationBars.buttons["You"].firstMatch.exists
+            app.tabBars.buttons["You"].firstMatch.tap(); settle(1)
+            let back = app.buttons["Settings"].firstMatch.waitForExistence(timeout: 3) && app.buttons["Settings"].firstMatch.isHittable
+            note("tabs: opened Settings = \(inside) · You tapped again shows You's main screen = \(back)")
+            shot(app, "tab-retap-you")
+            XCTAssertTrue(back, "tapping the You tab again goes back to its main screen")
+        } else { note("tabs: no Settings row in You"); shot(app, "tab-retap-missing") }
         app.terminate()
 
         // amounts: tapping the middle of the amount's line (not the number box) brings up the keypad
