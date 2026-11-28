@@ -14,6 +14,9 @@ final class Store {
     /// What the last change was, so the haptic matches it: adding, removing, or changing something.
     enum ChangeKind { case add, remove, edit }
     private(set) var changeKind = ChangeKind.edit
+    /// Goes up on changes the Diary list should animate (rows sliding in and out). Not on a drag: the list has already
+    /// put the row where you let go, and a second animation over its own is what made drops jolt.
+    private(set) var rowsChange = 0
     /// Foods added a moment ago (the Diary lights them up).
     private(set) var justAdded: Set<String> = []
     /// Something Siri or a shortcut asked the app to open.
@@ -149,7 +152,8 @@ final class Store {
             // the days on screen get their new targets in one go (never an empty moment that falls back to old numbers)
             var fresh: [String: DayPlan] = [:]
             for d in await MainActor.run(body: { Array(self.plans.keys) }) { if let p = await engine.dayPlan(d) { fresh[d] = p } }
-            await MainActor.run { self.plans = fresh }
+            // only when a target actually moved: setting the same numbers again still redraws every screen that reads them
+            await MainActor.run { if self.plans != fresh { self.plans = fresh } }
             await self.refreshOverview()
         }
     }
@@ -265,7 +269,7 @@ final class Store {
     }
     func refreshOverview() async { overview = await eng.overview() }
     func refreshPlan(_ day: String) async {
-        if let p = await eng.dayPlan(day) { plans[day] = p }
+        if let p = await eng.dayPlan(day), plans[day] != p { plans[day] = p }
     }
     /// Change part of your data (profile, settings, favorites…) and save.
     // Settings, profile and plan changes aren't animations: they're handed over at once (flushSave), so every screen
@@ -455,6 +459,7 @@ final class Store {
     private func remember(_ label: String, _ kind: ChangeKind = .edit) {
         changeKind = kind
         changeCount += 1
+        rowsChange += 1
         undoSnap = Snapshot(food: food, entries: entries, water: water)
         undoAction = nil
         undoLabel = label
@@ -476,6 +481,7 @@ final class Store {
         await adoptEngineState()
         changeKind = .edit
         changeCount += 1
+        rowsChange += 1
         undoSnap = nil
         undoLabel = String(localized: "Merged into \(keep.name)")
         undoAction = { [weak self] in

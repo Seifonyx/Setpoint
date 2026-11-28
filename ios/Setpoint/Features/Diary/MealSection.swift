@@ -90,22 +90,36 @@ struct MealRows: View {
         }
     }
 
-    private func isOpen(_ key: String) -> Bool { !closedMeals.split(separator: ",").contains(Substring(key)) }
+    private var closed: Set<String> { Set(closedMeals.split(separator: ",").map(String.init)) }
     private func setOpen(_ key: String, _ open: Bool) {
-        var set = Set(closedMeals.split(separator: ",").map(String.init))
+        var set = closed
         if open { set.remove(key) } else { set.insert(key) }
         withAnimation(.snappy) { closedMeals = set.sorted().joined(separator: ",") }
     }
-    private func foods(_ key: String) -> [FoodItem] { store.items(day).filter { store.mealKey(of: $0) == key && !$0.isDailyTotal } }
 
-    private var rows: [Row] {
-        store.meals.flatMap { m -> [Row] in
-            [.header(m)] + (isOpen(m.key) ? foods(m.key).map { .food($0, m) } : []) + [.end(m)]
+    /// The day's foods sorted into meals, worked out once per redraw. (Looking each food's meal up again for every
+    /// meal, every row and every name rebuilt the meal list hundreds of times per redraw, and the Diary redraws all
+    /// through a drag, a swipe or a scroll.)
+    private struct Layout {
+        let rows: [Row]
+        let foods: [String: [FoodItem]]
+        let closed: Set<String>
+        func isOpen(_ key: String) -> Bool { !closed.contains(key) }
+    }
+    private var layout: Layout {
+        let meals = store.meals, keys = Set(meals.map(\.key)), fallback = meals.last?.key ?? "snacks"
+        var foods: [String: [FoodItem]] = [:]
+        for f in store.items(day) where !f.isDailyTotal { foods[keys.contains(f.meal) ? f.meal : fallback, default: []].append(f) }
+        let closed = closed
+        let rows = meals.flatMap { m -> [Row] in
+            [.header(m)] + (closed.contains(m.key) ? [] : (foods[m.key] ?? []).map { .food($0, m) }) + [.end(m)]
         }
+        return Layout(rows: rows, foods: foods, closed: closed)
     }
 
     var body: some View {
-        let rows = rows
+        let layout = layout, rows = layout.rows
+        let foods = { (key: String) in layout.foods[key] ?? [] }, isOpen = layout.isOpen
         ForEach(Array(rows.enumerated()), id: \.element.id) { i, row in
             let last = i == rows.count - 1 || { if case .end = rows[i + 1] { return true }; return false }()
             switch row {

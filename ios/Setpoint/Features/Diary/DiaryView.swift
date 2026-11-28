@@ -81,7 +81,7 @@ struct DiaryView: View {
             .modifier(MenuScroller(actions: mealActions))
             .listSectionSpacing(10)
             .environment(\.defaultMinListRowHeight, 1) // the thin row closing each meal's card
-            .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.changeCount) // rows slide in and out as you log
+            .animation(reduceMotion ? nil : .snappy(duration: 0.32), value: store.rowsChange) // rows slide in and out as you log (not after a drag: the list has settled it already)
             .brandList()
             .shrinksTabBar()
             // pull down: bring in what you logged on another device (and save anything waiting here)
@@ -130,7 +130,14 @@ struct DiaryView: View {
                 handle(r)
             }
             .task { handle(store.request) }
-            .task(id: "\(day)|\(store.version)") { await store.refreshPlan(day); score = await store.engineRef.dayScore(day); kinds = await store.engineRef.itemKinds(day) }
+            .task(id: "\(day)|\(store.version)") {
+                // runs after every save: only what really changed is set, so an unchanged day isn't redrawn (a redraw
+                // landing just as you start the next drag or swipe is what made it hitch)
+                await store.refreshPlan(day)
+                let s = await store.engineRef.dayScore(day), k = await store.engineRef.itemKinds(day)
+                if s != score { score = s }
+                if k != kinds { kinds = k }
+            }
             .navigationDestination(item: $nutrientRoute) { r in
                 switch r {
                 case .all: NutrientsView(day: day)

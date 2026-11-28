@@ -395,8 +395,8 @@ struct Insights: Decodable, Sendable {
     let items: [Item]
 }
 
-struct DayScore: Decodable, Sendable {
-    struct Part: Decodable, Sendable { let label: String; let pts: Double; let max: Double; let note: String }
+struct DayScore: Decodable, Sendable, Equatable {
+    struct Part: Decodable, Sendable, Equatable { let label: String; let pts: Double; let max: Double; let note: String }
     let score: Int; let grade: String; let parts: [Part]
 }
 
