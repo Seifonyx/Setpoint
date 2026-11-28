@@ -82,8 +82,7 @@ not used by the app.
   the `shots` job captures before the screen draws. Not an app bug, but it hides screens from review.
 - Someone else: typed boxes show Western digits while results use Arabic-Indic (cosmetic).
 - `ios/legal` HTML still links fonts from the old site's folder (harmless: only text is extracted).
-- SideStore fork with auto-update (separate project): when it has a URL scheme, `UpdateCheck.openSideStore()` must try
-  it before `sidestore://`.
+- Updates now go through AltStore (`UpdateCheck.install()`: `altstore://install?url=`, then SideStore, then the release page).
 - Restaurant items still estimates: Burger King, Costa, Pizza Hut, Starbucks mochas, Dunkin' coffees, Domino's/Papa
   John's Egypt, local places.
 

@@ -60,8 +60,9 @@ Every push to `main` that touches `ios/`, `engine/`, `foods.json` or the workflo
 - The standing release policy is in AGENTS.md (test, then publish, then check). Put `[preview]` in the commit message
   only when the user asks to see something first. Bigger work awaiting approval goes on its own branch (e.g.
   `redesign`): pushes there only make previews; merge to `main` to release.
-- The user installs with SideStore. A separate project is making a SideStore fork with auto-update; when it has a URL
-  scheme, `UpdateCheck.openSideStore()` should try it before `sidestore://`.
+- The user installs with AltStore (switched from SideStore on 2026-11-28). The update card's Update button
+  (`UpdateCheck.install()`) hands the new .ipa to `altstore://install?url=`, then SideStore's same link, then the release
+  page. The source file is still named `sidestore.json` (AltStore reads the same format).
 
 ## Food list (foods.json)
 Rebuilt by `tools/foods/` in order: `off_fetch.py` (Open Food Facts brands; slow, rate-limited) → `build.py

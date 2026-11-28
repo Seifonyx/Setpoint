@@ -1,15 +1,18 @@
 import SwiftUI
 import UIKit
 
-/// Tells you when a newer build is out. SideStore doesn't install updates by itself, and iOS doesn't let a sideloaded
-/// app replace itself, so the Diary shows a small card that opens SideStore, where Setpoint's Update button is waiting.
-/// It reads the same SideStore source the build publishes (sidestore.json), at most every few hours, and never in the
-/// screenshots or UI tests (demo data) or in a build that didn't come from the build server (build 1).
+/// Tells you when a newer build is out. iOS doesn't let a sideloaded app replace itself, so the Diary shows a small card
+/// whose Update button hands the new build to AltStore (its install link), which installs it over this one and keeps
+/// your data. SideStore takes the same link if that's what you use; with neither, it opens the release page.
+/// It reads the source the build publishes (sidestore.json, AltStore's source format), at most every few hours, and
+/// never in the screenshots or UI tests (demo data) or in a build that didn't come from the build server (build 1).
 @MainActor @Observable
 final class UpdateCheck {
     static let shared = UpdateCheck()
     /// The newer build's number, while one is waiting and you haven't put it off.
     private(set) var available: Int?
+    /// Where the newer build's .ipa is.
+    @ObservationIgnored private var download: URL?
 
     private static let source = URL(string: "https://raw.githubusercontent.com/Seifonyx/Setpoint/main/sidestore.json")!
     private static let releasePage = URL(string: "https://github.com/Seifonyx/Setpoint/releases/tag/ios-latest")!
@@ -34,6 +37,7 @@ final class UpdateCheck {
               let apps = json["apps"] as? [[String: Any]],
               let version = (apps.first?["versions"] as? [[String: Any]])?.first,
               let build = Int("\(version["buildVersion"] ?? "")") else { return }
+        download = (version["downloadURL"] as? String).flatMap(URL.init(string:))
         withAnimation(.snappy) { available = build > Self.current && build != later ? build : nil }
     }
 
@@ -42,15 +46,24 @@ final class UpdateCheck {
         withAnimation(.snappy) { available = nil }
     }
 
-    /// SideStore (its Update button is on My Apps); the release page if SideStore isn't there.
-    func openSideStore() {
-        UIApplication.shared.open(URL(string: "sidestore://")!) { opened in
-            if !opened { UIApplication.shared.open(Self.releasePage) }
+    /// Installs the newer build: AltStore's install link (`altstore://install?url=`), then SideStore's (it kept the
+    /// same link), then AltStore's own My Apps, and the release page when none of them is there.
+    func install() {
+        var tries: [URL] = []
+        if let ipa = download?.absoluteString.addingPercentEncoding(withAllowedCharacters: .alphanumerics) {
+            tries += ["altstore", "sidestore"].compactMap { URL(string: "\($0)://install?url=\(ipa)") }
         }
+        tries += [URL(string: "altstore://")!, URL(string: "sidestore://")!, Self.releasePage]
+        Self.open(tries)
+    }
+
+    private static func open(_ urls: [URL]) {
+        guard let url = urls.first else { return }
+        UIApplication.shared.open(url) { opened in if !opened { Self.open(Array(urls.dropFirst())) } }
     }
 }
 
-/// The card at the top of the Diary: a new build is ready in SideStore.
+/// The card at the top of the Diary: a new build is ready to install with AltStore.
 struct UpdateBanner: View {
     let build: Int
     var body: some View {
@@ -58,10 +71,10 @@ struct UpdateBanner: View {
             Image(systemName: "arrow.down.circle.fill").font(.brand(.title3)).foregroundStyle(Brand.green)
             VStack(alignment: .leading, spacing: 4) {
                 Text("Update available").font(.brand(.subheadline, .semibold))
-                Text("Build \(build) is ready. Open SideStore and tap Update on Setpoint.")
+                Text("Build \(build) is ready. Tap Update to install it with AltStore.")
                     .font(.brand(.subheadline)).foregroundStyle(.secondary)
                 HStack(spacing: 10) {
-                    Button("Open SideStore") { UpdateCheck.shared.openSideStore() }
+                    Button("Update") { UpdateCheck.shared.install() }
                         .buttonStyle(.glassProminent).tint(Brand.green).controlSize(.small)
                     Button("Later") { UpdateCheck.shared.putOff() }
                         .buttonStyle(.glass).controlSize(.small)

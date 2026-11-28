@@ -2031,12 +2031,12 @@
         }
       }
     },
-    "Build %lld is ready. Open SideStore and tap Update on Setpoint.": {
+    "Build %lld is ready. Tap Update to install it with AltStore.": {
       "localizations": {
         "ar": {
           "stringUnit": {
             "state": "translated",
-            "value": "النسخة %lld جاهزة. افتح SideStore ودوس Update على Setpoint."
+            "value": "النسخة %lld جاهزة. دوس تحديث وAltStore هينزّلها."
           }
         }
       }
@@ -6841,16 +6841,6 @@
         }
       }
     },
-    "Open SideStore": {
-      "localizations": {
-        "ar": {
-          "stringUnit": {
-            "state": "translated",
-            "value": "افتح SideStore"
-          }
-        }
-      }
-    },
     "Open in Setpoint": {
       "localizations": {
         "ar": {
@@ -9863,6 +9853,16 @@
           "stringUnit": {
             "state": "translated",
             "value": "الأيام اللي مش متسجلة بتخبّي اللي كلته، فممكن الرقم يطلع أقل. بيتحسب بوزن أقل لحد ما تسجل أيام أكتر."
+          }
+        }
+      }
+    },
+    "Update": {
+      "localizations": {
+        "ar": {
+          "stringUnit": {
+            "state": "translated",
+            "value": "تحديث"
           }
         }
       }
